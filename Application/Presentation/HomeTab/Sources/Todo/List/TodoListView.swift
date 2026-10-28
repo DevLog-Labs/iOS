@@ -12,12 +12,7 @@ import Core
 import PresentationShared
 
 struct TodoListView: View {
-    @Environment(\.dismiss) private var dismiss
     @Environment(\.isTabContentActive) private var isTabContentActive
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @FocusState private var isSearchFocused: Bool
-    @Namespace private var searchTransition
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onSelectTodo: (String) -> Void
@@ -33,7 +28,7 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        todoListContent
+        TodoListContent(store: store, onSelectTodo: onSelectTodo)
             .prominentAlert(store, state: \.alert, action: \.alert)
             .onReceive(windowSubmits) { submit in
                 guard case .create(let value) = submit,
@@ -54,58 +49,26 @@ struct TodoListView: View {
         windowEvent?.submits ?? Empty().eraseToAnyPublisher()
     }
 
-    private var searchBar: some View {
-        HStack(spacing: 8) {
-            HStack(spacing: 8) {
-                Image(systemName: "magnifyingglass")
-                    .foregroundStyle(Color.textSecondary)
-                TextField(
-                    "",
-                    text: $store.searchQuery,
-                    prompt: Text(String(
-                        localized: "search_prompt",
-                        bundle: PresentationResources.bundle
-                    ))
-                    .foregroundStyle(Color.textSecondary)
-                )
-                .focused($isSearchFocused)
-                .task {
-                    await Task.yield()
-                    isSearchFocused = true
-                }
-                if !store.searchQuery.isEmpty {
-                    Button {
-                        store.send(.binding(.set(\.searchQuery, "")))
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(Color.textSecondary)
-                    }
-                    .buttonStyle(.plain)
-                }
+    @ViewBuilder
+    private func fullScreenCoverContent(
+        _ coverStore: Store<
+        TodoListFeature.FullScreenCoverState,
+        TodoListFeature.Action.FullScreenCover>
+    ) -> some View {
+        switch coverStore.destination {
+        case .editor:
+            if let todoEditorStore = coverStore.scope(state: \.todoEditor, action: \.todoEditor) {
+                TodoEditorView(store: todoEditorStore)
             }
-            .frame(maxWidth: .infinity)
-            .adaptiveButtonStyle(
-                shape: Capsule(),
-                color: .surface,
-                glassEffect: .enabled
-            )
-            .matchedGeometryEffect(id: "todo-search", in: searchTransition)
-
-            Button {
-                isSearchFocused = false
-                withAnimation(.smooth(duration: 0.3)) {
-                    store.send(.view(.setSearching(false)))
-                }
-            } label: {
-                Text(String(localized: "common_cancel", bundle: PresentationResources.bundle))
-                    .foregroundStyle(Color.accent)
-            }
-            .buttonStyle(.plain)
         }
     }
+}
 
-    @ViewBuilder
-    private var todoListContent: some View {
+private struct TodoListContent: View {
+    let store: StoreOf<TodoListFeature>
+    let onSelectTodo: (String) -> Void
+
+    var body: some View {
         let visibleTodos = store.state.todos.filter { !$0.isHidden }
 
         ZStack {
@@ -131,7 +94,7 @@ struct TodoListView: View {
                                 .contentShape(.rect)
                                 .todoDetailPreview(todoId: todo.id)
                                 .onTapGesture {
-                                    selectTodo(todo.id)
+                                    onSelectTodo(todo.id)
                                 }
                                 .itemActions {
                                     ItemActionButton(
@@ -174,7 +137,7 @@ struct TodoListView: View {
                     .padding(.horizontal, 16)
                 }
             }
-            .safeAreaInset(edge: .top, spacing: 0) { topBar }
+            .safeAreaInset(edge: .top, spacing: 0) { TodoListTopBar(store: store) }
             .refreshable { await store.send(.view(.refresh)).finish() }
             .scrollDisabled(visibleTodos.isEmpty || store.state.isLoading)
             .toolbarVisibility(.hidden, for: .navigationBar)
@@ -182,31 +145,6 @@ struct TodoListView: View {
             if store.state.isLoading {
                 LoadingView()
             }
-        }
-    }
-
-    @ViewBuilder
-    private func fullScreenCoverContent(
-        _ coverStore: Store<
-        TodoListFeature.FullScreenCoverState,
-        TodoListFeature.Action.FullScreenCover>
-    ) -> some View {
-        switch coverStore.destination {
-        case .editor:
-            if let todoEditorStore = coverStore.scope(state: \.todoEditor, action: \.todoEditor) {
-                TodoEditorView(store: todoEditorStore)
-            }
-        }
-    }
-
-    private func openTodoEditor() {
-        if isiOSAppOnMac {
-            openWindow(
-                id: TodoEditorWindowValue.sceneId,
-                value: TodoEditorWindowValue(todoCategory: store.category, source: .list)
-            )
-        } else {
-            store.send(.store(.setFullScreenCover(.editor)))
         }
     }
 
@@ -223,8 +161,16 @@ struct TodoListView: View {
             ToastLabel()
         }
     }
+}
 
-    private var topBar: some View {
+private struct TodoListTopBar: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.openWindow) private var openWindow
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Namespace private var searchTransition
+    let store: StoreOf<TodoListFeature>
+
+    var body: some View {
         VStack(spacing: 8) {
             ZStack {
                 Text(TodoCategoryItem(from: store.category).localizedName)
@@ -295,17 +241,88 @@ struct TodoListView: View {
             .padding(.horizontal, 16)
 
             if store.isSearching {
-                searchBar
+                TodoListSearchBar(store: store, searchTransition: searchTransition)
                     .padding(.horizontal, 16)
             }
 
-            filterHeader
+            TodoListFilterHeader(store: store)
         }
         .padding(.bottom, 12)
         .background(Color.appBackground, ignoresSafeAreaEdges: .top)
     }
 
-    private var filterHeader: some View {
+    private func openTodoEditor() {
+        if isiOSAppOnMac {
+            openWindow(
+                id: TodoEditorWindowValue.sceneId,
+                value: TodoEditorWindowValue(todoCategory: store.category, source: .list)
+            )
+        } else {
+            store.send(.store(.setFullScreenCover(.editor)))
+        }
+    }
+}
+
+private struct TodoListSearchBar: View {
+    @FocusState private var isSearchFocused: Bool
+    @Bindable var store: StoreOf<TodoListFeature>
+    let searchTransition: Namespace.ID
+
+    var body: some View {
+        HStack(spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(Color.textSecondary)
+                TextField(
+                    "",
+                    text: $store.searchQuery,
+                    prompt: Text(String(
+                        localized: "search_prompt",
+                        bundle: PresentationResources.bundle
+                    ))
+                    .foregroundStyle(Color.textSecondary)
+                )
+                .focused($isSearchFocused)
+                .task {
+                    await Task.yield()
+                    isSearchFocused = true
+                }
+                if !store.searchQuery.isEmpty {
+                    Button {
+                        store.send(.binding(.set(\.searchQuery, "")))
+                    } label: {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(Color.textSecondary)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .adaptiveButtonStyle(
+                shape: Capsule(),
+                color: .surface,
+                glassEffect: .enabled
+            )
+            .matchedGeometryEffect(id: "todo-search", in: searchTransition)
+
+            Button {
+                isSearchFocused = false
+                withAnimation(.smooth(duration: 0.3)) {
+                    store.send(.view(.setSearching(false)))
+                }
+            } label: {
+                Text(String(localized: "common_cancel", bundle: PresentationResources.bundle))
+                    .foregroundStyle(Color.accent)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+private struct TodoListFilterHeader: View {
+    @Bindable var store: StoreOf<TodoListFeature>
+
+    var body: some View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
                 if 0 < store.appliedFilterCount {
@@ -388,10 +405,6 @@ struct TodoListView: View {
         .fixedSize(horizontal: false, vertical: true)
         .contentMargins(.horizontal, 16, for: .scrollContent)
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func selectTodo(_ todoId: String) {
-        onSelectTodo(todoId)
     }
 }
 
