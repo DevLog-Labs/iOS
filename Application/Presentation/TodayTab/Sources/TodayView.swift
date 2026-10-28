@@ -35,11 +35,11 @@ public struct TodayView: View {
             ScrollView {
                 let sections = store.sections
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    achievementCard
+                    TodayAchievementCard(store: store)
                         .padding(.bottom, 8)
 
                     if sections.isEmpty, !store.isLoading {
-                        emptyContent
+                        TodayEmptyContent(store: store)
                     } else {
                         ForEach(sections) { section in
                             TodoSection(
@@ -58,7 +58,7 @@ public struct TodayView: View {
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(alignment: .leading) {
                     topBar
-                    filterBar
+                    TodayFilterBar(store: store)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -80,7 +80,7 @@ public struct TodayView: View {
             }
         }
         .inspector(isPresented: $store.isTodoInspectorPresented) {
-            todoInspector
+            TodayTodoInspector(store: store)
         }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
@@ -110,7 +110,40 @@ public struct TodayView: View {
             .padding(.bottom, 8)
     }
 
-    private var achievementCard: some View {
+    private func destination(_ route: TodayRoute) -> some View {
+        switch route {
+        case .todo(let item):
+            TodoDetailView(
+                store: Store(
+                    initialState: TodoDetailFeature.State(todoId: item.id, showEditButton: true)
+                ) {
+                    TodoDetailFeature()
+                },
+                windowEvent: windowEvent
+            )
+            .id(item.id)
+        }
+    }
+
+    private func monitorDateChanges() async {
+        while !Task.isCancelled {
+            let date = Date()
+            store.send(.checkCurrentDate(date))
+            let interval = TodayFeature.dayInterval(containing: date)
+            let seconds = min(max(interval.end.timeIntervalSince(date), 1), 60)
+            do {
+                try await Task.sleep(for: .seconds(seconds))
+            } catch {
+                return
+            }
+        }
+    }
+}
+
+private struct TodayAchievementCard: View {
+    let store: StoreOf<TodayFeature>
+
+    var body: some View {
         VStack(alignment: .leading, spacing: 20) {
             HStack(spacing: 10) {
                 Text(String(
@@ -159,8 +192,16 @@ public struct TodayView: View {
         }
     }
 
-    @ViewBuilder
-    private var filterBar: some View {
+    private var achievementStatusTitle: String {
+        store.todayAchievement?.status.title
+            ?? String(localized: "today_achievement_status_loading", bundle: PresentationResources.bundle)
+    }
+}
+
+private struct TodayFilterBar: View {
+    let store: StoreOf<TodayFeature>
+
+    var body: some View {
         ScrollView(.horizontal) {
             LazyHStack(spacing: 8) {
                 ForEach(TodayFeature.TodoScope.allCases, id: \.self) { scope in
@@ -207,8 +248,12 @@ public struct TodayView: View {
         .padding(.horizontal, -16)
         .contentMargins(.horizontal, 16, for: .scrollContent)
     }
+}
 
-    private var emptyContent: some View {
+private struct TodayEmptyContent: View {
+    let store: StoreOf<TodayFeature>
+
+    var body: some View {
         VStack(spacing: 8) {
             Text(emptyStateContent.title)
                 .font(.headline)
@@ -224,55 +269,6 @@ public struct TodayView: View {
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color.surface)
         }
-    }
-
-    @ViewBuilder
-    private var todoInspector: some View {
-        if let editorStore = store.scope(state: \.todoEditor, action: \.todoEditor) {
-            TodoPropertiesView(
-                store: editorStore,
-                showsEditorActions: true,
-                onSubmit: { editorStore.send(.upsertTodo) },
-                onClose: { store.send(.dismissTodoInspector) }
-            )
-            .inspectorColumnWidth(min: 320, ideal: 420, max: 520)
-            .onAppear { editorStore.send(.onAppear) }
-            .prominentAlert(editorStore, state: \.alert, action: \.alert)
-        }
-    }
-
-    private func destination(_ route: TodayRoute) -> some View {
-        switch route {
-        case .todo(let item):
-            TodoDetailView(
-                store: Store(
-                    initialState: TodoDetailFeature.State(todoId: item.id, showEditButton: true)
-                ) {
-                    TodoDetailFeature()
-                },
-                windowEvent: windowEvent
-            )
-            .id(item.id)
-        }
-    }
-
-    private func monitorDateChanges() async {
-        while !Task.isCancelled {
-            let date = Date()
-            store.send(.checkCurrentDate(date))
-            let interval = TodayFeature.dayInterval(containing: date)
-            let seconds = min(max(interval.end.timeIntervalSince(date), 1), 60)
-            do {
-                try await Task.sleep(for: .seconds(seconds))
-            } catch {
-                return
-            }
-        }
-    }
-
-    private var achievementStatusTitle: String {
-        store.todayAchievement?.status.title
-            ?? String(localized: "today_achievement_status_loading", bundle: PresentationResources.bundle)
     }
 
     private var emptyStateContent: EmptyStateContent {
@@ -297,6 +293,25 @@ public struct TodayView: View {
     private struct EmptyStateContent {
         let title: String
         let message: String
+    }
+}
+
+private struct TodayTodoInspector: View {
+    let store: StoreOf<TodayFeature>
+
+    @ViewBuilder
+    var body: some View {
+        if let editorStore = store.scope(state: \.todoEditor, action: \.todoEditor) {
+            TodoPropertiesView(
+                store: editorStore,
+                showsEditorActions: true,
+                onSubmit: { editorStore.send(.upsertTodo) },
+                onClose: { store.send(.dismissTodoInspector) }
+            )
+            .inspectorColumnWidth(min: 320, ideal: 420, max: 520)
+            .onAppear { editorStore.send(.onAppear) }
+            .prominentAlert(editorStore, state: \.alert, action: \.alert)
+        }
     }
 }
 
