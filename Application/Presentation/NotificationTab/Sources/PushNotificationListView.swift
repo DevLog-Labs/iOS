@@ -10,7 +10,6 @@ import Core
 import PresentationShared
 
 public struct PushNotificationListView: View {
-    @ScaledMetric(relativeTo: .headline) private var iconSize = 36
     @State private var store: StoreOf<PushNotificationListFeature>
     private let isSelected: Bool
 
@@ -28,7 +27,7 @@ public struct PushNotificationListView: View {
 
     public var body: some View {
         NavigationStack {
-            notificationListContent
+            PushNotificationListContent(store: store)
                 .background(Color.appBackground)
                 .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
                     let task = store.send(.view(.refresh))
@@ -57,7 +56,37 @@ public struct PushNotificationListView: View {
     }
 
     @ViewBuilder
-    private var notificationListContent: some View {
+    private func sheetContent(
+        _ sheetStore: Store<PushNotificationListFeature.SheetState, PushNotificationListFeature.Action.Sheet>
+    ) -> some View {
+        NavigationStack {
+            TodoDetailView(store: Store(
+                initialState: TodoDetailFeature.State(
+                    todoId: sheetStore.todoId,
+                    showEditButton: false
+                )
+            ) {
+                TodoDetailFeature()
+            })
+            .id(sheetStore.todoId)
+        }
+        .background(Color.appBackground)
+        .presentationDragIndicator(.visible)
+    }
+
+    private var sheetStore: Binding<
+        Store<PushNotificationListFeature.SheetState,
+              PushNotificationListFeature.Action.Sheet>?> {
+        $store.scope(state: \.sheet, action: \.sheet)
+    }
+}
+
+private struct PushNotificationListContent: View {
+    @ScaledMetric(relativeTo: .headline) private var iconSize = 36
+    let store: StoreOf<PushNotificationListFeature>
+
+    @ViewBuilder
+    var body: some View {
         let notifications = store.notifications.filter { !$0.isHidden }
         let recent = notifications.filter { Calendar.autoupdatingCurrent.isDateInToday($0.receivedAt) }
         let previous = notifications.filter { !Calendar.autoupdatingCurrent.isDateInToday($0.receivedAt) }
@@ -179,7 +208,7 @@ public struct PushNotificationListView: View {
                     .padding(.bottom, 8)
 
                 ScrollView(.horizontal) {
-                    headerContent
+                    PushNotificationFilterBar(store: store)
                 }
                 .scrollIndicators(.hidden)
                 .fixedSize(horizontal: false, vertical: true)
@@ -195,7 +224,54 @@ public struct PushNotificationListView: View {
         .scrollDisabled(notifications.isEmpty || store.isLoading)
     }
 
-    private var headerContent: some View {
+    private func presentDeleteNotificationToast(_ notificationId: String) {
+        ToastPresenter.present(
+            duration: 5,
+            action: {
+                store.send(.view(.undoDelete))
+            },
+            onDismiss: {
+                store.send(.view(.finishDeleteToast(notificationId)))
+            }
+        ) {
+            ToastLabel()
+        }
+    }
+
+    private func timeAgoText(from date: Date, now: Date) -> String {
+        let seconds = Int(now.timeIntervalSince(date))
+
+        if seconds < 60 {
+            return String.localizedStringWithFormat(
+                String(localized: "push_time_seconds_ago_format", bundle: PresentationResources.bundle),
+                Int64(max(0, seconds))
+            )
+        } else if seconds < 3600 {
+            let minutes = seconds / 60
+            return String.localizedStringWithFormat(
+                String(localized: "push_time_minutes_ago_format", bundle: PresentationResources.bundle),
+                Int64(minutes)
+            )
+        } else if seconds < 86400 {
+            let hours = seconds / 3600
+            return String.localizedStringWithFormat(
+                String(localized: "push_time_hours_ago_format", bundle: PresentationResources.bundle),
+                Int64(hours)
+            )
+        } else {
+            let days = seconds / 86400
+            return String.localizedStringWithFormat(
+                String(localized: "push_time_days_ago_format", bundle: PresentationResources.bundle),
+                Int64(days)
+            )
+        }
+    }
+}
+
+private struct PushNotificationFilterBar: View {
+    @Bindable var store: StoreOf<PushNotificationListFeature>
+
+    var body: some View {
         LazyHStack(spacing: 8) {
             Button {
                 if 0 < store.appliedFilterCount {
@@ -273,74 +349,6 @@ public struct PushNotificationListView: View {
             .minimumScaleFactor(0.6)
             .frame(width: 20, height: 20)
             .background(Circle().fill(Color.accent.opacity(0.1)))
-    }
-
-    @ViewBuilder
-    private func sheetContent(
-        _ sheetStore: Store<PushNotificationListFeature.SheetState, PushNotificationListFeature.Action.Sheet>
-    ) -> some View {
-        NavigationStack {
-            TodoDetailView(store: Store(
-                initialState: TodoDetailFeature.State(
-                    todoId: sheetStore.todoId,
-                    showEditButton: false
-                )
-            ) {
-                TodoDetailFeature()
-            })
-            .id(sheetStore.todoId)
-        }
-        .background(Color.appBackground)
-        .presentationDragIndicator(.visible)
-    }
-
-    private var sheetStore: Binding<
-        Store<PushNotificationListFeature.SheetState,
-              PushNotificationListFeature.Action.Sheet>?> {
-        $store.scope(state: \.sheet, action: \.sheet)
-    }
-
-    private func presentDeleteNotificationToast(_ notificationId: String) {
-        ToastPresenter.present(
-            duration: 5,
-            action: {
-                store.send(.view(.undoDelete))
-            },
-            onDismiss: {
-                store.send(.view(.finishDeleteToast(notificationId)))
-            }
-        ) {
-            ToastLabel()
-        }
-    }
-
-    private func timeAgoText(from date: Date, now: Date) -> String {
-        let seconds = Int(now.timeIntervalSince(date))
-
-        if seconds < 60 {
-            return String.localizedStringWithFormat(
-                String(localized: "push_time_seconds_ago_format", bundle: PresentationResources.bundle),
-                Int64(max(0, seconds))
-            )
-        } else if seconds < 3600 {
-            let minutes = seconds / 60
-            return String.localizedStringWithFormat(
-                String(localized: "push_time_minutes_ago_format", bundle: PresentationResources.bundle),
-                Int64(minutes)
-            )
-        } else if seconds < 86400 {
-            let hours = seconds / 3600
-            return String.localizedStringWithFormat(
-                String(localized: "push_time_hours_ago_format", bundle: PresentationResources.bundle),
-                Int64(hours)
-            )
-        } else {
-            let days = seconds / 86400
-            return String.localizedStringWithFormat(
-                String(localized: "push_time_days_ago_format", bundle: PresentationResources.bundle),
-                Int64(days)
-            )
-        }
     }
 }
 
