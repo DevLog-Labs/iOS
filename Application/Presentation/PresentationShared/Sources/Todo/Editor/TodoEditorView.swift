@@ -15,7 +15,6 @@ public struct TodoEditorView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @Environment(\.safeAreaInsets) private var safeAreaInsets
     @State var store: StoreOf<TodoEditorFeature>
     @FocusState private var field: Field?
     private let calendar = Calendar.current
@@ -42,7 +41,7 @@ public struct TodoEditorView: View {
                 VStack(spacing: 8) {
                     ToolBar(
                         store: store,
-                        showsActions: !movesActionsToInspector,
+                        isWideLayout: isWideLayout,
                         onClose: close,
                         onSubmit: submit
                     )
@@ -61,9 +60,7 @@ public struct TodoEditorView: View {
                                 ContentView(
                                     store: store,
                                     field: _field,
-                                    minimumHeight: max(
-                                        0, geometry.size.height - store.editorHeaderHeight - 16 - safeAreaInsets.bottom
-                                    )
+                                    height: geometry.size.height
                                 )
                                 .onTapGesture {
                                     field = .content
@@ -82,38 +79,15 @@ public struct TodoEditorView: View {
             .toolbarVisibility(.hidden, for: .navigationBar)
             .prominentAlert(store, state: \.alert, action: \.alert)
             .inspector(isPresented: $store.isInspectorPresented) {
-                Group {
-                switch store.inspectorContent {
-                case .options:
-                    TodoPropertiesView(
-                        store: store,
-                        showsEditorActions: movesActionsToInspector,
-                        onSubmit: submit
-                    ) {
-                        store.send(.binding(.set(\.isInspectorPresented, false)))
-                    }
-                case .todo(let item):
-                    NavigationStack {
-                        TodoDetailView(
-                            store: Store(
-                                initialState: TodoDetailFeature.State(todoId: item.id, showEditButton: false)
-                            ) {
-                                TodoDetailFeature()
-                            },
-                            onBack: { store.send(.showInspector(.options)) }
-                        )
-                        .id(item.id)
-                    }
-                }
-                }
-                .inspectorColumnWidth(min: 320, ideal: 420, max: 520)
-                .presentationDetents([.large])
+                EditorInspector(store: store, isWideLayout: isWideLayout)
+                    .inspectorColumnWidth(min: 320, ideal: 420, max: 520)
+                    .presentationDetents([.large])
             }
         }
     }
 
-    private var movesActionsToInspector: Bool {
-        store.isInspectorPresented && (isiOSAppOnMac || horizontalSizeClass == .regular)
+    private var isWideLayout: Bool {
+        isiOSAppOnMac || horizontalSizeClass == .regular
     }
 
     private func close() {
@@ -146,9 +120,13 @@ private struct ToolBar: View {
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
     ).lineHeight
     let store: StoreOf<TodoEditorFeature>
-    let showsActions: Bool
+    let isWideLayout: Bool
     let onClose: () -> Void
     let onSubmit: () -> Void
+
+    private var showsActions: Bool {
+        !(store.isInspectorPresented && isWideLayout)
+    }
 
     var body: some View {
         HStack {
@@ -246,6 +224,38 @@ struct EditorToolbarActions: View {
     }
 }
 
+private struct EditorInspector: View {
+    let store: StoreOf<TodoEditorFeature>
+    let isWideLayout: Bool
+
+    var body: some View {
+        Group {
+            switch store.inspectorContent {
+            case .options:
+                TodoPropertiesView(
+                    store: store,
+                    showsEditorActions: store.isInspectorPresented && isWideLayout,
+                    onSubmit: { store.send(.upsertTodo) }
+                ) {
+                    store.send(.binding(.set(\.isInspectorPresented, false)))
+                }
+            case .todo(let item):
+                NavigationStack {
+                    TodoDetailView(
+                        store: Store(
+                            initialState: TodoDetailFeature.State(todoId: item.id, showEditButton: false)
+                        ) {
+                            TodoDetailFeature()
+                        },
+                        onBack: { store.send(.showInspector(.options)) }
+                    )
+                    .id(item.id)
+                }
+            }
+        }
+    }
+}
+
 private struct TitleField: View {
     @Bindable var store: StoreOf<TodoEditorFeature>
     @FocusState var field: Field?
@@ -321,9 +331,14 @@ private struct ModePicker: View {
 }
 
 private struct ContentView: View {
+    @Environment(\.safeAreaInsets) private var safeAreaInsets
     @Bindable var store: StoreOf<TodoEditorFeature>
     @FocusState var field: Field?
-    let minimumHeight: CGFloat
+    let height: CGFloat
+
+    private var minimumHeight: CGFloat {
+        max(0, height - store.editorHeaderHeight - 16 - safeAreaInsets.bottom)
+    }
 
     var body: some View {
         let isContentFocused = field == .content
