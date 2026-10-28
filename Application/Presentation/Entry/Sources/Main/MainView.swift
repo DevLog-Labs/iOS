@@ -50,21 +50,36 @@ struct MainView: View {
                     systemImage: MainTab.home.symbolName,
                     value: MainTab.home
                 ) {
-                    tabContent(.home)
+                    MainTabContent(
+                        tab: .home,
+                        isSelected: selectedTab == .home,
+                        showsSideBar: showsSideBar,
+                        windowEvent: windowEvent
+                    )
                 }
                 Tab(
                     MainTab.today.title,
                     systemImage: MainTab.today.symbolName,
                     value: MainTab.today
                 ) {
-                    tabContent(.today)
+                    MainTabContent(
+                        tab: .today,
+                        isSelected: selectedTab == .today,
+                        showsSideBar: showsSideBar,
+                        windowEvent: windowEvent
+                    )
                 }
                 Tab(
                     MainTab.notification.title,
                     systemImage: MainTab.notification.symbolName,
                     value: MainTab.notification
                 ) {
-                    tabContent(.notification)
+                    MainTabContent(
+                        tab: .notification,
+                        isSelected: selectedTab == .notification,
+                        showsSideBar: showsSideBar,
+                        windowEvent: windowEvent
+                    )
                 }
                 .badge(store.unreadPushCount)
                 Tab(
@@ -72,7 +87,12 @@ struct MainView: View {
                     systemImage: MainTab.profile.symbolName,
                     value: MainTab.profile
                 ) {
-                    tabContent(.profile)
+                    MainTabContent(
+                        tab: .profile,
+                        isSelected: selectedTab == .profile,
+                        showsSideBar: showsSideBar,
+                        windowEvent: windowEvent
+                    )
                 }
             }
         }
@@ -87,17 +107,22 @@ struct MainView: View {
     private var showsSideBar: Bool {
         isiOSAppOnMac || horizontalSizeClass == .regular
     }
+}
 
-    @ViewBuilder
-    private func tabContent(_ tab: MainTab) -> some View {
-        let isSelected = selectedTab == tab
-        tabView(tab, isSelected: isSelected)
+private struct MainTabContent: View {
+    let tab: MainTab
+    let isSelected: Bool
+    let showsSideBar: Bool
+    let windowEvent: TodoEditorWindowEvent
+
+    var body: some View {
+        content
             .environment(\.isTabContentActive, isSelected)
             .toolbarVisibility(showsSideBar ? .hidden : .visible, for: .tabBar)
     }
 
     @ViewBuilder
-    private func tabView(_ tab: MainTab, isSelected: Bool) -> some View {
+    private var content: some View {
         switch tab {
         case .home:
             HomeView(
@@ -129,7 +154,13 @@ private struct SideBar: View {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(MainTab.allCases, id: \.self) { tab in
                     if tab == .profile { Spacer() }
-                    tabButton(tab)
+                    SideBarButton(
+                        tab: tab,
+                        isSelected: selectedTab == tab,
+                        unreadPushCount: unreadPushCount
+                    ) {
+                        selectedTab = tab
+                    }
                 }
             }
             .padding(.horizontal, 12)
@@ -147,13 +178,16 @@ private struct SideBar: View {
               UIDevice.current.userInterfaceIdiom == .pad else { return 0 }
         return geometry.containerCornerInsets.topLeading.height
     }
+}
 
-    private func tabButton(_ tab: MainTab) -> some View {
-        let isSelected = selectedTab == tab
+private struct SideBarButton: View {
+    let tab: MainTab
+    let isSelected: Bool
+    let unreadPushCount: Int
+    let action: () -> Void
 
-        return Button {
-            selectedTab = tab
-        } label: {
+    var body: some View {
+        Button(action: action) {
             HStack(spacing: 12) {
                 Image(systemName: tab.symbolName)
                     .font(.title3)
