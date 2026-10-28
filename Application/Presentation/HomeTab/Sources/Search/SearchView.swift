@@ -18,13 +18,10 @@ struct SearchView: View {
         NavigationStack(path: $router.path) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
-                    if !store.searchQuery.isEmpty {
-                        SearchResults(
-                            store: store,
-                            onSelectTodo: { router.push(.todo($0)) }
-                        )
-                        .padding(.bottom, 8)
-                    }
+                    SearchResults(
+                        store: store,
+                        onSelectTodo: { router.push(.todo($0)) }
+                    )
                     RecentSearchQuries(store: store)
                         .padding(.bottom, 8)
                     instruction
@@ -183,87 +180,90 @@ private struct SearchResults: View {
     let onSelectTodo: (String) -> Void
 
     var body: some View {
-        let todos = store.visibleTodos
+        if !store.searchQuery.isEmpty {
+            let todos = store.visibleTodos
 
-        VStack(spacing: 8) {
-            HStack(spacing: 12) {
-                Text(String(
-                    localized: "search_results_title",
-                    bundle: PresentationResources.bundle
-                ))
-                    .font(.title3)
-                    .bold()
-                Spacer()
-                Text(String.localizedStringWithFormat(
-                    String(
-                        localized: "search_result_count_format",
+            VStack(spacing: 8) {
+                HStack(spacing: 12) {
+                    Text(String(
+                        localized: "search_results_title",
                         bundle: PresentationResources.bundle
-                    ),
-                    Int64(store.todos.count)
-                ))
-                .font(.callout.bold())
-                .foregroundStyle(Color.onPrimaryContainer)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Color.primaryContainer, in: .capsule)
-            }
-            if store.isHashOnlyQuery {
-                VStack(spacing: 8) {
-                    Text(String(
-                        localized: "search_hash_guide_title",
-                        bundle: PresentationResources.bundle)
-                    )
-                    .font(.headline)
-                    Text(String(
-                        localized: "search_hash_guide_message",
-                        bundle: PresentationResources.bundle)
-                    )
-                    .font(.subheadline)
-                    .foregroundStyle(Color.textSecondary)
-                    .multilineTextAlignment(.center)
+                    ))
+                        .font(.title3)
+                        .bold()
+                    Spacer()
+                    Text(String.localizedStringWithFormat(
+                        String(
+                            localized: "search_result_count_format",
+                            bundle: PresentationResources.bundle
+                        ),
+                        Int64(store.todos.count)
+                    ))
+                    .font(.callout.bold())
+                    .foregroundStyle(Color.onPrimaryContainer)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.primaryContainer, in: .capsule)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 32)
-            } else if store.isLoading && todos.isEmpty {
-                ProgressView()
-            } else if todos.isEmpty {
-                Text(String(
-                    localized: "todo_list_search_empty",
-                    bundle: PresentationResources.bundle)
-                )
-            } else {
-                LazyVStack(spacing: 0) {
-                    ForEach(Array(zip(todos.indices, todos)), id: \.1.id) { index, item in
-                        Button {
-                            onSelectTodo(item.id)
-                        } label: {
-                            SearchResultRow(item: item)
-                                .todoDetailPreview(todoId: item.id)
-                        }
-                        .buttonStyle(.plain)
-                        if index < todos.count - 1 { Divider() }
-                    }
-                }
-                .background {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.surface)
-                }
-                if store.shouldShowMoreTodos {
-                    Button {
-                        store.send(.setShowAllTodos(true))
-                    } label: {
+                if store.isHashOnlyQuery {
+                    VStack(spacing: 8) {
                         Text(String(
-                            localized: "search_show_more",
+                            localized: "search_hash_guide_title",
                             bundle: PresentationResources.bundle)
                         )
-                        .foregroundStyle(Color.onPrimaryContainer)
-                        .font(.callout.bold())
+                        .font(.headline)
+                        Text(String(
+                            localized: "search_hash_guide_message",
+                            bundle: PresentationResources.bundle)
+                        )
+                        .font(.subheadline)
+                        .foregroundStyle(Color.textSecondary)
+                        .multilineTextAlignment(.center)
                     }
-                    .adaptiveButtonStyle(color: .primaryContainer)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 32)
+                } else if store.isLoading && todos.isEmpty {
+                    ProgressView()
+                } else if todos.isEmpty {
+                    Text(String(
+                        localized: "todo_list_search_empty",
+                        bundle: PresentationResources.bundle)
+                    )
+                } else {
+                    LazyVStack(spacing: 0) {
+                        ForEach(Array(zip(todos.indices, todos)), id: \.1.id) { index, item in
+                            Button {
+                                onSelectTodo(item.id)
+                            } label: {
+                                SearchResultRow(item: item)
+                                    .todoDetailPreview(todoId: item.id)
+                            }
+                            .buttonStyle(.plain)
+                            if index < todos.count - 1 { Divider() }
+                        }
+                    }
+                    .background {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color.surface)
+                    }
+                    if store.shouldShowMoreTodos {
+                        Button {
+                            store.send(.setShowAllTodos(true))
+                        } label: {
+                            Text(String(
+                                localized: "search_show_more",
+                                bundle: PresentationResources.bundle)
+                            )
+                            .foregroundStyle(Color.onPrimaryContainer)
+                            .font(.callout.bold())
+                        }
+                        .adaptiveButtonStyle(color: .primaryContainer)
+                    }
                 }
             }
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 8)
         }
-        .frame(maxWidth: .infinity)
     }
 }
 
