@@ -17,63 +17,8 @@ struct AccountView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
-                if let currentProvider = store.currentProvider {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("account_current_section", bundle: PresentationResources.bundle)
-                            .font(.title3.weight(.semibold))
-
-                        HStack(spacing: 12) {
-                            ProviderIdentity(
-                                provider: currentProvider,
-                                status: nil
-                            )
-
-                            Spacer(minLength: 8)
-
-                            Text("account_signed_in", bundle: PresentationResources.bundle)
-                                .font(.caption.weight(.semibold))
-                                .foregroundStyle(Color.accent)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 7)
-                                .background(Color.accent.opacity(0.1), in: .capsule)
-                        }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color.surface, in: .rect(cornerRadius: 16))
-                    }
-                }
-
-                let providers = AuthProvider.allCases.filter { $0 != store.currentProvider }
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("account_social_section", bundle: PresentationResources.bundle)
-                        .font(.title3.weight(.semibold))
-
-                    VStack(spacing: 0) {
-                        ForEach(providers, id: \.self) { provider in
-                            let isConnected = store.connectedProviders.contains(provider)
-                            ProviderRow(
-                                provider: provider,
-                                isConnected: isConnected,
-                                showsProgress: store.isLoading && store.activeLoadingProvider == provider,
-                                isDisabled: store.isLoading || (!isConnected && store.presentationContext == nil),
-                                action: {
-                                    if isConnected {
-                                        store.send(.unlinkFromProvider(provider))
-                                    } else {
-                                        store.send(.linkWithProvider(provider))
-                                    }
-                                }
-                            )
-
-                            if provider != providers.last {
-                                Divider()
-                                    .padding(.leading, 64)
-                                    .padding(.trailing, 16)
-                            }
-                        }
-                    }
-                    .background(Color.surface, in: .rect(cornerRadius: 16))
-                }
+                AccountCurrentSection(store: store)
+                AccountSocialSection(store: store)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
@@ -119,6 +64,76 @@ struct ToastLabel: View {
         } icon: {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundStyle(Color.accent)
+        }
+    }
+}
+
+private struct AccountCurrentSection: View {
+    let store: StoreOf<AccountFeature>
+
+    var body: some View {
+        if let currentProvider = store.currentProvider {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("account_current_section", bundle: PresentationResources.bundle)
+                    .font(.title3.weight(.semibold))
+
+                HStack(spacing: 12) {
+                    ProviderIdentity(
+                        provider: currentProvider,
+                        status: nil
+                    )
+
+                    Spacer(minLength: 8)
+
+                    Text("account_signed_in", bundle: PresentationResources.bundle)
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(Color.accent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
+                        .background(Color.accent.opacity(0.1), in: .capsule)
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.surface, in: .rect(cornerRadius: 16))
+            }
+        }
+    }
+}
+
+private struct AccountSocialSection: View {
+    let store: StoreOf<AccountFeature>
+
+    var body: some View {
+        let providers = AuthProvider.allCases.filter { $0 != store.currentProvider }
+        VStack(alignment: .leading, spacing: 12) {
+            Text("account_social_section", bundle: PresentationResources.bundle)
+                .font(.title3.weight(.semibold))
+
+            VStack(spacing: 0) {
+                ForEach(providers, id: \.self) { provider in
+                    let isConnected = store.connectedProviders.contains(provider)
+                    ProviderRow(
+                        provider: provider,
+                        isConnected: isConnected,
+                        showsProgress: store.isLoading && store.activeLoadingProvider == provider,
+                        isDisabled: store.isLoading || (!isConnected && store.presentationContext == nil),
+                        action: {
+                            if isConnected {
+                                store.send(.unlinkFromProvider(provider))
+                            } else {
+                                store.send(.linkWithProvider(provider))
+                            }
+                        }
+                    )
+
+                    if provider != providers.last {
+                        Divider()
+                            .padding(.leading, 64)
+                            .padding(.trailing, 16)
+                    }
+                }
+            }
+            .background(Color.surface, in: .rect(cornerRadius: 16))
         }
     }
 }

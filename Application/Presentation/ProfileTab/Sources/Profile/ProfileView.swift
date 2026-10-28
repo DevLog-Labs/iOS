@@ -41,13 +41,7 @@ public struct ProfileView: View {
                     ActivityCard(store: store) { todoId in
                         router.push(.activity(todoId))
                     }
-                    GoalSummaryCard(
-                        goals: store.developmentGoals,
-                        isLoading: store.isDevelopmentGoalsLoading,
-                        hasLoaded: store.hasDevelopmentGoalsLoaded,
-                        hasLoadFailure: store.hasDevelopmentGoalsLoadFailure,
-                        onRetry: { store.send(.retryDevelopmentGoals) }
-                    )
+                    ProfileGoalSummary(store: store)
                     RecentActivityCard(store: store) { todoId in
                         router.push(.recentTodo(todoId))
                     }
@@ -140,6 +134,20 @@ public struct ProfileView: View {
                 AccountFeature()
             })
         }
+    }
+}
+
+private struct ProfileGoalSummary: View {
+    let store: StoreOf<ProfileFeature>
+
+    var body: some View {
+        GoalSummaryCard(
+            goals: store.developmentGoals,
+            isLoading: store.isDevelopmentGoalsLoading,
+            hasLoaded: store.hasDevelopmentGoalsLoaded,
+            hasLoadFailure: store.hasDevelopmentGoalsLoadFailure,
+            onRetry: { store.send(.retryDevelopmentGoals) }
+        )
     }
 }
 
