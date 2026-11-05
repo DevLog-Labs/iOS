@@ -39,6 +39,7 @@ struct MainView: View {
             if showsSideBar {
                 SideBar(
                     selectedTab: $selectedTab,
+                    toolbarTitleTop: store.toolbarTitleTop,
                     unreadPushCount: store.unreadPushCount
                 )
                 .resizableSideBar(
@@ -102,6 +103,9 @@ struct MainView: View {
                         windowEvent: windowEvent
                     )
                 }
+            }
+            .environment(\.toolbarTitleTopChange) { top in
+                store.send(.binding(.set(\.toolbarTitleTop, top)))
             }
         }
         .onGeometryChange(for: Bool.self) { proxy in
@@ -187,6 +191,7 @@ private struct MainTabContent: View {
 
 private struct SideBar: View {
     @Binding var selectedTab: MainTab
+    let toolbarTitleTop: CGFloat?
     let unreadPushCount: Int
 
     var body: some View {
@@ -204,8 +209,8 @@ private struct SideBar: View {
                 }
             }
             .padding(.horizontal, 12)
-            .padding(.vertical, 16)
-            .padding(.top, geometry.windowControlsInset)
+            .padding(.bottom, 16)
+            .padding(.top, toolbarTitleTop ?? 16 + geometry.windowControlsInset)
         }
         .background {
             Color.surface
