@@ -71,7 +71,7 @@ public struct TodayView: View {
             }
             .background(Color.appBackground)
             .refreshable { await store.send(.refresh).finish() }
-            .toolbarVisibility(.hidden, for: .navigationBar)
+            .duoToolbarVisibility()
             .navigationDestination(
                 for: TodayRoute.self,
                 interactivePop: { _ in true },

@@ -34,7 +34,7 @@ public struct PushNotificationListView: View {
                     await task.finish()
                     store.send(.view(.startObserving))
                 }
-                .toolbarVisibility(.hidden, for: .navigationBar)
+                .duoToolbarVisibility()
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .sheet(item: sheetStore.activePresentation(when: isSelected)) { store in
@@ -71,6 +71,7 @@ public struct PushNotificationListView: View {
             .id(sheetStore.todoId)
         }
         .environment(\.windowControlsInset, 0)
+        .environment(\.deviceType, .bar)
         .background(Color.appBackground)
         .presentationDragIndicator(.visible)
     }
