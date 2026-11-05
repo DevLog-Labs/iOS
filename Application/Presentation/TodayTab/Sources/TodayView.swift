@@ -84,6 +84,8 @@ public struct TodayView: View {
         .inspector(isPresented: $store.isTodoInspectorPresented) {
             TodayTodoInspector(store: store)
         }
+        // inspector 컨테이너의 상단 safe area 배경
+        .background(Color.appBackground)
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.fetchData)
