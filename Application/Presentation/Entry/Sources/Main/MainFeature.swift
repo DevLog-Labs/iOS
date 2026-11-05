@@ -19,6 +19,7 @@ struct MainFeature {
         @Presents var alert: AlertState<Never>?
         var unreadPushCount = 0
         var isObservingUnreadPushCount = false
+        var isWide = false
         var windowControlsInset = CGFloat.zero
     }
 

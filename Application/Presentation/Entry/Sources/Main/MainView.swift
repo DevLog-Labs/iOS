@@ -18,6 +18,7 @@ struct MainView: View {
     @Binding var selectedTab: MainTab
     @State private var store: StoreOf<MainFeature>
     private let windowEvent: TodoEditorWindowEvent
+    private let sideBarMinimumWidth = CGFloat(800)
 
     init(
         windowEvent: TodoEditorWindowEvent,
@@ -31,6 +32,7 @@ struct MainView: View {
     }
 
     var body: some View {
+        let showsSideBar = isiOSAppOnMac || horizontalSizeClass == .regular && store.isWide
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
 
         HStack(spacing: 0) {
@@ -102,6 +104,11 @@ struct MainView: View {
                 }
             }
         }
+        .onGeometryChange(for: Bool.self) { proxy in
+            sideBarMinimumWidth <= proxy.size.width
+        } action: { isWide in
+            store.send(.binding(.set(\.isWide, isWide)))
+        }
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.windowControlsInset
         } action: { inset in
@@ -113,10 +120,6 @@ struct MainView: View {
             store.send(.view(.selectedTabChanged(tab)))
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-    }
-
-    private var showsSideBar: Bool {
-        isiOSAppOnMac || horizontalSizeClass == .regular
     }
 }
 
