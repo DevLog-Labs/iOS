@@ -23,6 +23,7 @@ struct HomeFeature {
         var isTodoCategoryExpanded = false
         var isNetworkConnected = true
         var selectedTodoCategory: TodoCategory?
+        var searchInset = CGFloat.zero
         var loading = LoadingFeature.State()
 
         var showContentPicker: Bool {

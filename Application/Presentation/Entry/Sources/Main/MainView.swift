@@ -31,6 +31,8 @@ struct MainView: View {
     }
 
     var body: some View {
+        let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
+
         HStack(spacing: 0) {
             if showsSideBar {
                 SideBar(
@@ -54,6 +56,7 @@ struct MainView: View {
                         tab: .home,
                         isSelected: selectedTab == .home,
                         showsSideBar: showsSideBar,
+                        windowControlsInset: tabContentInset,
                         windowEvent: windowEvent
                     )
                 }
@@ -66,6 +69,7 @@ struct MainView: View {
                         tab: .today,
                         isSelected: selectedTab == .today,
                         showsSideBar: showsSideBar,
+                        windowControlsInset: tabContentInset,
                         windowEvent: windowEvent
                     )
                 }
@@ -78,6 +82,7 @@ struct MainView: View {
                         tab: .notification,
                         isSelected: selectedTab == .notification,
                         showsSideBar: showsSideBar,
+                        windowControlsInset: tabContentInset,
                         windowEvent: windowEvent
                     )
                 }
@@ -91,10 +96,16 @@ struct MainView: View {
                         tab: .profile,
                         isSelected: selectedTab == .profile,
                         showsSideBar: showsSideBar,
+                        windowControlsInset: tabContentInset,
                         windowEvent: windowEvent
                     )
                 }
             }
+        }
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.windowControlsInset
+        } action: { inset in
+            store.send(.binding(.set(\.windowControlsInset, inset)))
         }
         .toastHost()
         .onAppear { store.send(.view(.onAppear)) }
@@ -113,11 +124,13 @@ private struct MainTabContent: View {
     let tab: MainTab
     let isSelected: Bool
     let showsSideBar: Bool
+    let windowControlsInset: CGFloat
     let windowEvent: TodoEditorWindowEvent
 
     var body: some View {
         content
             .environment(\.isTabContentActive, isSelected)
+            .environment(\.windowControlsInset, windowControlsInset)
             .toolbarVisibility(showsSideBar ? .hidden : .visible, for: .tabBar)
     }
 
@@ -165,18 +178,12 @@ private struct SideBar: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 16)
-            .padding(.top, windowControlTopPadding(in: geometry))
+            .padding(.top, geometry.windowControlsInset)
         }
         .background {
             Color.surface
                 .ignoresSafeArea(.container, edges: .vertical)
         }
-    }
-
-    private func windowControlTopPadding(in geometry: GeometryProxy) -> CGFloat {
-        guard #available(iOS 26.0, *),
-              UIDevice.current.userInterfaceIdiom == .pad else { return 0 }
-        return geometry.containerCornerInsets.topLeading.height
     }
 }
 

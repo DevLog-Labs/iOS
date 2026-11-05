@@ -12,6 +12,7 @@ import Domain
 
 struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @State var store: StoreOf<AccountFeature>
 
     var body: some View {
@@ -48,6 +49,7 @@ struct AccountView: View {
             }
         }
         .padding(.horizontal, 16)
+        .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground)
         .toolbarBackground(Color.appBackground)

@@ -70,6 +70,7 @@ public struct PushNotificationListView: View {
             })
             .id(sheetStore.todoId)
         }
+        .environment(\.windowControlsInset, 0)
         .background(Color.appBackground)
         .presentationDragIndicator(.visible)
     }
@@ -82,6 +83,7 @@ public struct PushNotificationListView: View {
 }
 
 private struct PushNotificationListContent: View {
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @ScaledMetric(relativeTo: .headline) private var iconSize = 36
     let store: StoreOf<PushNotificationListFeature>
 
@@ -217,6 +219,7 @@ private struct PushNotificationListContent: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
+            .padding(.top, windowControlsInset)
             .padding(.bottom, 8)
             .background(Color.appBackground)
             .toolbarBackground(Color.appBackground)

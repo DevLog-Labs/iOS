@@ -10,6 +10,7 @@ import PresentationShared
 
 struct PushNotificationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.isTabContentActive) private var isTabContentActive
     @State var store: StoreOf<PushNotificationSettingsFeature>
 
@@ -57,6 +58,7 @@ struct PushNotificationSettingsView: View {
             }
         }
         .padding(.horizontal, 16)
+        .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground)
         .toolbarBackground(Color.appBackground)
