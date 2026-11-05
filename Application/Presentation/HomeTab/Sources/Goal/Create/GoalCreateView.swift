@@ -313,6 +313,7 @@ private struct GoalCreateTodoField: View {
 }
 
 private struct GoalCreateSaveBar: View {
+    @Environment(\.deviceType) private var deviceType
     let isSaving: Bool
     let isSaveEnabled: Bool
     let onSave: () -> Void
@@ -338,7 +339,7 @@ private struct GoalCreateSaveBar: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.surface, ignoresSafeAreaEdges: .bottom)
+        .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
     }
 }
 

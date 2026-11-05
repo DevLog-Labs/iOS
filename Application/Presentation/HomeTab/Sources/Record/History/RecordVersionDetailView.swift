@@ -11,6 +11,7 @@ import PresentationShared
 
 struct RecordVersionDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.deviceType) private var deviceType
 
     let store: StoreOf<RecordDetailFeature>
     let version: DevelopmentRecord.Version
@@ -145,7 +146,7 @@ struct RecordVersionDetailView: View {
         .disabled(store.isRestoring || store.record.draft != nil)
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.surface, ignoresSafeAreaEdges: .bottom)
+        .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
     }
 
     @ViewBuilder

@@ -10,6 +10,7 @@ import PresentationShared
 
 struct CategoryManageView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
+    @Environment(\.deviceType) private var deviceType
     @Bindable var store: StoreOf<CategoryManageFeature>
 
     var body: some View {
@@ -62,7 +63,7 @@ struct CategoryManageView: View {
                 .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
                 .padding(.horizontal)
                 .padding(.vertical, 12)
-                .background(Color.surface, ignoresSafeAreaEdges: .bottom)
+                .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
             }
             .background(Color.appBackground.ignoresSafeArea())
             .sheet(
@@ -166,6 +167,7 @@ private let categoryColorHexValues = [
 ]
 
 private struct CategoryManageSheet: View {
+    @Environment(\.deviceType) private var deviceType
     @Bindable var store: Store<CategoryManageFeature.CategorySheetState, CategoryManageFeature.Action.CategorySheet>
 
     var body: some View {
@@ -194,7 +196,7 @@ private struct CategoryManageSheet: View {
             .disabled(!store.canSubmitUserCategory)
             .padding(.horizontal)
             .padding(.vertical, 12)
-            .background(Color.surface, ignoresSafeAreaEdges: .bottom)
+            .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
         }
         .background(Color.appBackground.ignoresSafeArea())
         .presentationDragIndicator(.visible)
