@@ -123,6 +123,29 @@ struct MainView: View {
     }
 }
 
+// toolbarVisibility 적용 전 첫 프레임의 탭 바 노출 방지
+private struct TabBarVisibility: UIViewControllerRepresentable {
+    let isHidden: Bool
+
+    func makeUIViewController(context: Context) -> Controller {
+        Controller()
+    }
+
+    func updateUIViewController(_ controller: Controller, context: Context) {
+        controller.isTabBarHidden = isHidden
+        controller.tabBarController?.isTabBarHidden = isHidden
+    }
+
+    final class Controller: UIViewController {
+        var isTabBarHidden = false
+
+        override func didMove(toParent parent: UIViewController?) {
+            super.didMove(toParent: parent)
+            tabBarController?.isTabBarHidden = isTabBarHidden
+        }
+    }
+}
+
 private struct MainTabContent: View {
     let tab: MainTab
     let isSelected: Bool
@@ -135,6 +158,7 @@ private struct MainTabContent: View {
             .environment(\.isTabContentActive, isSelected)
             .environment(\.windowControlsInset, windowControlsInset)
             .toolbarVisibility(showsSideBar ? .hidden : .visible, for: .tabBar)
+            .background { TabBarVisibility(isHidden: showsSideBar) }
     }
 
     @ViewBuilder
