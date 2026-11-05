@@ -29,6 +29,11 @@ public extension EnvironmentValues {
         set { self[WindowControlsInsetKey.self] = newValue }
     }
 
+    var deviceType: DeviceType {
+        get { self[DeviceTypeKey.self] }
+        set { self[DeviceTypeKey.self] = newValue }
+    }
+
     private struct SafeAreaInsetsKey: EnvironmentKey {
         static var defaultValue: EdgeInsets {
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -59,6 +64,22 @@ public extension EnvironmentValues {
 
     private struct WindowControlsInsetKey: EnvironmentKey {
         static let defaultValue = CGFloat.zero
+    }
+
+    private struct DeviceTypeKey: EnvironmentKey {
+        // 접힘 전환 중 값이 잠시 바뀌므로 첫 판별 결과로 고정
+        static let defaultValue: DeviceType = {
+            if ProcessInfo.processInfo.isiOSAppOnMac { return .mac }
+            if UIDevice.current.userInterfaceIdiom == .pad { return .ipad }
+            guard #available(iOS 27.1, *),
+                  let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene else {
+                return .bar
+            }
+            let traits = windowScene.traitCollection
+            return traits.verticalBarEdge != .unspecified
+                || traits.horizontalSizeClass == .regular
+                ? .duo : .bar
+        }()
     }
 
     private struct IOSAppOnMacKey: EnvironmentKey {
