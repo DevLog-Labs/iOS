@@ -27,6 +27,10 @@ public extension View {
         modifier(TopBarButtonStyleModifier(tint: nil, isInteractive: false))
     }
 
+    func duoToolbarVisibility() -> some View {
+        modifier(DuoToolbarVisibilityModifier())
+    }
+
     func toolbarBackground(_ color: Color) -> some View {
         background(alignment: .top) {
             GeometryReader { proxy in
@@ -160,6 +164,17 @@ public extension View {
                         .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
                 }
             }
+    }
+}
+
+private struct DuoToolbarVisibilityModifier: ViewModifier {
+    @Environment(\.deviceType) private var deviceType
+
+    func body(content: Content) -> some View {
+        content
+            .toolbarTitleDisplayMode(deviceType == .duo ? .inline : .automatic)
+            .toolbarBackgroundVisibility(deviceType == .duo ? .hidden : .automatic, for: .navigationBar)
+            .toolbarVisibility(deviceType == .duo ? .visible : .hidden, for: .navigationBar)
     }
 }
 
