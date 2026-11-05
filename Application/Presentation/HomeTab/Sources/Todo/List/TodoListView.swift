@@ -65,6 +65,8 @@ struct TodoListView: View {
 }
 
 private struct TodoListContent: View {
+    @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
     let store: StoreOf<TodoListFeature>
     let onSelectTodo: (String) -> Void
 
@@ -140,7 +142,31 @@ private struct TodoListContent: View {
             .safeAreaInset(edge: .top, spacing: 0) { TodoListTopBar(store: store) }
             .refreshable { await store.send(.view(.refresh)).finish() }
             .scrollDisabled(visibleTodos.isEmpty || store.state.isLoading)
-            .toolbarVisibility(.hidden, for: .navigationBar)
+            .duoToolbarVisibility()
+            .toolbar {
+                if deviceType == .duo {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+                        Group {
+                            if !store.isSearching {
+                                Button {
+                                    withAnimation(.smooth(duration: 0.3)) {
+                                        store.send(.view(.setSearching(true)))
+                                    }
+                                } label: {
+                                    Image(systemName: "magnifyingglass")
+                                }
+                            }
+                            Button {
+                                store.send(.store(.setFullScreenCover(.editor)))
+                            } label: {
+                                Image(systemName: "plus")
+                            }
+                        }
+                        .id(windowControlsInset)
+                    }
+                }
+            }
 
             if store.state.isLoading {
                 LoadingView()
@@ -168,6 +194,7 @@ private struct TodoListTopBar: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
     @Namespace private var searchTransition
     let store: StoreOf<TodoListFeature>
 
@@ -179,31 +206,56 @@ private struct TodoListTopBar: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
 
-                HStack(spacing: 12) {
-                    NavigationBackButton {
-                        dismiss()
-                    }
+                if deviceType != .duo {
+                    HStack(spacing: 12) {
+                        NavigationBackButton {
+                            dismiss()
+                        }
 
-                    Spacer()
+                        Spacer()
 
-                    if !store.isSearching {
+                        if !store.isSearching {
+                            if #available(iOS 26.0, *) {
+                                Button {
+                                    withAnimation(.smooth(duration: 0.3)) {
+                                        store.send(.view(.setSearching(true)))
+                                    }
+                                } label: {
+                                    Image(systemName: "magnifyingglass")
+                                }
+                                .topBarButtonStyle()
+                                .matchedGeometryEffect(id: "todo-search", in: searchTransition)
+                            } else {
+                                Button {
+                                    withAnimation(.smooth(duration: 0.3)) {
+                                        store.send(.view(.setSearching(true)))
+                                    }
+                                } label: {
+                                    Image(systemName: "magnifyingglass")
+                                        .font(.title3.weight(.semibold))
+                                        .frame(width: 28, height: 28)
+                                }
+                                .adaptiveButtonStyle(
+                                    shape: .circle,
+                                    color: .surface,
+                                    glassEffect: .enabled
+                                )
+                                .matchedGeometryEffect(id: "todo-search", in: searchTransition)
+                            }
+                        }
+
                         if #available(iOS 26.0, *) {
                             Button {
-                                withAnimation(.smooth(duration: 0.3)) {
-                                    store.send(.view(.setSearching(true)))
-                                }
+                                openTodoEditor()
                             } label: {
-                                Image(systemName: "magnifyingglass")
+                                Image(systemName: "plus")
                             }
                             .topBarButtonStyle()
-                            .matchedGeometryEffect(id: "todo-search", in: searchTransition)
                         } else {
                             Button {
-                                withAnimation(.smooth(duration: 0.3)) {
-                                    store.send(.view(.setSearching(true)))
-                                }
+                                openTodoEditor()
                             } label: {
-                                Image(systemName: "magnifyingglass")
+                                Image(systemName: "plus")
                                     .font(.title3.weight(.semibold))
                                     .frame(width: 28, height: 28)
                             }
@@ -212,30 +264,7 @@ private struct TodoListTopBar: View {
                                 color: .surface,
                                 glassEffect: .enabled
                             )
-                            .matchedGeometryEffect(id: "todo-search", in: searchTransition)
                         }
-                    }
-
-                    if #available(iOS 26.0, *) {
-                        Button {
-                            openTodoEditor()
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        .topBarButtonStyle()
-                    } else {
-                        Button {
-                            openTodoEditor()
-                        } label: {
-                            Image(systemName: "plus")
-                                .font(.title3.weight(.semibold))
-                                .frame(width: 28, height: 28)
-                        }
-                        .adaptiveButtonStyle(
-                            shape: .circle,
-                            color: .surface,
-                            glassEffect: .enabled
-                        )
                     }
                 }
             }
