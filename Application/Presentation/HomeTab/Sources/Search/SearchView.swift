@@ -11,6 +11,7 @@ import PresentationShared
 
 struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @State private var router = NavigationRouter<Path>()
     @State var store: StoreOf<SearchFeature>
 
@@ -75,6 +76,7 @@ struct SearchView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
+        .padding(.top, windowControlsInset)
         .padding(.bottom, 8)
         .background(Color.appBackground, ignoresSafeAreaEdges: .top)
     }

@@ -36,6 +36,7 @@ struct HeatmapView: View {
             }
             .padding(.vertical, 2)
             .frame(width: layout.contentWidth, alignment: .leading)
+            .frame(minWidth: availableWidth)
         }
         .scrollIndicators(.hidden)
         .scrollDisabled(true)

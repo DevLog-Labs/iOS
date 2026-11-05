@@ -16,6 +16,7 @@ public struct TodoDetailView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @State var store: StoreOf<TodoDetailFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onBack: (() -> Void)?
@@ -89,6 +90,7 @@ public struct TodoDetailView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
+        .padding(.top, windowControlsInset)
         .background(Color.appBackground, ignoresSafeAreaEdges: .top)
     }
 
@@ -169,6 +171,7 @@ public struct TodoDetailView: View {
                     TodoDetailView(store: todoStore)
                 }
             }
+            .environment(\.windowControlsInset, 0)
             .background(Color.appBackground)
             .presentationDragIndicator(.visible)
         }

@@ -24,6 +24,11 @@ public extension EnvironmentValues {
         self[IOSAppOnMacKey.self]
     }
 
+    var windowControlsInset: CGFloat {
+        get { self[WindowControlsInsetKey.self] }
+        set { self[WindowControlsInsetKey.self] = newValue }
+    }
+
     private struct SafeAreaInsetsKey: EnvironmentKey {
         static var defaultValue: EdgeInsets {
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -50,6 +55,10 @@ public extension EnvironmentValues {
             }
             return windowScene.screen.bounds.height
         }
+    }
+
+    private struct WindowControlsInsetKey: EnvironmentKey {
+        static let defaultValue = CGFloat.zero
     }
 
     private struct IOSAppOnMacKey: EnvironmentKey {

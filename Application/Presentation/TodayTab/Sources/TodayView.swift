@@ -12,6 +12,7 @@ import PresentationShared
 
 public struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @State private var router = NavigationRouter<TodayRoute>()
     @State private var store: StoreOf<TodayFeature>
     private let isSelected: Bool
@@ -63,6 +64,7 @@ public struct TodayView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
+                .padding(.top, windowControlsInset)
                 .padding(.bottom, 8)
                 .background(Color.appBackground)
                 .toolbarBackground(Color.appBackground)
@@ -82,6 +84,8 @@ public struct TodayView: View {
         .inspector(isPresented: $store.isTodoInspectorPresented) {
             TodayTodoInspector(store: store)
         }
+        // inspector 컨테이너의 상단 safe area 배경
+        .background(Color.appBackground)
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.fetchData)

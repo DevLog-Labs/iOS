@@ -80,9 +80,16 @@ public struct TodoEditorView: View {
             .prominentAlert(store, state: \.alert, action: \.alert)
             .inspector(isPresented: $store.isInspectorPresented) {
                 EditorInspector(store: store, isWideLayout: isWideLayout)
+                    .environment(\.windowControlsInset, 0)
                     .inspectorColumnWidth(min: 320, ideal: 420, max: 520)
                     .presentationDetents([.large])
             }
+        }
+        .environment(\.windowControlsInset, store.windowControlsInset)
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.windowControlsInset
+        } action: { inset in
+            store.send(.binding(.set(\.windowControlsInset, inset)))
         }
     }
 
@@ -119,6 +126,7 @@ private struct ToolBar: View {
         forTextStyle: .title1,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
     ).lineHeight
+    @Environment(\.windowControlsInset) private var windowControlsInset
     let store: StoreOf<TodoEditorFeature>
     let isWideLayout: Bool
     let onClose: () -> Void
@@ -154,7 +162,7 @@ private struct ToolBar: View {
             }
         }
         .padding(.horizontal)
-        .padding(.top, 12)
+        .padding(.top, 12 + windowControlsInset)
     }
 }
 

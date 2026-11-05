@@ -18,6 +18,7 @@ struct MainView: View {
     @Binding var selectedTab: MainTab
     @State private var store: StoreOf<MainFeature>
     private let windowEvent: TodoEditorWindowEvent
+    private let sideBarMinimumWidth = CGFloat(800)
 
     init(
         windowEvent: TodoEditorWindowEvent,
@@ -31,6 +32,9 @@ struct MainView: View {
     }
 
     var body: some View {
+        let showsSideBar = isiOSAppOnMac || horizontalSizeClass == .regular && store.isWide
+        let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
+
         HStack(spacing: 0) {
             if showsSideBar {
                 SideBar(
@@ -54,6 +58,7 @@ struct MainView: View {
                         tab: .home,
                         isSelected: selectedTab == .home,
                         showsSideBar: showsSideBar,
+                        windowControlsInset: tabContentInset,
                         windowEvent: windowEvent
                     )
                 }
@@ -66,6 +71,7 @@ struct MainView: View {
                         tab: .today,
                         isSelected: selectedTab == .today,
                         showsSideBar: showsSideBar,
+                        windowControlsInset: tabContentInset,
                         windowEvent: windowEvent
                     )
                 }
@@ -78,6 +84,7 @@ struct MainView: View {
                         tab: .notification,
                         isSelected: selectedTab == .notification,
                         showsSideBar: showsSideBar,
+                        windowControlsInset: tabContentInset,
                         windowEvent: windowEvent
                     )
                 }
@@ -91,10 +98,21 @@ struct MainView: View {
                         tab: .profile,
                         isSelected: selectedTab == .profile,
                         showsSideBar: showsSideBar,
+                        windowControlsInset: tabContentInset,
                         windowEvent: windowEvent
                     )
                 }
             }
+        }
+        .onGeometryChange(for: Bool.self) { proxy in
+            sideBarMinimumWidth <= proxy.size.width
+        } action: { isWide in
+            store.send(.binding(.set(\.isWide, isWide)))
+        }
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.windowControlsInset
+        } action: { inset in
+            store.send(.binding(.set(\.windowControlsInset, inset)))
         }
         .toastHost()
         .onAppear { store.send(.view(.onAppear)) }
@@ -103,9 +121,28 @@ struct MainView: View {
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
     }
+}
 
-    private var showsSideBar: Bool {
-        isiOSAppOnMac || horizontalSizeClass == .regular
+// toolbarVisibility 적용 전 첫 프레임의 탭 바 노출 방지
+private struct TabBarVisibility: UIViewControllerRepresentable {
+    let isHidden: Bool
+
+    func makeUIViewController(context: Context) -> Controller {
+        Controller()
+    }
+
+    func updateUIViewController(_ controller: Controller, context: Context) {
+        controller.isTabBarHidden = isHidden
+        controller.tabBarController?.isTabBarHidden = isHidden
+    }
+
+    final class Controller: UIViewController {
+        var isTabBarHidden = false
+
+        override func didMove(toParent parent: UIViewController?) {
+            super.didMove(toParent: parent)
+            tabBarController?.isTabBarHidden = isTabBarHidden
+        }
     }
 }
 
@@ -113,12 +150,15 @@ private struct MainTabContent: View {
     let tab: MainTab
     let isSelected: Bool
     let showsSideBar: Bool
+    let windowControlsInset: CGFloat
     let windowEvent: TodoEditorWindowEvent
 
     var body: some View {
         content
             .environment(\.isTabContentActive, isSelected)
+            .environment(\.windowControlsInset, windowControlsInset)
             .toolbarVisibility(showsSideBar ? .hidden : .visible, for: .tabBar)
+            .background { TabBarVisibility(isHidden: showsSideBar) }
     }
 
     @ViewBuilder
@@ -165,18 +205,12 @@ private struct SideBar: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 16)
-            .padding(.top, windowControlTopPadding(in: geometry))
+            .padding(.top, geometry.windowControlsInset)
         }
         .background {
             Color.surface
                 .ignoresSafeArea(.container, edges: .vertical)
         }
-    }
-
-    private func windowControlTopPadding(in geometry: GeometryProxy) -> CGFloat {
-        guard #available(iOS 26.0, *),
-              UIDevice.current.userInterfaceIdiom == .pad else { return 0 }
-        return geometry.containerCornerInsets.topLeading.height
     }
 }
 

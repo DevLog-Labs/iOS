@@ -11,6 +11,7 @@ import PresentationShared
 
 struct ThemeView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @Binding var theme: SystemTheme
 
     var body: some View {
@@ -49,6 +50,7 @@ struct ThemeView: View {
             }
         }
         .padding(.horizontal, 16)
+        .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground)
         .toolbarBackground(Color.appBackground)

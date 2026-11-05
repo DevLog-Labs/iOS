@@ -33,6 +33,7 @@ public struct TodoEditorFeature {
         public var tagText: String = ""
         public var tabViewTag: EditorTab = .editor
         public var editorHeaderHeight = CGFloat.zero
+        public var windowControlsInset = CGFloat.zero
         public var categories: [TodoCategoryItem] = []
         public var category = TodoCategoryItem(from: .system(.etc))
         public var selectedCategoryID: String {

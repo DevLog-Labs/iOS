@@ -13,6 +13,7 @@ import PresentationShared
 public struct HomeView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @State private var router = NavigationRouter<HomeRoute>()
     @State private var searchStore: StoreOf<SearchFeature>
     @State private var store: StoreOf<HomeFeature>
@@ -116,6 +117,7 @@ public struct HomeView: View {
             HomeCreateButton(store: store)
         }
         .padding(.horizontal, 16)
+        .padding(.top, windowControlsInset)
         .padding(.bottom, 8)
         .background(Color.appBackground)
         .toolbarBackground(Color.appBackground)
@@ -134,6 +136,7 @@ public struct HomeView: View {
             GoalCreateView()
         case .goalDetail(let goalID):
             GoalDetailView(goalId: goalID)
+                .environment(\.windowControlsInset, 0)
         }
     }
 
@@ -148,6 +151,12 @@ public struct HomeView: View {
             }
         case .search:
             SearchView(store: searchStore)
+                .environment(\.windowControlsInset, store.searchInset)
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.windowControlsInset
+                } action: { inset in
+                    store.send(.binding(.set(\.searchInset, inset)))
+                }
         }
     }
 
@@ -277,7 +286,8 @@ private struct HomeTodoSection: View {
 
                 TodoCategoryGridLayout(
                     columnCount: columnCount,
-                    itemWidth: iconSize
+                    itemWidth: iconSize,
+                    maximumRowSpacing: dynamicTypeSize.isAccessibilitySize ? .infinity : iconSize / 2
                 ) {
                     ForEach(visibleItems) { item in
                         HomeTodoCategoryLink(item: item, iconSize: iconSize)

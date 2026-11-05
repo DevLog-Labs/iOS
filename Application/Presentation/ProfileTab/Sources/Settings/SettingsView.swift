@@ -11,6 +11,7 @@ import PresentationShared
 
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @Bindable var store: StoreOf<SettingsFeature>
     let onNavigate: (ProfileRoute) -> Void
 
@@ -67,6 +68,7 @@ struct SettingsView: View {
             }
         }
         .padding(.horizontal, 16)
+        .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground)
         .toolbarBackground(Color.appBackground)

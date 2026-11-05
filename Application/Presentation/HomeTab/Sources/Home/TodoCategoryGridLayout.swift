@@ -10,6 +10,7 @@ import SwiftUI
 struct TodoCategoryGridLayout: Layout {
     let columnCount: Int
     let itemWidth: CGFloat
+    let maximumRowSpacing: CGFloat
 
     func sizeThatFits(
         proposal: ProposedViewSize,
@@ -17,13 +18,13 @@ struct TodoCategoryGridLayout: Layout {
         cache: inout ()
     ) -> CGSize {
         let width = proposal.width ?? itemWidth * CGFloat(columnCount)
-        let spacing = spacing(for: width)
+        let rowSpacing = min(spacing(for: width), maximumRowSpacing)
         let rowHeights = rowHeights(subviews: subviews)
-        let rowSpacing = spacing * CGFloat(max(0, rowHeights.count - 1))
+        let totalRowSpacing = rowSpacing * CGFloat(max(0, rowHeights.count - 1))
 
         return CGSize(
             width: width,
-            height: spacing + rowHeights.reduce(0, +) + rowSpacing
+            height: rowSpacing + rowHeights.reduce(0, +) + totalRowSpacing
         )
     }
 
@@ -34,8 +35,9 @@ struct TodoCategoryGridLayout: Layout {
         cache: inout ()
     ) {
         let spacing = spacing(for: bounds.width)
+        let rowSpacing = min(spacing, maximumRowSpacing)
         let rowHeights = rowHeights(subviews: subviews)
-        var currentY = bounds.minY + spacing
+        var currentY = bounds.minY + rowSpacing
 
         for rowIndex in rowHeights.indices {
             let rowStartIndex = rowIndex * columnCount
@@ -54,7 +56,7 @@ struct TodoCategoryGridLayout: Layout {
                 )
             }
 
-            currentY += rowHeights[rowIndex] + spacing
+            currentY += rowHeights[rowIndex] + rowSpacing
         }
     }
 

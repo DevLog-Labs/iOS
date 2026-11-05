@@ -167,6 +167,7 @@ private struct TodoListTopBar: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @Namespace private var searchTransition
     let store: StoreOf<TodoListFeature>
 
@@ -247,6 +248,7 @@ private struct TodoListTopBar: View {
 
             TodoListFilterHeader(store: store)
         }
+        .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground, ignoresSafeAreaEdges: .top)
     }

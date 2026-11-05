@@ -19,10 +19,13 @@ struct MainFeature {
         @Presents var alert: AlertState<Never>?
         var unreadPushCount = 0
         var isObservingUnreadPushCount = false
+        var isWide = false
+        var windowControlsInset = CGFloat.zero
     }
 
-    enum Action: Equatable {
+    enum Action: BindableAction, Equatable {
         case alert(PresentationAction<Never>)
+        case binding(BindingAction<State>)
         case view(ViewAction)
         case store(StoreAction)
 
@@ -46,9 +49,12 @@ struct MainFeature {
     @Dependency(\.setApplicationBadgeCount) var setApplicationBadgeCount
 
     var body: some ReducerOf<Self> {
+        BindingReducer()
         Reduce { state, action in
             switch action {
             case .alert:
+                break
+            case .binding:
                 break
             case .view(.onAppear):
                 guard !state.isObservingUnreadPushCount else { break }

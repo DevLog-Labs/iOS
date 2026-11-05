@@ -11,6 +11,7 @@ import Domain
 import PresentationShared
 
 public struct ProfileView: View {
+    @Environment(\.windowControlsInset) private var windowControlsInset
     @State private var settingsStore: StoreOf<SettingsFeature>
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
@@ -99,6 +100,7 @@ public struct ProfileView: View {
             }
         }
         .padding(.horizontal, 16)
+        .padding(.top, windowControlsInset)
         .padding(.bottom, 8)
         .background(Color.appBackground)
         .toolbarBackground(Color.appBackground)
