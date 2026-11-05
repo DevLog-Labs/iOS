@@ -34,6 +34,11 @@ public extension EnvironmentValues {
         set { self[DeviceTypeKey.self] = newValue }
     }
 
+    var toolbarTitleTopChange: (CGFloat) -> Void {
+        get { self[ToolbarTitleTopChangeKey.self] }
+        set { self[ToolbarTitleTopChangeKey.self] = newValue }
+    }
+
     private struct SafeAreaInsetsKey: EnvironmentKey {
         static var defaultValue: EdgeInsets {
             guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
@@ -80,6 +85,10 @@ public extension EnvironmentValues {
                 || traits.horizontalSizeClass == .regular
                 ? .duo : .bar
         }()
+    }
+
+    private struct ToolbarTitleTopChangeKey: EnvironmentKey {
+        static var defaultValue: (CGFloat) -> Void { { _ in } }
     }
 
     private struct IOSAppOnMacKey: EnvironmentKey {

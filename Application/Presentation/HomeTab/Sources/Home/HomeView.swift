@@ -14,6 +14,8 @@ public struct HomeView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
+    @Environment(\.toolbarTitleTopChange) private var toolbarTitleTopChange
     @State private var router = NavigationRouter<HomeRoute>()
     @State private var searchStore: StoreOf<SearchFeature>
     @State private var store: StoreOf<HomeFeature>
@@ -51,7 +53,28 @@ public struct HomeView: View {
             }
             .safeAreaInset(edge: .top, spacing: 0) { topBar }
             .background(Color.appBackground)
-            .toolbarVisibility(.hidden, for: .navigationBar)
+            .duoToolbarVisibility()
+            .toolbar {
+                if deviceType == .duo {
+                    ToolbarItemGroup(placement: .topBarTrailing) {
+                        // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+                        Group {
+                            Button {
+                                store.send(.store(.setPresentation(.searchView, true)))
+                            } label: {
+                                Image(systemName: "magnifyingglass")
+                            }
+                            Button {
+                                store.send(.store(.setPresentation(.contentPicker, true)))
+                            } label: {
+                                Image(systemName: "plus")
+                            }
+                            .disabled(!store.isNetworkConnected)
+                        }
+                        .id(windowControlsInset)
+                    }
+                }
+            }
             .navigationDestination(
                 for: HomeRoute.self,
                 interactivePop: {
@@ -92,29 +115,38 @@ public struct HomeView: View {
         HStack(spacing: 12) {
             Text("DevLog")
                 .font(.largeTitle.weight(.bold))
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.frame(in: .global).minY
+                } action: { top in
+                    if deviceType == .duo {
+                        toolbarTitleTopChange(top)
+                    }
+                }
             Spacer()
-            if #available(iOS 26.0, *) {
-                Button {
-                    store.send(.store(.setPresentation(.searchView, true)))
-                } label: {
-                    Image(systemName: "magnifyingglass")
+            if deviceType != .duo {
+                if #available(iOS 26.0, *) {
+                    Button {
+                        store.send(.store(.setPresentation(.searchView, true)))
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .topBarButtonStyle()
+                } else {
+                    Button {
+                        store.send(.store(.setPresentation(.searchView, true)))
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                            .font(.title3.weight(.semibold))
+                            .frame(width: 28, height: 28)
+                    }
+                    .adaptiveButtonStyle(
+                        shape: .circle,
+                        color: .surface,
+                        glassEffect: .enabled
+                    )
                 }
-                .topBarButtonStyle()
-            } else {
-                Button {
-                    store.send(.store(.setPresentation(.searchView, true)))
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.title3.weight(.semibold))
-                        .frame(width: 28, height: 28)
-                }
-                .adaptiveButtonStyle(
-                    shape: .circle,
-                    color: .surface,
-                    glassEffect: .enabled
-                )
+                HomeCreateButton(store: store)
             }
-            HomeCreateButton(store: store)
         }
         .padding(.horizontal, 16)
         .padding(.top, windowControlsInset)
