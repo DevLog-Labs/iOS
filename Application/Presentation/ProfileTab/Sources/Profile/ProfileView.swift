@@ -12,6 +12,7 @@ import PresentationShared
 
 public struct ProfileView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
     @State private var settingsStore: StoreOf<SettingsFeature>
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
@@ -52,7 +53,20 @@ public struct ProfileView: View {
             }
             .safeAreaInset(edge: .top, spacing: 0) { titleBar }
             .refreshable { await store.send(.refresh).finish() }
-            .toolbarVisibility(.hidden, for: .navigationBar)
+            .duoToolbarVisibility()
+            .toolbar {
+                if deviceType == .duo {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+                        Button {
+                            router.push(.settings)
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                        .id(windowControlsInset)
+                    }
+                }
+            }
             .background(Color.appBackground)
             .navigationDestination(
                 for: ProfileRoute.self,
@@ -91,12 +105,14 @@ public struct ProfileView: View {
                 Text("nav_profile", bundle: PresentationResources.bundle)
                     .font(.largeTitle.bold())
                 Spacer()
-                Button {
-                    router.push(.settings)
-                } label: {
-                    Image(systemName: "gearshape")
+                if deviceType != .duo {
+                    Button {
+                        router.push(.settings)
+                    } label: {
+                        Image(systemName: "gearshape")
+                    }
+                    .topBarButtonStyle()
                 }
-                .topBarButtonStyle()
             }
         }
         .padding(.horizontal, 16)

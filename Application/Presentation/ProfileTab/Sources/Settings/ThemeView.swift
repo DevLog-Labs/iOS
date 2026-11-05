@@ -12,6 +12,7 @@ import PresentationShared
 struct ThemeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
     @Binding var theme: SystemTheme
 
     var body: some View {
@@ -35,7 +36,7 @@ struct ThemeView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .duoToolbarVisibility()
     }
 
     private static let themes: [SystemTheme] = [.automatic, .light, .dark]
@@ -44,9 +45,11 @@ struct ThemeView: View {
         ZStack {
             Text(String(localized: "nav_theme", bundle: PresentationResources.bundle))
                 .font(.headline)
-            HStack {
-                NavigationBackButton(action: { dismiss() })
-                Spacer()
+            if deviceType != .duo {
+                HStack {
+                    NavigationBackButton(action: { dismiss() })
+                    Spacer()
+                }
             }
         }
         .padding(.horizontal, 16)
