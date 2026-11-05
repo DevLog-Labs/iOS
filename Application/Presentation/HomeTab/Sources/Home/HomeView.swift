@@ -286,7 +286,8 @@ private struct HomeTodoSection: View {
 
                 TodoCategoryGridLayout(
                     columnCount: columnCount,
-                    itemWidth: iconSize
+                    itemWidth: iconSize,
+                    maximumRowSpacing: dynamicTypeSize.isAccessibilitySize ? .infinity : iconSize / 2
                 ) {
                     ForEach(visibleItems) { item in
                         HomeTodoCategoryLink(item: item, iconSize: iconSize)
