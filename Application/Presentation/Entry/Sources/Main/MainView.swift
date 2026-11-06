@@ -15,6 +15,7 @@ import TodayTab
 struct MainView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.deviceType) private var deviceType
     @Binding var selectedTab: MainTab
     @State private var store: StoreOf<MainFeature>
     private let windowEvent: TodoEditorWindowEvent
@@ -32,14 +33,13 @@ struct MainView: View {
     }
 
     var body: some View {
-        let showsSideBar = isiOSAppOnMac || horizontalSizeClass == .regular && store.isWide
+        let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular && store.isWide
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
 
         HStack(spacing: 0) {
             if showsSideBar {
                 SideBar(
                     selectedTab: $selectedTab,
-                    toolbarTitleTop: store.toolbarTitleTop,
                     unreadPushCount: store.unreadPushCount
                 )
                 .resizableSideBar(
@@ -103,9 +103,6 @@ struct MainView: View {
                         windowEvent: windowEvent
                     )
                 }
-            }
-            .environment(\.toolbarTitleTopChange) { top in
-                store.send(.binding(.set(\.toolbarTitleTop, top)))
             }
         }
         .onGeometryChange(for: Bool.self) { proxy in
@@ -191,7 +188,6 @@ private struct MainTabContent: View {
 
 private struct SideBar: View {
     @Binding var selectedTab: MainTab
-    let toolbarTitleTop: CGFloat?
     let unreadPushCount: Int
 
     var body: some View {
@@ -209,8 +205,8 @@ private struct SideBar: View {
                 }
             }
             .padding(.horizontal, 12)
-            .padding(.bottom, 16)
-            .padding(.top, toolbarTitleTop ?? 16 + geometry.windowControlsInset)
+            .padding(.vertical, 16)
+            .padding(.top, geometry.windowControlsInset)
         }
         .background {
             Color.surface

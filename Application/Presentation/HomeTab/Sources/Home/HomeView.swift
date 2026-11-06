@@ -15,7 +15,6 @@ public struct HomeView: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.deviceType) private var deviceType
-    @Environment(\.toolbarTitleTopChange) private var toolbarTitleTopChange
     @State private var router = NavigationRouter<HomeRoute>()
     @State private var searchStore: StoreOf<SearchFeature>
     @State private var store: StoreOf<HomeFeature>
@@ -115,13 +114,6 @@ public struct HomeView: View {
         HStack(spacing: 12) {
             Text("DevLog")
                 .font(.largeTitle.weight(.bold))
-                .onGeometryChange(for: CGFloat.self) { proxy in
-                    proxy.frame(in: .global).minY
-                } action: { top in
-                    if deviceType == .duo {
-                        toolbarTitleTopChange(top)
-                    }
-                }
             Spacer()
             if deviceType != .duo {
                 if #available(iOS 26.0, *) {

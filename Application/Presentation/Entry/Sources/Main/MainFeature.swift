@@ -21,7 +21,6 @@ struct MainFeature {
         var isObservingUnreadPushCount = false
         var isWide = false
         var windowControlsInset = CGFloat.zero
-        var toolbarTitleTop: CGFloat?
     }
 
     enum Action: BindableAction, Equatable {
