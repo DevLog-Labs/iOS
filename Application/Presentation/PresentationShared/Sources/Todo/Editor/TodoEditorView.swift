@@ -259,6 +259,7 @@ private struct EditorInspector: View {
                     )
                     .id(item.id)
                 }
+                .environment(\.deviceType, .bar)
             }
         }
     }

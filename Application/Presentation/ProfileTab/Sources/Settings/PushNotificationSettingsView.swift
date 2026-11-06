@@ -11,6 +11,7 @@ import PresentationShared
 struct PushNotificationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
     @Environment(\.isTabContentActive) private var isTabContentActive
     @State var store: StoreOf<PushNotificationSettingsFeature>
 
@@ -33,7 +34,7 @@ struct PushNotificationSettingsView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .duoToolbarVisibility()
         .onAppear { store.send(.fetchSettings) }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .sheet(
@@ -52,9 +53,11 @@ struct PushNotificationSettingsView: View {
             Text(String(localized: "nav_push_settings", bundle: PresentationResources.bundle))
                 .font(.headline)
 
-            HStack {
-                NavigationBackButton(action: { dismiss() })
-                Spacer()
+            if deviceType != .duo {
+                HStack {
+                    NavigationBackButton(action: { dismiss() })
+                    Spacer()
+                }
             }
         }
         .padding(.horizontal, 16)

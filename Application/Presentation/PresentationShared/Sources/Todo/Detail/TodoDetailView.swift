@@ -17,6 +17,7 @@ public struct TodoDetailView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
     @State var store: StoreOf<TodoDetailFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onBack: (() -> Void)?
@@ -46,8 +47,34 @@ public struct TodoDetailView: View {
                 LoadingView()
             }
         }
-        .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if deviceType != .duo {
+                topBar
+            }
+        }
+        .duoToolbarVisibility()
+        .toolbar {
+            if deviceType == .duo {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+                    Group {
+                        Button {
+                            store.send(.setSheet(.info))
+                        } label: {
+                            Image(systemName: "info.circle")
+                        }
+                        if store.showEditButton {
+                            Button {
+                                openTodoEditor()
+                            } label: {
+                                Image(systemName: "pencil")
+                            }
+                        }
+                    }
+                    .id(windowControlsInset)
+                }
+            }
+        }
         .onAppear { store.send(.onAppear) }
         .onReceive(windowSubmits) { submit in
             guard case .update(let value, let todo) = submit,
@@ -172,6 +199,7 @@ public struct TodoDetailView: View {
                 }
             }
             .environment(\.windowControlsInset, 0)
+            .environment(\.deviceType, .bar)
             .background(Color.appBackground)
             .presentationDragIndicator(.visible)
         }

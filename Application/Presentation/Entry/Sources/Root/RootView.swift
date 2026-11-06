@@ -69,6 +69,7 @@ public struct RootView: View {
                 TodoDetailFeature()
             })
         }
+        .environment(\.deviceType, .bar)
         .background(Color.appBackground)
         .presentationDragIndicator(.visible)
     }

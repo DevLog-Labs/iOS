@@ -15,6 +15,7 @@ import TodayTab
 struct MainView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.deviceType) private var deviceType
     @Binding var selectedTab: MainTab
     @State private var store: StoreOf<MainFeature>
     private let windowEvent: TodoEditorWindowEvent
@@ -32,7 +33,7 @@ struct MainView: View {
     }
 
     var body: some View {
-        let showsSideBar = isiOSAppOnMac || horizontalSizeClass == .regular && store.isWide
+        let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular && store.isWide
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
 
         HStack(spacing: 0) {

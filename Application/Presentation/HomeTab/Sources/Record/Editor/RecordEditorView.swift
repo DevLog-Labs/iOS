@@ -11,6 +11,7 @@ import PresentationShared
 
 public struct RecordEditorView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.deviceType) private var deviceType
     @State private var store: StoreOf<RecordEditorFeature>
     @FocusState private var focusedField: Field?
     private let onCompletion: () -> Void
@@ -226,7 +227,7 @@ public struct RecordEditorView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.surface, ignoresSafeAreaEdges: .bottom)
+        .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
     }
 
 }

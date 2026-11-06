@@ -12,6 +12,7 @@ import PresentationShared
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
     @Bindable var store: StoreOf<SettingsFeature>
     let onNavigate: (ProfileRoute) -> Void
 
@@ -53,7 +54,7 @@ struct SettingsView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .duoToolbarVisibility()
         .prominentAlert(store, state: \.alert, action: \.alert)
     }
 
@@ -62,9 +63,11 @@ struct SettingsView: View {
             Text(String(localized: "nav_settings", bundle: PresentationResources.bundle))
                 .font(.headline)
 
-            HStack {
-                NavigationBackButton(action: { dismiss() })
-                Spacer()
+            if deviceType != .duo {
+                HStack {
+                    NavigationBackButton(action: { dismiss() })
+                    Spacer()
+                }
             }
         }
         .padding(.horizontal, 16)

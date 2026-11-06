@@ -9,6 +9,7 @@ import SwiftUI
 import PresentationShared
 
 struct GoalDetailRecordActionBar: View {
+    @Environment(\.deviceType) private var deviceType
     @ScaledMetric(relativeTo: .headline) private var buttonLabelHeight = CGFloat(40)
     let hasDraft: Bool
     let isDisabled: Bool
@@ -37,7 +38,7 @@ struct GoalDetailRecordActionBar: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.surface, ignoresSafeAreaEdges: .bottom)
+        .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
     }
 
     private var secondaryAddRecordButton: some View {

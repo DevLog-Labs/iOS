@@ -9,8 +9,7 @@ import SwiftUI
 
 public extension GeometryProxy {
     var windowControlsInset: CGFloat {
-        guard #available(iOS 26.0, *),
-              UIDevice.current.userInterfaceIdiom == .pad else { return 0 }
+        guard #available(iOS 26.0, *) else { return 0 }
         return containerCornerInsets.topLeading.height
     }
 }

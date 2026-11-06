@@ -13,6 +13,7 @@ import Domain
 struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.deviceType) private var deviceType
     @State var store: StoreOf<AccountFeature>
 
     var body: some View {
@@ -26,7 +27,7 @@ struct AccountView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .duoToolbarVisibility()
         .onAppear { store.send(.onAppear) }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .background {
@@ -43,9 +44,11 @@ struct AccountView: View {
             Text(String(localized: "nav_account", bundle: PresentationResources.bundle))
                 .font(.headline)
 
-            HStack {
-                NavigationBackButton(action: { dismiss() })
-                Spacer()
+            if deviceType != .duo {
+                HStack {
+                    NavigationBackButton(action: { dismiss() })
+                    Spacer()
+                }
             }
         }
         .padding(.horizontal, 16)
