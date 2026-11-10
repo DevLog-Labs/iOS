@@ -70,7 +70,7 @@ do
 
 	printf '%s\n' "Claude 리뷰 시작: $local_ref ($base..$local_sha)" >&2
 	if ! claude -p \
-		--model claude-opus-5-5 \
+		--model claude-fable-5-2 \
 		--effort high \
 		--permission-mode plan \
 		--permission-prompts none \
