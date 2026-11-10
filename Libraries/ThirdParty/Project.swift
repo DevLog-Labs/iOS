@@ -11,11 +11,11 @@ let project = Project(
     packages: [
         .package(
             url: "https://github.com/firebase/firebase-ios-sdk",
-            .exact("11.15.0")
+            .exact("13.1.1")
         ),
         .package(
             url: "https://github.com/google/GoogleSignIn-iOS",
-            .exact("9.2.0")
+            .exact("10.1.0")
         ),
         .package(
             url: "https://github.com/opficdev/Nexa",
