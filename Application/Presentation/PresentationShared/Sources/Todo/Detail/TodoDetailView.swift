@@ -17,6 +17,7 @@ public struct TodoDetailView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @State var store: StoreOf<TodoDetailFeature>
     private let windowEvent: TodoEditorWindowEvent?
@@ -116,6 +117,8 @@ public struct TodoDetailView: View {
             }
         }
         .padding(.horizontal)
+        .frame(maxWidth: readableContentWidth)
+        .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .padding(.top, windowControlsInset)
         .background(Color.appBackground, ignoresSafeAreaEdges: .top)

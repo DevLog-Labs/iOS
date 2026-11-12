@@ -12,6 +12,7 @@ import PresentationShared
 struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @Bindable var store: StoreOf<SettingsFeature>
     let onNavigate: (ProfileRoute) -> Void
@@ -51,6 +52,8 @@ struct SettingsView: View {
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
@@ -71,6 +74,7 @@ struct SettingsView: View {
             }
         }
         .padding(.horizontal, 16)
+        .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground)

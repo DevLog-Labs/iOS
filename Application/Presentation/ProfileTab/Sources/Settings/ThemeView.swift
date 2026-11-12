@@ -12,6 +12,7 @@ import PresentationShared
 struct ThemeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @Binding var theme: SystemTheme
 
@@ -33,6 +34,8 @@ struct ThemeView: View {
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
@@ -53,6 +56,7 @@ struct ThemeView: View {
             }
         }
         .padding(.horizontal, 16)
+        .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground)

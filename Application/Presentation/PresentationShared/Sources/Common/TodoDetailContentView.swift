@@ -9,6 +9,7 @@ import SwiftUI
 import Domain
 
 struct TodoDetailContentView: View {
+    @Environment(\.readableContentWidth) private var readableContentWidth
     let title: String
     let content: String
     let referenceItems: [Int: TodoReferenceItem]
@@ -62,6 +63,8 @@ struct TodoDetailContentView: View {
                 .background(Color.surface, in: .rect(cornerRadius: 24))
             }
             .padding()
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
         }
     }
 }

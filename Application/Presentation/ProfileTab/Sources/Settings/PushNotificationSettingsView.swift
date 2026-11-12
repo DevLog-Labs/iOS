@@ -11,6 +11,7 @@ import PresentationShared
 struct PushNotificationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @Environment(\.isTabContentActive) private var isTabContentActive
     @State var store: StoreOf<PushNotificationSettingsFeature>
@@ -31,6 +32,8 @@ struct PushNotificationSettingsView: View {
             .padding(.horizontal, 16)
             .padding(.top, 20)
             .padding(.bottom, 24)
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
@@ -61,6 +64,7 @@ struct PushNotificationSettingsView: View {
             }
         }
         .padding(.horizontal, 16)
+        .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground)

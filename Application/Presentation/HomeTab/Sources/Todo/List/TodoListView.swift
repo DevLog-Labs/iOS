@@ -66,6 +66,7 @@ struct TodoListView: View {
 
 private struct TodoListContent: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     let store: StoreOf<TodoListFeature>
     let onSelectTodo: (String) -> Void
@@ -83,6 +84,8 @@ private struct TodoListContent: View {
                         .padding(.vertical, 32)
                         .background(Color.surface, in: .rect(cornerRadius: 16))
                         .padding(.horizontal, 16)
+                        .frame(maxWidth: readableContentWidth)
+                        .frame(maxWidth: .infinity)
                 } else {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(
@@ -137,6 +140,8 @@ private struct TodoListContent: View {
                     .background(Color.surface)
                     .clipShape(.rect(cornerRadius: 16))
                     .padding(.horizontal, 16)
+                    .frame(maxWidth: readableContentWidth)
+                    .frame(maxWidth: .infinity)
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) { TodoListTopBar(store: store) }
@@ -194,6 +199,7 @@ private struct TodoListTopBar: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @Namespace private var searchTransition
     let store: StoreOf<TodoListFeature>
@@ -277,6 +283,8 @@ private struct TodoListTopBar: View {
 
             TodoListFilterHeader(store: store)
         }
+        .frame(maxWidth: readableContentWidth)
+        .frame(maxWidth: .infinity)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 12)
         .background(Color.appBackground, ignoresSafeAreaEdges: .top)
