@@ -16,14 +16,21 @@ public extension View {
 }
 
 private struct PreviewModifier: ViewModifier {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let todoId: String
 
+    @ViewBuilder
     func body(content: Content) -> some View {
-        content.overlay {
-            PreviewInteractionView(
-                todoId: todoId,
-                makePreview: makePreviewViewController
-            )
+        // Mac 우클릭 메뉴는 미리보기를 표시하지 않아 행의 우클릭 메뉴를 가리지 않도록 제외
+        if isiOSAppOnMac {
+            content
+        } else {
+            content.overlay {
+                PreviewInteractionView(
+                    todoId: todoId,
+                    makePreview: makePreviewViewController
+                )
+            }
         }
     }
 
