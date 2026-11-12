@@ -85,6 +85,7 @@ public struct TodayView: View {
                 CategoryFilterSheet(store: store)
             }
         }
+        .navigationHistory(router)
         .inspector(isPresented: $store.isTodoInspectorPresented) {
             TodayTodoInspector(store: store)
         }

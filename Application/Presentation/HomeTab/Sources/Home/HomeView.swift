@@ -88,6 +88,7 @@ public struct HomeView: View {
                 destination: destinationView
             )
         }
+        .navigationHistory(router)
         .onAppear { store.send(.view(.startObserving)) }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {

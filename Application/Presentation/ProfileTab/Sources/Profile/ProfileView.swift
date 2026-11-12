@@ -82,6 +82,7 @@ public struct ProfileView: View {
                 destination: destinationView
             )
         }
+        .navigationHistory(router)
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.fetchData)

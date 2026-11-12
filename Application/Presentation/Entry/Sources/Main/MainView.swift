@@ -41,7 +41,10 @@ struct MainView: View {
             if showsSideBar {
                 SideBar(
                     selectedTab: $selectedTab,
-                    unreadPushCount: store.unreadPushCount
+                    unreadPushCount: store.unreadPushCount,
+                    history: isiOSAppOnMac ? store.navigationHistories[selectedTab, default: NavigationHistoryState()] : nil,
+                    onBack: { store.send(.view(.tapNavigation(selectedTab, .back))) },
+                    onForward: { store.send(.view(.tapNavigation(selectedTab, .forward))) }
                 )
                 .resizableSideBar(
                     minimumWidth: 220,
@@ -62,6 +65,8 @@ struct MainView: View {
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
                         readableContentWidth: readableContentWidth,
+                        navigationCommand: store.navigationCommands[.home],
+                        onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.home, $0))) },
                         windowEvent: windowEvent
                     )
                 }
@@ -76,6 +81,8 @@ struct MainView: View {
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
                         readableContentWidth: readableContentWidth,
+                        navigationCommand: store.navigationCommands[.today],
+                        onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.today, $0))) },
                         windowEvent: windowEvent
                     )
                 }
@@ -90,6 +97,8 @@ struct MainView: View {
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
                         readableContentWidth: readableContentWidth,
+                        navigationCommand: store.navigationCommands[.notification],
+                        onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.notification, $0))) },
                         windowEvent: windowEvent
                     )
                 }
@@ -105,6 +114,8 @@ struct MainView: View {
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
                         readableContentWidth: readableContentWidth,
+                        navigationCommand: store.navigationCommands[.profile],
+                        onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.profile, $0))) },
                         windowEvent: windowEvent
                     )
                 }
@@ -115,6 +126,8 @@ struct MainView: View {
                 }
             }
         }
+        // Mac 창에서 상태 표시줄 자리로 비워 두는 상단 여백 제거
+        .statusBarHidden(isiOSAppOnMac)
         .onGeometryChange(for: Bool.self) { proxy in
             sideBarMinimumWidth <= proxy.size.width
         } action: { isWide in
@@ -194,6 +207,8 @@ private struct MainTabContent: View {
     let showsSideBar: Bool
     let windowControlsInset: CGFloat
     let readableContentWidth: CGFloat
+    let navigationCommand: NavigationHistoryCommand?
+    let onNavigationHistoryChange: (NavigationHistoryState) -> Void
     let windowEvent: TodoEditorWindowEvent
 
     var body: some View {
@@ -201,6 +216,10 @@ private struct MainTabContent: View {
             .environment(\.isTabContentActive, isSelected)
             .environment(\.windowControlsInset, windowControlsInset)
             .environment(\.readableContentWidth, readableContentWidth)
+            .environment(\.navigationHistoryCommand, navigationCommand)
+            .onPreferenceChange(NavigationHistoryPreferenceKey.self) { history in
+                onNavigationHistoryChange(history)
+            }
             .toolbarVisibility(showsSideBar ? .hidden : .visible, for: .tabBar)
             .background { TabBarVisibility(isHidden: showsSideBar) }
     }
@@ -232,29 +251,65 @@ private struct MainTabContent: View {
 private struct SideBar: View {
     @Binding var selectedTab: MainTab
     let unreadPushCount: Int
+    let history: NavigationHistoryState?
+    let onBack: () -> Void
+    let onForward: () -> Void
 
     var body: some View {
         GeometryReader { geometry in
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(MainTab.allCases, id: \.self) { tab in
-                    if tab == .profile { Spacer() }
-                    SideBarButton(
-                        tab: tab,
-                        isSelected: selectedTab == tab,
-                        unreadPushCount: unreadPushCount
-                    ) {
-                        selectedTab = tab
+            VStack(spacing: 0) {
+                if let history {
+                    HStack(spacing: 4) {
+                        Spacer()
+                        SideBarHistoryButton(
+                            systemName: "arrow.left",
+                            isEnabled: history.canGoBack,
+                            action: onBack
+                        )
+                        SideBarHistoryButton(
+                            systemName: "arrow.right",
+                            isEnabled: history.canGoForward,
+                            action: onForward
+                        )
+                    }
+                    .padding(.horizontal, 12)
+                }
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(MainTab.allCases, id: \.self) { tab in
+                        if tab == .profile { Spacer() }
+                        SideBarButton(
+                            tab: tab,
+                            isSelected: selectedTab == tab,
+                            unreadPushCount: unreadPushCount
+                        ) {
+                            selectedTab = tab
+                        }
                     }
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 16)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 16)
             .padding(.top, geometry.windowControlsInset)
         }
         .background {
             Color.surface
                 .ignoresSafeArea(.container, edges: .vertical)
         }
+    }
+}
+
+private struct SideBarHistoryButton: View {
+    let systemName: String
+    let isEnabled: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemName)
+                .foregroundStyle(isEnabled ? Color.primary : .textTertiary)
+        }
+        .topBarButtonStyle()
+        .disabled(!isEnabled)
     }
 }
 

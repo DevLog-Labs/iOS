@@ -34,6 +34,11 @@ public extension EnvironmentValues {
         set { self[ReadableContentWidthKey.self] = newValue }
     }
 
+    var navigationHistoryCommand: NavigationHistoryCommand? {
+        get { self[NavigationHistoryCommandKey.self] }
+        set { self[NavigationHistoryCommandKey.self] = newValue }
+    }
+
     var deviceType: DeviceType {
         get { self[DeviceTypeKey.self] }
         set { self[DeviceTypeKey.self] = newValue }
@@ -73,6 +78,10 @@ public extension EnvironmentValues {
 
     private struct ReadableContentWidthKey: EnvironmentKey {
         static let defaultValue = CGFloat.infinity
+    }
+
+    private struct NavigationHistoryCommandKey: EnvironmentKey {
+        static let defaultValue: NavigationHistoryCommand? = nil
     }
 
     private struct DeviceTypeKey: EnvironmentKey {
