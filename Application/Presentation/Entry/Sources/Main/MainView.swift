@@ -157,8 +157,8 @@ private struct TabBarVisibility: UIViewControllerRepresentable {
     }
 }
 
-// 탭 영역의 readableContentGuide 폭 전달
-private struct ReadableContentWidthReader: UIViewRepresentable {
+// 화면 영역의 readableContentGuide 폭 전달
+struct ReadableContentWidthReader: UIViewRepresentable {
     let action: (CGFloat) -> Void
 
     func makeUIView(context: Context) -> ReaderView {

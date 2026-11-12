@@ -11,6 +11,7 @@ import PresentationShared
 
 public struct TodoEditorWindowView: View {
     @State private var windowScene: UIWindowScene?
+    @State private var readableContentWidth = CGFloat.infinity
     private let value: TodoEditorWindowValue
     private let windowEvent: TodoEditorWindowEvent
 
@@ -43,8 +44,10 @@ public struct TodoEditorWindowView: View {
                 )
             }
         }
+        .environment(\.readableContentWidth, readableContentWidth)
         .background {
             WindowSceneReader { windowScene = $0 }
+            ReadableContentWidthReader { readableContentWidth = $0 }
         }
     }
 
