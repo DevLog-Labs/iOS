@@ -53,71 +53,93 @@ struct MainView: View {
                 )
             }
 
-            TabView(selection: $selectedTab) {
-                Tab(
-                    MainTab.home.title,
-                    systemImage: MainTab.home.symbolName,
-                    value: MainTab.home
-                ) {
-                    MainTabContent(
-                        tab: .home,
-                        isSelected: selectedTab == .home,
-                        showsSideBar: showsSideBar,
-                        windowControlsInset: tabContentInset,
-                        readableContentWidth: readableContentWidth,
-                        navigationStep: store.navigationSteps[.home],
-                        onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.home, $0))) },
-                        windowEvent: windowEvent
-                    )
-                }
-                Tab(
-                    MainTab.today.title,
-                    systemImage: MainTab.today.symbolName,
-                    value: MainTab.today
-                ) {
-                    MainTabContent(
-                        tab: .today,
-                        isSelected: selectedTab == .today,
-                        showsSideBar: showsSideBar,
-                        windowControlsInset: tabContentInset,
-                        readableContentWidth: readableContentWidth,
-                        navigationStep: store.navigationSteps[.today],
-                        onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.today, $0))) },
-                        windowEvent: windowEvent
-                    )
-                }
-                Tab(
-                    MainTab.notification.title,
-                    systemImage: MainTab.notification.symbolName,
-                    value: MainTab.notification
-                ) {
-                    MainTabContent(
-                        tab: .notification,
-                        isSelected: selectedTab == .notification,
-                        showsSideBar: showsSideBar,
-                        windowControlsInset: tabContentInset,
-                        readableContentWidth: readableContentWidth,
-                        navigationStep: store.navigationSteps[.notification],
-                        onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.notification, $0))) },
-                        windowEvent: windowEvent
-                    )
-                }
-                .badge(store.unreadPushCount)
-                Tab(
-                    MainTab.profile.title,
-                    systemImage: MainTab.profile.symbolName,
-                    value: MainTab.profile
-                ) {
-                    MainTabContent(
-                        tab: .profile,
-                        isSelected: selectedTab == .profile,
-                        showsSideBar: showsSideBar,
-                        windowControlsInset: tabContentInset,
-                        readableContentWidth: readableContentWidth,
-                        navigationStep: store.navigationSteps[.profile],
-                        onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.profile, $0))) },
-                        windowEvent: windowEvent
-                    )
+            ZStack {
+                if isiOSAppOnMac {
+                    // 탭 전환 애니메이션 없이 한 번 연 탭을 유지하고 선택한 탭만 표시
+                    ForEach(MainTab.allCases, id: \.self) { tab in
+                        if store.openedTabs.contains(tab) || selectedTab == tab {
+                            MainTabContent(
+                                tab: tab,
+                                isSelected: selectedTab == tab,
+                                showsSideBar: showsSideBar,
+                                windowControlsInset: tabContentInset,
+                                readableContentWidth: readableContentWidth,
+                                navigationStep: store.navigationSteps[tab],
+                                onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(tab, $0))) },
+                                windowEvent: windowEvent
+                            )
+                            .opacity(selectedTab == tab ? 1 : 0)
+                            .allowsHitTesting(selectedTab == tab)
+                        }
+                    }
+                } else {
+                    TabView(selection: $selectedTab) {
+                        Tab(
+                            MainTab.home.title,
+                            systemImage: MainTab.home.symbolName,
+                            value: MainTab.home
+                        ) {
+                            MainTabContent(
+                                tab: .home,
+                                isSelected: selectedTab == .home,
+                                showsSideBar: showsSideBar,
+                                windowControlsInset: tabContentInset,
+                                readableContentWidth: readableContentWidth,
+                                navigationStep: store.navigationSteps[.home],
+                                onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.home, $0))) },
+                                windowEvent: windowEvent
+                            )
+                        }
+                        Tab(
+                            MainTab.today.title,
+                            systemImage: MainTab.today.symbolName,
+                            value: MainTab.today
+                        ) {
+                            MainTabContent(
+                                tab: .today,
+                                isSelected: selectedTab == .today,
+                                showsSideBar: showsSideBar,
+                                windowControlsInset: tabContentInset,
+                                readableContentWidth: readableContentWidth,
+                                navigationStep: store.navigationSteps[.today],
+                                onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.today, $0))) },
+                                windowEvent: windowEvent
+                            )
+                        }
+                        Tab(
+                            MainTab.notification.title,
+                            systemImage: MainTab.notification.symbolName,
+                            value: MainTab.notification
+                        ) {
+                            MainTabContent(
+                                tab: .notification,
+                                isSelected: selectedTab == .notification,
+                                showsSideBar: showsSideBar,
+                                windowControlsInset: tabContentInset,
+                                readableContentWidth: readableContentWidth,
+                                navigationStep: store.navigationSteps[.notification],
+                                onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.notification, $0))) },
+                                windowEvent: windowEvent
+                            )
+                        }
+                        .badge(store.unreadPushCount)
+                        Tab(
+                            MainTab.profile.title,
+                            systemImage: MainTab.profile.symbolName,
+                            value: MainTab.profile
+                        ) {
+                            MainTabContent(
+                                tab: .profile,
+                                isSelected: selectedTab == .profile,
+                                showsSideBar: showsSideBar,
+                                windowControlsInset: tabContentInset,
+                                readableContentWidth: readableContentWidth,
+                                navigationStep: store.navigationSteps[.profile],
+                                onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.profile, $0))) },
+                                windowEvent: windowEvent
+                            )
+                        }
+                    }
                 }
             }
             .background {

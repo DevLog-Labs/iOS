@@ -24,6 +24,7 @@ struct MainFeature {
         var readableContentWidth = CGFloat.infinity
         var navigationHistories: [MainTab: NavigationHistoryState] = [:]
         var navigationSteps: [MainTab: NavigationStep] = [:]
+        var openedTabs: Set<MainTab> = []
     }
 
     enum Action: BindableAction, Equatable {
@@ -67,6 +68,7 @@ struct MainFeature {
                 state.isObservingUnreadPushCount = true
                 return observeUnreadPushCountEffect()
             case .view(.selectedTabChanged(let tab)):
+                state.openedTabs.insert(tab)
                 guard let screenName = tab.analyticsScreenName else { break }
                 return trackScreenViewEffect(screenName)
             case .view(.navigationHistoryChanged(let tab, let history)):

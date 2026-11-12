@@ -44,10 +44,18 @@ struct MainFeatureTests {
             reference.reduce(.selectedTabChanged(.notification)),
             reference.reduce(.selectedTabChanged(.profile))
         ]
-        await store.send(.view(.selectedTabChanged(.home)))
-        await store.send(.view(.selectedTabChanged(.today)))
-        await store.send(.view(.selectedTabChanged(.notification)))
-        await store.send(.view(.selectedTabChanged(.profile)))
+        await store.send(.view(.selectedTabChanged(.home))) {
+            $0.openedTabs = [.home]
+        }
+        await store.send(.view(.selectedTabChanged(.today))) {
+            $0.openedTabs = [.home, .today]
+        }
+        await store.send(.view(.selectedTabChanged(.notification))) {
+            $0.openedTabs = [.home, .today, .notification]
+        }
+        await store.send(.view(.selectedTabChanged(.profile))) {
+            $0.openedTabs = [.home, .today, .notification, .profile]
+        }
         await waitUntil {
             trackAnalyticsEventUseCase.screenNames == ["home", "today", "profile"]
         }
