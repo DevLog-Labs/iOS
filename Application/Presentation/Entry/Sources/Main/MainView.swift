@@ -35,6 +35,7 @@ struct MainView: View {
     var body: some View {
         let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular && store.isWide
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
+        let readableContentWidth = isiOSAppOnMac ? store.readableContentWidth : .infinity
 
         HStack(spacing: 0) {
             if showsSideBar {
@@ -60,6 +61,7 @@ struct MainView: View {
                         isSelected: selectedTab == .home,
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
+                        readableContentWidth: readableContentWidth,
                         windowEvent: windowEvent
                     )
                 }
@@ -73,6 +75,7 @@ struct MainView: View {
                         isSelected: selectedTab == .today,
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
+                        readableContentWidth: readableContentWidth,
                         windowEvent: windowEvent
                     )
                 }
@@ -86,6 +89,7 @@ struct MainView: View {
                         isSelected: selectedTab == .notification,
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
+                        readableContentWidth: readableContentWidth,
                         windowEvent: windowEvent
                     )
                 }
@@ -100,8 +104,14 @@ struct MainView: View {
                         isSelected: selectedTab == .profile,
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
+                        readableContentWidth: readableContentWidth,
                         windowEvent: windowEvent
                     )
+                }
+            }
+            .background {
+                ReadableContentWidthReader { width in
+                    store.send(.binding(.set(\.readableContentWidth, width)))
                 }
             }
         }
@@ -147,17 +157,50 @@ private struct TabBarVisibility: UIViewControllerRepresentable {
     }
 }
 
+// 탭 영역의 readableContentGuide 폭 전달
+private struct ReadableContentWidthReader: UIViewRepresentable {
+    let action: (CGFloat) -> Void
+
+    func makeUIView(context: Context) -> ReaderView {
+        let view = ReaderView()
+        view.isUserInteractionEnabled = false
+        return view
+    }
+
+    func updateUIView(_ uiView: ReaderView, context: Context) {
+        uiView.action = action
+    }
+
+    final class ReaderView: UIView {
+        var action: ((CGFloat) -> Void)?
+        private var width: CGFloat?
+
+        override func layoutSubviews() {
+            super.layoutSubviews()
+            let width = readableContentGuide.layoutFrame.width
+            guard width != self.width else { return }
+            self.width = width
+            // 레이아웃 중 상태 변경 방지
+            DispatchQueue.main.async { [action] in
+                action?(width)
+            }
+        }
+    }
+}
+
 private struct MainTabContent: View {
     let tab: MainTab
     let isSelected: Bool
     let showsSideBar: Bool
     let windowControlsInset: CGFloat
+    let readableContentWidth: CGFloat
     let windowEvent: TodoEditorWindowEvent
 
     var body: some View {
         content
             .environment(\.isTabContentActive, isSelected)
             .environment(\.windowControlsInset, windowControlsInset)
+            .environment(\.readableContentWidth, readableContentWidth)
             .toolbarVisibility(showsSideBar ? .hidden : .visible, for: .tabBar)
             .background { TabBarVisibility(isHidden: showsSideBar) }
     }

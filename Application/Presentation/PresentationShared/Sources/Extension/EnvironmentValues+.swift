@@ -29,6 +29,11 @@ public extension EnvironmentValues {
         set { self[WindowControlsInsetKey.self] = newValue }
     }
 
+    var readableContentWidth: CGFloat {
+        get { self[ReadableContentWidthKey.self] }
+        set { self[ReadableContentWidthKey.self] = newValue }
+    }
+
     var deviceType: DeviceType {
         get { self[DeviceTypeKey.self] }
         set { self[DeviceTypeKey.self] = newValue }
@@ -64,6 +69,10 @@ public extension EnvironmentValues {
 
     private struct WindowControlsInsetKey: EnvironmentKey {
         static let defaultValue = CGFloat.zero
+    }
+
+    private struct ReadableContentWidthKey: EnvironmentKey {
+        static let defaultValue = CGFloat.infinity
     }
 
     private struct DeviceTypeKey: EnvironmentKey {

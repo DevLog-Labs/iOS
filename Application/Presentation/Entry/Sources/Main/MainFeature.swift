@@ -21,6 +21,7 @@ struct MainFeature {
         var isObservingUnreadPushCount = false
         var isWide = false
         var windowControlsInset = CGFloat.zero
+        var readableContentWidth = CGFloat.infinity
     }
 
     enum Action: BindableAction, Equatable {
