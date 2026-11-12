@@ -14,6 +14,7 @@ public struct HomeView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @State private var router = NavigationRouter<HomeRoute>()
     @State private var searchStore: StoreOf<SearchFeature>
@@ -49,6 +50,8 @@ public struct HomeView: View {
                     HomeDevelopmentGoals(store: store)
                 }
                 .padding(.horizontal, 16)
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
             }
             .safeAreaInset(edge: .top, spacing: 0) { topBar }
             .background(Color.appBackground)
@@ -141,6 +144,7 @@ public struct HomeView: View {
             }
         }
         .padding(.horizontal, 16)
+        .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 8)
         .background(Color.appBackground)

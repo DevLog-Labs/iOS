@@ -13,6 +13,7 @@ import PresentationShared
 public struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @State private var router = NavigationRouter<TodayRoute>()
     @State private var store: StoreOf<TodayFeature>
     private let isSelected: Bool
@@ -55,6 +56,8 @@ public struct TodayView: View {
                     }
                 }
                 .padding(.horizontal)
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(alignment: .leading) {
@@ -64,6 +67,7 @@ public struct TodayView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal)
+                .frame(maxWidth: readableContentWidth)
                 .padding(.top, windowControlsInset)
                 .padding(.bottom, 8)
                 .background(Color.appBackground)

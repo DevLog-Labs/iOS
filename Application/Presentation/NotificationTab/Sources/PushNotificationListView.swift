@@ -85,6 +85,7 @@ public struct PushNotificationListView: View {
 
 private struct PushNotificationListContent: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @ScaledMetric(relativeTo: .headline) private var iconSize = 36
     let store: StoreOf<PushNotificationListFeature>
 
@@ -203,6 +204,8 @@ private struct PushNotificationListContent: View {
                 }
             }
             .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             VStack(alignment: .leading, spacing: 12) {
@@ -220,6 +223,7 @@ private struct PushNotificationListContent: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 8)
             .background(Color.appBackground)

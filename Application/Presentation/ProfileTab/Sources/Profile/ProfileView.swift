@@ -12,6 +12,7 @@ import PresentationShared
 
 public struct ProfileView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @State private var settingsStore: StoreOf<SettingsFeature>
     @State private var store: StoreOf<ProfileFeature>
@@ -50,6 +51,8 @@ public struct ProfileView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
             }
             .safeAreaInset(edge: .top, spacing: 0) { titleBar }
             .refreshable { await store.send(.refresh).finish() }
@@ -116,6 +119,7 @@ public struct ProfileView: View {
             }
         }
         .padding(.horizontal, 16)
+        .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 8)
         .background(Color.appBackground)
