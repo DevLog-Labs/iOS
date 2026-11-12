@@ -103,6 +103,8 @@ private struct TodoListContent: View {
                                 }
                                 .itemActions {
                                     ItemActionButton(
+                                        title: todo.isPinned
+                                            ? String(localized: "todo_action_unpin", bundle: PresentationResources.bundle) : String(localized: "todo_action_pin", bundle: PresentationResources.bundle),
                                         color: Color.orange,
                                         image: Image(systemName: "star\(todo.isPinned ? ".slash" : ".fill")")
                                     ) {
@@ -110,6 +112,8 @@ private struct TodoListContent: View {
                                     }
 
                                     ItemActionButton(
+                                        title: todo.isCompleted
+                                            ? String(localized: "todo_action_uncomplete", bundle: PresentationResources.bundle) : String(localized: "todo_action_complete", bundle: PresentationResources.bundle),
                                         color: Color.accent,
                                         image: Image(systemName: todo.isCompleted
                                             ? "arrow.uturn.backward" : "checkmark")
@@ -118,6 +122,7 @@ private struct TodoListContent: View {
                                     }
 
                                     ItemActionButton(
+                                        title: String(localized: "common_delete", bundle: PresentationResources.bundle),
                                         color: Color.red,
                                         image: Image(systemName: "trash")
                                     ) {

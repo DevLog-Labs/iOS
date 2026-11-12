@@ -117,12 +117,14 @@ private struct CategoryManageRow: View {
                 .background(Color.surface)
                 .itemActions {
                     ItemActionButton(
+                        title: String(localized: "todo_edit", bundle: PresentationResources.bundle),
                         color: Color.accent,
                         image: Image(systemName: "pencil"),
                         action: onEdit
                     )
 
                     ItemActionButton(
+                        title: String(localized: "common_delete", bundle: PresentationResources.bundle),
                         color: Color.red,
                         image: Image(systemName: "trash"),
                         action: onDelete

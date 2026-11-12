@@ -175,6 +175,8 @@ private struct PushNotificationListContent: View {
                                             }
                                             .itemActions {
                                                 ItemActionButton(
+                                                    title: item.isRead
+                                                        ? String(localized: "push_mark_unread", bundle: PresentationResources.bundle) : String(localized: "push_mark_read", bundle: PresentationResources.bundle),
                                                     color: Color.accent,
                                                     image: Image(systemName: item.isRead
                                                         ? "circle.badge.xmark" : "checkmark.circle")
@@ -183,6 +185,7 @@ private struct PushNotificationListContent: View {
                                                 }
 
                                                 ItemActionButton(
+                                                    title: String(localized: "common_delete", bundle: PresentationResources.bundle),
                                                     color: Color.red,
                                                     image: Image(systemName: "trash")
                                                 ) {

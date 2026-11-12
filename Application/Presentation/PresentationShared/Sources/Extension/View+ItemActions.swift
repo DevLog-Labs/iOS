@@ -17,15 +17,18 @@ public extension View {
 public struct ItemActionButton: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
 
+    private let title: String
     private let color: Color
     private let image: Image
     private let action: () -> Void
 
     public init(
+        title: String,
         color: Color,
         image: Image,
         action: @escaping () -> Void
     ) {
+        self.title = title
         self.color = color
         self.image = image
         self.action = action
@@ -33,8 +36,13 @@ public struct ItemActionButton: View {
 
     public var body: some View {
         if isiOSAppOnMac {
+            // Mac 우클릭 메뉴 항목은 아이콘과 제목 함께 표시
             Button(action: action) {
-                image
+                Label {
+                    Text(title)
+                } icon: {
+                    image
+                }
             }
         } else {
             Button(action: action) {
