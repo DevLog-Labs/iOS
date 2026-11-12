@@ -34,9 +34,9 @@ public extension EnvironmentValues {
         set { self[ReadableContentWidthKey.self] = newValue }
     }
 
-    var navigationHistoryCommand: NavigationHistoryCommand? {
-        get { self[NavigationHistoryCommandKey.self] }
-        set { self[NavigationHistoryCommandKey.self] = newValue }
+    var navigationStep: NavigationStep? {
+        get { self[NavigationStepKey.self] }
+        set { self[NavigationStepKey.self] = newValue }
     }
 
     var showsPaneTitleBar: Bool {
@@ -85,8 +85,8 @@ public extension EnvironmentValues {
         static let defaultValue = CGFloat.infinity
     }
 
-    private struct NavigationHistoryCommandKey: EnvironmentKey {
-        static let defaultValue: NavigationHistoryCommand? = nil
+    private struct NavigationStepKey: EnvironmentKey {
+        static let defaultValue: NavigationStep? = nil
     }
 
     private struct ShowsPaneTitleBarKey: EnvironmentKey {

@@ -83,7 +83,7 @@ public struct NavigationHistoryState: Equatable {
     }
 }
 
-public struct NavigationHistoryCommand: Equatable {
+public struct NavigationStep: Equatable {
     public enum Direction: Equatable {
         case back
         case forward
@@ -118,14 +118,14 @@ public extension View {
 }
 
 private struct NavigationHistoryModifier<Route: Hashable>: ViewModifier {
-    @Environment(\.navigationHistoryCommand) private var command
+    @Environment(\.navigationStep) private var step
     let router: NavigationRouter<Route>
 
     func body(content: Content) -> some View {
         content
             .preference(key: NavigationHistoryPreferenceKey.self, value: router.history)
-            .onChange(of: command) { _, command in
-                switch command?.direction {
+            .onChange(of: step) { _, step in
+                switch step?.direction {
                 case .back:
                     router.goBack()
                 case .forward:

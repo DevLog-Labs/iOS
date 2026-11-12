@@ -23,7 +23,7 @@ struct MainFeature {
         var windowControlsInset = CGFloat.zero
         var readableContentWidth = CGFloat.infinity
         var navigationHistories: [MainTab: NavigationHistoryState] = [:]
-        var navigationCommands: [MainTab: NavigationHistoryCommand] = [:]
+        var navigationSteps: [MainTab: NavigationStep] = [:]
     }
 
     enum Action: BindableAction, Equatable {
@@ -36,7 +36,7 @@ struct MainFeature {
             case onAppear
             case selectedTabChanged(MainTab)
             case navigationHistoryChanged(MainTab, NavigationHistoryState)
-            case tapNavigation(MainTab, NavigationHistoryCommand.Direction)
+            case tapNavigation(MainTab, NavigationStep.Direction)
         }
 
         enum StoreAction: Equatable {
@@ -72,7 +72,7 @@ struct MainFeature {
             case .view(.navigationHistoryChanged(let tab, let history)):
                 state.navigationHistories[tab] = history
             case .view(.tapNavigation(let tab, let direction)):
-                state.navigationCommands[tab] = NavigationHistoryCommand(id: uuid(), direction: direction)
+                state.navigationSteps[tab] = NavigationStep(id: uuid(), direction: direction)
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)

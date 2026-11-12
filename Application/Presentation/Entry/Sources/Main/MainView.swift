@@ -65,7 +65,7 @@ struct MainView: View {
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
                         readableContentWidth: readableContentWidth,
-                        navigationCommand: store.navigationCommands[.home],
+                        navigationStep: store.navigationSteps[.home],
                         onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.home, $0))) },
                         windowEvent: windowEvent
                     )
@@ -81,7 +81,7 @@ struct MainView: View {
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
                         readableContentWidth: readableContentWidth,
-                        navigationCommand: store.navigationCommands[.today],
+                        navigationStep: store.navigationSteps[.today],
                         onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.today, $0))) },
                         windowEvent: windowEvent
                     )
@@ -97,7 +97,7 @@ struct MainView: View {
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
                         readableContentWidth: readableContentWidth,
-                        navigationCommand: store.navigationCommands[.notification],
+                        navigationStep: store.navigationSteps[.notification],
                         onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.notification, $0))) },
                         windowEvent: windowEvent
                     )
@@ -114,7 +114,7 @@ struct MainView: View {
                         showsSideBar: showsSideBar,
                         windowControlsInset: tabContentInset,
                         readableContentWidth: readableContentWidth,
-                        navigationCommand: store.navigationCommands[.profile],
+                        navigationStep: store.navigationSteps[.profile],
                         onNavigationHistoryChange: { store.send(.view(.navigationHistoryChanged(.profile, $0))) },
                         windowEvent: windowEvent
                     )
@@ -207,7 +207,7 @@ private struct MainTabContent: View {
     let showsSideBar: Bool
     let windowControlsInset: CGFloat
     let readableContentWidth: CGFloat
-    let navigationCommand: NavigationHistoryCommand?
+    let navigationStep: NavigationStep?
     let onNavigationHistoryChange: (NavigationHistoryState) -> Void
     let windowEvent: TodoEditorWindowEvent
 
@@ -216,7 +216,7 @@ private struct MainTabContent: View {
             .environment(\.isTabContentActive, isSelected)
             .environment(\.windowControlsInset, windowControlsInset)
             .environment(\.readableContentWidth, readableContentWidth)
-            .environment(\.navigationHistoryCommand, navigationCommand)
+            .environment(\.navigationStep, navigationStep)
             .onPreferenceChange(NavigationHistoryPreferenceKey.self) { history in
                 onNavigationHistoryChange(history)
             }
