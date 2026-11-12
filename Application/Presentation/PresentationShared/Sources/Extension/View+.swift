@@ -136,9 +136,17 @@ public extension View {
         if #available(iOS 26.0, *) {
             switch glassEffect {
             case .enabled:
-                self.foregroundStyle(Color(.label))
-                    .padding(8)
-                    .modifier(AdaptiveGlassEffectModifier(shape: shape, color: color))
+                if ProcessInfo.processInfo.isiOSAppOnMac {
+                    // Mac에서는 리퀴드 글래스 대신 같은 색의 불투명 배경 표시
+                    self.foregroundStyle(Color(.label))
+                        .padding(8)
+                        .background(color, in: shape)
+                } else {
+                    self.foregroundStyle(Color(.label))
+                        .padding(8)
+                        .glassEffect(.regular.tint(color), in: shape)
+                        .clipShape(shape)
+                }
             case .disabled:
                 opaqueButtonStyle(shape: shape, color: color)
             }
@@ -232,27 +240,6 @@ private struct TopBarButtonStyleModifier: ViewModifier {
                 .frame(width: iconSize, height: iconSize)
                 .padding(9)
                 .glassEffect(.regular.interactive(isInteractive), in: .circle)
-        }
-    }
-}
-
-@available(iOS 26.0, *)
-private struct AdaptiveGlassEffectModifier<S: InsettableShape>: ViewModifier {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    let shape: S
-    let color: Color
-
-    @ViewBuilder
-    func body(content: Content) -> some View {
-        if isiOSAppOnMac {
-            // Mac에서는 리퀴드 글래스 대신 같은 색의 불투명 배경 표시
-            content
-                .background(color, in: shape)
-                .contentShape(shape)
-        } else {
-            content
-                .glassEffect(.regular.tint(color), in: shape)
-                .clipShape(shape)
         }
     }
 }
