@@ -138,8 +138,7 @@ public extension View {
             case .enabled:
                 self.foregroundStyle(Color(.label))
                     .padding(8)
-                    .glassEffect(.regular.tint(color), in: shape)
-                    .clipShape(shape)
+                    .modifier(AdaptiveGlassEffectModifier(shape: shape, color: color))
             case .disabled:
                 opaqueButtonStyle(shape: shape, color: color)
             }
@@ -194,6 +193,7 @@ private struct LegacyTopBarButtonStyleModifier: ViewModifier {
 
 @available(iOS 26.0, *)
 private struct TopBarButtonStyleModifier: ViewModifier {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title2,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
@@ -203,7 +203,15 @@ private struct TopBarButtonStyleModifier: ViewModifier {
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        if let tint {
+        if isiOSAppOnMac {
+            // Mac에서는 리퀴드 글래스 없이 아이콘만 표시
+            content
+                .font(.title2.weight(.semibold))
+                .foregroundStyle(tint ?? Color.primary)
+                .frame(width: iconSize, height: iconSize)
+                .padding(9)
+                .contentShape(.circle)
+        } else if let tint {
             content
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(Color.white)
@@ -220,6 +228,26 @@ private struct TopBarButtonStyleModifier: ViewModifier {
                 .frame(width: iconSize, height: iconSize)
                 .padding(9)
                 .glassEffect(.regular.interactive(isInteractive), in: .circle)
+        }
+    }
+}
+
+@available(iOS 26.0, *)
+private struct AdaptiveGlassEffectModifier<S: InsettableShape>: ViewModifier {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    let shape: S
+    let color: Color
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if isiOSAppOnMac {
+            // Mac에서는 리퀴드 글래스 없이 내용만 표시
+            content
+                .contentShape(shape)
+        } else {
+            content
+                .glassEffect(.regular.tint(color), in: shape)
+                .clipShape(shape)
         }
     }
 }
