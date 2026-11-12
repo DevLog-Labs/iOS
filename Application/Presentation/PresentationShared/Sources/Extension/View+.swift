@@ -245,8 +245,9 @@ private struct AdaptiveGlassEffectModifier<S: InsettableShape>: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {
         if isiOSAppOnMac {
-            // Mac에서는 리퀴드 글래스 없이 내용만 표시
+            // Mac에서는 리퀴드 글래스 대신 같은 색의 불투명 배경 표시
             content
+                .background(color, in: shape)
                 .contentShape(shape)
         } else {
             content
