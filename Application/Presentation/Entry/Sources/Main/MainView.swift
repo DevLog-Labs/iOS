@@ -259,8 +259,10 @@ private struct SideBar: View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
                 if let history {
-                    HStack(spacing: 4) {
-                        Spacer()
+                    // 칸 제목 줄과 같은 높이의 ← → 줄
+                    PaneTitleBar(background: .surface) {
+                        EmptyView()
+                    } actions: {
                         SideBarHistoryButton(
                             systemName: "arrow.left",
                             isEnabled: history.canGoBack,
@@ -272,7 +274,6 @@ private struct SideBar: View {
                             action: onForward
                         )
                     }
-                    .padding(.horizontal, 12)
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     ForEach(MainTab.allCases, id: \.self) { tab in

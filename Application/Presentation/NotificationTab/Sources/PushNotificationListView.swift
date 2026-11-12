@@ -84,6 +84,7 @@ public struct PushNotificationListView: View {
 }
 
 private struct PushNotificationListContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @ScaledMetric(relativeTo: .headline) private var iconSize = 36
@@ -211,24 +212,33 @@ private struct PushNotificationListContent: View {
             .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            VStack(alignment: .leading, spacing: 12) {
-                Text(String(localized: "nav_push_notifications", bundle: PresentationResources.bundle))
-                    .font(.largeTitle.bold())
-                    .padding(.bottom, 8)
+            let title = Text(String(localized: "nav_push_notifications", bundle: PresentationResources.bundle))
 
-                ScrollView(.horizontal) {
-                    PushNotificationFilterBar(store: store)
+            VStack(spacing: 0) {
+                if isiOSAppOnMac {
+                    PaneTitleBar(title)
                 }
-                .scrollIndicators(.hidden)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.horizontal, -16)
-                .contentMargins(.horizontal, 16, for: .scrollContent)
+                VStack(alignment: .leading, spacing: 12) {
+                    if !isiOSAppOnMac {
+                        title
+                            .font(.largeTitle.bold())
+                            .padding(.bottom, 8)
+                    }
+
+                    ScrollView(.horizontal) {
+                        PushNotificationFilterBar(store: store)
+                    }
+                    .scrollIndicators(.hidden)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.horizontal, -16)
+                    .contentMargins(.horizontal, 16, for: .scrollContent)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 16)
+                .frame(maxWidth: readableContentWidth)
+                .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
+                .padding(.bottom, 8)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 16)
-            .frame(maxWidth: readableContentWidth)
-            .padding(.top, windowControlsInset)
-            .padding(.bottom, 8)
             .background(Color.appBackground)
             .toolbarBackground(Color.appBackground)
         }

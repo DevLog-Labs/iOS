@@ -39,6 +39,11 @@ public extension EnvironmentValues {
         set { self[NavigationHistoryCommandKey.self] = newValue }
     }
 
+    var showsPaneTitleBar: Bool {
+        get { self[ShowsPaneTitleBarKey.self] }
+        set { self[ShowsPaneTitleBarKey.self] = newValue }
+    }
+
     var deviceType: DeviceType {
         get { self[DeviceTypeKey.self] }
         set { self[DeviceTypeKey.self] = newValue }
@@ -82,6 +87,10 @@ public extension EnvironmentValues {
 
     private struct NavigationHistoryCommandKey: EnvironmentKey {
         static let defaultValue: NavigationHistoryCommand? = nil
+    }
+
+    private struct ShowsPaneTitleBarKey: EnvironmentKey {
+        static let defaultValue = false
     }
 
     private struct DeviceTypeKey: EnvironmentKey {

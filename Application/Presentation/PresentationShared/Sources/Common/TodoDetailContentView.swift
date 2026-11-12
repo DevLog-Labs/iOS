@@ -14,31 +14,34 @@ struct TodoDetailContentView: View {
     let content: String
     let referenceItems: [Int: TodoReferenceItem]
     var number: Int
+    var showsTitle = true
     var onOpenTodoID: ((String) -> Void)?
 
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
-                ScrollView(.horizontal) {
-                    LazyHStack(alignment: .firstTextBaseline, spacing: 0, pinnedViews: .sectionFooters) {
-                        Section {
-                            Text(title)
-                        } footer: {
-                            Text("#\(number)")
-                                .foregroundStyle(Color.textTertiary)
-                                .padding(.leading, 8)
-                                .background {
-                                    Color.appBackground.padding(.trailing, -16)
-                                }
+                if showsTitle {
+                    ScrollView(.horizontal) {
+                        LazyHStack(alignment: .firstTextBaseline, spacing: 0, pinnedViews: .sectionFooters) {
+                            Section {
+                                Text(title)
+                            } footer: {
+                                Text("#\(number)")
+                                    .foregroundStyle(Color.textTertiary)
+                                    .padding(.leading, 8)
+                                    .background {
+                                        Color.appBackground.padding(.trailing, -16)
+                                    }
+                            }
                         }
+                        .lineLimit(1)
+                        .font(.title3.bold())
                     }
-                    .lineLimit(1)
-                    .font(.title3.bold())
+                    .scrollBounceBehavior(.always, axes: .horizontal)
+                    .scrollIndicators(.hidden)
+                    .contentMargins(.horizontal, 16, for: .scrollContent)
+                    .padding(.horizontal, -16)
                 }
-                .scrollBounceBehavior(.always, axes: .horizontal)
-                .scrollIndicators(.hidden)
-                .contentMargins(.horizontal, 16, for: .scrollContent)
-                .padding(.horizontal, -16)
 
                 Group {
                     if content.isEmpty {

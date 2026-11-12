@@ -12,6 +12,7 @@ struct PushNotificationSettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
     @Environment(\.isTabContentActive) private var isTabContentActive
     @State var store: StoreOf<PushNotificationSettingsFeature>
@@ -51,24 +52,31 @@ struct PushNotificationSettingsView: View {
         }
     }
 
+    @ViewBuilder
     private var topBar: some View {
-        ZStack {
-            Text(String(localized: "nav_push_settings", bundle: PresentationResources.bundle))
-                .font(.headline)
+        let title = Text(String(localized: "nav_push_settings", bundle: PresentationResources.bundle))
 
-            if deviceType != .duo {
-                HStack {
-                    NavigationBackButton(action: { dismiss() })
-                    Spacer()
+        if showsPaneTitleBar {
+            PaneTitleBar(title)
+        } else {
+            ZStack {
+                title
+                    .font(.headline)
+
+                if deviceType != .duo {
+                    HStack {
+                        NavigationBackButton(action: { dismiss() })
+                        Spacer()
+                    }
                 }
             }
+            .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
+            .padding(.top, windowControlsInset)
+            .padding(.bottom, 12)
+            .background(Color.appBackground)
+            .toolbarBackground(Color.appBackground)
         }
-        .padding(.horizontal, 16)
-        .frame(maxWidth: readableContentWidth)
-        .padding(.top, windowControlsInset)
-        .padding(.bottom, 12)
-        .background(Color.appBackground)
-        .toolbarBackground(Color.appBackground)
     }
 }
 

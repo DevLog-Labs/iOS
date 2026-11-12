@@ -205,94 +205,110 @@ private struct TodoListTopBar: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
     @Namespace private var searchTransition
     let store: StoreOf<TodoListFeature>
 
     var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Text(TodoCategoryItem(from: store.category).localizedName)
-                    .font(.headline)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
+        let title = Text(TodoCategoryItem(from: store.category).localizedName)
 
-                if deviceType != .duo {
-                    HStack(spacing: 12) {
-                        NavigationBackButton {
-                            dismiss()
-                        }
+        VStack(spacing: 0) {
+            if showsPaneTitleBar {
+                PaneTitleBar(title) { actions }
+            }
 
-                        Spacer()
+            VStack(spacing: 8) {
+                if !showsPaneTitleBar {
+                    ZStack {
+                        title
+                            .font(.headline)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
 
-                        if !store.isSearching {
-                            if #available(iOS 26.0, *) {
-                                Button {
-                                    withAnimation(.smooth(duration: 0.3)) {
-                                        store.send(.view(.setSearching(true)))
-                                    }
-                                } label: {
-                                    Image(systemName: "magnifyingglass")
+                        if deviceType != .duo {
+                            HStack(spacing: 12) {
+                                NavigationBackButton {
+                                    dismiss()
                                 }
-                                .topBarButtonStyle()
-                                .matchedGeometryEffect(id: "todo-search", in: searchTransition)
-                            } else {
-                                Button {
-                                    withAnimation(.smooth(duration: 0.3)) {
-                                        store.send(.view(.setSearching(true)))
-                                    }
-                                } label: {
-                                    Image(systemName: "magnifyingglass")
-                                        .font(.title3.weight(.semibold))
-                                        .frame(width: 28, height: 28)
-                                }
-                                .adaptiveButtonStyle(
-                                    shape: .circle,
-                                    color: .surface,
-                                    glassEffect: .enabled
-                                )
-                                .matchedGeometryEffect(id: "todo-search", in: searchTransition)
-                            }
-                        }
 
-                        if #available(iOS 26.0, *) {
-                            Button {
-                                openTodoEditor()
-                            } label: {
-                                Image(systemName: "plus")
+                                Spacer()
+
+                                actions
                             }
-                            .topBarButtonStyle()
-                        } else {
-                            Button {
-                                openTodoEditor()
-                            } label: {
-                                Image(systemName: "plus")
-                                    .font(.title3.weight(.semibold))
-                                    .frame(width: 28, height: 28)
-                            }
-                            .adaptiveButtonStyle(
-                                shape: .circle,
-                                color: .surface,
-                                glassEffect: .enabled
-                            )
                         }
                     }
-                }
-            }
-            .padding(.horizontal, 16)
-
-            if store.isSearching {
-                TodoListSearchBar(store: store, searchTransition: searchTransition)
                     .padding(.horizontal, 16)
-            }
+                }
 
-            TodoListFilterHeader(store: store)
+                if store.isSearching {
+                    TodoListSearchBar(store: store, searchTransition: searchTransition)
+                        .padding(.horizontal, 16)
+                }
+
+                TodoListFilterHeader(store: store)
+            }
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
+            .padding(.top, showsPaneTitleBar ? 12 : windowControlsInset)
+            .padding(.bottom, 12)
         }
-        .frame(maxWidth: readableContentWidth)
-        .frame(maxWidth: .infinity)
-        .padding(.top, windowControlsInset)
-        .padding(.bottom, 12)
         .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+    }
+
+    @ViewBuilder
+    private var actions: some View {
+        if !store.isSearching {
+            if #available(iOS 26.0, *) {
+                Button {
+                    withAnimation(.smooth(duration: 0.3)) {
+                        store.send(.view(.setSearching(true)))
+                    }
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+                .topBarButtonStyle()
+                .matchedGeometryEffect(id: "todo-search", in: searchTransition)
+            } else {
+                Button {
+                    withAnimation(.smooth(duration: 0.3)) {
+                        store.send(.view(.setSearching(true)))
+                    }
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                        .font(.title3.weight(.semibold))
+                        .frame(width: 28, height: 28)
+                }
+                .adaptiveButtonStyle(
+                    shape: .circle,
+                    color: .surface,
+                    glassEffect: .enabled
+                )
+                .matchedGeometryEffect(id: "todo-search", in: searchTransition)
+            }
+        }
+
+        if #available(iOS 26.0, *) {
+            Button {
+                openTodoEditor()
+            } label: {
+                Image(systemName: "plus")
+            }
+            .topBarButtonStyle()
+        } else {
+            Button {
+                openTodoEditor()
+            } label: {
+                Image(systemName: "plus")
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 28, height: 28)
+            }
+            .adaptiveButtonStyle(
+                shape: .circle,
+                color: .surface,
+                glassEffect: .enabled
+            )
+        }
     }
 
     private func openTodoEditor() {

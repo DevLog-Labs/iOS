@@ -13,6 +13,7 @@ import PresentationShared
 public struct ProfileView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.deviceType) private var deviceType
     @State private var settingsStore: StoreOf<SettingsFeature>
     @State private var store: StoreOf<ProfileFeature>
@@ -54,6 +55,8 @@ public struct ProfileView: View {
                 .frame(maxWidth: readableContentWidth)
                 .frame(maxWidth: .infinity)
             }
+            // Mac 제목 줄 구분선과 첫 카드 사이 여백
+            .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
             .safeAreaInset(edge: .top, spacing: 0) { titleBar }
             .refreshable { await store.send(.refresh).finish() }
             .duoToolbarVisibility()
@@ -79,7 +82,7 @@ public struct ProfileView: View {
                     default: false
                     }
                 },
-                destination: destinationView
+                destination: { destinationView($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
             )
         }
         .navigationHistory(router)
@@ -103,28 +106,37 @@ public struct ProfileView: View {
         }
     }
 
+    @ViewBuilder
     private var titleBar: some View {
-        VStack(alignment: .leading) {
-            HStack {
-                Text("nav_profile", bundle: PresentationResources.bundle)
-                    .font(.largeTitle.bold())
-                Spacer()
-                if deviceType != .duo {
-                    Button {
-                        router.push(.settings)
-                    } label: {
-                        Image(systemName: "gearshape")
+        let settingsButton = Button {
+            router.push(.settings)
+        } label: {
+            Image(systemName: "gearshape")
+        }
+        .topBarButtonStyle()
+
+        if isiOSAppOnMac {
+            PaneTitleBar(Text("nav_profile", bundle: PresentationResources.bundle)) {
+                settingsButton
+            }
+        } else {
+            VStack(alignment: .leading) {
+                HStack {
+                    Text("nav_profile", bundle: PresentationResources.bundle)
+                        .font(.largeTitle.bold())
+                    Spacer()
+                    if deviceType != .duo {
+                        settingsButton
                     }
-                    .topBarButtonStyle()
                 }
             }
+            .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
+            .padding(.top, windowControlsInset)
+            .padding(.bottom, 8)
+            .background(Color.appBackground)
+            .toolbarBackground(Color.appBackground)
         }
-        .padding(.horizontal, 16)
-        .frame(maxWidth: readableContentWidth)
-        .padding(.top, windowControlsInset)
-        .padding(.bottom, 8)
-        .background(Color.appBackground)
-        .toolbarBackground(Color.appBackground)
     }
 
     @ViewBuilder

@@ -198,19 +198,23 @@ private struct TopBarButtonStyleModifier: ViewModifier {
         forTextStyle: .title2,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
     ).lineHeight
+    @ScaledMetric(relativeTo: .body) private var macIconSize = UIFont.preferredFont(
+        forTextStyle: .body,
+        compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
+    ).lineHeight
     let tint: Color?
     let isInteractive: Bool
 
     @ViewBuilder
     func body(content: Content) -> some View {
         if isiOSAppOnMac {
-            // Mac에서는 리퀴드 글래스 없이 아이콘만 표시
+            // Mac에서는 리퀴드 글래스 없이 제목 줄에 맞는 작은 아이콘만 표시
             content
-                .font(.title2.weight(.semibold))
+                .font(.body.weight(.medium))
                 .foregroundStyle(tint ?? Color.primary)
-                .frame(width: iconSize, height: iconSize)
-                .padding(9)
-                .contentShape(.circle)
+                .frame(width: macIconSize, height: macIconSize)
+                .padding(6)
+                .contentShape(.rect)
         } else if let tint {
             content
                 .font(.title2.weight(.semibold))

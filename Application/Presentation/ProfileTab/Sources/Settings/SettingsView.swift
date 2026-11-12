@@ -13,6 +13,7 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
     @Bindable var store: StoreOf<SettingsFeature>
     let onNavigate: (ProfileRoute) -> Void
@@ -55,30 +56,39 @@ struct SettingsView: View {
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
+        // Mac 제목 줄 구분선과 첫 항목 사이 여백
+        .contentMargins(.top, showsPaneTitleBar ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
         .duoToolbarVisibility()
         .prominentAlert(store, state: \.alert, action: \.alert)
     }
 
+    @ViewBuilder
     private var topBar: some View {
-        ZStack {
-            Text(String(localized: "nav_settings", bundle: PresentationResources.bundle))
-                .font(.headline)
+        let title = Text(String(localized: "nav_settings", bundle: PresentationResources.bundle))
 
-            if deviceType != .duo {
-                HStack {
-                    NavigationBackButton(action: { dismiss() })
-                    Spacer()
+        if showsPaneTitleBar {
+            PaneTitleBar(title)
+        } else {
+            ZStack {
+                title
+                    .font(.headline)
+
+                if deviceType != .duo {
+                    HStack {
+                        NavigationBackButton(action: { dismiss() })
+                        Spacer()
+                    }
                 }
             }
+            .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
+            .padding(.top, windowControlsInset)
+            .padding(.bottom, 12)
+            .background(Color.appBackground)
+            .toolbarBackground(Color.appBackground)
         }
-        .padding(.horizontal, 16)
-        .frame(maxWidth: readableContentWidth)
-        .padding(.top, windowControlsInset)
-        .padding(.bottom, 12)
-        .background(Color.appBackground)
-        .toolbarBackground(Color.appBackground)
     }
 
     private var deleteAccountContent: some View {
