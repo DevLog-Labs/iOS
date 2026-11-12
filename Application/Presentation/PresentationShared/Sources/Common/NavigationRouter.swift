@@ -47,19 +47,18 @@ public final class NavigationRouter<Route: Hashable> {
     }
 
     public func goBack() {
-        guard !path.isEmpty else { return }
-        path.removeLast()
+        _ = path.popLast()
     }
 
     public func goForward() {
         guard let route = forwardPath.last else { return }
-        path.append(route)
+        push(route)
     }
 
     private func recordForwardPath(from oldPath: [Route]) {
-        if path.count < oldPath.count, Array(oldPath.prefix(path.count)) == path {
+        if path.count < oldPath.count, oldPath.starts(with: path) {
             forwardPath.append(contentsOf: oldPath.dropFirst(path.count).reversed())
-        } else if oldPath.count < path.count, Array(path.prefix(oldPath.count)) == oldPath {
+        } else if oldPath.count < path.count, path.starts(with: oldPath) {
             for route in path.dropFirst(oldPath.count) {
                 if forwardPath.last == route {
                     forwardPath.removeLast()
