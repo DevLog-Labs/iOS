@@ -306,7 +306,8 @@ jobs:
         run: |
           set -euo pipefail
           set -x
-          SPM_DIR="$GITHUB_WORKSPACE/.spm"
+          # tuist generate가 패키지를 해석한 경로를 그대로 써서 패키지를 다시 풀지 않음
+          SPM_DIR="$GITHUB_WORKSPACE/.spm/DevLog"
           mkdir -p "$SPM_DIR"
 
           xcodebuild -version
