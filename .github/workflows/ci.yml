@@ -23,8 +23,6 @@ env:
   WORKSPACE: DevLog.xcworkspace
   TEST_SCHEME: DevLog-Tests
   XCODE_VERSION: "27.2"
-  MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
-  MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
 
 permissions:
   contents: read
@@ -97,11 +95,12 @@ jobs:
             Libraries/MarkdownRenderer/Resources/MarkdownRenderer/renderer.css \
             Libraries/MarkdownRenderer/Resources/MarkdownRenderer/renderer.js
 
+      # private 저장소 인증값은 이 스텝에만 전달해 다른 스텝의 프로세스 환경에 남기지 않음
       - name: Install private config files
         uses: ./.github/actions/install-private-config
         with:
-          git_url: ${{ env.MATCH_GIT_URL }}
-          git_basic_authorization: ${{ env.MATCH_GIT_BASIC_AUTHORIZATION }}
+          git_url: ${{ secrets.MATCH_GIT_URL }}
+          git_basic_authorization: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
           environment: staging
 
       - name: Select Xcode
