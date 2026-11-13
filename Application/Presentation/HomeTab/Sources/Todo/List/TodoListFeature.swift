@@ -25,6 +25,7 @@ struct TodoListFeature {
         var loading = LoadingFeature.State()
         var searchQuery = ""
         var selectedTodoId: String?
+        var detailRevision = 0
         var undoTodoId: String?
         var nextCursor: TodoCursor?
 
@@ -372,6 +373,10 @@ private extension TodoListFeature {
         case .didToggleCompleted(let todo), .didTogglePinned(let todo):
             if let index = state.todos.firstIndex(where: { $0.id == todo.id }) {
                 state.todos[index] = todo
+            }
+            // 상세 칸이 바뀐 완료·중요 상태를 다시 조회하도록 갱신
+            if todo.id == state.selectedTodoId {
+                state.detailRevision += 1
             }
         case .setTodoHidden(let todoId, let isHidden):
             Self.setTodoHidden(&state, todoId: todoId, isHidden: isHidden)

@@ -45,6 +45,7 @@ struct TodoListView: View {
                 placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
                 windowEvent: windowEvent
             )
+            .id(store.detailRevision)
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .onReceive(windowSubmits) { submit in

@@ -30,6 +30,7 @@ final class TodoListStoreTestAdapter {
     var showAlert: Bool { store.state.alert != nil }
     var appliedFilterCount: Int { store.state.appliedFilterCount }
     var selectedTodoId: String? { store.state.selectedTodoId }
+    var detailRevision: Int { store.state.detailRevision }
 
     init(
         fetchUseCase: FetchTodosUseCase = TodoListFetchTodosUseCaseSpy(),
