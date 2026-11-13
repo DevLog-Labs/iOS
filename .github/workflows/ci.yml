@@ -1,7 +1,18 @@
 name: iOS CI
 
+# develop 푸시는 PR이 읽을 캐시를 만드는 실행
 on:
   pull_request:
+  push:
+    branches:
+      - develop
+    paths-ignore:
+      - '**/*.md'
+      - 'docs/**'
+      - '.githooks/**'
+      - 'fastlane/**'
+      - 'Gemfile'
+      - 'Gemfile.lock'
 
 # 같은 PR이나 브랜치에 새 푸시가 오면 진행 중인 앞 실행 취소
 concurrency:
@@ -23,6 +34,7 @@ permissions:
 
 jobs:
   # 테스트 타깃까지 한 번 컴파일하고 같은 러너에서 테스트만 실행
+  # develop 실행은 패키지와 컴파일 캐시 저장용 빌드
   ci:
     name: Build and Test
     runs-on: xcode-27
@@ -85,6 +97,10 @@ jobs:
           sudo xcode-select -s "$XCODE_APP/Contents/Developer"
           xcodebuild -version
 
+      - name: Read Xcode version
+        id: xcode
+        run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
+
       - name: Set up Tuist
         uses: jdx/mise-action@v4
         with:
@@ -101,17 +117,25 @@ jobs:
           brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
           swiftlint version
 
-      - name: Cache SwiftPM
-        uses: actions/cache@v5
+      # 키가 없을 때만 develop 실행이 저장
+      - name: Restore SwiftPM packages
+        id: packages
+        uses: actions/cache/restore@v5
         with:
-          path: |
-            ~/.swiftpm
-            ~/Library/Caches/org.swift.swiftpm
-            ~/Library/Developer/Xcode/SourcePackages
-            .spm
-          key: ${{ runner.os }}-spm-${{ hashFiles('.mise.toml', 'Tuist.swift', 'Workspace.swift', 'Tuist/ProjectDescriptionHelpers/*.swift', 'Application/**/Project.swift', 'Libraries/**/Project.swift', 'Widget/**/Project.swift') }}
+          path: .spm
+          key: spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('.mise.toml', 'Tuist.swift', 'Workspace.swift', 'Tuist/ProjectDescriptionHelpers/*.swift', 'Application/**/Project.swift', 'Libraries/**/Project.swift', 'Widget/**/Project.swift') }}
           restore-keys: |
-            ${{ runner.os }}-spm-
+            spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-
+
+      # develop 실행은 처음부터 빌드해 커밋마다 저장하고 PR은 가장 최근 develop 캐시만 읽음
+      - name: Restore compilation cache
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ runner.temp }}/compilation-cache
+          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-${{ github.sha }}
+          restore-keys: |
+            compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-
 
       - name: Generate Xcode workspace with Tuist
         shell: bash
@@ -148,6 +172,9 @@ jobs:
             -skipMacroValidation \
             -showBuildTimingSummary \
             ARCHS=arm64 \
+            COMPILATION_CACHE_ENABLE_CACHING=YES \
+            COMPILATION_CACHE_CAS_PATH="$RUNNER_TEMP/compilation-cache" \
+            SWIFT_ENABLE_EXPLICIT_MODULES=YES \
             COMPILER_INDEX_STORE_ENABLE=NO \
             build-for-testing \
             | tee build.log
@@ -167,6 +194,7 @@ jobs:
 
       - name: Select iOS Simulator Runtime (installed)
         id: pick_ios
+        if: github.event_name == 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
@@ -248,6 +276,7 @@ jobs:
       # 설치나 적용이 실패하면 경고만 남기고 기본 상태 시뮬레이터로 진행
       - name: Install simslim
         id: simslim
+        if: github.event_name == 'pull_request'
         continue-on-error: true
         timeout-minutes: 2
         env:
@@ -269,7 +298,7 @@ jobs:
       # 종료 상태의 시뮬레이터에 적용하면 simslim이 비활성화 목록을 기록한 뒤 한 번만 부팅
       # 제한 시간이 지나도 진행 중인 부팅은 다음 단계가 기다림
       - name: Slim simulator
-        if: steps.simslim.outputs.path != ''
+        if: github.event_name == 'pull_request' && steps.simslim.outputs.path != ''
         continue-on-error: true
         timeout-minutes: 4
         env:
@@ -284,6 +313,7 @@ jobs:
           fi
 
       - name: Boot simulator
+        if: github.event_name == 'pull_request'
         timeout-minutes: 5
         env:
           DEVICE_ID: ${{ steps.pick_ios.outputs.device_id }}
@@ -298,6 +328,7 @@ jobs:
       # 복제 시뮬레이터를 추가로 부팅하는 병렬 테스트는 CI에서 끔
       - name: Test
         id: test
+        if: github.event_name == 'pull_request'
         timeout-minutes: 15
         shell: bash
         env:
@@ -439,20 +470,36 @@ jobs:
           PY
 
       - name: Upload test logs
-        if: always()
+        if: always() && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v6
         with:
           name: ios-test
           path: test-results
           if-no-files-found: ignore
 
+      - name: Save SwiftPM packages
+        if: github.event_name == 'push' && steps.packages.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: .spm
+          key: ${{ steps.packages.outputs.cache-primary-key }}
+
+      - name: Save compilation cache
+        if: github.event_name == 'push'
+        uses: actions/cache/save@v5
+        with:
+          path: ${{ runner.temp }}/compilation-cache
+          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-${{ github.sha }}
+
   report:
     name: Report
     runs-on: ubuntu-latest
     needs: [ci]
     # 취소된 실행은 실패 댓글을 남기지 않음
+    # push 실행의 fork 값은 비어 있어 이벤트 조건으로 제외
     if: |
       !cancelled()
+      && github.event_name == 'pull_request'
       && github.event.pull_request.head.repo.fork == false
       && (needs.ci.result == 'failure' || needs.ci.result == 'success')
     steps:
