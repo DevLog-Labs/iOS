@@ -39,41 +39,65 @@ public struct ProfileView: View {
 
     public var body: some View {
         NavigationStack(path: $router.path) {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    UserInfoCard(store: store, isSelected: isSelected)
-                    ActivityCard(store: store) { todoId in
-                        router.push(.activity(todoId))
-                    }
-                    ProfileGoalSummary(store: store)
-                    RecentActivityCard(store: store) { todoId in
-                        router.push(.recentTodo(todoId))
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.bottom, 24)
-                .frame(maxWidth: readableContentWidth)
-                .frame(maxWidth: .infinity)
-            }
-            // Mac 제목 줄 구분선과 첫 카드 사이 여백
-            .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
-            .safeAreaInset(edge: .top, spacing: 0) { titleBar }
-            .refreshable { await store.send(.refresh).finish() }
-            .duoToolbarVisibility()
-            .toolbar {
-                if deviceType == .duo {
-                    ToolbarItem(placement: .topBarTrailing) {
-                        // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
-                        Button {
-                            router.push(.settings)
-                        } label: {
-                            Image(systemName: "gearshape")
+            PaneSplitView {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 16) {
+                        UserInfoCard(store: store, isSelected: isSelected)
+                        ActivityCard(store: store) { todoId in
+                            showTodo(.activity(todoId))
                         }
-                        .id(windowControlsInset)
+                        ProfileGoalSummary(store: store)
+                        RecentActivityCard(store: store) { todoId in
+                            showTodo(.recentTodo(todoId))
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
+                    .frame(maxWidth: readableContentWidth)
+                    .frame(maxWidth: .infinity)
+                }
+                // Mac 제목 줄 구분선과 첫 카드 사이 여백
+                .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
+                .safeAreaInset(edge: .top, spacing: 0) { titleBar }
+                .refreshable { await store.send(.refresh).finish() }
+                .duoToolbarVisibility()
+                .toolbar {
+                    if deviceType == .duo {
+                        ToolbarItem(placement: .topBarTrailing) {
+                            // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+                            Button {
+                                router.push(.settings)
+                            } label: {
+                                Image(systemName: "gearshape")
+                            }
+                            .id(windowControlsInset)
+                        }
                     }
                 }
+                .background(Color.appBackground)
+            } detail: {
+                switch store.selectedTodoRoute {
+                case .activity(let todoId):
+                    TodoDetailPane(
+                        todoId: todoId,
+                        showEditButton: false,
+                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle)
+                    )
+                case .recentTodo(let todoId):
+                    TodoDetailPane(
+                        todoId: todoId,
+                        showEditButton: true,
+                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle),
+                        windowEvent: windowEvent
+                    )
+                default:
+                    TodoDetailPane(
+                        todoId: nil,
+                        showEditButton: false,
+                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle)
+                    )
+                }
             }
-            .background(Color.appBackground)
             .navigationDestination(
                 for: ProfileRoute.self,
                 interactivePop: {
@@ -136,6 +160,15 @@ public struct ProfileView: View {
             .padding(.bottom, 8)
             .background(Color.appBackground)
             .toolbarBackground(Color.appBackground)
+        }
+    }
+
+    // Mac은 옆 칸에 상세를 열고 나머지 기기는 화면 이동
+    private func showTodo(_ route: ProfileRoute) {
+        if isiOSAppOnMac {
+            store.send(.binding(.set(\.selectedTodoRoute, route)))
+        } else {
+            router.push(route)
         }
     }
 

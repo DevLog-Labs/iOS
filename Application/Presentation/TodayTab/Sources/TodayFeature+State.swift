@@ -40,6 +40,7 @@ extension TodayFeature {
         var selectedCategoryID: String?
         var isCategoryFilterPresented = false
         var isTodoInspectorPresented = false
+        var selectedTodoId: String?
         var todoEditor: TodoEditorFeature.State?
         var dismissesTodoInspectorAfterSaving = false
         var loading = LoadingFeature.State()

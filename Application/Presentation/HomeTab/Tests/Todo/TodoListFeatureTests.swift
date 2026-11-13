@@ -370,6 +370,54 @@ struct TodoListFeatureTests {
         #expect(adapter.todos.isEmpty)
     }
 
+    @Test("swipeTodo는 선택한 Todo를 지울 때만 선택을 해제한다")
+    func swipeTodo는_선택한_Todo를_지울_때만_선택을_해제한다() async {
+        let selected = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
+        let other = TodoListItem(from: makeTodoListTodo(id: "todo-other"))!
+        let adapter = TodoListStoreTestAdapter()
+
+        await adapter.appendTodos([selected, other])
+        await adapter.selectTodo("todo-selected")
+        await adapter.swipeTodo(other)
+
+        #expect(adapter.selectedTodoId == "todo-selected")
+
+        await adapter.swipeTodo(selected)
+
+        #expect(adapter.selectedTodoId == nil)
+
+        await adapter.undoDelete()
+
+        #expect(adapter.selectedTodoId == nil)
+    }
+
+    @Test("tapToggleCompleted는 선택한 Todo일 때만 상세 칸을 다시 조회하도록 갱신한다")
+    func tapToggleCompleted는_선택한_Todo일_때만_상세_칸을_다시_조회하도록_갱신한다() async {
+        let todo = makeTodoListTodo(id: "todo-toggle", isPinned: false, isCompleted: false)
+        let item = TodoListItem(from: todo)!
+        let adapter = TodoListStoreTestAdapter(
+            fetchTodoByIdUseCase: TodoListFetchTodoByIdUseCaseSpy(todos: [todo])
+        )
+
+        await adapter.appendTodos([item])
+        await adapter.tapToggleCompleted(item)
+
+        await waitUntil {
+            adapter.todos.first?.isCompleted == true
+        }
+
+        #expect(adapter.detailRevision == 0)
+
+        await adapter.selectTodo("todo-toggle")
+        await adapter.tapToggleCompleted(adapter.todos[0])
+
+        await waitUntil {
+            adapter.detailRevision == 1
+        }
+
+        #expect(adapter.detailRevision == 1)
+    }
+
     @Test("tapToggleCompleted와 tapTogglePinned는 조회한 Todo를 갱신해 목록에 반영한다")
     func tapToggleCompleted와_tapTogglePinned는_조회한_Todo를_갱신해_목록에_반영한다() async {
         let todo = makeTodoListTodo(id: "todo-toggle", isPinned: false, isCompleted: false)

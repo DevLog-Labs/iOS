@@ -74,6 +74,10 @@ extension TodoListFeature {
     func swipeTodoEffect(_ todo: TodoListItem, state: inout State) -> Effect<Action> {
         guard state.todos.contains(where: { $0.id == todo.id }) else { return .none }
         state.undoTodoId = todo.id
+        // 지운 Todo의 상세 칸은 되돌리기와 관계없이 바로 닫음
+        if state.selectedTodoId == todo.id {
+            state.selectedTodoId = nil
+        }
         Self.setTodoHidden(&state, todoId: todo.id, isHidden: true)
         return deleteEffect(todo)
     }

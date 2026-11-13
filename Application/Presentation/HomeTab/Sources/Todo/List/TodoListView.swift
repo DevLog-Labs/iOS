@@ -13,6 +13,7 @@ import PresentationShared
 
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onSelectTodo: (String) -> Void
@@ -28,21 +29,42 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        TodoListContent(store: store, onSelectTodo: onSelectTodo)
-            .prominentAlert(store, state: \.alert, action: \.alert)
-            .onReceive(windowSubmits) { submit in
-                guard case .create(let value) = submit,
-                      value.matchesCreate(category: store.category, source: .list) else { return }
+        PaneSplitView {
+            TodoListContent(store: store) { todoId in
+                if isiOSAppOnMac {
+                    store.send(.binding(.set(\.selectedTodoId, todoId)))
+                } else {
+                    onSelectTodo(todoId)
+                }
+            }
+        } detail: {
+            TodoDetailPane(
+                todoId: store.selectedTodoId,
+                showEditButton: true,
+                placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
+                windowEvent: windowEvent
+            )
+            .id(store.detailRevision)
+        }
+        .prominentAlert(store, state: \.alert, action: \.alert)
+        .onReceive(windowSubmits) { submit in
+            switch submit {
+            case .create(let value):
+                guard value.matchesCreate(category: store.category, source: .list) else { return }
                 store.send(.view(.windowTodoCreated))
+            case .update:
+                // 상세 칸에서 편집한 Todo를 옆 목록에도 반영
+                store.send(.view(.windowTodoUpdated))
             }
-            .fullScreenCover(
-                item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
-                    .activePresentation(when: isTabContentActive)
-            ) { coverStore in
-                fullScreenCoverContent(coverStore)
-            }
-            .background(Color.appBackground.ignoresSafeArea())
-            .task { store.send(.view(.onAppear)) }
+        }
+        .fullScreenCover(
+            item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
+                .activePresentation(when: isTabContentActive)
+        ) { coverStore in
+            fullScreenCoverContent(coverStore)
+        }
+        .background(Color.appBackground.ignoresSafeArea())
+        .task { store.send(.view(.onAppear)) }
     }
 
     private var windowSubmits: AnyPublisher<TodoEditorWindowSubmit, Never> {
@@ -95,7 +117,7 @@ private struct TodoListContent: View {
                             let isLast = index == visibleTodos.count - 1
 
                             TodoItemRow(todo)
-                                .background(Color.surface)
+                                .background(todo.id == store.selectedTodoId ? Color.primaryContainer : .surface)
                                 .contentShape(.rect)
                                 .todoDetailPreview(todoId: todo.id)
                                 .onTapGesture {

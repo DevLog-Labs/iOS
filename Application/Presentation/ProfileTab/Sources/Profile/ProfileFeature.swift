@@ -52,6 +52,7 @@ struct ProfileFeature {
         var dayActivitiesByDate: [Date: [HeatmapActivityItem]] = [:]
         var selectedActivityKinds: Set<ActivityKind> = [.created, .completed, .deleted]
         var selectedDay: HeatmapDay?
+        var selectedTodoRoute: ProfileRoute?
         var showDoneButton = false
         var loading = LoadingFeature.State()
     }

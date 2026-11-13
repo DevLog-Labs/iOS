@@ -9,6 +9,7 @@ import SwiftUI
 import Domain
 
 public struct TodoItemRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @ScaledMetric(relativeTo: .headline) private var labelWidth = CGFloat(28)
     private let item: TodoListItem
 
@@ -59,9 +60,12 @@ public struct TodoItemRow: View {
                     .foregroundStyle(.orange)
             }
 
-            Image(systemName: "chevron.right")
-                .font(.caption2.bold())
-                .foregroundStyle(Color.textTertiary)
+            // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
+            if !isiOSAppOnMac {
+                Image(systemName: "chevron.right")
+                    .font(.caption2.bold())
+                    .foregroundStyle(Color.textTertiary)
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
