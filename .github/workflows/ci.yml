@@ -60,7 +60,7 @@ jobs:
           fi
 
   # 테스트 타깃까지 한 번 컴파일하고 같은 러너에서 테스트만 실행
-  # develop 실행은 패키지와 컴파일 캐시 저장용 빌드
+  # develop 실행은 패키지 캐시 저장용 빌드
   # Changes 잡이 실패하면 건너뛰지 않고 실행
   ci:
     name: Build and Test
@@ -282,16 +282,6 @@ jobs:
           restore-keys: |
             spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-
 
-      # develop 실행은 처음부터 빌드해 커밋마다 저장하고 PR은 가장 최근 develop 캐시만 읽음
-      - name: Restore compilation cache
-        if: github.event_name == 'pull_request'
-        uses: actions/cache/restore@v5
-        with:
-          path: ${{ runner.temp }}/compilation-cache
-          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-${{ github.sha }}
-          restore-keys: |
-            compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-
-
       - name: Generate Xcode workspace with Tuist
         shell: bash
         run: |
@@ -327,9 +317,6 @@ jobs:
             -skipMacroValidation \
             -showBuildTimingSummary \
             ARCHS=arm64 \
-            COMPILATION_CACHE_ENABLE_CACHING=YES \
-            COMPILATION_CACHE_CAS_PATH="$RUNNER_TEMP/compilation-cache" \
-            SWIFT_ENABLE_EXPLICIT_MODULES=YES \
             COMPILER_INDEX_STORE_ENABLE=NO \
             build-for-testing \
             | tee build.log
@@ -532,13 +519,6 @@ jobs:
         with:
           path: .spm
           key: ${{ steps.packages.outputs.cache-primary-key }}
-
-      - name: Save compilation cache
-        if: github.event_name == 'push'
-        uses: actions/cache/save@v5
-        with:
-          path: ${{ runner.temp }}/compilation-cache
-          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-${{ github.sha }}
 
   report:
     name: Report
