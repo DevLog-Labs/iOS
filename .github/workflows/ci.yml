@@ -33,10 +33,39 @@ permissions:
   checks: write
 
 jobs:
+  # 코드가 아닌 파일만 바뀐 PR의 Build and Test 건너뜀
+  # 트리거 경로 조건은 필수 체크를 대기 상태로 남기므로 잡 조건으로 판정
+  changes:
+    name: Changes
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      pull-requests: read
+    outputs:
+      code: ${{ steps.filter.outputs.code }}
+    steps:
+      - name: Detect code changes
+        id: filter
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_FILES: repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files
+        run: |
+          # 이름이 바뀐 파일은 이전 경로도 검사
+          files=$(gh api --paginate "$PR_FILES" --jq '.[] | .filename, (.previous_filename // empty)')
+          if [ -z "$files" ] || printf '%s\n' "$files" | grep -qvE '\.md$|^docs/|^\.githooks/|^fastlane/|^Gemfile(\.lock)?$'; then
+            echo "code=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "code=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # 테스트 타깃까지 한 번 컴파일하고 같은 러너에서 테스트만 실행
   # develop 실행은 패키지와 컴파일 캐시 저장용 빌드
+  # Changes 잡이 실패하면 건너뛰지 않고 실행
   ci:
     name: Build and Test
+    needs: changes
+    if: ${{ !cancelled() && (needs.changes.result != 'success' || needs.changes.outputs.code == 'true') }}
     runs-on: xcode-27
     timeout-minutes: 30
     outputs:
