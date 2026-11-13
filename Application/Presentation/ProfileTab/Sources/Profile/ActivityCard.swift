@@ -11,6 +11,7 @@ import Domain
 import PresentationShared
 
 struct ActivityCard: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<ProfileFeature>
     let onSelectTodoID: (String) -> Void
 
@@ -145,13 +146,23 @@ struct ActivityCard: View {
                                     )
                             }
                             Spacer()
-                            if !activity.isDeleted {
+                            // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
+                            if !activity.isDeleted, !isiOSAppOnMac {
                                 Image(systemName: "chevron.right")
                                     .font(.caption.weight(.semibold))
                                     .foregroundStyle(.tertiary)
                             }
                         }
                         .contentShape(.rect)
+                        // 행 배치를 바꾸지 않고 선택한 행 배경만 바깥으로 넓힘
+                        .background {
+                            if store.selectedTodoRoute == .activity(activity.todoId) {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color.primaryContainer)
+                                    .padding(.horizontal, -8)
+                                    .padding(.vertical, -2)
+                            }
+                        }
                     }
                     .buttonStyle(.plain)
                     .disabled(activity.isDeleted)

@@ -35,8 +35,11 @@ struct RecentActivityCard: View {
                         Button {
                             onSelectTodo(todo.id)
                         } label: {
-                            RecentTodoCard(todo: todo)
-                                .todoDetailPreview(todoId: todo.id)
+                            RecentTodoCard(
+                                todo: todo,
+                                isSelected: store.selectedTodoRoute == .recentTodo(todo.id)
+                            )
+                            .todoDetailPreview(todoId: todo.id)
                         }
                         .buttonStyle(.plain)
                     }
@@ -47,8 +50,10 @@ struct RecentActivityCard: View {
 }
 
 private struct RecentTodoCard: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @ScaledMetric(relativeTo: .title3) private var iconSize = CGFloat(44)
     let todo: RecentTodoItem
+    let isSelected: Bool
 
     var body: some View {
         let category = TodoCategoryItem(from: todo.category)
@@ -97,13 +102,16 @@ private struct RecentTodoCard: View {
             }
 
             Spacer(minLength: 0)
-            Image(systemName: "chevron.right")
-                .font(.callout.bold())
-                .foregroundStyle(Color.textTertiary)
+            // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
+            if !isiOSAppOnMac {
+                Image(systemName: "chevron.right")
+                    .font(.callout.bold())
+                    .foregroundStyle(Color.textTertiary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(Color.surface, in: RoundedRectangle(cornerRadius: 16))
+        .background(isSelected ? Color.primaryContainer : .surface, in: RoundedRectangle(cornerRadius: 16))
         .contentShape(.rect)
     }
 }
