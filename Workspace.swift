@@ -31,6 +31,9 @@ let workspace = Workspace(
                 .testableTarget(target: .project(path: "Application/Presentation", target: "EntryTests")),
                 .testableTarget(target: .project(path: "Application/Presentation", target: "PresentationSharedTests")),
                 .testableTarget(target: .project(path: "Application/Presentation", target: "HomeTabTests")),
+                .testableTarget(target: .project(path: "Application/Presentation", target: "TodayTabTests")),
+                .testableTarget(target: .project(path: "Application/Presentation", target: "NotificationTabTests")),
+                .testableTarget(target: .project(path: "Application/Presentation", target: "ProfileTabTests")),
                 .testableTarget(target: .project(path: "Application/Widget", target: "WidgetTests")),
                 .testableTarget(target: .project(path: "Widget/WidgetCore", target: "WidgetCoreTests")),
             ])
