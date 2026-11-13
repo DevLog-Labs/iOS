@@ -52,10 +52,9 @@ struct TodoListView: View {
             case .create(let value):
                 guard value.matchesCreate(category: store.category, source: .list) else { return }
                 store.send(.view(.windowTodoCreated))
-            case .update(_, let todo):
-                // 상세 칸에서 편집한 Todo를 옆 목록 행에도 반영
-                guard let item = TodoListItem(from: todo) else { return }
-                store.send(.store(.updateTodo(item)))
+            case .update:
+                // 상세 칸에서 편집한 Todo를 옆 목록에도 반영
+                store.send(.view(.windowTodoUpdated))
             }
         }
         .fullScreenCover(

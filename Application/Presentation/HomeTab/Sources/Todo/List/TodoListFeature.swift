@@ -89,6 +89,7 @@ struct TodoListFeature {
             case undoDelete
             case onAppear
             case windowTodoCreated
+            case windowTodoUpdated
             case loadNextPage
             case searchQueryDebounced
             case setSearching(Bool)
@@ -99,7 +100,6 @@ struct TodoListFeature {
             case setAlert(Bool)
             case didToggleCompleted(TodoListItem)
             case didTogglePinned(TodoListItem)
-            case updateTodo(TodoListItem)
             case setTodoHidden(String, Bool)
             case appendTodos([TodoListItem], nextCursor: TodoCursor?)
             case resetPagination
@@ -304,6 +304,9 @@ private extension TodoListFeature {
                 trackTodoCreateEffect(),
                 fetchEffect(query: state.query, cursor: nil, showsIndicator: false)
             )
+        case .windowTodoUpdated:
+            // 편집으로 목록 조건에서 벗어난 Todo도 반영되도록 다시 조회
+            return fetchEffect(query: state.query, cursor: nil, showsIndicator: false)
         case .swipeTodo(let todo):
             return swipeTodoEffect(todo, state: &state)
         case .resetFilters:
@@ -366,7 +369,7 @@ private extension TodoListFeature {
             state.fullScreenCover = cover?.destination == .editor ? .editor(state.category) : nil
         case .setAlert(let value):
             Self.setAlert(&state, isPresented: value)
-        case .didToggleCompleted(let todo), .didTogglePinned(let todo), .updateTodo(let todo):
+        case .didToggleCompleted(let todo), .didTogglePinned(let todo):
             if let index = state.todos.firstIndex(where: { $0.id == todo.id }) {
                 state.todos[index] = todo
             }
