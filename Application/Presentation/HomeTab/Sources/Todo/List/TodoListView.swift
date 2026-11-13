@@ -13,6 +13,7 @@ import PresentationShared
 
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onSelectTodo: (String) -> Void
@@ -28,21 +29,37 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        TodoListContent(store: store, onSelectTodo: onSelectTodo)
-            .prominentAlert(store, state: \.alert, action: \.alert)
-            .onReceive(windowSubmits) { submit in
-                guard case .create(let value) = submit,
-                      value.matchesCreate(category: store.category, source: .list) else { return }
-                store.send(.view(.windowTodoCreated))
+        PaneSplitView {
+            TodoListContent(store: store) { todoId in
+                if isiOSAppOnMac {
+                    store.send(.binding(.set(\.selectedTodoId, todoId)))
+                } else {
+                    onSelectTodo(todoId)
+                }
             }
-            .fullScreenCover(
-                item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
-                    .activePresentation(when: isTabContentActive)
-            ) { coverStore in
-                fullScreenCoverContent(coverStore)
-            }
-            .background(Color.appBackground.ignoresSafeArea())
-            .task { store.send(.view(.onAppear)) }
+        } detail: {
+            // 삭제되거나 숨겨진 Todo는 선택 안내로 대체
+            TodoDetailPane(
+                todoId: store.todos.first { $0.id == store.selectedTodoId && !$0.isHidden }?.id,
+                showEditButton: true,
+                placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
+                windowEvent: windowEvent
+            )
+        }
+        .prominentAlert(store, state: \.alert, action: \.alert)
+        .onReceive(windowSubmits) { submit in
+            guard case .create(let value) = submit,
+                  value.matchesCreate(category: store.category, source: .list) else { return }
+            store.send(.view(.windowTodoCreated))
+        }
+        .fullScreenCover(
+            item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
+                .activePresentation(when: isTabContentActive)
+        ) { coverStore in
+            fullScreenCoverContent(coverStore)
+        }
+        .background(Color.appBackground.ignoresSafeArea())
+        .task { store.send(.view(.onAppear)) }
     }
 
     private var windowSubmits: AnyPublisher<TodoEditorWindowSubmit, Never> {
@@ -95,7 +112,7 @@ private struct TodoListContent: View {
                             let isLast = index == visibleTodos.count - 1
 
                             TodoItemRow(todo)
-                                .background(Color.surface)
+                                .background(todo.id == store.selectedTodoId ? Color.primaryContainer : .surface)
                                 .contentShape(.rect)
                                 .todoDetailPreview(todoId: todo.id)
                                 .onTapGesture {

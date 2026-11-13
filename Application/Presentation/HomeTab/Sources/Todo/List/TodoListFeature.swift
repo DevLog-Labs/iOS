@@ -24,6 +24,7 @@ struct TodoListFeature {
         var isSearching = false
         var loading = LoadingFeature.State()
         var searchQuery = ""
+        var selectedTodoId: String?
         var undoTodoId: String?
         var nextCursor: TodoCursor?
 
