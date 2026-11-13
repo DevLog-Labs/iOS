@@ -18,20 +18,12 @@ public struct PushNotificationItem: Identifiable, Hashable {
     public let todoCategory: TodoCategory
 
     private let todoTitle: String?
-    @available(*, deprecated, message: "todoTitle 기반 알림을 사용한다.")
-    private let legacy: PushNotification.Legacy?
 
     public var title: String {
-        if let legacy {
-            return legacy.title
-        }
         return String(localized: "push_notification_todo_due_title", bundle: PresentationResources.bundle)
     }
 
     public var body: String {
-        if let legacy {
-            return legacy.body
-        }
         guard let todoTitle,
               !todoTitle.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             return String(
@@ -52,6 +44,5 @@ public struct PushNotificationItem: Identifiable, Hashable {
         self.todoId = notification.todoId
         self.todoCategory = notification.todoCategory
         self.todoTitle = notification.todoTitle
-        self.legacy = notification.legacy
     }
 }

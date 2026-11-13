@@ -67,18 +67,4 @@ struct PushNotificationItemTests {
                 )
         )
     }
-
-    @Test("기존 알림 문서의 저장 문구를 유지한다")
-    func 기존_알림_문서의_저장_문구를_유지한다() {
-        let notification = makeLegacyPushNotification(
-            id: "notification-1",
-            number: 1,
-            title: "기존 제목",
-            body: "기존 본문"
-        )
-        let item = PushNotificationItem(from: notification)
-
-        #expect(item.title == "기존 제목")
-        #expect(item.body == "기존 본문")
-    }
 }
