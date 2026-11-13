@@ -401,6 +401,21 @@ struct TodoListFeatureTests {
         #expect(adapter.selectedTodoId == nil)
     }
 
+    @Test("finishDeleteToast는 되돌린 Todo가 재조회로 목록에서 빠져도 선택을 유지한다")
+    func finishDeleteToast는_되돌린_Todo가_재조회로_목록에서_빠져도_선택을_유지한다() async {
+        let item = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
+        let adapter = TodoListStoreTestAdapter()
+
+        await adapter.appendTodos([item])
+        await adapter.selectTodo("todo-selected")
+        await adapter.swipeTodo(item)
+        await adapter.undoDelete()
+        await adapter.resetPagination()
+        await adapter.finishDeleteToast("todo-selected")
+
+        #expect(adapter.selectedTodoId == "todo-selected")
+    }
+
     @Test("tapToggleCompleted와 tapTogglePinned는 조회한 Todo를 갱신해 목록에 반영한다")
     func tapToggleCompleted와_tapTogglePinned는_조회한_Todo를_갱신해_목록에_반영한다() async {
         let todo = makeTodoListTodo(id: "todo-toggle", isPinned: false, isCompleted: false)
