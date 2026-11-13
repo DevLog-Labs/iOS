@@ -46,7 +46,7 @@ struct MainView: View {
                     onBack: { store.send(.view(.tapNavigation(selectedTab, .back))) },
                     onForward: { store.send(.view(.tapNavigation(selectedTab, .forward))) }
                 )
-                .resizableSideBar(
+                .resizablePane(
                     minimumWidth: 220,
                     idealWidth: 260,
                     maximumWidth: 320
@@ -373,71 +373,5 @@ private struct SideBarButton: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
-    }
-}
-
-private struct ResizableSideBarModifier: ViewModifier {
-    @Environment(\.layoutDirection) private var layoutDirection
-    @State private var width: CGFloat
-    @State private var dragStartWidth: CGFloat?
-    private let minimumWidth: CGFloat
-    private let maximumWidth: CGFloat
-
-    init(
-        minimumWidth: CGFloat,
-        idealWidth: CGFloat,
-        maximumWidth: CGFloat
-    ) {
-        self.minimumWidth = minimumWidth
-        self.maximumWidth = maximumWidth
-        self._width = State(initialValue: min(max(idealWidth, minimumWidth), maximumWidth))
-    }
-
-    func body(content: Content) -> some View {
-        content
-            .frame(width: width)
-            .overlay(alignment: .trailing) {
-                Color.clear
-                    .frame(width: 16)
-                    .contentShape(.rect)
-                    .gesture(resizeGesture)
-                    .overlay(alignment: .trailing) {
-                        Rectangle()
-                            .fill(Color.border)
-                            .frame(width: 1)
-                    }
-                    .ignoresSafeArea(.container, edges: .vertical)
-            }
-    }
-
-    private var resizeGesture: some Gesture {
-        DragGesture(minimumDistance: 0, coordinateSpace: .global)
-            .onChanged { value in
-                if dragStartWidth == nil {
-                    dragStartWidth = width
-                }
-                let startWidth = dragStartWidth ?? width
-                let translation = layoutDirection == .leftToRight
-                    ? value.translation.width
-                    : -value.translation.width
-                width = min(max(startWidth + translation, minimumWidth), maximumWidth)
-            }
-            .onEnded { _ in
-                dragStartWidth = nil
-            }
-    }
-}
-
-private extension View {
-    func resizableSideBar(
-        minimumWidth: CGFloat,
-        idealWidth: CGFloat,
-        maximumWidth: CGFloat
-    ) -> some View {
-        modifier(ResizableSideBarModifier(
-            minimumWidth: minimumWidth,
-            idealWidth: idealWidth,
-            maximumWidth: maximumWidth
-        ))
     }
 }
