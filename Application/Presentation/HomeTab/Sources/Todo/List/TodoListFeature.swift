@@ -316,7 +316,12 @@ private extension TodoListFeature {
                 fetchEffect(query: state.query, cursor: nil)
             )
         case .finishDeleteToast(let todoId):
+            let count = state.todos.count
             state.todos.removeAll { $0.id == todoId && $0.isHidden }
+            // 삭제가 확정된 Todo의 상세 칸 선택 해제
+            if state.todos.count < count, state.selectedTodoId == todoId {
+                state.selectedTodoId = nil
+            }
             if state.undoTodoId == todoId {
                 state.undoTodoId = nil
             }

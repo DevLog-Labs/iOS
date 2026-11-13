@@ -29,6 +29,7 @@ final class TodoListStoreTestAdapter {
     }
     var showAlert: Bool { store.state.alert != nil }
     var appliedFilterCount: Int { store.state.appliedFilterCount }
+    var selectedTodoId: String? { store.state.selectedTodoId }
 
     init(
         fetchUseCase: FetchTodosUseCase = TodoListFetchTodosUseCaseSpy(),
@@ -149,6 +150,10 @@ final class TodoListStoreTestAdapter {
 
     func finishDeleteToast(_ todoId: String) async {
         await store.send(.view(.finishDeleteToast(todoId)))
+    }
+
+    func selectTodo(_ todoId: String?) async {
+        await store.send(.binding(.set(\.selectedTodoId, todoId)))
     }
 
     func tapToggleCompleted(_ todo: TodoListItem) async {

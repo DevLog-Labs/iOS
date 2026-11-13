@@ -38,9 +38,10 @@ struct TodoListView: View {
                 }
             }
         } detail: {
-            // 삭제되거나 숨겨진 Todo는 선택 안내로 대체
+            // 삭제 대기로 숨긴 Todo는 선택 안내로 대체
             TodoDetailPane(
-                todoId: store.todos.first { $0.id == store.selectedTodoId && !$0.isHidden }?.id,
+                todoId: store.todos.contains { $0.id == store.selectedTodoId && $0.isHidden }
+                    ? nil : store.selectedTodoId,
                 showEditButton: true,
                 placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
                 windowEvent: windowEvent

@@ -370,6 +370,23 @@ struct TodoListFeatureTests {
         #expect(adapter.todos.isEmpty)
     }
 
+    @Test("finishDeleteToast는 삭제가 확정된 Todo만 선택을 해제한다")
+    func finishDeleteToast는_삭제가_확정된_Todo만_선택을_해제한다() async {
+        let item = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
+        let adapter = TodoListStoreTestAdapter()
+
+        await adapter.appendTodos([item])
+        await adapter.selectTodo("todo-selected")
+        await adapter.finishDeleteToast("todo-selected")
+
+        #expect(adapter.selectedTodoId == "todo-selected")
+
+        await adapter.swipeTodo(item)
+        await adapter.finishDeleteToast("todo-selected")
+
+        #expect(adapter.selectedTodoId == nil)
+    }
+
     @Test("tapToggleCompleted와 tapTogglePinned는 조회한 Todo를 갱신해 목록에 반영한다")
     func tapToggleCompleted와_tapTogglePinned는_조회한_Todo를_갱신해_목록에_반영한다() async {
         let todo = makeTodoListTodo(id: "todo-toggle", isPinned: false, isCompleted: false)
