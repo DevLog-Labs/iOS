@@ -130,6 +130,98 @@ jobs:
         id: xcode
         run: echo "version=$(xcodebuild -version | tr '\n ' '--')" >> "$GITHUB_OUTPUT"
 
+      - name: Set up Tuist
+        uses: jdx/mise-action@v4
+        with:
+          install: true
+          cache: true
+
+      - name: Install SwiftLint
+        env:
+          HOMEBREW_REQUIRE_TAP_TRUST: "1"
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
+          swiftlint version
+
+      # 키가 없을 때만 develop 실행이 저장
+      - name: Restore SwiftPM packages
+        id: packages
+        uses: actions/cache/restore@v5
+        with:
+          path: .spm
+          key: spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('.mise.toml', 'Tuist.swift', 'Workspace.swift', 'Tuist/ProjectDescriptionHelpers/*.swift', 'Application/**/Project.swift', 'Libraries/**/Project.swift', 'Widget/**/Project.swift') }}
+          restore-keys: |
+            spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-
+
+      # develop 실행은 처음부터 빌드해 커밋마다 저장하고 PR은 가장 최근 develop 캐시만 읽음
+      - name: Restore compilation cache
+        if: github.event_name == 'pull_request'
+        uses: actions/cache/restore@v5
+        with:
+          path: ${{ runner.temp }}/compilation-cache
+          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-${{ github.sha }}
+          restore-keys: |
+            compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-
+
+      - name: Generate Xcode workspace with Tuist
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tuist generate --no-open
+
+      # 시뮬레이터 x86_64 슬라이스는 CI에서 만들지 않음
+      - name: Build
+        id: build
+        shell: bash
+        run: |
+          set -euo pipefail
+          set -x
+          # tuist generate가 패키지를 해석한 경로를 그대로 써서 패키지를 다시 풀지 않음
+          SPM_DIR="$GITHUB_WORKSPACE/.spm/DevLog"
+          mkdir -p "$SPM_DIR"
+
+          xcodebuild -version
+
+          echo "Using scheme: $TEST_SCHEME"
+
+          set -o pipefail
+          set +e
+          echo "== Starting xcodebuild build-for-testing =="
+          xcodebuild \
+            -workspace "$WORKSPACE" \
+            -scheme "$TEST_SCHEME" \
+            -configuration Debug \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/derived-data" \
+            -clonedSourcePackagesDirPath "$SPM_DIR" \
+            -skipPackagePluginValidation \
+            -skipMacroValidation \
+            -showBuildTimingSummary \
+            ARCHS=arm64 \
+            COMPILATION_CACHE_ENABLE_CACHING=YES \
+            COMPILATION_CACHE_CAS_PATH="$RUNNER_TEMP/compilation-cache" \
+            SWIFT_ENABLE_EXPLICIT_MODULES=YES \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build-for-testing \
+            | tee build.log
+          XC_STATUS=${PIPESTATUS[0]}
+          echo "== xcodebuild finished =="
+          set -e
+
+          exit $XC_STATUS
+
+      - name: Upload build log
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: ios-build
+          path: build.log
+          if-no-files-found: ignore
+
       - name: Select iOS Simulator Runtime (installed)
         id: pick_ios
         if: github.event_name == 'pull_request'
@@ -233,141 +325,29 @@ jobs:
             echo "::warning title=simslim::설치에 실패해 기본 상태 시뮬레이터로 진행"
           fi
 
-      - name: Set up Tuist
-        uses: jdx/mise-action@v4
-        with:
-          install: true
-          cache: true
-
-      - name: Install SwiftLint
-        env:
-          HOMEBREW_REQUIRE_TAP_TRUST: "1"
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
-          swiftlint version
-
-      # 키가 없을 때만 develop 실행이 저장
-      - name: Restore SwiftPM packages
-        id: packages
-        uses: actions/cache/restore@v5
-        with:
-          path: .spm
-          key: spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-${{ hashFiles('.mise.toml', 'Tuist.swift', 'Workspace.swift', 'Tuist/ProjectDescriptionHelpers/*.swift', 'Application/**/Project.swift', 'Libraries/**/Project.swift', 'Widget/**/Project.swift') }}
-          restore-keys: |
-            spm-${{ runner.os }}-${{ steps.xcode.outputs.version }}-
-
-      # develop 실행은 처음부터 빌드해 커밋마다 저장하고 PR은 가장 최근 develop 캐시만 읽음
-      - name: Restore compilation cache
-        if: github.event_name == 'pull_request'
-        uses: actions/cache/restore@v5
-        with:
-          path: ${{ runner.temp }}/compilation-cache
-          key: compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-${{ github.sha }}
-          restore-keys: |
-            compilation-cache-${{ runner.os }}-${{ steps.xcode.outputs.version }}-arm64-
-
-      # simslim 적용과 부팅을 백그라운드로 시작해 generate, 빌드와 겹쳐 실행
       # 종료 상태의 시뮬레이터에 적용하면 simslim이 비활성화 목록을 기록한 뒤 한 번만 부팅
-      - name: Start simulator
-        if: github.event_name == 'pull_request'
+      # 제한 시간이 지나도 진행 중인 부팅은 다음 단계가 기다림
+      - name: Slim simulator
+        if: github.event_name == 'pull_request' && steps.simslim.outputs.path != ''
+        continue-on-error: true
+        timeout-minutes: 4
         env:
           SIMSLIM: ${{ steps.simslim.outputs.path }}
           SIMSLIM_BOOT_TIMEOUT: 3m
           DEVICE_ID: ${{ steps.pick_ios.outputs.device_id }}
         run: |
-          # 별도 프로세스 그룹으로 실행해 제한 시간이 지나면 하위 프로세스까지 종료
-          set -m
-          nohup bash -c '
-            if [ -n "$SIMSLIM" ] && "$SIMSLIM" on "$DEVICE_ID"; then
-              "$SIMSLIM" status "$DEVICE_ID" || true
-            else
-              if [ -n "$SIMSLIM" ]; then
-                echo "::warning title=simslim::적용에 실패해 기본 상태 시뮬레이터로 진행"
-              fi
-              xcrun simctl boot "$DEVICE_ID" || true
-            fi
-          ' > "$RUNNER_TEMP/simulator.log" 2>&1 &
-          echo "$!" > "$RUNNER_TEMP/simulator.pid"
+          if "$SIMSLIM" on "$DEVICE_ID"; then
+            "$SIMSLIM" status "$DEVICE_ID" || true
+          else
+            echo "::warning title=simslim::적용에 실패해 기본 상태 시뮬레이터로 진행"
+          fi
 
-      - name: Generate Xcode workspace with Tuist
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          tuist generate --no-open
-
-      # 시뮬레이터 x86_64 슬라이스는 CI에서 만들지 않음
-      - name: Build
-        id: build
-        shell: bash
-        run: |
-          set -euo pipefail
-          set -x
-          # tuist generate가 패키지를 해석한 경로를 그대로 써서 패키지를 다시 풀지 않음
-          SPM_DIR="$GITHUB_WORKSPACE/.spm/DevLog"
-          mkdir -p "$SPM_DIR"
-
-          xcodebuild -version
-
-          echo "Using scheme: $TEST_SCHEME"
-
-          set -o pipefail
-          set +e
-          echo "== Starting xcodebuild build-for-testing =="
-          xcodebuild \
-            -workspace "$WORKSPACE" \
-            -scheme "$TEST_SCHEME" \
-            -configuration Debug \
-            -destination "generic/platform=iOS Simulator" \
-            -derivedDataPath "$RUNNER_TEMP/derived-data" \
-            -clonedSourcePackagesDirPath "$SPM_DIR" \
-            -skipPackagePluginValidation \
-            -skipMacroValidation \
-            -showBuildTimingSummary \
-            ARCHS=arm64 \
-            COMPILATION_CACHE_ENABLE_CACHING=YES \
-            COMPILATION_CACHE_CAS_PATH="$RUNNER_TEMP/compilation-cache" \
-            SWIFT_ENABLE_EXPLICIT_MODULES=YES \
-            COMPILER_INDEX_STORE_ENABLE=NO \
-            build-for-testing \
-            | tee build.log
-          XC_STATUS=${PIPESTATUS[0]}
-          echo "== xcodebuild finished =="
-          set -e
-
-          exit $XC_STATUS
-
-      - name: Upload build log
-        if: always()
-        uses: actions/upload-artifact@v6
-        with:
-          name: ios-build
-          path: build.log
-          if-no-files-found: ignore
-
-      - name: Wait for simulator
+      - name: Boot simulator
         if: github.event_name == 'pull_request'
-        timeout-minutes: 8
+        timeout-minutes: 5
         env:
           DEVICE_ID: ${{ steps.pick_ios.outputs.device_id }}
         run: |
-          # 백그라운드 simslim 작업이 끝날 때까지 대기
-          # 시작 후 4분이 지나면 작업을 끝내고 기본 상태 시뮬레이터로 진행
-          PID="$(cat "$RUNNER_TEMP/simulator.pid")"
-          DEADLINE=$(( $(stat -f %m "$RUNNER_TEMP/simulator.pid") + 240 ))
-          while kill -0 "$PID" 2>/dev/null; do
-            if [ "$DEADLINE" -le "$(date +%s)" ]; then
-              kill -- "-$PID" || true
-              echo "::warning title=simslim::제한 시간이 지나 기본 상태 시뮬레이터로 진행"
-              break
-            fi
-            sleep 2
-          done
-          cat "$RUNNER_TEMP/simulator.log"
-
           # 종료 상태가 아니면 부팅 명령을 보내지 않음
           if xcrun simctl list devices | grep "$DEVICE_ID" | grep -q "(Shutdown)"; then
             xcrun simctl boot "$DEVICE_ID"
