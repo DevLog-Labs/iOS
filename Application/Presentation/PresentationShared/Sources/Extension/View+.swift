@@ -136,10 +136,17 @@ public extension View {
         if #available(iOS 26.0, *) {
             switch glassEffect {
             case .enabled:
-                self.foregroundStyle(Color(.label))
-                    .padding(8)
-                    .glassEffect(.regular.tint(color), in: shape)
-                    .clipShape(shape)
+                if ProcessInfo.processInfo.isiOSAppOnMac {
+                    // Mac에서는 리퀴드 글래스 대신 같은 색의 불투명 배경 표시
+                    self.foregroundStyle(Color(.label))
+                        .padding(8)
+                        .background(color, in: shape)
+                } else {
+                    self.foregroundStyle(Color(.label))
+                        .padding(8)
+                        .glassEffect(.regular.tint(color), in: shape)
+                        .clipShape(shape)
+                }
             case .disabled:
                 opaqueButtonStyle(shape: shape, color: color)
             }
@@ -194,8 +201,13 @@ private struct LegacyTopBarButtonStyleModifier: ViewModifier {
 
 @available(iOS 26.0, *)
 private struct TopBarButtonStyleModifier: ViewModifier {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title2,
+        compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
+    ).lineHeight
+    @ScaledMetric(relativeTo: .body) private var macIconSize = UIFont.preferredFont(
+        forTextStyle: .body,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
     ).lineHeight
     let tint: Color?
@@ -203,7 +215,15 @@ private struct TopBarButtonStyleModifier: ViewModifier {
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        if let tint {
+        if isiOSAppOnMac {
+            // Mac에서는 리퀴드 글래스 없이 제목 줄에 맞는 작은 아이콘만 표시
+            content
+                .font(.body.weight(.medium))
+                .foregroundStyle(tint ?? Color.primary)
+                .frame(width: macIconSize, height: macIconSize)
+                .padding(6)
+                .contentShape(.rect)
+        } else if let tint {
             content
                 .font(.title2.weight(.semibold))
                 .foregroundStyle(Color.white)

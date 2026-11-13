@@ -12,7 +12,9 @@ import PresentationShared
 
 public struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @State private var router = NavigationRouter<TodayRoute>()
     @State private var store: StoreOf<TodayFeature>
     private let isSelected: Bool
@@ -55,17 +57,31 @@ public struct TodayView: View {
                     }
                 }
                 .padding(.horizontal)
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
-                VStack(alignment: .leading) {
-                    topBar
-                    TodayFilterBar(store: store)
-                        .fixedSize(horizontal: false, vertical: true)
+                let title = Text(String(localized: "nav_today", bundle: PresentationResources.bundle))
+
+                VStack(spacing: 0) {
+                    if isiOSAppOnMac {
+                        PaneTitleBar(title)
+                    }
+                    VStack(alignment: .leading) {
+                        if !isiOSAppOnMac {
+                            title
+                                .font(.largeTitle.bold())
+                                .padding(.bottom, 8)
+                        }
+                        TodayFilterBar(store: store)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .frame(maxWidth: readableContentWidth)
+                    .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
+                    .padding(.bottom, 8)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal)
-                .padding(.top, windowControlsInset)
-                .padding(.bottom, 8)
                 .background(Color.appBackground)
                 .toolbarBackground(Color.appBackground)
             }
@@ -75,12 +91,13 @@ public struct TodayView: View {
             .navigationDestination(
                 for: TodayRoute.self,
                 interactivePop: { _ in true },
-                destination: destination
+                destination: { destination($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
             )
             .sheet(isPresented: $store.isCategoryFilterPresented) {
                 CategoryFilterSheet(store: store)
             }
         }
+        .navigationHistory(router)
         .inspector(isPresented: $store.isTodoInspectorPresented) {
             TodayTodoInspector(store: store)
         }
@@ -106,12 +123,6 @@ public struct TodayView: View {
                 LoadingView()
             }
         }
-    }
-
-    private var topBar: some View {
-        Text(String(localized: "nav_today", bundle: PresentationResources.bundle))
-            .font(.largeTitle.bold())
-            .padding(.bottom, 8)
     }
 
     private func destination(_ route: TodayRoute) -> some View {

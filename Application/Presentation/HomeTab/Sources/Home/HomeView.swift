@@ -14,6 +14,7 @@ public struct HomeView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @State private var router = NavigationRouter<HomeRoute>()
     @State private var searchStore: StoreOf<SearchFeature>
@@ -49,7 +50,11 @@ public struct HomeView: View {
                     HomeDevelopmentGoals(store: store)
                 }
                 .padding(.horizontal, 16)
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
             }
+            // Mac 제목 줄 구분선과 첫 카드 사이 여백
+            .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
             .safeAreaInset(edge: .top, spacing: 0) { topBar }
             .background(Color.appBackground)
             .duoToolbarVisibility()
@@ -82,9 +87,10 @@ public struct HomeView: View {
                     case .todo: true
                     }
                 },
-                destination: destinationView
+                destination: { destinationView($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
             )
         }
+        .navigationHistory(router)
         .onAppear { store.send(.view(.startObserving)) }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
@@ -111,40 +117,53 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var topBar: some View {
-        HStack(spacing: 12) {
-            Text("DevLog")
-                .font(.largeTitle.weight(.bold))
-            Spacer()
-            if deviceType != .duo {
-                if #available(iOS 26.0, *) {
-                    Button {
-                        store.send(.store(.setPresentation(.searchView, true)))
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                    }
-                    .topBarButtonStyle()
-                } else {
-                    Button {
-                        store.send(.store(.setPresentation(.searchView, true)))
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .font(.title3.weight(.semibold))
-                            .frame(width: 28, height: 28)
-                    }
-                    .adaptiveButtonStyle(
-                        shape: .circle,
-                        color: .surface,
-                        glassEffect: .enabled
-                    )
-                }
+        if isiOSAppOnMac {
+            PaneTitleBar(Text("nav_home", bundle: PresentationResources.bundle)) {
+                searchButton
                 HomeCreateButton(store: store)
             }
+        } else {
+            HStack(spacing: 12) {
+                Text("DevLog")
+                    .font(.largeTitle.weight(.bold))
+                Spacer()
+                if deviceType != .duo {
+                    searchButton
+                    HomeCreateButton(store: store)
+                }
+            }
+            .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
+            .padding(.top, windowControlsInset)
+            .padding(.bottom, 8)
+            .background(Color.appBackground)
+            .toolbarBackground(Color.appBackground)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, windowControlsInset)
-        .padding(.bottom, 8)
-        .background(Color.appBackground)
-        .toolbarBackground(Color.appBackground)
+    }
+
+    @ViewBuilder
+    private var searchButton: some View {
+        if #available(iOS 26.0, *) {
+            Button {
+                store.send(.store(.setPresentation(.searchView, true)))
+            } label: {
+                Image(systemName: "magnifyingglass")
+            }
+            .topBarButtonStyle()
+        } else {
+            Button {
+                store.send(.store(.setPresentation(.searchView, true)))
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .font(.title3.weight(.semibold))
+                    .frame(width: 28, height: 28)
+            }
+            .adaptiveButtonStyle(
+                shape: .circle,
+                color: .surface,
+                glassEffect: .enabled
+            )
+        }
     }
 
     @ViewBuilder

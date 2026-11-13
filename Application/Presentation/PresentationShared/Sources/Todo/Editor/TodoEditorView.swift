@@ -15,6 +15,7 @@ public struct TodoEditorView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @State var store: StoreOf<TodoEditorFeature>
     @FocusState private var field: Field?
     private let calendar = Calendar.current
@@ -67,6 +68,8 @@ public struct TodoEditorView: View {
                                 }
                             }
                             .padding(.horizontal)
+                            .frame(maxWidth: readableContentWidth)
+                            .frame(maxWidth: .infinity)
                         }
                         .contentMargins(.vertical, 16, for: .scrollContent)
                     }
@@ -127,6 +130,7 @@ private struct ToolBar: View {
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
     ).lineHeight
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     let store: StoreOf<TodoEditorFeature>
     let isWideLayout: Bool
     let onClose: () -> Void
@@ -162,6 +166,7 @@ private struct ToolBar: View {
             }
         }
         .padding(.horizontal)
+        .frame(maxWidth: readableContentWidth)
         .padding(.top, 12 + windowControlsInset)
     }
 }

@@ -12,6 +12,8 @@ import PresentationShared
 struct ThemeView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
     @Binding var theme: SystemTheme
 
@@ -33,7 +35,11 @@ struct ThemeView: View {
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
         }
+        // Mac 제목 줄 구분선과 첫 항목 사이 여백
+        .contentMargins(.top, showsPaneTitleBar ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.appBackground)
         .duoToolbarVisibility()
@@ -41,22 +47,31 @@ struct ThemeView: View {
 
     private static let themes: [SystemTheme] = [.automatic, .light, .dark]
 
+    @ViewBuilder
     private var topBar: some View {
-        ZStack {
-            Text(String(localized: "nav_theme", bundle: PresentationResources.bundle))
-                .font(.headline)
-            if deviceType != .duo {
-                HStack {
-                    NavigationBackButton(action: { dismiss() })
-                    Spacer()
+        let title = Text(String(localized: "nav_theme", bundle: PresentationResources.bundle))
+
+        if showsPaneTitleBar {
+            PaneTitleBar(title)
+        } else {
+            ZStack {
+                title
+                    .font(.headline)
+
+                if deviceType != .duo {
+                    HStack {
+                        NavigationBackButton(action: { dismiss() })
+                        Spacer()
+                    }
                 }
             }
+            .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
+            .padding(.top, windowControlsInset)
+            .padding(.bottom, 12)
+            .background(Color.appBackground)
+            .toolbarBackground(Color.appBackground)
         }
-        .padding(.horizontal, 16)
-        .padding(.top, windowControlsInset)
-        .padding(.bottom, 12)
-        .background(Color.appBackground)
-        .toolbarBackground(Color.appBackground)
     }
 
     private func themeButton(_ option: SystemTheme) -> some View {

@@ -12,6 +12,7 @@ import PresentationShared
 struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
     @State private var router = NavigationRouter<Path>()
     @State var store: StoreOf<SearchFeature>
 
@@ -28,12 +29,15 @@ struct SearchView: View {
                     instruction
                 }
                 .padding(.horizontal)
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
                     topBar
                     tipCard
                         .padding(.horizontal)
+                        .frame(maxWidth: readableContentWidth)
                         .padding(.bottom, 8)
                 }
                 .background(Color.appBackground)
@@ -76,6 +80,7 @@ struct SearchView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal)
+        .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 8)
         .background(Color.appBackground, ignoresSafeAreaEdges: .top)

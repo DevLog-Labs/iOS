@@ -17,6 +17,8 @@ public struct TodoDetailView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
+    @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
     @State var store: StoreOf<TodoDetailFeature>
     private let windowEvent: TodoEditorWindowEvent?
@@ -41,6 +43,7 @@ public struct TodoDetailView: View {
                     content: todo.content,
                     referenceItems: store.referenceItems,
                     number: todo.number,
+                    showsTitle: !showsPaneTitleBar,
                     onOpenTodoID: { store.send(.setSheet(.todo(TodoIdItem(id: $0)))) }
                 )
             } else if store.isLoading {
@@ -100,25 +103,45 @@ public struct TodoDetailView: View {
         windowEvent?.submits ?? Empty().eraseToAnyPublisher()
     }
 
+    @ViewBuilder
     private var topBar: some View {
-        HStack(spacing: 12) {
-            NavigationBackButton {
-                if let onBack {
-                    onBack()
-                } else {
-                    dismiss()
+        if showsPaneTitleBar {
+            PaneTitleBar {
+                if let todo = store.todo {
+                    HStack(spacing: 8) {
+                        Text(todo.title)
+                        Text(verbatim: "#\(todo.number)")
+                            .foregroundStyle(Color.textTertiary)
+                    }
+                }
+            } actions: {
+                infoButton
+                if store.showEditButton {
+                    editButton
                 }
             }
-            Spacer()
-            infoButton
-            if store.showEditButton {
-                editButton
+        } else {
+            HStack(spacing: 12) {
+                NavigationBackButton {
+                    if let onBack {
+                        onBack()
+                    } else {
+                        dismiss()
+                    }
+                }
+                Spacer()
+                infoButton
+                if store.showEditButton {
+                    editButton
+                }
             }
+            .padding(.horizontal)
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 12)
+            .padding(.top, windowControlsInset)
+            .background(Color.appBackground, ignoresSafeAreaEdges: .top)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .padding(.top, windowControlsInset)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
     }
 
     @ViewBuilder
@@ -200,6 +223,7 @@ public struct TodoDetailView: View {
             }
             .environment(\.windowControlsInset, 0)
             .environment(\.deviceType, .bar)
+            .environment(\.showsPaneTitleBar, false)
             .background(Color.appBackground)
             .presentationDragIndicator(.visible)
         }

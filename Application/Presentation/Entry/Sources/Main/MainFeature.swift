@@ -21,6 +21,10 @@ struct MainFeature {
         var isObservingUnreadPushCount = false
         var isWide = false
         var windowControlsInset = CGFloat.zero
+        var readableContentWidth = CGFloat.infinity
+        var navigationHistories: [MainTab: NavigationHistoryState] = [:]
+        var navigationSteps: [MainTab: NavigationStep] = [:]
+        var openedTabs: Set<MainTab> = []
     }
 
     enum Action: BindableAction, Equatable {
@@ -32,6 +36,8 @@ struct MainFeature {
         enum ViewAction: Equatable {
             case onAppear
             case selectedTabChanged(MainTab)
+            case navigationHistoryChanged(MainTab, NavigationHistoryState)
+            case tapNavigation(MainTab, NavigationStep.Direction)
         }
 
         enum StoreAction: Equatable {
@@ -45,6 +51,7 @@ struct MainFeature {
     }
 
     @Dependency(\.observeUnreadPushCountUseCase) var observeUnreadPushCountUseCase
+    @Dependency(\.uuid) var uuid
     @Dependency(\.trackAnalyticsEventUseCase) var trackAnalyticsEventUseCase
     @Dependency(\.setApplicationBadgeCount) var setApplicationBadgeCount
 
@@ -61,8 +68,13 @@ struct MainFeature {
                 state.isObservingUnreadPushCount = true
                 return observeUnreadPushCountEffect()
             case .view(.selectedTabChanged(let tab)):
+                state.openedTabs.insert(tab)
                 guard let screenName = tab.analyticsScreenName else { break }
                 return trackScreenViewEffect(screenName)
+            case .view(.navigationHistoryChanged(let tab, let history)):
+                state.navigationHistories[tab] = history
+            case .view(.tapNavigation(let tab, let direction)):
+                state.navigationSteps[tab] = NavigationStep(id: uuid(), direction: direction)
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)
