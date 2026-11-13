@@ -7,6 +7,38 @@
 
 import SwiftUI
 
+// Mac 창에서 목록 칸 오른쪽에 상세 칸을 나란히 두는 화면
+public struct PaneSplitView<Primary: View, Detail: View>: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    private let primary: Primary
+    private let detail: Detail
+
+    public init(
+        @ViewBuilder primary: () -> Primary,
+        @ViewBuilder detail: () -> Detail
+    ) {
+        self.primary = primary()
+        self.detail = detail()
+    }
+
+    public var body: some View {
+        if isiOSAppOnMac {
+            HStack(spacing: 0) {
+                primary
+                    .resizablePane(
+                        minimumWidth: 320,
+                        idealWidth: 400,
+                        maximumWidth: 520
+                    )
+                detail
+                    .frame(maxWidth: .infinity)
+            }
+        } else {
+            primary
+        }
+    }
+}
+
 public extension View {
     // 오른쪽 경계선을 끌어 폭을 바꾸는 칸
     func resizablePane(
