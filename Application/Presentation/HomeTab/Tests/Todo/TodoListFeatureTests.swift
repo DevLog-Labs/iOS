@@ -387,6 +387,20 @@ struct TodoListFeatureTests {
         #expect(adapter.selectedTodoId == nil)
     }
 
+    @Test("finishDeleteToast는 삭제 대기 중 재조회로 목록에서 빠진 Todo의 선택도 해제한다")
+    func finishDeleteToast는_삭제_대기_중_재조회로_목록에서_빠진_Todo의_선택도_해제한다() async {
+        let item = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
+        let adapter = TodoListStoreTestAdapter()
+
+        await adapter.appendTodos([item])
+        await adapter.selectTodo("todo-selected")
+        await adapter.swipeTodo(item)
+        await adapter.resetPagination()
+        await adapter.finishDeleteToast("todo-selected")
+
+        #expect(adapter.selectedTodoId == nil)
+    }
+
     @Test("tapToggleCompleted와 tapTogglePinned는 조회한 Todo를 갱신해 목록에 반영한다")
     func tapToggleCompleted와_tapTogglePinned는_조회한_Todo를_갱신해_목록에_반영한다() async {
         let todo = makeTodoListTodo(id: "todo-toggle", isPinned: false, isCompleted: false)

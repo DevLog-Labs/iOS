@@ -152,6 +152,10 @@ final class TodoListStoreTestAdapter {
         await store.send(.view(.finishDeleteToast(todoId)))
     }
 
+    func resetPagination() async {
+        await store.send(.store(.resetPagination))
+    }
+
     func selectTodo(_ todoId: String?) async {
         await store.send(.binding(.set(\.selectedTodoId, todoId)))
     }
