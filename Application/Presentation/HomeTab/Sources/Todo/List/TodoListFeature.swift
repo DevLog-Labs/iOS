@@ -322,12 +322,6 @@ private extension TodoListFeature {
             )
         case .finishDeleteToast(let todoId):
             state.todos.removeAll { $0.id == todoId && $0.isHidden }
-            // 되돌리지 않고 목록에서 빠진 Todo의 상세 칸 선택 해제
-            if state.undoTodoId == todoId,
-               state.selectedTodoId == todoId,
-               !state.todos.contains(where: { $0.id == todoId }) {
-                state.selectedTodoId = nil
-            }
             if state.undoTodoId == todoId {
                 state.undoTodoId = nil
             }

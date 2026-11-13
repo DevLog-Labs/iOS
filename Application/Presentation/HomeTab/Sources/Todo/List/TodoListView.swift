@@ -38,9 +38,8 @@ struct TodoListView: View {
                 }
             }
         } detail: {
-            // 삭제 대기 중인 Todo는 재조회로 목록에서 빠져도 선택 안내로 대체
             TodoDetailPane(
-                todoId: store.selectedTodoId == store.undoTodoId ? nil : store.selectedTodoId,
+                todoId: store.selectedTodoId,
                 showEditButton: true,
                 placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
                 windowEvent: windowEvent

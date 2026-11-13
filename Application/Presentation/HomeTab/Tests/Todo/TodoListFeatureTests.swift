@@ -370,50 +370,25 @@ struct TodoListFeatureTests {
         #expect(adapter.todos.isEmpty)
     }
 
-    @Test("finishDeleteToast는 삭제가 확정된 Todo만 선택을 해제한다")
-    func finishDeleteToast는_삭제가_확정된_Todo만_선택을_해제한다() async {
-        let item = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
+    @Test("swipeTodo는 선택한 Todo를 지울 때만 선택을 해제한다")
+    func swipeTodo는_선택한_Todo를_지울_때만_선택을_해제한다() async {
+        let selected = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
+        let other = TodoListItem(from: makeTodoListTodo(id: "todo-other"))!
         let adapter = TodoListStoreTestAdapter()
 
-        await adapter.appendTodos([item])
+        await adapter.appendTodos([selected, other])
         await adapter.selectTodo("todo-selected")
-        await adapter.finishDeleteToast("todo-selected")
+        await adapter.swipeTodo(other)
 
         #expect(adapter.selectedTodoId == "todo-selected")
 
-        await adapter.swipeTodo(item)
-        await adapter.finishDeleteToast("todo-selected")
+        await adapter.swipeTodo(selected)
 
         #expect(adapter.selectedTodoId == nil)
-    }
 
-    @Test("finishDeleteToast는 삭제 대기 중 재조회로 목록에서 빠진 Todo의 선택도 해제한다")
-    func finishDeleteToast는_삭제_대기_중_재조회로_목록에서_빠진_Todo의_선택도_해제한다() async {
-        let item = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
-        let adapter = TodoListStoreTestAdapter()
-
-        await adapter.appendTodos([item])
-        await adapter.selectTodo("todo-selected")
-        await adapter.swipeTodo(item)
-        await adapter.resetPagination()
-        await adapter.finishDeleteToast("todo-selected")
-
-        #expect(adapter.selectedTodoId == nil)
-    }
-
-    @Test("finishDeleteToast는 되돌린 Todo가 재조회로 목록에서 빠져도 선택을 유지한다")
-    func finishDeleteToast는_되돌린_Todo가_재조회로_목록에서_빠져도_선택을_유지한다() async {
-        let item = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
-        let adapter = TodoListStoreTestAdapter()
-
-        await adapter.appendTodos([item])
-        await adapter.selectTodo("todo-selected")
-        await adapter.swipeTodo(item)
         await adapter.undoDelete()
-        await adapter.resetPagination()
-        await adapter.finishDeleteToast("todo-selected")
 
-        #expect(adapter.selectedTodoId == "todo-selected")
+        #expect(adapter.selectedTodoId == nil)
     }
 
     @Test("tapToggleCompleted는 선택한 Todo일 때만 상세 칸을 다시 조회하도록 갱신한다")
