@@ -99,6 +99,7 @@ struct TodoListFeature {
             case setAlert(Bool)
             case didToggleCompleted(TodoListItem)
             case didTogglePinned(TodoListItem)
+            case updateTodo(TodoListItem)
             case setTodoHidden(String, Bool)
             case appendTodos([TodoListItem], nextCursor: TodoCursor?)
             case resetPagination
@@ -363,7 +364,7 @@ private extension TodoListFeature {
             state.fullScreenCover = cover?.destination == .editor ? .editor(state.category) : nil
         case .setAlert(let value):
             Self.setAlert(&state, isPresented: value)
-        case .didToggleCompleted(let todo), .didTogglePinned(let todo):
+        case .didToggleCompleted(let todo), .didTogglePinned(let todo), .updateTodo(let todo):
             if let index = state.todos.firstIndex(where: { $0.id == todo.id }) {
                 state.todos[index] = todo
             }

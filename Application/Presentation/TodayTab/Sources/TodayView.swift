@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Combine
 import Core
 import Domain
 import PresentationShared
@@ -97,13 +98,16 @@ public struct TodayView: View {
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
             } detail: {
+                let item = sections.flatMap(\.items).first { $0.id == store.selectedTodoId }
                 // 목록에서 빠진 Todo는 선택 안내로 대체
                 TodoDetailPane(
-                    todoId: sections.flatMap(\.items).first { $0.id == store.selectedTodoId }?.id,
+                    todoId: item?.id,
                     showEditButton: true,
                     placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
                     windowEvent: windowEvent
                 )
+                // 인스펙터 등에서 목록 행이 바뀌면 상세 칸도 다시 조회
+                .id(item?.updatedAt)
             }
             .navigationDestination(
                 for: TodayRoute.self,
@@ -133,6 +137,12 @@ public struct TodayView: View {
         .task(id: isSelected) {
             guard isSelected else { return }
             await monitorDateChanges()
+        }
+        .onReceive(windowEvent.submits) { submit in
+            // 상세 칸에서 편집한 Todo를 옆 목록 행에도 반영
+            guard case .update(_, let todo) = submit,
+                  let item = TodayTodoItem(from: todo) else { return }
+            store.send(.store(.updateTodo(item)))
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .overlay {
