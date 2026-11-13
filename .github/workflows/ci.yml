@@ -3,6 +3,11 @@ name: iOS CI
 on:
   pull_request:
 
+# 같은 PR이나 브랜치에 새 푸시가 오면 진행 중인 앞 실행 취소
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 env:
   WORKSPACE: DevLog.xcworkspace
   SCHEME: App
