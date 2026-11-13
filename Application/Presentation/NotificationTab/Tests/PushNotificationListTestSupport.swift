@@ -89,6 +89,7 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
         let task = await store.send(.view(.refresh))
         await drainReceivedActions()
         await task.finish()
+        await drainReceivedActions()
     }
 
     func fetchNotifications() async {
@@ -157,6 +158,17 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
     func finishEffects() async {
         await drainReceivedActions()
         await store.finish()
+    }
+
+    // TestStore는 effect가 보낸 액션을 받음 처리해야 state에 반영하므로 대기 중에도 받은 액션을 처리
+    func waitForNotifications(_ ids: [String]) async {
+        let continuousClock = ContinuousClock()
+        let deadline = continuousClock.now + .seconds(1)
+
+        while notifications.map(\.id) != ids && continuousClock.now < deadline {
+            await drainReceivedActions()
+            try? await Task.sleep(for: .milliseconds(20))
+        }
     }
 
     private func presentDeleteNotificationToast(_ notificationId: String) {

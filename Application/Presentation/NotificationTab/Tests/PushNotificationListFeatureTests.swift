@@ -127,6 +127,7 @@ struct PushNotificationListFeatureTests {
         let refreshingNotification = makePushNotification(id: "refreshing", number: 1)
         let fetchedNotification = makePushNotification(id: "fetched", number: 2)
         let observedNotification = makePushNotification(id: "observed", number: 3)
+        let now = Date(timeIntervalSince1970: 2_000)
         let fetchSpy = PushNotificationListFetchUseCaseSpy(
             pages: [
                 PushNotificationPage(items: [fetchedNotification], nextCursor: nil)
@@ -136,13 +137,14 @@ struct PushNotificationListFeatureTests {
                 .eraseToAnyPublisher()
         )
         fetchSpy.shouldSuspend = true
-        let adapter = PushNotificationListStoreTestAdapter(fetchUseCase: fetchSpy)
+        let adapter = PushNotificationListStoreTestAdapter(
+            fetchUseCase: fetchSpy,
+            now: now
+        )
 
         await adapter.startObserving()
         subject.send(PushNotificationPage(items: [initialNotification], nextCursor: nil))
-        await waitUntilMainActor {
-            adapter.notifications.map(\.id) == [initialNotification.id]
-        }
+        await adapter.waitForNotifications([initialNotification.id])
 
         let task = Task { await adapter.refresh() }
         await waitUntilMainActor {
@@ -162,9 +164,9 @@ struct PushNotificationListFeatureTests {
 
         await adapter.startObserving()
         subject.send(PushNotificationPage(items: [observedNotification], nextCursor: nil))
-        await waitUntilMainActor {
-            adapter.notifications.map(\.id) == [observedNotification.id]
-        }
+        await adapter.waitForNotifications([observedNotification.id])
+
+        #expect(adapter.notifications.map(\.id) == [observedNotification.id])
 
         subject.send(completion: .finished)
         await adapter.finishEffects()
