@@ -10,7 +10,7 @@ concurrency:
 
 env:
   WORKSPACE: DevLog.xcworkspace
-  SCHEME: App
+  TEST_SCHEME: DevLog-Tests
   XCODE_VERSION: "27.2"
   MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
   MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
@@ -22,10 +22,13 @@ permissions:
   checks: write
 
 jobs:
-  build:
-    name: Build
+  # 테스트 타깃까지 한 번 컴파일하고 같은 러너에서 테스트만 실행
+  ci:
+    name: Build and Test
     runs-on: xcode-27
     timeout-minutes: 30
+    outputs:
+      build: ${{ steps.build.outcome }}
     steps:
       - uses: actions/checkout@v5
 
@@ -117,87 +120,10 @@ jobs:
 
           tuist generate --no-open
 
-      - name: Select iOS Simulator Runtime (installed)
-        id: pick_ios
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          RESULT=$(python3 - <<'PY'
-          import re, subprocess, sys
-
-          def ver_key(version):
-            return tuple(int(part) for part in version.split('.'))
-
-          text = subprocess.check_output(["xcrun", "simctl", "list", "devices"], text=True)
-          lines = text.splitlines()
-          current_ver = None
-          candidates = []
-
-          for line in lines:
-            header = re.match(r"^-- iOS ([0-9]+(?:\.[0-9]+)*) --$", line.strip())
-            if header:
-              current_ver = header.group(1)
-              continue
-            if current_ver is None:
-              continue
-            if "(unavailable)" in line:
-              continue
-            if "iPhone" not in line:
-              continue
-
-            raw = line.strip()
-            if "platform:" in raw and "name:" in raw and "OS:" in raw:
-              kv = {}
-              for part in raw.split(","):
-                if ":" not in part:
-                  continue
-                k, v = part.split(":", 1)
-                kv[k.strip()] = v.strip()
-              name = kv.get("name", raw)
-            else:
-              name = raw
-              name = re.sub(r"\s+\([0-9A-Fa-f-]{36}\)\s+\(.*\)$", "", name)
-
-            candidates.append((current_ver, name))
-
-          if len(candidates) <= 0:
-            print("No available iPhone simulators found", file=sys.stderr)
-            sys.exit(1)
-
-          latest_version = max((candidate[0] for candidate in candidates), key=ver_key)
-          latest_candidates = [
-            candidate for candidate in candidates
-            if candidate[0] == latest_version
-          ]
-          chosen_version, chosen_device_name = min(
-            latest_candidates,
-            key=lambda candidate: candidate[1]
-          )
-
-          print(f"{chosen_version}|{chosen_device_name}")
-          sys.exit(0)
-          PY
-          )
-
-          if [ -z "${RESULT:-}" ]; then
-            echo "No iPhone simulator devices detected." >&2
-            exit 1
-          fi
-
-          IFS='|' read -r IOS_VER DEVICE_NAME <<< "$RESULT"
-
-          echo "Chosen iOS runtime version (iPhone): $IOS_VER"
-          echo "Chosen simulator: $DEVICE_NAME"
-
-          echo "ios_version=$IOS_VER" >> "$GITHUB_OUTPUT"
-          echo "device_name=$DEVICE_NAME" >> "$GITHUB_OUTPUT"
-
+      # 시뮬레이터 x86_64 슬라이스는 CI에서 만들지 않음
       - name: Build
+        id: build
         shell: bash
-        env:
-          IOS_VER: ${{ steps.pick_ios.outputs.ios_version }}
-          DEVICE_NAME: ${{ steps.pick_ios.outputs.device_name }}
         run: |
           set -euo pipefail
           set -x
@@ -206,29 +132,24 @@ jobs:
 
           xcodebuild -version
 
-          echo "Using scheme: $SCHEME"
-          echo "Using simulator: $DEVICE_NAME (iOS ${IOS_VER})"
+          echo "Using scheme: $TEST_SCHEME"
 
           set -o pipefail
           set +e
-          echo "== Resolving Swift Package dependencies =="
+          echo "== Starting xcodebuild build-for-testing =="
           xcodebuild \
             -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
+            -scheme "$TEST_SCHEME" \
             -configuration Debug \
-            -clonedSourcePackagesDirPath "$SPM_DIR" \
-            -resolvePackageDependencies
-          echo "== Starting xcodebuild build =="
-          xcodebuild \
-            -workspace "$WORKSPACE" \
-            -scheme "$SCHEME" \
-            -configuration Debug \
-            -destination "platform=iOS Simulator,OS=${IOS_VER},name=${DEVICE_NAME}" \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$RUNNER_TEMP/derived-data" \
             -clonedSourcePackagesDirPath "$SPM_DIR" \
             -skipPackagePluginValidation \
             -skipMacroValidation \
             -showBuildTimingSummary \
-            build \
+            ARCHS=arm64 \
+            COMPILER_INDEX_STORE_ENABLE=NO \
+            build-for-testing \
             | tee build.log
           XC_STATUS=${PIPESTATUS[0]}
           echo "== xcodebuild finished =="
@@ -244,95 +165,6 @@ jobs:
           path: build.log
           if-no-files-found: ignore
 
-  test:
-    name: Test (${{ matrix.name }})
-    runs-on: xcode-27
-    timeout-minutes: 30
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: App
-            schemes: "App"
-          - name: Domain-Data
-            schemes: "Domain Data"
-          - name: Infra
-            schemes: "Infra"
-          - name: Persistence
-            schemes: "Persistence"
-          - name: Libraries
-            schemes: "MarkdownRenderer"
-          - name: Presentation
-            schemes: "Entry PresentationShared HomeTab"
-          - name: Widget
-            schemes: "Widget WidgetCore"
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install private config files
-        uses: ./.github/actions/install-private-config
-        with:
-          git_url: ${{ env.MATCH_GIT_URL }}
-          git_basic_authorization: ${{ env.MATCH_GIT_BASIC_AUTHORIZATION }}
-          environment: staging
-
-      - name: Select Xcode
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if [ "$XCODE_VERSION" = "latest" ]; then
-            XCODE_APP="$(find /Applications -maxdepth 1 -name 'Xcode*.app' -type d | sort -V | tail -n 1)"
-          else
-            XCODE_APP="/Applications/Xcode_${XCODE_VERSION}.app"
-            if [ ! -d "$XCODE_APP" ]; then
-              XCODE_APP="/Applications/Xcode-${XCODE_VERSION}.app"
-            fi
-          fi
-
-          if [ ! -d "${XCODE_APP:-}" ]; then
-            echo "Requested Xcode not found for version: $XCODE_VERSION" >&2
-            exit 1
-          fi
-
-          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
-          xcodebuild -version
-
-      - name: Set up Tuist
-        uses: jdx/mise-action@v4
-        with:
-          install: true
-          cache: true
-
-      - name: Install SwiftLint
-        env:
-          HOMEBREW_REQUIRE_TAP_TRUST: "1"
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          brew list swiftlint >/dev/null 2>&1 || brew install swiftlint
-          swiftlint version
-
-      - name: Cache SwiftPM
-        uses: actions/cache@v5
-        with:
-          path: |
-            ~/.swiftpm
-            ~/Library/Caches/org.swift.swiftpm
-            ~/Library/Developer/Xcode/SourcePackages
-            .spm
-          key: ${{ runner.os }}-spm-${{ hashFiles('.mise.toml', 'Tuist.swift', 'Workspace.swift', 'Tuist/ProjectDescriptionHelpers/*.swift', 'Application/**/Project.swift', 'Libraries/**/Project.swift', 'Widget/**/Project.swift') }}
-          restore-keys: |
-            ${{ runner.os }}-spm-
-
-      - name: Generate Xcode workspace with Tuist
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          tuist generate --no-open
-
       - name: Select iOS Simulator Runtime (installed)
         id: pick_ios
         shell: bash
@@ -363,6 +195,10 @@ jobs:
               continue
 
             raw = line.strip()
+            udid = re.search(r"\(([0-9A-Fa-f-]{36})\)", raw)
+            if udid is None:
+              continue
+
             if "platform:" in raw and "name:" in raw and "OS:" in raw:
               kv = {}
               for part in raw.split(","):
@@ -375,7 +211,7 @@ jobs:
               name = raw
               name = re.sub(r"\s+\([0-9A-Fa-f-]{36}\)\s+\(.*\)$", "", name)
 
-            candidates.append((current_ver, name))
+            candidates.append((current_ver, name, udid.group(1)))
 
           if len(candidates) <= 0:
             print("No available iPhone simulators found", file=sys.stderr)
@@ -386,12 +222,12 @@ jobs:
             candidate for candidate in candidates
             if candidate[0] == latest_version
           ]
-          chosen_version, chosen_device_name = min(
+          chosen_version, chosen_device_name, chosen_device_id = min(
             latest_candidates,
             key=lambda candidate: candidate[1]
           )
 
-          print(f"{chosen_version}|{chosen_device_name}")
+          print(f"{chosen_version}|{chosen_device_name}|{chosen_device_id}")
           sys.exit(0)
           PY
           )
@@ -401,119 +237,236 @@ jobs:
             exit 1
           fi
 
-          IFS='|' read -r IOS_VER DEVICE_NAME <<< "$RESULT"
+          IFS='|' read -r IOS_VER DEVICE_NAME DEVICE_ID <<< "$RESULT"
 
           echo "Chosen iOS runtime version (iPhone): $IOS_VER"
-          echo "Chosen simulator: $DEVICE_NAME"
+          echo "Chosen simulator: $DEVICE_NAME ($DEVICE_ID)"
 
-          echo "ios_version=$IOS_VER" >> "$GITHUB_OUTPUT"
-          echo "device_name=$DEVICE_NAME" >> "$GITHUB_OUTPUT"
+          echo "device_id=$DEVICE_ID" >> "$GITHUB_OUTPUT"
 
+      # simslim은 부팅과 테스트 시간을 줄이는 최적화이고 테스트는 simslim이 끄는 데몬에 의존하지 않음
+      # 설치나 적용이 실패하면 경고만 남기고 기본 상태 시뮬레이터로 진행
+      - name: Install simslim
+        id: simslim
+        continue-on-error: true
+        timeout-minutes: 2
+        env:
+          SIMSLIM_VERSION: 0.12.2
+          SIMSLIM_SHA256: b47302da6fb83b8b4c21f4fdd61507469770c07b0ff07fd1f48207bda4270887
+        run: |
+          archive="$RUNNER_TEMP/simslim.tar.gz"
+          directory="$RUNNER_TEMP/simslim"
+          mkdir -p "$directory"
+          if curl -fsSL --retry 3 -o "$archive" "https://github.com/MobAI-App/simslim/releases/download/v$SIMSLIM_VERSION/simslim-v$SIMSLIM_VERSION-macos-arm64.tar.gz" \
+            && echo "$SIMSLIM_SHA256  $archive" | shasum -a 256 -c - \
+            && tar -xzf "$archive" -C "$directory" simslim \
+            && "$directory/simslim" --version; then
+            echo "path=$directory/simslim" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning title=simslim::설치에 실패해 기본 상태 시뮬레이터로 진행"
+          fi
+
+      # 종료 상태의 시뮬레이터에 적용하면 simslim이 비활성화 목록을 기록한 뒤 한 번만 부팅
+      # 제한 시간이 지나도 진행 중인 부팅은 다음 단계가 기다림
+      - name: Slim simulator
+        if: steps.simslim.outputs.path != ''
+        continue-on-error: true
+        timeout-minutes: 4
+        env:
+          SIMSLIM: ${{ steps.simslim.outputs.path }}
+          SIMSLIM_BOOT_TIMEOUT: 3m
+          DEVICE_ID: ${{ steps.pick_ios.outputs.device_id }}
+        run: |
+          if "$SIMSLIM" on "$DEVICE_ID"; then
+            "$SIMSLIM" status "$DEVICE_ID" || true
+          else
+            echo "::warning title=simslim::적용에 실패해 기본 상태 시뮬레이터로 진행"
+          fi
+
+      - name: Boot simulator
+        timeout-minutes: 5
+        env:
+          DEVICE_ID: ${{ steps.pick_ios.outputs.device_id }}
+        run: |
+          # 종료 상태가 아니면 부팅 명령을 보내지 않음
+          if xcrun simctl list devices | grep "$DEVICE_ID" | grep -q "(Shutdown)"; then
+            xcrun simctl boot "$DEVICE_ID"
+          fi
+          xcrun simctl bootstatus "$DEVICE_ID" -b
+
+      # 테스트는 한 번에 실행하고 결과 번들에서 타깃별 결과를 나눠 기록
+      # 복제 시뮬레이터를 추가로 부팅하는 병렬 테스트는 CI에서 끔
       - name: Test
+        id: test
+        timeout-minutes: 15
         shell: bash
         env:
-          IOS_VER: ${{ steps.pick_ios.outputs.ios_version }}
-          DEVICE_NAME: ${{ steps.pick_ios.outputs.device_name }}
-          TEST_SCHEMES: ${{ matrix.schemes }}
-          TEST_GROUP: ${{ matrix.name }}
+          DEVICE_ID: ${{ steps.pick_ios.outputs.device_id }}
         run: |
           set -uo pipefail
           set -x
 
-          SPM_DIR="$GITHUB_WORKSPACE/.spm"
-          RESULT_DIR="$GITHUB_WORKSPACE/test-results/$TEST_GROUP"
-          mkdir -p "$SPM_DIR" "$RESULT_DIR"
+          RESULT_DIR="$GITHUB_WORKSPACE/test-results"
+          RESULT_BUNDLE="$RUNNER_TEMP/${TEST_SCHEME}.xcresult"
+          XCTESTRUN="$(find "$RUNNER_TEMP/derived-data/Build/Products" -maxdepth 1 -name '*.xctestrun' -print -quit)"
+          mkdir -p "$RESULT_DIR"
+          rm -rf "$RESULT_BUNDLE"
 
-          xcodebuild -version
+          echo "== Starting xcodebuild test-without-building: ${TEST_SCHEME} =="
 
-          STATUS=0
-          SUMMARY="$RESULT_DIR/summary.txt"
-          : > "$SUMMARY"
+          # 테스트가 실패해도 타깃별 결과를 기록하려고 종료 코드를 직접 처리
+          set +e
+          xcodebuild \
+            -xctestrun "$XCTESTRUN" \
+            -destination "platform=iOS Simulator,id=${DEVICE_ID}" \
+            -parallel-testing-enabled NO \
+            -resultBundlePath "$RESULT_BUNDLE" \
+            test-without-building \
+            | tee "$RESULT_DIR/xcodebuild.log"
+          XC_STATUS=${PIPESTATUS[0]}
 
-          for TEST_SCHEME in $TEST_SCHEMES; do
-            LOG_PATH="$RESULT_DIR/${TEST_SCHEME}.log"
-            if [ "$TEST_SCHEME" = "WidgetCore" ]; then
-              TEST_SOURCE_DIR="Widget/WidgetCore/Tests"
-            elif [ -d "Libraries/${TEST_SCHEME}/Tests" ]; then
-              TEST_SOURCE_DIR="Libraries/${TEST_SCHEME}/Tests"
-            elif [ -d "Application/Presentation/${TEST_SCHEME}/Tests" ]; then
-              TEST_SOURCE_DIR="Application/Presentation/${TEST_SCHEME}/Tests"
-            else
-              TEST_SOURCE_DIR="Application/${TEST_SCHEME}/Tests"
-            fi
+          echo "== Finished xcodebuild test-without-building: ${TEST_SCHEME} (${XC_STATUS}) =="
 
-            echo "== Starting xcodebuild test: ${TEST_SCHEME} =="
-            echo "scheme=${TEST_SCHEME}" >> "$SUMMARY"
+          xcrun xcresulttool get test-results tests --path "$RESULT_BUNDLE" > "$RUNNER_TEMP/test-results.json"
 
-            if [ -z "$(find "$TEST_SOURCE_DIR" -name '*.swift' -print -quit 2>/dev/null)" ]; then
-              echo "No Swift test sources found in ${TEST_SOURCE_DIR}. Skipping ${TEST_SCHEME}."
-              echo "No Swift test sources found in ${TEST_SOURCE_DIR}. Skipping ${TEST_SCHEME}." > "$LOG_PATH"
-              echo "status=0" >> "$SUMMARY"
-              echo "result=skipped" >> "$SUMMARY"
-              echo "" >> "$SUMMARY"
-              echo "== Finished xcodebuild test: ${TEST_SCHEME} (skipped) =="
-              continue
-            fi
+          set +x
+          python3 - "$XCTESTRUN" "$RUNNER_TEMP/test-results.json" "$RESULT_DIR" "$XC_STATUS" <<'PY'
+          import json, os, plistlib, shutil, sys
 
-            set +e
-            xcodebuild \
-              -workspace "$WORKSPACE" \
-              -scheme "$TEST_SCHEME" \
-              -configuration Debug \
-              -destination "platform=iOS Simulator,OS=${IOS_VER},name=${DEVICE_NAME}" \
-              -clonedSourcePackagesDirPath "$SPM_DIR" \
-              -skipPackagePluginValidation \
-              -skipMacroValidation \
-              -showBuildTimingSummary \
-              test \
-              | tee "$LOG_PATH"
-            XC_STATUS=${PIPESTATUS[0]}
-            set -e
+          xctestrun_path, tests_path, result_dir, status = sys.argv[1], sys.argv[2], sys.argv[3], int(sys.argv[4])
+          scheme = os.environ["TEST_SCHEME"]
+          workspace = os.environ["GITHUB_WORKSPACE"] + "/"
+          passing = ("Passed", "Skipped", "Expected Failure")
 
-            echo "status=${XC_STATUS}" >> "$SUMMARY"
-            echo "" >> "$SUMMARY"
+          # 실행 대상 타깃은 xctestrun에서 읽어 결과가 빠진 타깃도 실패로 기록
+          try:
+            with open(xctestrun_path, "rb") as file:
+              xctestrun = plistlib.load(file)
+          except (OSError, plistlib.InvalidFileException):
+            xctestrun = {}
 
-            if [ "$XC_STATUS" -ne 0 ]; then
-              STATUS="$XC_STATUS"
-            fi
+          if "TestConfigurations" in xctestrun:
+            targets = [
+              target["BlueprintName"]
+              for configuration in xctestrun["TestConfigurations"]
+              for target in configuration["TestTargets"]
+            ]
+          else:
+            targets = [name for name in xctestrun if name != "__xctestrun_metadata__"]
 
-            echo "== Finished xcodebuild test: ${TEST_SCHEME} (${XC_STATUS}) =="
-          done
+          bundles = {}
 
-          exit "$STATUS"
+          def collect(node):
+            if node["nodeType"] in ("Unit test bundle", "UI test bundle"):
+              bundles[node["name"]] = node
+              return
+            for child in node.get("children", []):
+              collect(child)
+
+          try:
+            with open(tests_path) as file:
+              for node in json.load(file)["testNodes"]:
+                collect(node)
+          except (OSError, ValueError, KeyError):
+            pass
+
+          # 결과 번들이 없으면 타깃별로 나누지 않고 전체 로그로 기록
+          if not bundles:
+            targets = []
+
+          def cases(node):
+            if node["nodeType"] == "Test Case":
+              yield node
+              return
+            for child in node.get("children", []):
+              yield from cases(child)
+
+          def failures(node, case):
+            if node["nodeType"] == "Test Case":
+              case = node.get("nodeIdentifier", node["name"])
+            if node["nodeType"] == "Failure Message":
+              location = node.get("sourceLocation")
+              where = f"{location['filePath'].removeprefix(workspace)}:{location['lineNumber']}: " if location else ""
+              yield f"✘ {case}"
+              for line in f"{where}{node['name']}".splitlines():
+                yield f"  {line}"
+            for child in node.get("children", []):
+              yield from failures(child, case)
+
+          rows = []
+          failed = False
+
+          with open(os.path.join(result_dir, "summary.txt"), "w") as summary:
+            for target in targets:
+              bundle = bundles.get(target)
+              if bundle is None:
+                result, counts, lines = "No result", {}, ["✘ No test result was recorded for this target."]
+              else:
+                result = bundle.get("result", "unknown")
+                counts = {}
+                for case in cases(bundle):
+                  counts[case.get("result")] = counts.get(case.get("result"), 0) + 1
+                lines = list(failures(bundle, target))
+
+              ok = result in passing
+              failed = failed or not ok
+              line = f"{target}: {result} (passed {counts.get('Passed', 0)}, failed {counts.get('Failed', 0)}, skipped {counts.get('Skipped', 0)})"
+              rows.append((target, result, counts))
+
+              with open(os.path.join(result_dir, f"{target}.log"), "w") as log:
+                log.write("\n".join([line] + lines) + "\n")
+
+              summary.write(f"scheme={target}\nstatus={0 if ok else 1}\n\n")
+              print(line)
+              for failure in lines:
+                print(failure)
+
+            # 타깃 결과로 설명되지 않는 실패는 전체 로그로 기록
+            if status != 0 and not failed:
+              shutil.copyfile(os.path.join(result_dir, "xcodebuild.log"), os.path.join(result_dir, f"{scheme}.log"))
+              summary.write(f"scheme={scheme}\nstatus={status}\n\n")
+              failed = True
+
+          step_summary = os.environ.get("GITHUB_STEP_SUMMARY")
+          if step_summary:
+            with open(step_summary, "a") as file:
+              file.write("| Target | Result | Passed | Failed | Skipped |\n| --- | --- | --- | --- | --- |\n")
+              for target, result, counts in rows:
+                mark = "✅" if result in passing else "❌"
+                file.write(f"| {target} | {mark} {result} | {counts.get('Passed', 0)} | {counts.get('Failed', 0)} | {counts.get('Skipped', 0)} |\n")
+
+          sys.exit(status if status != 0 else int(failed))
+          PY
 
       - name: Upload test logs
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: ios-test-${{ matrix.name }}
-          path: test-results/${{ matrix.name }}
+          name: ios-test
+          path: test-results
           if-no-files-found: ignore
 
   report:
     name: Report
     runs-on: ubuntu-latest
-    needs: [build, test]
+    needs: [ci]
+    # 취소된 실행은 실패 댓글을 남기지 않음
     if: |
-      always()
+      !cancelled()
       && github.event.pull_request.head.repo.fork == false
-      && (
-        needs.build.result == 'failure'
-        || needs.test.result == 'failure'
-        || (needs.build.result == 'success' && needs.test.result == 'success')
-      )
+      && (needs.ci.result == 'failure' || needs.ci.result == 'success')
     steps:
       - uses: actions/checkout@v5
 
       - name: Download CI logs
-        if: needs.build.result == 'failure' || needs.test.result == 'failure'
+        if: needs.ci.result == 'failure'
         uses: actions/download-artifact@v7
         continue-on-error: true
         with:
           path: test-artifacts
 
       - name: Delete resolved CI failure comments
-        if: needs.build.result == 'success' && needs.test.result == 'success'
+        if: needs.ci.result == 'success'
         uses: actions/github-script@v8
         with:
           script: |
@@ -544,11 +497,12 @@ jobs:
             }
 
       - name: Comment CI failure on PR
-        if: needs.build.result == 'failure' || needs.test.result == 'failure'
+        if: needs.ci.result == 'failure'
         uses: actions/github-script@v8
+        # 빌드가 성공한 뒤의 실패는 테스트 단계 실패로 처리
         env:
-          BUILD_RESULT: ${{ needs.build.result }}
-          TEST_RESULT: ${{ needs.test.result }}
+          BUILD_RESULT: ${{ needs.ci.outputs.build == 'success' && 'success' || 'failure' }}
+          TEST_RESULT: ${{ needs.ci.outputs.build == 'success' && 'failure' || 'skipped' }}
         with:
           script: |
             const fs = require('fs');
