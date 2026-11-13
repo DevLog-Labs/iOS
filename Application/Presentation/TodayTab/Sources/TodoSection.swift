@@ -12,6 +12,7 @@ import PresentationShared
 struct TodoSection: View {
     let section: TodayFeature.SectionContent
     let isNavigationEnabled: Bool
+    let selectedTodoId: String?
     let onSelect: (TodayTodoItem) -> Void
     let onInspect: (TodayTodoItem) -> Void
 
@@ -40,6 +41,7 @@ struct TodoSection: View {
                     TodoRow(
                         item: item,
                         isNavigationEnabled: isNavigationEnabled,
+                        isSelected: item.id == selectedTodoId,
                         onSelect: { onSelect(item) },
                         onInspect: { onInspect(item) }
                     )
@@ -52,13 +54,17 @@ struct TodoSection: View {
                 RoundedRectangle(cornerRadius: 16)
                     .fill(Color.surface)
             }
+            // 선택한 행 배경이 카드 모서리를 넘지 않도록 자름
+            .clipShape(.rect(cornerRadius: 16))
         }
     }
 }
 
 private struct TodoRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let item: TodayTodoItem
     let isNavigationEnabled: Bool
+    let isSelected: Bool
     let onSelect: () -> Void
     let onInspect: () -> Void
 
@@ -88,7 +94,8 @@ private struct TodoRow: View {
                 Image(systemName: "chevron.right")
                     .font(.callout.bold())
                     .foregroundStyle(Color.textTertiary)
-                    .opacity(isNavigationEnabled ? 1 : 0)
+                    // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
+                    .opacity(isNavigationEnabled && !isiOSAppOnMac ? 1 : 0)
             }
             .overlay {
                 TodoInspectorInteractionView(action: onInspect)
@@ -97,6 +104,7 @@ private struct TodoRow: View {
         .buttonStyle(.plain)
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+        .background(isSelected ? Color.primaryContainer : .clear)
     }
 
     @ViewBuilder

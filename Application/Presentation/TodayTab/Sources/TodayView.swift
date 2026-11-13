@@ -35,59 +35,76 @@ public struct TodayView: View {
 
     public var body: some View {
         NavigationStack(path: $router.path) {
-            ScrollView {
-                let sections = store.sections
-                LazyVStack(alignment: .leading, spacing: 0) {
-                    TodayAchievementCard(store: store)
-                        .padding(.bottom, 8)
+            let sections = store.sections
+            PaneSplitView {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        TodayAchievementCard(store: store)
+                            .padding(.bottom, 8)
 
-                    if sections.isEmpty, !store.isLoading {
-                        TodayEmptyContent(store: store)
-                    } else {
-                        ForEach(sections) { section in
-                            TodoSection(
-                                section: section,
-                                isNavigationEnabled: !store.isTodoInspectorPresented,
-                                onSelect: { router.push(.todo(TodoIdItem(id: $0.id))) },
-                                onInspect: { store.send(.showTodoInspector($0)) }
-                            )
-                            .padding(.bottom, section.id == sections.last?.id ? 0 : 8)
+                        if sections.isEmpty, !store.isLoading {
+                            TodayEmptyContent(store: store)
+                        } else {
+                            ForEach(sections) { section in
+                                TodoSection(
+                                    section: section,
+                                    isNavigationEnabled: !store.isTodoInspectorPresented,
+                                    selectedTodoId: store.selectedTodoId,
+                                    onSelect: { item in
+                                        if isiOSAppOnMac {
+                                            store.send(.binding(.set(\.selectedTodoId, item.id)))
+                                        } else {
+                                            router.push(.todo(TodoIdItem(id: item.id)))
+                                        }
+                                    },
+                                    onInspect: { store.send(.showTodoInspector($0)) }
+                                )
+                                .padding(.bottom, section.id == sections.last?.id ? 0 : 8)
+                            }
+                            .padding(.bottom, 12)
                         }
-                        .padding(.bottom, 12)
                     }
-                }
-                .padding(.horizontal)
-                .frame(maxWidth: readableContentWidth)
-                .frame(maxWidth: .infinity)
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                let title = Text(String(localized: "nav_today", bundle: PresentationResources.bundle))
-
-                VStack(spacing: 0) {
-                    if isiOSAppOnMac {
-                        PaneTitleBar(title)
-                    }
-                    VStack(alignment: .leading) {
-                        if !isiOSAppOnMac {
-                            title
-                                .font(.largeTitle.bold())
-                                .padding(.bottom, 8)
-                        }
-                        TodayFilterBar(store: store)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal)
                     .frame(maxWidth: readableContentWidth)
-                    .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
-                    .padding(.bottom, 8)
+                    .frame(maxWidth: .infinity)
+                }
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    let title = Text(String(localized: "nav_today", bundle: PresentationResources.bundle))
+
+                    VStack(spacing: 0) {
+                        if isiOSAppOnMac {
+                            PaneTitleBar(title)
+                        }
+                        VStack(alignment: .leading) {
+                            if !isiOSAppOnMac {
+                                title
+                                    .font(.largeTitle.bold())
+                                    .padding(.bottom, 8)
+                            }
+                            TodayFilterBar(store: store)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                        .frame(maxWidth: readableContentWidth)
+                        .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
+                        .padding(.bottom, 8)
+                    }
+                    .background(Color.appBackground)
+                    .toolbarBackground(Color.appBackground)
                 }
                 .background(Color.appBackground)
-                .toolbarBackground(Color.appBackground)
+                .refreshable { await store.send(.refresh).finish() }
+                .duoToolbarVisibility()
+            } detail: {
+                // 목록에서 빠진 Todo는 선택 안내로 대체
+                TodoDetailPane(
+                    todoId: sections.flatMap(\.items).first { $0.id == store.selectedTodoId }?.id,
+                    showEditButton: true,
+                    placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
+                    windowEvent: windowEvent
+                )
             }
-            .background(Color.appBackground)
-            .refreshable { await store.send(.refresh).finish() }
-            .duoToolbarVisibility()
             .navigationDestination(
                 for: TodayRoute.self,
                 interactivePop: { _ in true },
