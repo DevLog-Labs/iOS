@@ -11,7 +11,6 @@ public protocol SaveDevelopmentRecordDraftUseCase {
         recordId: String,
         baseVersionId: String?,
         draftRevisionId: String?,
-        title: String,
-        markdownContent: String
+        content: DevelopmentRecord.Content
     ) async throws -> DevelopmentRecord
 }

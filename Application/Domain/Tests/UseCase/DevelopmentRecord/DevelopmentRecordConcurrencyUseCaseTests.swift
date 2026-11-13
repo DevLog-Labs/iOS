@@ -24,8 +24,7 @@ struct DevelopmentRecordConcurrencyUseCaseTests {
                 recordId: "record-1",
                 baseVersionId: nil,
                 draftRevisionId: nil,
-                title: "오래된 초안",
-                markdownContent: "본문"
+                content: .init(title: "오래된 초안", markdownContent: "본문")
             )
         }
         #expect(await repository.draftRequests().isEmpty)
@@ -51,8 +50,7 @@ struct DevelopmentRecordConcurrencyUseCaseTests {
                 recordId: "record-1",
                 baseVersionId: nil,
                 draftRevisionId: "revision-1",
-                title: "오래된 초안",
-                markdownContent: "본문"
+                content: .init(title: "오래된 초안", markdownContent: "본문")
             )
         }
         await expectDevelopmentRecordDomainError(.developmentRecordDraftConflict) {

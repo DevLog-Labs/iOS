@@ -40,6 +40,16 @@ public struct DevelopmentRecord: Hashable {
         }
     }
 
+    public struct Content: Hashable {
+        public let title: String
+        public let markdownContent: String
+
+        public init(title: String, markdownContent: String) {
+            self.title = title
+            self.markdownContent = markdownContent
+        }
+    }
+
     public struct Confirmation: Hashable {
         public let versionId: String
         public let kind: Version.Kind

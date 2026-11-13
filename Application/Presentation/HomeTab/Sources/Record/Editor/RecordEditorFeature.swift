@@ -189,8 +189,7 @@ private extension RecordEditorFeature {
                         recordId: recordId,
                         baseVersionId: state.baseVersionID,
                         draftRevisionId: state.record?.draft?.revisionId,
-                        title: state.title,
-                        markdownContent: state.markdownContent
+                        content: .init(title: state.title, markdownContent: state.markdownContent)
                     )
                 } else {
                     record = try await createRecordUseCase.execute(
@@ -217,8 +216,7 @@ private extension RecordEditorFeature {
                         recordId: recordId,
                         baseVersionId: state.baseVersionID,
                         draftRevisionId: state.record?.draft?.revisionId,
-                        title: state.title,
-                        markdownContent: state.markdownContent
+                        content: .init(title: state.title, markdownContent: state.markdownContent)
                     )
                 } else {
                     record = try await createRecordUseCase.execute(

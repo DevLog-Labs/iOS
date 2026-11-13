@@ -128,14 +128,12 @@ struct CreateDevelopmentRecordUseCaseStub: CreateDevelopmentRecordUseCase {
 struct SaveDevelopmentRecordDraftUseCaseStub: SaveDevelopmentRecordDraftUseCase {
     let result: Result<DevelopmentRecord, Error>
 
-    // swiftlint:disable:next function_parameter_count
     func execute(
         goalId: String,
         recordId: String,
         baseVersionId: String?,
         draftRevisionId: String?,
-        title: String,
-        markdownContent: String
+        content: DevelopmentRecord.Content
     ) async throws -> DevelopmentRecord {
         try result.get()
     }

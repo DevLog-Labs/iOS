@@ -30,8 +30,7 @@ public final class SaveDevelopmentRecordDraftUseCaseImpl: SaveDevelopmentRecordD
         recordId: String,
         baseVersionId: String?,
         draftRevisionId: String?,
-        title: String,
-        markdownContent: String
+        content: DevelopmentRecord.Content
     ) async throws -> DevelopmentRecord {
         let goal = try await goalRepository.fetchGoal(goalId)
         guard goal.status == .inProgress else {
@@ -49,8 +48,8 @@ public final class SaveDevelopmentRecordDraftUseCaseImpl: SaveDevelopmentRecordD
             throw DomainLayerError.developmentRecordDraftConflict
         }
         let updatedDraft = try DevelopmentRecord.Draft(
-            title: title,
-            markdownContent: markdownContent,
+            title: content.title,
+            markdownContent: content.markdownContent,
             baseVersionId: baseVersionId,
             revisionId: revisionIdProvider(),
             updatedAt: now()
