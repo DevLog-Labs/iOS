@@ -58,10 +58,12 @@ public final class ConfirmDevelopmentRecordUseCaseImpl: ConfirmDevelopmentRecord
             return try await repository.confirmDraft(
                 goalId: goalId,
                 recordId: recordId,
-                versionId: versionId,
-                kind: kind,
-                sourceVersionId: baseVersionId,
-                draftRevisionId: draftRevisionId
+                confirmation: .init(
+                    versionId: versionId,
+                    kind: kind,
+                    sourceVersionId: baseVersionId,
+                    draftRevisionId: draftRevisionId
+                )
             )
         } catch {
             guard let record = try? await repository.fetchRecord(

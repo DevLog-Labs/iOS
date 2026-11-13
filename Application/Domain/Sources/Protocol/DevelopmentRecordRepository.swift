@@ -28,10 +28,7 @@ public protocol DevelopmentRecordRepository {
     func confirmDraft(
         goalId: String,
         recordId: String,
-        versionId: String,
-        kind: DevelopmentRecord.Version.Kind,
-        sourceVersionId: String?,
-        draftRevisionId: String?
+        confirmation: DevelopmentRecord.Confirmation
     ) async throws -> DevelopmentRecord.Version
     func restoreVersion(
         goalId: String,

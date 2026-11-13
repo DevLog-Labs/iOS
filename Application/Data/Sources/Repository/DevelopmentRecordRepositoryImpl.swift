@@ -95,20 +95,17 @@ final class DevelopmentRecordRepositoryImpl: DevelopmentRecordRepository {
     func confirmDraft(
         goalId: String,
         recordId: String,
-        versionId: String,
-        kind: DevelopmentRecord.Version.Kind,
-        sourceVersionId: String?,
-        draftRevisionId: String?
+        confirmation: DevelopmentRecord.Confirmation
     ) async throws -> DevelopmentRecord.Version {
         do {
             let response = try await service.confirmDraft(
                 goalId: goalId,
                 recordId: recordId,
                 request: .init(
-                    versionId: versionId,
-                    kind: kind.storageValue,
-                    sourceVersionId: sourceVersionId,
-                    draftRevisionId: draftRevisionId
+                    versionId: confirmation.versionId,
+                    kind: confirmation.kind.storageValue,
+                    sourceVersionId: confirmation.sourceVersionId,
+                    draftRevisionId: confirmation.draftRevisionId
                 )
             )
             return try response.toDomain()

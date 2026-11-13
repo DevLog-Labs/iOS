@@ -187,19 +187,16 @@ actor DevelopmentRecordRepositorySpy: DevelopmentRecordRepository {
     func confirmDraft(
         goalId: String,
         recordId: String,
-        versionId: String,
-        kind: DevelopmentRecord.Version.Kind,
-        sourceVersionId: String?,
-        draftRevisionId: String?
+        confirmation: DevelopmentRecord.Confirmation
     ) async throws -> DevelopmentRecord.Version {
         recordedConfirmRequests.append(
             .init(
                 goalId: goalId,
                 recordId: recordId,
-                versionId: versionId,
-                kind: kind,
-                sourceVersionId: sourceVersionId,
-                draftRevisionId: draftRevisionId
+                versionId: confirmation.versionId,
+                kind: confirmation.kind,
+                sourceVersionId: confirmation.sourceVersionId,
+                draftRevisionId: confirmation.draftRevisionId
             )
         )
         if let confirmError {
