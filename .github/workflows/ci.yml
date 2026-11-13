@@ -508,14 +508,13 @@ jobs:
           if-no-files-found: ignore
 
       - name: Save SwiftPM packages
-        if: github.event_name == 'push' && steps.packages.outputs.cache-hit != 'true'
+        if: steps.packages.outputs.cache-hit != 'true'
         uses: actions/cache/save@v5
         with:
           path: .spm
           key: ${{ steps.packages.outputs.cache-primary-key }}
 
       - name: Save compilation cache
-        if: github.event_name == 'push'
         uses: actions/cache/save@v5
         with:
           path: ${{ runner.temp }}/compilation-cache
