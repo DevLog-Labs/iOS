@@ -24,8 +24,13 @@ public struct MarkdownRendererView: View {
         markdown: String,
         references: [Int: MarkdownRendererReference] = [:],
         isScrollEnabled: Bool = true,
+        fontSize: CGFloat? = nil,
         onOpenReferenceID: ((String) -> Void)? = nil
     ) {
+        // 글자 크기를 받지 않으면 기본 본문 크기
+        if let fontSize {
+            self._fontSize = ScaledMetric(wrappedValue: fontSize, relativeTo: .body)
+        }
         self.markdown = markdown
         self.isScrollEnabled = isScrollEnabled
         self.references = references
