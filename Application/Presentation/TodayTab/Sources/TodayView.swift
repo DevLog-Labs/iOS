@@ -114,9 +114,6 @@ public struct TodayView: View {
                 interactivePop: { _ in true },
                 destination: { destination($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
             )
-            .sheet(isPresented: $store.isCategoryFilterPresented) {
-                CategoryFilterSheet(store: store)
-            }
         }
         .navigationHistory(router)
         .inspector(isPresented: $store.isTodoInspectorPresented) {
@@ -241,7 +238,7 @@ private struct TodayAchievementCard: View {
 }
 
 private struct TodayFilterBar: View {
-    let store: StoreOf<TodayFeature>
+    @Bindable var store: StoreOf<TodayFeature>
 
     var body: some View {
         ScrollView(.horizontal) {
@@ -266,9 +263,30 @@ private struct TodayFilterBar: View {
 
                 let category = store.selectedCategory
                 let isSelected = category != nil
-                Button {
-                    store.send(.binding(.set(\.isCategoryFilterPresented, true)))
-                } label: {
+                DropdownMenu(
+                    isPresented: $store.isCategoryFilterPresented,
+                    sections: [
+                        DropdownMenuSection(items: [
+                            DropdownMenuItem(
+                                String(localized: "today_filter_all_categories", bundle: PresentationResources.bundle),
+                                systemImage: "tray.2",
+                                isChecked: store.selectedCategoryID == nil
+                            ) {
+                                store.send(.setCategory(nil))
+                            }
+                        ]),
+                        DropdownMenuSection(items: store.visibleCategories.map { category in
+                            DropdownMenuItem(
+                                category.localizedName,
+                                systemImage: category.symbolName,
+                                imageColor: category.color,
+                                isChecked: store.selectedCategoryID == category.id
+                            ) {
+                                store.send(.setCategory(category.id))
+                            }
+                        })
+                    ]
+                ) {
                     HStack(spacing: 6) {
                         Image(systemName: category?.symbolName ?? "tray.2")
                             .foregroundStyle(category?.color ?? Color.onControlBackground)
@@ -282,8 +300,8 @@ private struct TodayFilterBar: View {
                     }
                     .font(.callout)
                     .foregroundStyle(isSelected ? Color.onPrimaryContainer : .onControlBackground)
+                    .adaptiveButtonStyle(color: isSelected ? Color.primaryContainer : .controlBackground)
                 }
-                .adaptiveButtonStyle(color: isSelected ? Color.primaryContainer : .controlBackground)
             }
         }
         .scrollIndicators(.hidden)
@@ -365,5 +383,16 @@ private extension TodayFeature.TodayAchievement.Status {
         case .completed: "today_achievement_status_completed"
         }
         return String(localized: String.LocalizationValue(key), bundle: PresentationResources.bundle)
+    }
+}
+
+extension TodayFeature.TodoScope {
+    var title: String {
+        switch self {
+        case .remaining:
+            return String(localized: "today_filter_remaining", bundle: PresentationResources.bundle)
+        case .important:
+            return String(localized: "today_filter_important", bundle: PresentationResources.bundle)
+        }
     }
 }
