@@ -63,7 +63,7 @@ public struct GoalDetailView: View {
 
     private var presentedContent: some View {
         mainContent
-            .sheet(item: $store.scope(state: \.recordEditor, action: \.recordEditor)) { destination in
+            .prominentSheet(item: $store.scope(state: \.recordEditor, action: \.recordEditor)) { destination in
                 RecordEditorView(
                     goalId: store.goalId,
                     goalTitle: store.goalTitle,
@@ -73,7 +73,7 @@ public struct GoalDetailView: View {
                     }
                 )
             }
-            .sheet(item: $store.scope(state: \.todoLinkSheet, action: \.todoLinkSheet)) {
+            .prominentSheet(item: $store.scope(state: \.todoLinkSheet, action: \.todoLinkSheet)) {
                 GoalTodoLinkSheet(store: $0)
             }
             .navigationDestination(

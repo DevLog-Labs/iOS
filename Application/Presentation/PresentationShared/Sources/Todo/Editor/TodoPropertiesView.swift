@@ -13,6 +13,7 @@ public struct TodoPropertiesView: View {
     @Bindable var store: StoreOf<TodoEditorFeature>
     @FocusState private var isTagFieldFocused: Bool
     var showsEditorActions = false
+    var showsCloseButton = false
     var onSubmit: () -> Void = {}
     let onClose: () -> Void
     private let calendar = Calendar.current
@@ -20,11 +21,13 @@ public struct TodoPropertiesView: View {
     public init(
         store: StoreOf<TodoEditorFeature>,
         showsEditorActions: Bool = false,
+        showsCloseButton: Bool = false,
         onSubmit: @escaping () -> Void = {},
         onClose: @escaping () -> Void
     ) {
         self.store = store
         self.showsEditorActions = showsEditorActions
+        self.showsCloseButton = showsCloseButton
         self.onSubmit = onSubmit
         self.onClose = onClose
     }
@@ -33,7 +36,6 @@ public struct TodoPropertiesView: View {
         content
             .safeAreaInset(edge: .top, spacing: 0) { toolBar }
             .background(Color.background.ignoresSafeArea())
-            .presentationDragIndicator(.visible)
     }
 
     private var toolBar: some View {
@@ -43,7 +45,7 @@ public struct TodoPropertiesView: View {
                     .font(.headline)
             }
             HStack {
-                if !showsEditorActions {
+                if !showsEditorActions || showsCloseButton {
                     if #available(iOS 26.0, *) {
                         Button {
                             onClose()
@@ -55,9 +57,15 @@ public struct TodoPropertiesView: View {
                         Button {
                             onClose()
                         } label: {
-                            Text(String(localized: "common_done", bundle: PresentationResources.bundle))
+                            // 저장 버튼과 함께 둘 때는 저장 없이 닫는 버튼
+                            Text(
+                                String(
+                                    localized: showsEditorActions ? "common_close" : "common_done",
+                                    bundle: PresentationResources.bundle
+                                )
+                            )
                         }
-                        .topBarButtonStyle(tint: Color.accent)
+                        .topBarButtonStyle(tint: showsEditorActions ? nil : Color.accent)
                     }
                 }
                 Spacer()
@@ -101,7 +109,7 @@ public struct TodoPropertiesView: View {
                             Text(String(localized: "todo_completed", bundle: PresentationResources.bundle))
                         }
                     }
-                    .tint(Color.accent)
+                    .toggleStyle(.pill)
                     .padding(.vertical, 12)
 
                     Divider().overlay(Color.separator)
@@ -112,7 +120,7 @@ public struct TodoPropertiesView: View {
                             Text(String(localized: "todo_pinned", bundle: PresentationResources.bundle))
                         }
                     }
-                    .tint(Color.accent)
+                    .toggleStyle(.pill)
                     .padding(.vertical, 12)
 
                     Divider().overlay(Color.separator)
@@ -273,7 +281,7 @@ private struct DueDatePicker<Content: View>: View {
         } label: {
             content()
         }
-        .sheet(isPresented: $isPresented.activePresentation(when: isTabContentActive)) {
+        .prominentSheet(isPresented: $isPresented.activePresentation(when: isTabContentActive)) {
             DatePicker(
                 "",
                 selection: $dueDate,
@@ -281,8 +289,7 @@ private struct DueDatePicker<Content: View>: View {
             )
             .labelsHidden()
             .datePickerStyle(.graphical)
-            .presentationDragIndicator(.visible)
-            .presentationDetents([.height(height)])
+            .sheetDetent(.height(height))
             .background {
                 GeometryReader { geometry in
                     Color.clear.onAppear {

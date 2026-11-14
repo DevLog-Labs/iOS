@@ -52,7 +52,7 @@ public struct GoalCreateView: View {
             .background(Color.background.ignoresSafeArea())
             .toolbarVisibility(.hidden, for: .navigationBar)
             .prominentAlert(store, state: \.alert, action: \.alert)
-            .sheet(item: $store.scope(state: \.todoSelection, action: \.todoSelection)) {
+            .prominentSheet(item: $store.scope(state: \.todoSelection, action: \.todoSelection)) {
                 GoalCreateTodoSelectionSheet(store: $0)
             }
             .onChange(of: store.result) { _, result in
@@ -61,7 +61,7 @@ public struct GoalCreateView: View {
                 dismiss()
             }
         }
-        .interactiveDismissDisabled(store.isSaving)
+        .sheetDismissDisabled(store.isSaving)
     }
 
     private func save() {

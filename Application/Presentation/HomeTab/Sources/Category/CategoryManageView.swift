@@ -66,14 +66,13 @@ struct CategoryManageView: View {
                 .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
             }
             .background(Color.background.ignoresSafeArea())
-            .sheet(
+            .prominentSheet(
                 item: $store.scope(state: \.categorySheet, action: \.categorySheet)
                     .activePresentation(when: isTabContentActive)
             ) { sheetStore in
                 CategoryManageSheet(store: sheetStore)
             }
             .prominentAlert(store, state: \.alert, action: \.alert)
-            .presentationDragIndicator(.visible)
     }
 
     private var toolBar: some View {
@@ -157,7 +156,7 @@ private struct CategoryManageRowContent: View {
                 isOn: Binding(get: { item.isVisible }, set: { _ in onToggle() })
             )
             .labelsHidden()
-            .tint(Color.accent)
+            .toggleStyle(.pill)
         }
         .padding(.trailing, 12)
         .frame(minHeight: 44)
@@ -201,7 +200,6 @@ private struct CategoryManageSheet: View {
             .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
         }
         .background(Color.background.ignoresSafeArea())
-        .presentationDragIndicator(.visible)
     }
 
     private var toolBar: some View {

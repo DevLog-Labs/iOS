@@ -37,7 +37,7 @@ public struct PushNotificationListView: View {
                 .duoToolbarVisibility()
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .sheet(item: sheetStore.activePresentation(when: isSelected)) { store in
+        .prominentSheet(item: sheetStore.activePresentation(when: isSelected)) { store in
             sheetContent(store)
         }
         .onChange(of: isSelected, initial: true) { _, isSelected in
@@ -73,7 +73,6 @@ public struct PushNotificationListView: View {
         .environment(\.windowControlsInset, 0)
         .environment(\.deviceType, .bar)
         .background(Color.background)
-        .presentationDragIndicator(.visible)
     }
 
     private var sheetStore: Binding<

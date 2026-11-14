@@ -220,8 +220,7 @@ struct QuarterPickerSheet: View {
                 }
             }
         }
-        .presentationDetents([.fraction(0.3)])
-        .presentationDragIndicator(.visible)
+        .sheetDetent(.fraction(0.3))
     }
 
     @ViewBuilder

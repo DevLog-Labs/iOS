@@ -68,7 +68,7 @@ public struct RecordDetailView: View {
         .toolbarVisibility(.hidden, for: .navigationBar)
         .onAppear { store.send(.view(.fetch)) }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .sheet(item: $store.scope(state: \.sheet, action: \.sheet)) { _ in
+        .prominentSheet(item: $store.scope(state: \.sheet, action: \.sheet)) { _ in
             RecordEditorView(
                 goalId: store.record.goalId,
                 goalTitle: store.goalTitle,

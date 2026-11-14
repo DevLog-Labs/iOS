@@ -41,7 +41,7 @@ struct PushNotificationSettingsView: View {
         .duoToolbarVisibility()
         .onAppear { store.send(.fetchSettings) }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .sheet(
+        .prominentSheet(
             item: $store.scope(state: \.timePicker, action: \.timePicker)
                 .activePresentation(when: isTabContentActive)
         ) { timePickerStore in
@@ -101,7 +101,7 @@ private struct EnableCard: View {
                 } else {
                     Toggle("", isOn: $store.pushNotificationEnable)
                         .labelsHidden()
-                        .tint(.accent)
+                        .toggleStyle(.pill)
                         .disabled(store.activeLoadingRow != nil)
                 }
             }
@@ -277,7 +277,7 @@ private struct TimePickerView: View {
                 }
             )
         }
-        .presentationDragIndicator(.hidden)
-        .presentationDetents([.height(store.height)])
+        .sheetDetent(.height(store.height))
+        .sheetGrabberHidden()
     }
 }
