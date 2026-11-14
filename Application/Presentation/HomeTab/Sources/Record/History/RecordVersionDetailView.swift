@@ -23,7 +23,7 @@ struct RecordVersionDetailView: View {
                 contentCard
                 currentVersionCard
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .padding(.bottom, 20 * AdaptiveSize.scale)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
@@ -56,7 +56,7 @@ struct RecordVersionDetailView: View {
                 .disabled(store.isRestoring)
             Spacer()
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.bottom, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
@@ -145,7 +145,7 @@ struct RecordVersionDetailView: View {
         }
         .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
         .disabled(store.isRestoring || store.record.draft != nil)
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }

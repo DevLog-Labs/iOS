@@ -437,7 +437,7 @@ private struct HomeContentPicker: View {
                                     imageColor: item.color
                                 )
                             }
-                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                            .listRowInsets(EdgeInsets(top: 0, leading: 16 * AdaptiveSize.scale, bottom: 0, trailing: 16 * AdaptiveSize.scale))
                         }
                     }
                 } header: {
@@ -458,7 +458,7 @@ private struct HomeContentPicker: View {
                             imageColor: Color.accent
                         )
                     }
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16 * AdaptiveSize.scale, bottom: 0, trailing: 16 * AdaptiveSize.scale))
                 } header: {
                     Text("development_goal_title", bundle: PresentationResources.bundle)
                         .foregroundStyle(Color(.label))

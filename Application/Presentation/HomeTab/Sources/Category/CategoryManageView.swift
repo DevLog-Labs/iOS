@@ -61,7 +61,7 @@ struct CategoryManageView: View {
                     .padding(.vertical, 10 * AdaptiveSize.scale)
                 }
                 .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
                 .padding(.vertical, 12 * AdaptiveSize.scale)
                 .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
             }
@@ -181,7 +181,7 @@ private struct CategoryManageSheet: View {
             .padding(.horizontal, 16 * AdaptiveSize.scale)
             .padding(.bottom, 16 * AdaptiveSize.scale)
         }
-        .contentMargins(.top, 16, for: .scrollContent)
+        .contentMargins(.top, 16 * AdaptiveSize.scale, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { toolBar }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             Button {
@@ -195,7 +195,7 @@ private struct CategoryManageSheet: View {
             }
             .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!store.canSubmitUserCategory)
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .padding(.vertical, 12 * AdaptiveSize.scale)
             .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
         }
@@ -245,7 +245,7 @@ private struct CategoryManageSheet: View {
                     .foregroundStyle(Color.secondaryLabel)
                     .monospacedDigit()
             }
-            .padding()
+            .padding(16 * AdaptiveSize.scale)
             .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
             .tint(Color.accent)
 

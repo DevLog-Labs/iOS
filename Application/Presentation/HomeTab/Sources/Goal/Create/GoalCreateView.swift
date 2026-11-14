@@ -33,7 +33,7 @@ public struct GoalCreateView: View {
                     GoalCreateStatusField()
                     GoalCreateTodoField(store: store)
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
                 .padding(.bottom, 20 * AdaptiveSize.scale)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -93,7 +93,7 @@ private struct GoalCreateTopBar: View {
                 Spacer()
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
@@ -114,7 +114,7 @@ private struct GoalCreateTitleField: View {
             )
             .focused(focusedField, equals: .title)
             .font(.adaptive(.body))
-            .padding()
+            .padding(16 * AdaptiveSize.scale)
             .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
         .disabled(store.isSaving)
@@ -136,7 +136,7 @@ private struct GoalCreateDescriptionEditor: View {
                 Group {
                     switch store.selectedTab {
                     case .write:
-                        TextEditorContentLayout(minimumHeight: 120) {
+                        TextEditorContentLayout(minimumHeight: 120 * AdaptiveSize.scale) {
                             Text(RecordPresentation.text("development_goal_create_markdown_hint"))
                                 .font(.adaptive(.caption))
                                 .foregroundStyle(Color.tertiaryLabel)
@@ -337,7 +337,7 @@ private struct GoalCreateSaveBar: View {
             .disabled(!isSaveEnabled)
 
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }

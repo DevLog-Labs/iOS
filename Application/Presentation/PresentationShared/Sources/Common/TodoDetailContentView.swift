@@ -30,7 +30,7 @@ struct TodoDetailContentView: View {
                                     .foregroundStyle(Color.tertiaryLabel)
                                     .padding(.leading, 8 * AdaptiveSize.scale)
                                     .background {
-                                        Color.background.padding(.trailing, -16)
+                                        Color.background.padding(.trailing, -16 * AdaptiveSize.scale)
                                     }
                             }
                         }
@@ -39,8 +39,8 @@ struct TodoDetailContentView: View {
                     }
                     .scrollBounceBehavior(.always, axes: .horizontal)
                     .scrollIndicators(.hidden)
-                    .contentMargins(.horizontal, 16, for: .scrollContent)
-                    .padding(.horizontal, -16)
+                    .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
+                    .padding(.horizontal, -16 * AdaptiveSize.scale)
                 }
 
                 Group {
@@ -65,7 +65,7 @@ struct TodoDetailContentView: View {
                 .padding(.vertical, 16 * AdaptiveSize.scale)
                 .background(Color.secondaryBackground, in: .rect)
             }
-            .padding()
+            .padding(16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }

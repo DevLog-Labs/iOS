@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Core
+import PresentationShared
 
 struct HeatmapView: View {
     @State private var availableWidth = CGFloat.zero
@@ -34,7 +35,7 @@ struct HeatmapView: View {
                     )
                 }
             }
-            .padding(.vertical, 2)
+            .padding(.vertical, 2 * AdaptiveSize.scale)
             .frame(width: layout.contentWidth, alignment: .leading)
             .frame(minWidth: availableWidth)
         }

@@ -48,7 +48,7 @@ public struct Tag: View {
                 .lineLimit(1)
                 .padding(.vertical, 4 * AdaptiveSize.scale)
                 .padding(.leading, 8 * AdaptiveSize.scale)
-                .padding(.trailing, isEditing ? 0 : 8)
+                .padding(.trailing, isEditing ? 0 : 8 * AdaptiveSize.scale)
                 .overlay {
                     if isCopyEnabled {
                         TagCopyMenuView(tagText: name)

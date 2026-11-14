@@ -25,7 +25,7 @@ struct GoalCreateTodoSelectionSheet: View {
                     .autocorrectionDisabled()
                 }
                 .font(.adaptive(.title3))
-                .padding()
+                .padding(16 * AdaptiveSize.scale)
                 .background {
                     RoundedRectangle(cornerRadius: CornerRadius.control)
                         .fill(Color.secondaryBackground)

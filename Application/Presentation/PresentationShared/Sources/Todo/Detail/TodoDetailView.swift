@@ -135,7 +135,7 @@ public struct TodoDetailView: View {
                     editButton
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12 * AdaptiveSize.scale)

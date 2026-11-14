@@ -36,7 +36,7 @@ struct GoalDetailRecordActionBar: View {
                 )
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }

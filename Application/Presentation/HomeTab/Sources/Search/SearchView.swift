@@ -28,7 +28,7 @@ struct SearchView: View {
                         .padding(.bottom, 8 * AdaptiveSize.scale)
                     instruction
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
                 .frame(maxWidth: readableContentWidth)
                 .frame(maxWidth: .infinity)
             }
@@ -36,7 +36,7 @@ struct SearchView: View {
                 VStack(spacing: 0) {
                     topBar
                     tipCard
-                        .padding(.horizontal)
+                        .padding(.horizontal, 16 * AdaptiveSize.scale)
                         .frame(maxWidth: readableContentWidth)
                         .padding(.bottom, 8 * AdaptiveSize.scale)
                 }
@@ -79,7 +79,7 @@ struct SearchView: View {
             SearchField(store: store)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 8 * AdaptiveSize.scale)
@@ -106,7 +106,7 @@ struct SearchView: View {
             Spacer()
         }
         .foregroundStyle(Color.tintLabel)
-        .padding()
+        .padding(16 * AdaptiveSize.scale)
         .background {
             Rectangle()
                 .fill(Color.background)
@@ -171,7 +171,7 @@ private struct SearchField: View {
             }
         }
         .font(.adaptive(.title3))
-        .padding()
+        .padding(16 * AdaptiveSize.scale)
         .background {
             RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(Color.secondaryBackground)
@@ -312,7 +312,7 @@ private struct SearchResultRow: View {
                 .font(.adaptive(.callout).bold())
                 .foregroundStyle(Color.secondaryLabel)
         }
-        .padding()
+        .padding(16 * AdaptiveSize.scale)
     }
 }
 
@@ -337,7 +337,7 @@ private struct RecentSearchQuries: View {
                         )
                 }
                 .disabled(store.recentQueries.isEmpty)
-                .padding(.trailing)
+                .padding(.trailing, 16 * AdaptiveSize.scale)
             }
             LazyVStack(spacing: 0) {
                 ForEach(Array(zip(
@@ -364,7 +364,7 @@ private struct RecentSearchQuries: View {
                                     .foregroundStyle(Color.secondaryLabel)
                             }
                         }
-                        .padding()
+                        .padding(16 * AdaptiveSize.scale)
                         if idx < store.recentQueries.count - 1 { Divider().overlay(Color.secondarySeparator) }
                     }
                 }

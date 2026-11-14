@@ -227,8 +227,8 @@ private struct PushNotificationListContent: View {
                     }
                     .scrollIndicators(.hidden)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, -16)
-                    .contentMargins(.horizontal, 16, for: .scrollContent)
+                    .padding(.horizontal, -16 * AdaptiveSize.scale)
+                    .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 16 * AdaptiveSize.scale)

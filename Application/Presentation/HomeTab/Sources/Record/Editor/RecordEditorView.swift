@@ -44,7 +44,7 @@ public struct RecordEditorView: View {
                     titleCard
                     contentEditor
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
                 .padding(.bottom, 20 * AdaptiveSize.scale)
             }
             .safeAreaInset(edge: .top, spacing: 0) { topBar }
@@ -96,7 +96,7 @@ public struct RecordEditorView: View {
             .topBarButtonStyle()
             .disabled(!store.isReadyToSave)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
@@ -106,7 +106,7 @@ public struct RecordEditorView: View {
             Text(RecordPresentation.versionLabel(store.versionNumber))
                 .font(.adaptive(.body))
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
+                .padding(16 * AdaptiveSize.scale)
                 .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
     }
@@ -119,7 +119,7 @@ public struct RecordEditorView: View {
             )
             .font(.adaptive(.body))
             .focused($focusedField, equals: .title)
-            .padding()
+            .padding(16 * AdaptiveSize.scale)
             .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
         .disabled(store.isLoading)
@@ -131,7 +131,7 @@ public struct RecordEditorView: View {
 
             switch store.selectedTab {
             case .write:
-                TextEditorContentLayout(minimumHeight: 340) {
+                TextEditorContentLayout(minimumHeight: 340 * AdaptiveSize.scale) {
                     Text(RecordPresentation.text("development_record_markdown_hint"))
                         .font(.adaptive(.caption))
                         .foregroundStyle(Color.tertiaryLabel)
@@ -225,7 +225,7 @@ public struct RecordEditorView: View {
             .font(.adaptive(.caption))
             .foregroundStyle(Color.tertiaryLabel)
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }

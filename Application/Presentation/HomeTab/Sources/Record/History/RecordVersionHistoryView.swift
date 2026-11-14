@@ -29,7 +29,7 @@ struct RecordVersionHistoryView: View {
                 currentVersionCard
                 historyCard
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .padding(.bottom, 24 * AdaptiveSize.scale)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
@@ -52,7 +52,7 @@ struct RecordVersionHistoryView: View {
             NavigationBackButton(action: { dismiss() })
             Spacer()
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }

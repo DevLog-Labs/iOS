@@ -139,7 +139,7 @@ struct ActivityCard: View {
                                     .font(.adaptive(.caption2))
                                     .foregroundStyle(item.badgeColor)
                                     .padding(.horizontal, 6 * AdaptiveSize.scale)
-                                    .padding(.vertical, 2)
+                                    .padding(.vertical, 2 * AdaptiveSize.scale)
                                     .background(
                                         RoundedRectangle(cornerRadius: CornerRadius.badge)
                                             .fill(item.badgeColor.opacity(0.14))
@@ -159,14 +159,14 @@ struct ActivityCard: View {
                             if store.selectedTodoRoute == .activity(activity.todoId) {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .fill(Color.tintFill)
-                                    .padding(.horizontal, -8)
-                                    .padding(.vertical, -2)
+                                    .padding(.horizontal, -8 * AdaptiveSize.scale)
+                                    .padding(.vertical, -2 * AdaptiveSize.scale)
                             }
                         }
                     }
                     .buttonStyle(.plain)
                     .disabled(activity.isDeleted)
-                    .padding(.vertical, 2)
+                    .padding(.vertical, 2 * AdaptiveSize.scale)
                 }
             }
         }

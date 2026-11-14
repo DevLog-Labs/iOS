@@ -492,7 +492,7 @@ private struct TodoListFilterHeader: View {
         }
         .scrollIndicators(.hidden)
         .fixedSize(horizontal: false, vertical: true)
-        .contentMargins(.horizontal, 16, for: .scrollContent)
+        .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

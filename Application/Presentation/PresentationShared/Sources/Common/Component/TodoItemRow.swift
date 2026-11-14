@@ -46,7 +46,7 @@ public struct TodoItemRow: View {
                             item.tags,
                             lineLimit: 1,
                             verticalSpacing: 4 * AdaptiveSize.scale,
-                            horizontalSpacing: 4
+                            horizontalSpacing: 4 * AdaptiveSize.scale
                         )
                     }
                 }

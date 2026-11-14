@@ -39,7 +39,7 @@ struct LoginView: View {
                     .fontWeight(.heavy)
                     .multilineTextAlignment(.center)
                 Text(String(localized: "login_intro_description", bundle: PresentationResources.bundle))
-                    .padding(.horizontal)
+                    .padding(.horizontal, 16 * AdaptiveSize.scale)
                     .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
             }
@@ -69,7 +69,7 @@ struct LoginView: View {
                 .font(.adaptive(.caption2))
                 .foregroundStyle(Color.secondaryLabel)
                 .multilineTextAlignment(.center)
-                .padding(.vertical)
+                .padding(.vertical, 16 * AdaptiveSize.scale)
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .background {

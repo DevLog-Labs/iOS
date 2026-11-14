@@ -61,7 +61,7 @@ public struct RecordDetailView: View {
                     Color.clear.frame(height: 1)
                 }
             }
-            .padding()
+            .padding(16 * AdaptiveSize.scale)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background.ignoresSafeArea())
@@ -100,7 +100,7 @@ public struct RecordDetailView: View {
                 .disabled(store.isRestoring)
             Spacer()
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }

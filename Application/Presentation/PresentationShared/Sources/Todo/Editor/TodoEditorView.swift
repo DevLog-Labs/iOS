@@ -67,11 +67,11 @@ public struct TodoEditorView: View {
                                     field = .content
                                 }
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 16 * AdaptiveSize.scale)
                             .frame(maxWidth: readableContentWidth)
                             .frame(maxWidth: .infinity)
                         }
-                        .contentMargins(.vertical, 16, for: .scrollContent)
+                        .contentMargins(.vertical, 16 * AdaptiveSize.scale, for: .scrollContent)
                     }
                 }
             }
@@ -169,7 +169,7 @@ private struct ToolBar: View {
                 EditorToolbarActions(store: store, onSubmit: onSubmit)
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .frame(maxWidth: readableContentWidth)
         .padding(.top, 12 + windowControlsInset)
     }
@@ -292,7 +292,7 @@ private struct TitleField: View {
         )
         .font(.adaptive(.body))
         .focused($field, equals: .title)
-        .padding()
+        .padding(16 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }
 }

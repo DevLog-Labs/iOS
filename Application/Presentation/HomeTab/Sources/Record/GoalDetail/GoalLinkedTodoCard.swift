@@ -23,7 +23,7 @@ struct GoalLinkedTodoCard: View {
             header
             content
         }
-        .padding([.horizontal, .top])
+        .padding([.horizontal, .top], 16 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: .rect)
     }
 

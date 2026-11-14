@@ -191,7 +191,7 @@ public struct TodoPropertiesView: View {
             .padding(.horizontal, 16 * AdaptiveSize.scale)
             .padding(.bottom, 16 * AdaptiveSize.scale)
         }
-        .contentMargins(.top, 16, for: .scrollContent)
+        .contentMargins(.top, 16 * AdaptiveSize.scale, for: .scrollContent)
     }
 
     private func optionIcon(_ name: String, color: Color) -> some View {
@@ -213,7 +213,7 @@ public struct TodoPropertiesView: View {
                     Tag(dueDateText(for: dueDate), isEditing: true) {
                         store.send(.binding(.set(\.dueDate, nil)))
                     }
-                    .padding(.vertical, -4)
+                    .padding(.vertical, -4 * AdaptiveSize.scale)
                 } else {
                     Text(String(localized: "todo_none", bundle: PresentationResources.bundle))
                         .foregroundStyle(Color.secondaryLabel)

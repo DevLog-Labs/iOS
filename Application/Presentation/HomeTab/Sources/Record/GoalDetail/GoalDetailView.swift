@@ -51,7 +51,7 @@ public struct GoalDetailView: View {
                     onSelect: { store.send(.view(.selectTodo($0))) }
                 )
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .safeAreaInset(edge: .bottom, spacing: 0) { recordActionBar }
@@ -148,7 +148,7 @@ public struct GoalDetailView: View {
                 }
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
@@ -166,8 +166,8 @@ public struct GoalDetailView: View {
                         .lineLimit(1)
                 }
                 .scrollIndicators(.hidden)
-                .contentMargins(.horizontal, 16, for: .scrollContent)
-                .padding(.horizontal, -16)
+                .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
+                .padding(.horizontal, -16 * AdaptiveSize.scale)
             }
 
             if let status = store.goalStatus {
@@ -221,7 +221,7 @@ public struct GoalDetailView: View {
                 }
             }
         }
-        .padding([.horizontal, .top])   // TimelineView 자체의 하단 패딩과 겹치기 때문에 .bottom은 제외
+        .padding([.horizontal, .top], 16 * AdaptiveSize.scale)   // TimelineView 자체의 하단 패딩과 겹치기 때문에 .bottom은 제외
         .background {
             Rectangle()
                 .fill(Color.secondaryBackground)

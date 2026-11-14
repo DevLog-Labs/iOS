@@ -61,12 +61,12 @@ public struct TodayView: View {
                                     },
                                     onInspect: { store.send(.showTodoInspector($0)) }
                                 )
-                                .padding(.bottom, section.id == sections.last?.id ? 0 : 8)
+                                .padding(.bottom, section.id == sections.last?.id ? 0 : 8 * AdaptiveSize.scale)
                             }
                             .padding(.bottom, 12 * AdaptiveSize.scale)
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, 16 * AdaptiveSize.scale)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -87,7 +87,7 @@ public struct TodayView: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
+                        .padding(.horizontal, 16 * AdaptiveSize.scale)
                         .frame(maxWidth: readableContentWidth)
                         .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
                         .padding(.bottom, 8 * AdaptiveSize.scale)
@@ -313,8 +313,8 @@ private struct TodayFilterBar: View {
             }
         }
         .scrollIndicators(.hidden)
-        .padding(.horizontal, -16)
-        .contentMargins(.horizontal, 16, for: .scrollContent)
+        .padding(.horizontal, -16 * AdaptiveSize.scale)
+        .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
     }
 }
 

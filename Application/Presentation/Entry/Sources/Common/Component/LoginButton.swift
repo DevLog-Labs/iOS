@@ -52,7 +52,7 @@ struct LoginButton: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: height, height: height)
-                        .padding(.leading)
+                        .padding(.leading, 16 * AdaptiveSize.scale)
                 }
             }
         }
