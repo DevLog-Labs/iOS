@@ -278,5 +278,6 @@ private struct TimePickerView: View {
             )
         }
         .sheetDetent(.height(store.height))
+        .sheetGrabberHidden()
     }
 }
