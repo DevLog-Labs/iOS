@@ -120,7 +120,7 @@ public struct ProfileView: View {
             settingsStore.send(.startObserving)
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .sheet(
+        .prominentSheet(
             isPresented: $store.showQuarterPicker.activePresentation(when: isSelected)
         ) { QuarterPickerSheet(store: store) }
         .overlay {

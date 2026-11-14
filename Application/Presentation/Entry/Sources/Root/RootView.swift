@@ -52,7 +52,7 @@ public struct RootView: View {
             store.send(.openWidgetRoute(route))
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .sheet(item: $store.scope(state: \.sheet, action: \.sheet)) { sheetStore in
+        .prominentSheet(item: $store.scope(state: \.sheet, action: \.sheet)) { sheetStore in
             sheetContent(todoId: sheetStore.todoId)
         }
         .onReceive(pushNotificationTodoIdPublisher) { todoId in
@@ -71,6 +71,5 @@ public struct RootView: View {
         }
         .environment(\.deviceType, .bar)
         .background(Color.background)
-        .presentationDragIndicator(.visible)
     }
 }
