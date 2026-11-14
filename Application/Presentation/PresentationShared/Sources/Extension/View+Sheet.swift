@@ -49,6 +49,11 @@ public extension View {
     func sheetDismissDisabled(_ isDisabled: Bool = true) -> some View {
         preference(key: SheetDismissDisabledKey.self, value: isDisabled)
     }
+
+    // 손잡이 모양만 숨기고 끌어서 닫기는 유지
+    func sheetGrabberHidden(_ isHidden: Bool = true) -> some View {
+        preference(key: SheetGrabberHiddenKey.self, value: isHidden)
+    }
 }
 
 private struct SheetPresence: Identifiable {
@@ -73,11 +78,20 @@ private struct SheetDismissDisabledKey: PreferenceKey {
     }
 }
 
+private struct SheetGrabberHiddenKey: PreferenceKey {
+    static let defaultValue = false
+
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
+    }
+}
+
 private struct ProminentSheet<Content: View>: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
     @State private var detent = SheetDetent.large
     @State private var isDismissDisabled = false
+    @State private var isGrabberHidden = false
     @State private var dragOffset = CGFloat.zero
     let isShown: Bool
     let dismiss: () -> Void
@@ -119,6 +133,7 @@ private struct ProminentSheet<Content: View>: View {
         }
         .onPreferenceChange(SheetDetentKey.self) { detent = $0 }
         .onPreferenceChange(SheetDismissDisabledKey.self) { isDismissDisabled = $0 }
+        .onPreferenceChange(SheetGrabberHiddenKey.self) { isGrabberHidden = $0 }
     }
 
     private func dialog(in proxy: GeometryProxy) -> some View {
@@ -176,6 +191,7 @@ private struct ProminentSheet<Content: View>: View {
         Capsule()
             .fill(Color.sheetGrabber)
             .frame(width: 36, height: 5)
+            .opacity(isGrabberHidden ? 0 : 1)
             .padding(.top, 6)
             .frame(width: 120, height: 20, alignment: .top)
             .contentShape(.rect)
