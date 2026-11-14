@@ -40,12 +40,12 @@ public struct TodoDetailPane: View {
             .environment(\.showsPaneTitleBar, true)
             .id(todoId)
         } else {
-            VStack(spacing: 12) {
+            VStack(spacing: 12 * AdaptiveSize.scale) {
                 Image(systemName: "doc.text")
-                    .font(.largeTitle)
+                    .font(.adaptive(.largeTitle))
                     .foregroundStyle(Color.tertiaryLabel)
                 placeholder
-                    .font(.callout)
+                    .font(.adaptive(.callout))
                     .foregroundStyle(Color.secondaryLabel)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

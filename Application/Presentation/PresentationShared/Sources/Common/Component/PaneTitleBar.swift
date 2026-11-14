@@ -32,7 +32,7 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
 
             HStack(spacing: 4) {
                 title
-                    .font(.headline)
+                    .font(.adaptive(.headline))
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 actions

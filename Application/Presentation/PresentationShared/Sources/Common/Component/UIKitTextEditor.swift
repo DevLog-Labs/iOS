@@ -65,7 +65,8 @@ public final class UIKitTextEditor: UITextView, UICoordinatedComposable {
     }
 
     private func configureAppearance() {
-        font = UIFont.preferredFont(forTextStyle: .body)
+        font = AdaptiveSize.macFontSize(.body).map { UIFont.systemFont(ofSize: $0) }
+            ?? UIFont.preferredFont(forTextStyle: .body)
         backgroundColor = .clear
         textColor = .label
         tintColor = .tintColor

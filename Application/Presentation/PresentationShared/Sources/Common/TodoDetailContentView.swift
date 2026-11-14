@@ -19,7 +19,7 @@ struct TodoDetailContentView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
                 if showsTitle {
                     ScrollView(.horizontal) {
                         LazyHStack(alignment: .firstTextBaseline, spacing: 0, pinnedViews: .sectionFooters) {
@@ -28,14 +28,14 @@ struct TodoDetailContentView: View {
                             } footer: {
                                 Text("#\(number)")
                                     .foregroundStyle(Color.tertiaryLabel)
-                                    .padding(.leading, 8)
+                                    .padding(.leading, 8 * AdaptiveSize.scale)
                                     .background {
                                         Color.background.padding(.trailing, -16)
                                     }
                             }
                         }
                         .lineLimit(1)
-                        .font(.title3.bold())
+                        .font(.adaptive(.title3).bold())
                     }
                     .scrollBounceBehavior(.always, axes: .horizontal)
                     .scrollIndicators(.hidden)
@@ -59,10 +59,10 @@ struct TodoDetailContentView: View {
                             isScrollEnabled: false,
                             onOpenTodoID: onOpenTodoID
                         )
-                        .frame(minHeight: 120, alignment: .top)
+                        .frame(minHeight: 120 * AdaptiveSize.scale, alignment: .top)
                     }
                 }
-                .padding(.vertical, 16)
+                .padding(.vertical, 16 * AdaptiveSize.scale)
                 .background(Color.secondaryBackground, in: .rect)
             }
             .padding()

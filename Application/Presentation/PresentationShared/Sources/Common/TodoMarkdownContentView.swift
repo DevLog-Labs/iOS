@@ -19,7 +19,11 @@ public struct MarkdownContentView: View {
     }
 
     public var body: some View {
-        MarkdownRendererView(markdown: content, isScrollEnabled: isScrollEnabled)
+        MarkdownRendererView(
+            markdown: content,
+            isScrollEnabled: isScrollEnabled,
+            fontSize: AdaptiveSize.macFontSize(.body)
+        )
             .frame(maxWidth: .infinity, maxHeight: isScrollEnabled ? .infinity : nil)
     }
 }
@@ -35,6 +39,7 @@ struct TodoMarkdownContentView: View {
             markdown: content,
             references: rendererReferences,
             isScrollEnabled: isScrollEnabled,
+            fontSize: AdaptiveSize.macFontSize(.body),
             onOpenReferenceID: onOpenTodoID
         )
         .frame(maxWidth: .infinity, maxHeight: isScrollEnabled ? .infinity : nil)

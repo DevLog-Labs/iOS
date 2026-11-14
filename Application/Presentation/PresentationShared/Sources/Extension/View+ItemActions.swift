@@ -71,7 +71,7 @@ private struct ItemActionsModifier<Actions: View>: ViewModifier {
 
             ZStack(alignment: .trailing) {
                 Group(subviews: actions) { subviews in
-                    HStack(spacing: 8) {
+                    HStack(spacing: 8 * AdaptiveSize.scale) {
                         ForEach(subviews) { subview in
                             subview
                                 .background {
@@ -85,7 +85,7 @@ private struct ItemActionsModifier<Actions: View>: ViewModifier {
                         }
                     }
                 }
-                .padding(.leading, 12)
+                .padding(.leading, 12 * AdaptiveSize.scale)
                 .padding(.trailing, ItemActionsFeature.trailingPadding)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
                     store.send(.view(.setTrayWidth(width)))
@@ -138,7 +138,7 @@ private struct ItemActionButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.callout)
+            .font(.adaptive(.callout))
             .foregroundStyle(Color.white)
             .frame(width: size, height: size)
             .background(color, in: .circle)

@@ -41,13 +41,13 @@ public struct Tag: View {
     }
 
     public var body: some View {
-        HStack(spacing: 4) {
+        HStack(spacing: 4 * AdaptiveSize.scale) {
             Text(name)
                 .foregroundStyle(Color.accent)
                 .bold()
                 .lineLimit(1)
-                .padding(.vertical, 4)
-                .padding(.leading, 8)
+                .padding(.vertical, 4 * AdaptiveSize.scale)
+                .padding(.leading, 8 * AdaptiveSize.scale)
                 .padding(.trailing, isEditing ? 0 : 8)
                 .overlay {
                     if isCopyEnabled {

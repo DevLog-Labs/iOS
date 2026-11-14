@@ -23,8 +23,8 @@ public struct NavigationBackButton: View {
         } else {
             Button(action: action) {
                 Image(systemName: "chevron.left")
-                    .font(.title3.weight(.semibold))
-                    .frame(width: 28, height: 28)
+                    .font(.adaptive(.title3).weight(.semibold))
+                    .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
             }
             .adaptiveButtonStyle(shape: .circle, color: .secondaryBackground, glassEffect: .enabled)
         }
