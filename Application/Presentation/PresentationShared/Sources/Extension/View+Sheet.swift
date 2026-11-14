@@ -170,6 +170,21 @@ private struct ProminentSheet<Content: View>: View {
             }
             .padding(.leading, -insets.leading)
             .padding(.trailing, -insets.trailing)
+            .gesture(
+                SheetDragGesture(isEnabled: !isDismissDisabled) { translation in
+                    guard !isDismissDisabled else { return }
+                    dragOffset = max(translation, 0)
+                } onEnded: { translation, predictedTranslation in
+                    // 끄는 도중 닫기가 막히면 닫지 않고 제자리로 돌림
+                    if !isDismissDisabled, 80 < max(translation, predictedTranslation) {
+                        dismiss()
+                    } else {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            dragOffset = 0
+                        }
+                    }
+                }
+            )
             .offset(y: dragOffset)
             .ignoresSafeArea(edges: .bottom)
     }
@@ -191,23 +206,6 @@ private struct ProminentSheet<Content: View>: View {
             .opacity(isGrabberHidden ? 0 : 1)
             .padding(.top, 6)
             .frame(width: 120, height: 20, alignment: .top)
-            .contentShape(.rect)
-            .gesture(
-                DragGesture()
-                    .onChanged { value in
-                        guard !isDismissDisabled else { return }
-                        dragOffset = max(value.translation.height, 0)
-                    }
-                    .onEnded { value in
-                        if !isDismissDisabled, 80 < max(value.translation.height, value.predictedEndTranslation.height) {
-                            dismiss()
-                        } else {
-                            withAnimation(.easeOut(duration: 0.2)) {
-                                dragOffset = 0
-                            }
-                        }
-                    }
-            )
     }
 
     private func height(of detent: SheetDetent, in maxHeight: CGFloat) -> CGFloat {
@@ -218,6 +216,84 @@ private struct ProminentSheet<Content: View>: View {
             min(height, maxHeight)
         case .fraction(let fraction):
             maxHeight * fraction
+        }
+    }
+}
+
+// 시스템 시트처럼 손잡이뿐 아니라 내용을 아래로 끌어도 시트를 내림
+// 스크롤 내용은 맨 위에 있을 때만 시트를 끌고, 그 밖의 끌기는 내용에 맡김
+private struct SheetDragGesture: UIGestureRecognizerRepresentable {
+    let isEnabled: Bool
+    let onChanged: (CGFloat) -> Void
+    let onEnded: (CGFloat, CGFloat) -> Void
+
+    func makeCoordinator(converter: CoordinateSpaceConverter) -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIGestureRecognizer(context: Context) -> UIPanGestureRecognizer {
+        let recognizer = UIPanGestureRecognizer()
+        recognizer.delegate = context.coordinator
+        return recognizer
+    }
+
+    func updateUIGestureRecognizer(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        context.coordinator.isEnabled = isEnabled
+    }
+
+    func handleUIGestureRecognizerAction(_ recognizer: UIPanGestureRecognizer, context: Context) {
+        let translation = recognizer.translation(in: nil).y
+
+        switch recognizer.state {
+        case .began, .changed:
+            // 시트를 끄는 동안 스크롤 내용이 같이 당겨지지 않게 맨 위에 고정
+            if 0 < translation, let scrollView = context.coordinator.scrollView {
+                scrollView.contentOffset.y = -scrollView.adjustedContentInset.top
+            }
+            onChanged(translation)
+        case .ended, .cancelled:
+            // 손을 뗀 뒤 스크롤처럼 감속해 멈출 위치까지 더함
+            let rate = UIScrollView.DecelerationRate.normal.rawValue
+            let velocity = recognizer.velocity(in: nil).y
+            onEnded(translation, translation + velocity / 1000 * rate / (1 - rate))
+        default:
+            break
+        }
+    }
+
+    final class Coordinator: NSObject, UIGestureRecognizerDelegate {
+        var isEnabled = true
+        weak var scrollView: UIScrollView?
+
+        func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
+            guard isEnabled,
+                  let recognizer = recognizer as? UIPanGestureRecognizer,
+                  let view = recognizer.view
+            else { return false }
+
+            let translation = recognizer.translation(in: view)
+            guard abs(translation.x) < translation.y else { return false }
+
+            // 끌기를 시작한 자리 아래의 스크롤 내용을 찾음
+            let location = recognizer.location(in: view)
+            let startLocation = CGPoint(x: location.x - translation.x, y: location.y - translation.y)
+            // 목록 순서 바꾸기 손잡이처럼 직접 끄는 컨트롤은 시트를 끌지 않음
+            guard let hitView = view.hitTest(startLocation, with: nil), !(hitView is UIControl) else { return false }
+
+            scrollView = sequence(first: hitView, next: \.superview)
+                .lazy
+                .compactMap { $0 as? UIScrollView }
+                .first { $0.alwaysBounceVertical || $0.bounds.height < $0.contentSize.height }
+            guard let scrollView else { return true }
+            return scrollView.contentOffset.y <= -scrollView.adjustedContentInset.top
+        }
+
+        func gestureRecognizer(
+            _ recognizer: UIGestureRecognizer,
+            shouldRecognizeSimultaneouslyWith other: UIGestureRecognizer
+        ) -> Bool {
+            // 스크롤 끌기와는 함께 받고, 목록 순서 바꾸기 같은 다른 끌기와는 겹치지 않음
+            !(other is UIPanGestureRecognizer) || other === (other.view as? UIScrollView)?.panGestureRecognizer
         }
     }
 }
