@@ -74,7 +74,7 @@ struct UserInfoCard: View {
                 }
                 .padding(8)
                 .background(
-                    RoundedRectangle(cornerRadius: 10)
+                    RoundedRectangle(cornerRadius: CornerRadius.control)
                         .fill(Color.tertiaryBackground)
                 )
                 if store.showDoneButton {
@@ -91,7 +91,7 @@ struct UserInfoCard: View {
             .opacity(store.isNetworkConnected ? 1 : 0.7)
         }
         .padding(16)
-        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if !isSelected {
                 focused = false

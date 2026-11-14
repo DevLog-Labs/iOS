@@ -27,7 +27,7 @@ struct AppSettingsCard: View {
                         Image(systemName: "desktopcomputer")
                             .font(.headline)
                             .frame(width: iconSize, height: iconSize)
-                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
+                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
                         Text(String(localized: "settings_theme", bundle: PresentationResources.bundle))
                             .foregroundStyle(Color.label)
 
@@ -55,7 +55,7 @@ struct AppSettingsCard: View {
                         Image(systemName: "bell")
                             .font(.headline)
                             .frame(width: iconSize, height: iconSize)
-                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
+                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
                         Text(String(localized: "settings_notifications", bundle: PresentationResources.bundle))
                             .foregroundStyle(Color.label)
 
@@ -73,7 +73,7 @@ struct AppSettingsCard: View {
                 .buttonStyle(.plain)
                 .disabled(!isNetworkConnected)
             }
-            .groupBackground(in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 }

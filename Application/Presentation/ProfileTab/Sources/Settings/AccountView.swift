@@ -95,11 +95,11 @@ private struct AccountCurrentSection: View {
                         .foregroundStyle(Color.accent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .background(Color.accent.opacity(0.1), in: .capsule)
+                        .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.badge))
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .groupBackground(in: .rect(cornerRadius: 16))
+                .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
         }
     }
@@ -138,7 +138,7 @@ private struct AccountSocialSection: View {
                     }
                 }
             }
-            .groupBackground(in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 }
@@ -178,9 +178,9 @@ private struct ProviderRow: View {
                 .foregroundStyle(isConnected ? Color.danger : Color.white)
                 .padding(.horizontal, 12)
                 .padding(.vertical, 7)
-                .background(isConnected ? Color.clear : Color.accent, in: .capsule)
+                .background(isConnected ? Color.clear : Color.accent, in: .rect(cornerRadius: CornerRadius.control))
                 .overlay {
-                    Capsule()
+                    RoundedRectangle(cornerRadius: CornerRadius.control)
                         .stroke(isConnected ? Color.danger : Color.clear)
                 }
             }

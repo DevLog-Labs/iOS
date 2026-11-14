@@ -22,13 +22,13 @@ struct RecentActivityCard: View {
             if store.isRecentTodosLoading && store.recentTodos.isEmpty {
                 LoadingView()
                     .frame(maxWidth: .infinity, minHeight: 80)
-                    .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
+                    .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
             } else if store.recentTodos.isEmpty {
                 Text("profile_recent_empty", bundle: PresentationResources.bundle)
                     .font(.callout)
                     .foregroundStyle(Color.secondaryLabel)
                     .frame(maxWidth: .infinity, minHeight: 80)
-                    .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
+                    .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
             } else {
                 VStack(spacing: 12) {
                     ForEach(store.recentTodos) { todo in
@@ -63,7 +63,7 @@ private struct RecentTodoCard: View {
                 .frame(width: iconSize, height: iconSize)
                 .iconStyle(
                     color: category.color,
-                    in: RoundedRectangle(cornerRadius: 12)
+                    in: RoundedRectangle(cornerRadius: CornerRadius.control)
                 )
 
             VStack(alignment: .leading, spacing: 8) {
@@ -111,7 +111,7 @@ private struct RecentTodoCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(isSelected ? Color.tintFill : .secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
+        .background(isSelected ? Color.tintFill : .secondaryBackground, in: Rectangle())
         .contentShape(.rect)
     }
 }

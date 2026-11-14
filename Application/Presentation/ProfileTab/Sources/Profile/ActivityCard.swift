@@ -98,7 +98,7 @@ struct ActivityCard: View {
             }
         }
         .padding(16)
-        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
     }
 
     @ViewBuilder
@@ -141,7 +141,7 @@ struct ActivityCard: View {
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
                                     .background(
-                                        Capsule()
+                                        RoundedRectangle(cornerRadius: CornerRadius.badge)
                                             .fill(item.badgeColor.opacity(0.14))
                                     )
                             }
@@ -157,7 +157,7 @@ struct ActivityCard: View {
                         // 행 배치를 바꾸지 않고 선택한 행 배경만 바깥으로 넓힘
                         .background {
                             if store.selectedTodoRoute == .activity(activity.todoId) {
-                                RoundedRectangle(cornerRadius: 8)
+                                RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .fill(Color.tintFill)
                                     .padding(.horizontal, -8)
                                     .padding(.vertical, -2)
@@ -244,7 +244,7 @@ struct QuarterPickerSheet: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .background(
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.control)
                     .fill(isSelected ? Color.accent : Color.tertiaryBackground)
             )
             .foregroundStyle(isSelected ? Color.white : isEnabled ? .label : .secondaryLabel)
