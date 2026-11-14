@@ -15,28 +15,28 @@ struct WidgetTodoCategoryStyle {
         switch categoryID {
         case "issue":
             symbolName = "exclamationmark.triangle"
-            color = .red
+            color = .danger
         case "feature":
             symbolName = "sparkles"
-            color = .green
+            color = .categoryFeature
         case "improvement":
             symbolName = "arrow.triangle.2.circlepath"
-            color = .cyan
+            color = .categoryImprovement
         case "review":
             symbolName = "eye"
-            color = .orange
+            color = .categoryReview
         case "test":
             symbolName = "checkmark.shield"
-            color = .purple
+            color = .categoryTest
         case "doc":
             symbolName = "doc.text"
-            color = .yellow
+            color = .categoryDoc
         case "research":
             symbolName = "magnifyingglass"
-            color = .teal
+            color = .categoryResearch
         case "etc":
             symbolName = "ellipsis"
-            color = .gray
+            color = .categoryEtc
         default:
             if let colorHex {
                 symbolName = "tray.fill"

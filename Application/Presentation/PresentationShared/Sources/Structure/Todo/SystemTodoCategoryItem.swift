@@ -45,14 +45,14 @@ public struct SystemTodoCategoryItem: Identifiable, Hashable {
 
     public var color: Color {
         switch systemTodoCategory {
-        case .issue: return .red
-        case .feature: return .green
-        case .improvement: return .cyan
-        case .review: return .orange
-        case .test: return .purple
-        case .doc: return .yellow
-        case .research: return .teal
-        case .etc: return .gray
+        case .issue: return .danger
+        case .feature: return .categoryFeature
+        case .improvement: return .categoryImprovement
+        case .review: return .categoryReview
+        case .test: return .categoryTest
+        case .doc: return .categoryDoc
+        case .research: return .categoryResearch
+        case .etc: return .categoryEtc
         }
     }
 }
