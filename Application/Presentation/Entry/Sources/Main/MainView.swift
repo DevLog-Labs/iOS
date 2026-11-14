@@ -36,6 +36,13 @@ struct MainView: View {
         let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular && store.isWide
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
         let readableContentWidth = isiOSAppOnMac ? store.readableContentWidth : .infinity
+        // iPhone, Duo, 좁은 iPad 창은 시스템 탭 바 대신 직접 그린 탭 사용
+        let usesCustomTabBar = deviceType != .ipad || horizontalSizeClass == .compact
+        let isSystemTabBarHidden = showsSideBar || usesCustomTabBar
+        let verticalBarWidth = deviceType == .duo
+            ? max(store.verticalBarInsets.leading, store.verticalBarInsets.trailing) : 0
+        // 시스템 탭 바처럼 키보드가 올라오면 키보드 뒤로 사라짐
+        let showsTabBar = !showsSideBar && usesCustomTabBar && verticalBarWidth == 0 && !store.isKeyboardVisible
 
         HStack(spacing: 0) {
             if showsSideBar {
@@ -61,7 +68,7 @@ struct MainView: View {
                             MainTabContent(
                                 tab: tab,
                                 isSelected: selectedTab == tab,
-                                showsSideBar: showsSideBar,
+                                isTabBarHidden: isSystemTabBarHidden,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 navigationStep: store.navigationSteps[tab],
@@ -82,7 +89,7 @@ struct MainView: View {
                             MainTabContent(
                                 tab: .home,
                                 isSelected: selectedTab == .home,
-                                showsSideBar: showsSideBar,
+                                isTabBarHidden: isSystemTabBarHidden,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 navigationStep: store.navigationSteps[.home],
@@ -98,7 +105,7 @@ struct MainView: View {
                             MainTabContent(
                                 tab: .today,
                                 isSelected: selectedTab == .today,
-                                showsSideBar: showsSideBar,
+                                isTabBarHidden: isSystemTabBarHidden,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 navigationStep: store.navigationSteps[.today],
@@ -114,7 +121,7 @@ struct MainView: View {
                             MainTabContent(
                                 tab: .notification,
                                 isSelected: selectedTab == .notification,
-                                showsSideBar: showsSideBar,
+                                isTabBarHidden: isSystemTabBarHidden,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 navigationStep: store.navigationSteps[.notification],
@@ -131,7 +138,7 @@ struct MainView: View {
                             MainTabContent(
                                 tab: .profile,
                                 isSelected: selectedTab == .profile,
-                                showsSideBar: showsSideBar,
+                                isTabBarHidden: isSystemTabBarHidden,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 navigationStep: store.navigationSteps[.profile],
@@ -148,6 +155,16 @@ struct MainView: View {
                 }
             }
         }
+        .overlay {
+            if 0 < verticalBarWidth {
+                MainTabRail(
+                    selectedTab: $selectedTab,
+                    edge: store.verticalBarInsets.leading < store.verticalBarInsets.trailing ? .trailing : .leading,
+                    width: verticalBarWidth,
+                    unreadPushCount: store.unreadPushCount
+                )
+            }
+        }
         // Mac 창에서 상태 표시줄 자리로 비워 두는 상단 여백 제거
         .statusBarHidden(isiOSAppOnMac)
         .onGeometryChange(for: Bool.self) { proxy in
@@ -161,6 +178,40 @@ struct MainView: View {
             store.send(.binding(.set(\.windowControlsInset, inset)))
         }
         .toastHost()
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if showsTabBar {
+                MainTabBar(
+                    selectedTab: $selectedTab,
+                    axis: .horizontal,
+                    unreadPushCount: store.unreadPushCount
+                )
+                .padding(.horizontal, 8)
+                .padding(.top, 8)
+                .padding(.bottom, 4)
+                .background(Color.background, ignoresSafeAreaEdges: .bottom)
+                .overlay(alignment: .top) {
+                    Rectangle()
+                        .fill(Color.separator)
+                        .frame(height: 1)
+                }
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            store.send(.binding(.set(\.isKeyboardVisible, true)))
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            store.send(.binding(.set(\.isKeyboardVisible, false)))
+        }
+        .onGeometryChange(for: EdgeInsets.self) { proxy in
+            EdgeInsets(
+                top: 0,
+                leading: proxy.safeAreaInsets.leading,
+                bottom: 0,
+                trailing: proxy.safeAreaInsets.trailing
+            )
+        } action: { insets in
+            store.send(.binding(.set(\.verticalBarInsets, insets)))
+        }
         .onAppear { store.send(.view(.onAppear)) }
         .onChange(of: selectedTab, initial: true) { _, tab in
             store.send(.view(.selectedTabChanged(tab)))
@@ -226,7 +277,7 @@ struct ReadableContentWidthReader: UIViewRepresentable {
 private struct MainTabContent: View {
     let tab: MainTab
     let isSelected: Bool
-    let showsSideBar: Bool
+    let isTabBarHidden: Bool
     let windowControlsInset: CGFloat
     let readableContentWidth: CGFloat
     let navigationStep: NavigationStep?
@@ -242,8 +293,8 @@ private struct MainTabContent: View {
             .onPreferenceChange(NavigationHistoryPreferenceKey.self) { history in
                 onNavigationHistoryChange(history)
             }
-            .toolbarVisibility(showsSideBar ? .hidden : .visible, for: .tabBar)
-            .background { TabBarVisibility(isHidden: showsSideBar) }
+            .toolbarVisibility(isTabBarHidden ? .hidden : .visible, for: .tabBar)
+            .background { TabBarVisibility(isHidden: isTabBarHidden) }
     }
 
     @ViewBuilder
@@ -267,6 +318,36 @@ private struct MainTabContent: View {
                 windowEvent: windowEvent
             )
         }
+    }
+}
+
+// Duo 세로 칸 경계선과 아래쪽 탭
+// 위쪽 상태 표시와 툴바 버튼 자리는 시스템 세로 막대가 맡음
+private struct MainTabRail: View {
+    @Binding var selectedTab: MainTab
+    let edge: HorizontalEdge
+    let width: CGFloat
+    let unreadPushCount: Int
+
+    var body: some View {
+        MainTabBar(
+            selectedTab: $selectedTab,
+            axis: .vertical,
+            unreadPushCount: unreadPushCount
+        )
+        // 시스템 세로 막대 버튼처럼 화면 끝 쪽을 더 띄움
+        .padding(edge == .trailing ? .trailing : .leading, 12)
+        .frame(width: width)
+        .frame(maxHeight: .infinity, alignment: .bottom)
+        .overlay(alignment: edge == .trailing ? .leading : .trailing) {
+            Rectangle()
+                .fill(Color.separator)
+                .frame(width: 1)
+                .ignoresSafeArea(edges: .vertical)
+                .allowsHitTesting(false)
+        }
+        .frame(maxWidth: .infinity, alignment: edge == .trailing ? .trailing : .leading)
+        .ignoresSafeArea(edges: .horizontal)
     }
 }
 
