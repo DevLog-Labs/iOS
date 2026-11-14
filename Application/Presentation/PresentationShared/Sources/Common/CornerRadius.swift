@@ -18,6 +18,9 @@ public enum CornerRadius {
     public static let control: CGFloat = 8
     // 알림창, 대화상자, 팝오버
     public static let dialog: CGFloat = 10
+    // 메뉴
+    // Mac은 Orca 데스크톱, iPhone·Duo·iPad는 Orca 모바일 기준
+    public static let menu: CGFloat = ProcessInfo.processInfo.isiOSAppOnMac ? 10 : 14
     // 설정 묶음, 요약 카드
     // Mac은 Orca 데스크톱, iPhone·Duo·iPad는 Orca 모바일 기준
     public static let group: CGFloat = ProcessInfo.processInfo.isiOSAppOnMac ? 14 : 16
