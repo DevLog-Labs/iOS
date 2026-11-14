@@ -39,10 +39,10 @@ struct LoginButton: View {
                 }
             }
             .font(.system(.body))
-            .contentShape(.rect(cornerRadius: 12))
+            .contentShape(.rect(cornerRadius: CornerRadius.control))
             .frame(width: 300, height: height + 24)
             .background {
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.control)
                     .stroke(Color.separator, lineWidth: 1)
                     .fill(Color.secondaryBackground)
             }
