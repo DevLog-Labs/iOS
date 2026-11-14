@@ -89,7 +89,6 @@ private struct SheetGrabberHiddenKey: PreferenceKey {
 private struct ProminentSheet<Content: View>: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.deviceType) private var deviceType
     @State private var detent = SheetDetent.large
     @State private var isDismissDisabled = false
     @State private var isGrabberHidden = false
@@ -146,8 +145,9 @@ private struct ProminentSheet<Content: View>: View {
     private func bottomSheet(in proxy: GeometryProxy) -> some View {
         let shape = UnevenRoundedRectangle(topLeadingRadius: CornerRadius.sheet, topTrailingRadius: CornerRadius.sheet)
         let insets = proxy.safeAreaInsets
-        // Duo 세로 막대 위쪽의 시각·카메라 표시를 가리지 않게 그 아래까지만 올림
-        let topMargin = deviceType == .duo && 0 < max(insets.leading, insets.trailing) ? CGFloat(160) : 10
+        // 옆 안전 영역은 Duo 세로 막대 자리
+        // 시트 내용의 deviceType 재정의와 상관없이 세로 막대 위쪽의 시각·카메라 표시 아래까지만 올림
+        let topMargin = 0 < max(insets.leading, insets.trailing) ? CGFloat(160) : 10
 
         return content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
