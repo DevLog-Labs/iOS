@@ -251,11 +251,14 @@ private struct SheetDragGesture: UIGestureRecognizerRepresentable {
                 scrollView.contentOffset.y = -scrollView.adjustedContentInset.top
             }
             onChanged(translation)
-        case .ended, .cancelled:
+        case .ended:
             // 손을 뗀 뒤 스크롤처럼 감속해 멈출 위치까지 더함
             let rate = UIScrollView.DecelerationRate.normal.rawValue
             let velocity = recognizer.velocity(in: nil).y
             onEnded(translation, translation + velocity / 1000 * rate / (1 - rate))
+        case .cancelled, .failed:
+            // 시스템이 끌기를 취소하면 닫지 않고 제자리로 돌림
+            onEnded(0, 0)
         default:
             break
         }
