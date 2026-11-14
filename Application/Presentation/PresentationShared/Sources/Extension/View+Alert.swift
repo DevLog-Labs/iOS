@@ -28,6 +28,9 @@ public extension View {
 
 private struct ProminentAlertModifier<State, Action, AlertAction>: ViewModifier
 where State: ObservableState {
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.isTabContentActive) private var isTabContentActive
 
     let store: Store<State, Action>
@@ -38,126 +41,115 @@ where State: ObservableState {
     func body(content: Content) -> some View {
         @Bindable var store = store
         let item = $store.scope(state: alertState, action: alertAction)
-        let alertStore = item.wrappedValue
-        let state = store.state[keyPath: alertState]
-        let isPresented: Binding<Bool> = Binding(item).activePresentation(when: isTabContentActive)
-
-        if #available(iOS 26, *) {
-            content.alert(
-                state.map(\.title).map(Text.init) ?? Text(verbatim: ""),
-                isPresented: isPresented,
-                presenting: state,
-                actions: { state in
-                    ForEach(state.buttons) { button in
-                        let usesDefaultAction = state.usesDefaultAction(for: button)
-
-                        Button(
-                            role: state.buttonRole(for: button),
-                            action: {
-                                button.withAction { action in
-                                    if let action {
-                                        alertStore?.send(action)
-                                    }
-                                }
-                            }
-                        ) {
-                            Text(button.label)
-                        }
-                        .keyboardShortcut(
-                            usesDefaultAction ? .defaultAction : nil
-                        )
-                    }
-                },
-                message: {
-                    $0.message.map(Text.init)
+            .activePresentation(when: isTabContentActive)
+        let alert = Binding(
+            get: {
+                item.wrappedValue.flatMap { alertStore in
+                    store.state[keyPath: alertState].map { PresentedAlert(state: $0, store: alertStore) }
                 }
-            )
-        } else {
-            ZStack {
-                content
-                    .allowsHitTesting(!isPresented.wrappedValue)
-
-                if let state, isTabContentActive {
-                    Color.black.opacity(0.32)
-                        .ignoresSafeArea()
-                        .transition(.opacity)
-
-                    confirmationAlert(state) { button in
-                        button.withAction { action in
-                            if let action {
-                                alertStore?.send(action)
-                            }
-                            isPresented.wrappedValue = false
-                        }
-                    }
-                    .padding(.horizontal, 20)
-                    .transition(.scale(scale: 0.96).combined(with: .opacity))
+            },
+            set: { alert in
+                if alert == nil {
+                    item.wrappedValue = nil
                 }
             }
-            .animation(.easeOut(duration: 0.18), value: isPresented.wrappedValue)
-        }
+        )
+
+        content
+            .modifier(
+                ProminentPresentation(item: alert) { alert, isShown, dismiss in
+                    ZStack {
+                        if isShown {
+                            Color.dimming
+                                .ignoresSafeArea()
+                                .transition(.opacity)
+
+                            confirmationAlert(alert.state) { button in
+                                button.withAction { action in
+                                    if let action {
+                                        alert.store.send(action)
+                                    }
+                                    dismiss()
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                            .transition(.scale(scale: 0.96).combined(with: .opacity))
+                        }
+                    }
+                }
+            )
     }
 
     private func confirmationAlert(
         _ state: AlertState<AlertAction>,
         onSelect: @escaping (ButtonState<AlertAction>) -> Void
     ) -> some View {
-        VStack(spacing: 0) {
-            VStack(spacing: 12) {
-                Text(state.title)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(Color.primary)
-                    .multilineTextAlignment(.center)
+        VStack(alignment: .leading, spacing: 0) {
+            Text(state.title)
+                .font(isiOSAppOnMac ? .system(size: 14, weight: .bold) : .headline.weight(.bold))
+                .foregroundStyle(Color.label)
+                .fixedSize(horizontal: false, vertical: true)
 
-                if let message = state.message {
-                    Text(message)
-                        .font(.body)
-                        .foregroundStyle(Color.secondaryLabel)
-                        .multilineTextAlignment(.center)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+            if let message = state.message {
+                Text(message)
+                    .font(isiOSAppOnMac ? .system(size: 13) : .subheadline)
+                    .foregroundStyle(Color.secondaryLabel)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
             }
-            .padding(.horizontal, 24)
-            .padding(.vertical, 28)
 
-            Divider()
-
-            HStack(spacing: 0) {
-                ForEach(Array(state.buttons.enumerated()), id: \.element.id) { index, button in
-                    if 0 < index {
-                        Divider()
-                    }
+            HStack(spacing: 8) {
+                ForEach(state.buttons) { button in
+                    let usesDefaultAction = state.usesDefaultAction(for: button)
 
                     Button {
                         onSelect(button)
                     } label: {
                         Text(button.label)
+                            .font(isiOSAppOnMac ? .system(size: 13, weight: .semibold) : .subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 32 : 44)
+                            .background(
+                                usesDefaultAction ? Color.clear : .tertiaryBackground,
+                                in: .rect(cornerRadius: CornerRadius.control)
+                            )
+                            .overlay {
+                                RoundedRectangle(cornerRadius: CornerRadius.control)
+                                    .strokeBorder(Color.secondarySeparator)
+                            }
+                            .contentShape(.rect)
                     }
+                    .buttonStyle(.plain)
                     .foregroundStyle(
-                        state.usesDefaultAction(for: button)
-                            ? Color.accent
-                            : Color.secondaryLabel
+                        button.role == .destructive
+                            ? Color.danger : usesDefaultAction ? .accent : .label
                     )
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .keyboardShortcut(
+                        usesDefaultAction
+                            ? .defaultAction : button.role == .cancel ? .cancelAction : nil
+                    )
                 }
             }
-            .font(.body)
-            .frame(height: 56)
+            .padding(.top, 20)
         }
-        .frame(maxWidth: 420)
+        .padding(20)
+        .frame(maxWidth: isiOSAppOnMac || horizontalSizeClass == .compact ? 300 : 320, alignment: .leading)
         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.dialog))
-        .clipShape(.rect(cornerRadius: CornerRadius.dialog))
-        .shadow(color: Color.black.opacity(0.18), radius: 24, y: 12)
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.dialog)
+                .strokeBorder(Color.separator)
+        }
+        .shadow(color: Color.black.opacity(colorScheme == .dark ? 0.5 : 0.12), radius: 30, y: 24)
     }
 }
 
-extension AlertState {
-    func buttonRole(for button: ButtonState<Action>) -> ButtonRole? {
-        if #available(iOS 26, *), usesDefaultAction(for: button) { return .confirm }
-        if buttons.count == 1 { return nil }
-        return button.role.map(ButtonRole.init)
-    }
+private struct PresentedAlert<Action>: Identifiable {
+    let state: AlertState<Action>
+    let store: Store<AlertState<Action>, Action>
 
+    var id: AlertState<Action>.ID { state.id }
+}
+
+extension AlertState {
     func usesDefaultAction(for button: ButtonState<Action>) -> Bool {
         guard 1 < buttons.count else { return true }
         if let destructiveButton = buttons.first(where: { $0.role == .destructive }) {
