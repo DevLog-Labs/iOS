@@ -49,6 +49,8 @@ public struct TodoEditorWindowView: View {
             WindowSceneReader { windowScene = $0 }
             ReadableContentWidthReader { readableContentWidth = $0 }
         }
+        // 글자 크기를 정하지 않은 글자도 Mac 크기로 표시
+        .font(AdaptiveSize.macFontSize(.body).map { .system(size: $0) })
     }
 
     private func create() {
