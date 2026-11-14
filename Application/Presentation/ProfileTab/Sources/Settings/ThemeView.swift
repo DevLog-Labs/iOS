@@ -25,7 +25,7 @@ struct ThemeView: View {
                         themeButton(option)
 
                         if option != Self.themes.last {
-                            Divider()
+                            Divider().overlay(Color.border)
                                 .padding(.leading, 68)
                                 .padding(.trailing, 16)
                         }

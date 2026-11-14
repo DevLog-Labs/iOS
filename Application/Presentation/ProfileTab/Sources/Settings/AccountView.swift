@@ -146,7 +146,7 @@ private struct AccountSocialSection: View {
                     )
 
                     if provider != providers.last {
-                        Divider()
+                        Divider().overlay(Color.border)
                             .padding(.leading, 64)
                             .padding(.trailing, 16)
                     }

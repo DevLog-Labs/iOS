@@ -132,8 +132,11 @@ public final class CardCollectionView<
                 sectionProvider: { [weak self] _, environment in
                     var listConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
                     listConfiguration.backgroundColor = .clear
-                    listConfiguration.separatorConfiguration.color = UIColor(named: "Border", in: PresentationResources.bundle, compatibleWith: nil)
-                        ?? .separator
+                    listConfiguration.separatorConfiguration.color = UIColor(
+                        named: ProcessInfo.processInfo.isiOSAppOnMac ? "BorderMac" : "Border",
+                        in: PresentationResources.bundle,
+                        compatibleWith: nil
+                    ) ?? .separator
                     // 시스템 reorder 핸들의 trailing 여백이 카드 안쪽 여백(16pt)보다 커서 셀을 그만큼 카드 밖으로 늘린다.
                     let handleOverhang: CGFloat = 7
                     let separatorInsets = NSDirectionalEdgeInsets(

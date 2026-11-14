@@ -42,7 +42,7 @@ struct AppInformationCard: View {
 
                 if let privacyPolicyURL {
                     if appVersion != nil {
-                        Divider()
+                        Divider().overlay(Color.border)
                             .padding(.leading, 64)
                             .padding(.trailing, 16)
                     }
@@ -75,7 +75,7 @@ struct AppInformationCard: View {
 
                 if let betaTestURL {
                     if appVersion != nil || privacyPolicyURL != nil {
-                        Divider()
+                        Divider().overlay(Color.border)
                             .padding(.leading, 64)
                             .padding(.trailing, 16)
                     }

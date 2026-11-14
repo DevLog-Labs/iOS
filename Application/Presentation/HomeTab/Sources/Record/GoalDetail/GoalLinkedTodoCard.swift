@@ -83,7 +83,7 @@ struct GoalLinkedTodoCard: View {
                         onSelect(todo.id)
                     }
                     if todo.id != todos.last?.id {
-                        Divider()
+                        Divider().overlay(Color.borderSubtle)
                     }
                 }
             }

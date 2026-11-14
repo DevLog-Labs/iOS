@@ -47,7 +47,7 @@ struct AccountCard: View {
                 .buttonStyle(.plain)
                 .disabled(!isNetworkConnected)
 
-                Divider()
+                Divider().overlay(Color.border)
                     .padding(.leading, 64)
                     .padding(.trailing, 16)
 

@@ -154,7 +154,7 @@ private struct TodoListContent: View {
                                 }
                                 .overlay(alignment: .bottom) {
                                     if !isLast {
-                                        Divider()
+                                        Divider().overlay(Color.borderSubtle)
                                     }
                                 }
                                 .onAppear {

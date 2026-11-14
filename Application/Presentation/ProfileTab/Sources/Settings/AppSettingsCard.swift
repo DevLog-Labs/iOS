@@ -47,7 +47,7 @@ struct AppSettingsCard: View {
                 }
                 .buttonStyle(.plain)
 
-                Divider()
+                Divider().overlay(Color.border)
                     .padding(.leading, 64)
                     .padding(.trailing, 16)
                 Button(action: onNotifications) {

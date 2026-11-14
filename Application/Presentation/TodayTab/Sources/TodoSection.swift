@@ -46,7 +46,7 @@ struct TodoSection: View {
                         onInspect: { onInspect(item) }
                     )
                     if index < section.items.count - 1 {
-                        Divider()
+                        Divider().overlay(Color.borderSubtle)
                     }
                 }
             }

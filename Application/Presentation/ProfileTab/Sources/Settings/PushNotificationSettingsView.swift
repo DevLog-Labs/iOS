@@ -106,7 +106,7 @@ private struct EnableCard: View {
                 }
             }
 
-            Divider()
+            Divider().overlay(Color.border)
 
             Text("push_settings_footer", bundle: PresentationResources.bundle)
                 .font(.footnote)
@@ -129,7 +129,7 @@ private struct TimeCard: View {
             ForEach(Self.presetHours, id: \.self) { hour in
                 if let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) {
                     presetTimeButton(date, hour: hour)
-                    Divider()
+                    Divider().overlay(Color.border)
                 }
             }
             customTimeButton

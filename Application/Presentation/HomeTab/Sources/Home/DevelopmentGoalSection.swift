@@ -129,7 +129,7 @@ private struct DevelopmentGoalCard: View {
 
             DevelopmentTodoProgressView(progress: item.todoProgress)
 
-            Divider()
+            Divider().overlay(Color.borderSubtle)
 
             if let recentRecord = item.recentRecord {
                 VStack(alignment: .leading, spacing: 3) {

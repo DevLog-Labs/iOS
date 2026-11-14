@@ -246,7 +246,7 @@ private struct SearchResults: View {
                                     .todoDetailPreview(todoId: item.id)
                             }
                             .buttonStyle(.plain)
-                            if index < todos.count - 1 { Divider() }
+                            if index < todos.count - 1 { Divider().overlay(Color.borderSubtle) }
                         }
                     }
                     .background {
@@ -365,7 +365,7 @@ private struct RecentSearchQuries: View {
                             }
                         }
                         .padding()
-                        if idx < store.recentQueries.count - 1 { Divider() }
+                        if idx < store.recentQueries.count - 1 { Divider().overlay(Color.borderSubtle) }
                     }
                 }
             }

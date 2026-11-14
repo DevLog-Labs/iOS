@@ -249,7 +249,7 @@ private struct InfoSheetView: View {
                             .lineLimit(1)
                     }
 
-                    Divider()
+                    Divider().overlay(Color.border)
 
                     optionRow(
                         systemImage: "circle",
@@ -260,7 +260,7 @@ private struct InfoSheetView: View {
                             .foregroundStyle(todo.isCompleted ? Color.accent : Color.textTertiary)
                     }
 
-                    Divider()
+                    Divider().overlay(Color.border)
 
                     optionRow(
                         systemImage: "star.fill",
@@ -271,7 +271,7 @@ private struct InfoSheetView: View {
                             .foregroundStyle(todo.isPinned ? Color.orange : Color.textTertiary)
                     }
 
-                    Divider()
+                    Divider().overlay(Color.border)
 
                     optionRow(
                         systemImage: "calendar",
