@@ -107,9 +107,9 @@ private struct ProminentMenu<Label: View, Action: Hashable>: View {
             }
         }
         .frame(minWidth: 220)
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 20))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.dialog))
         .compositingGroup()
-        .clipShape(.rect(cornerRadius: 20))
+        .clipShape(.rect(cornerRadius: CornerRadius.dialog))
         .shadow(color: Color.black.opacity(0.18), radius: 20, y: 10)
         .padding(8)
     }

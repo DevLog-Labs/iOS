@@ -145,8 +145,8 @@ where State: ObservableState {
             .frame(height: 56)
         }
         .frame(maxWidth: 420)
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 28))
-        .clipShape(.rect(cornerRadius: 28))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.dialog))
+        .clipShape(.rect(cornerRadius: CornerRadius.dialog))
         .shadow(color: Color.black.opacity(0.18), radius: 24, y: 12)
     }
 }
