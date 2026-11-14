@@ -89,6 +89,7 @@ private struct SheetGrabberHiddenKey: PreferenceKey {
 private struct ProminentSheet<Content: View>: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.deviceType) private var deviceType
     @State private var detent = SheetDetent.large
     @State private var isDismissDisabled = false
     @State private var isGrabberHidden = false
@@ -115,17 +116,6 @@ private struct ProminentSheet<Content: View>: View {
                     } else {
                         bottomSheet(in: proxy)
                             .transition(.move(edge: .bottom))
-
-                        // 내용의 목록·내비게이션 막대가 옆 안전 영역(Duo 레일)까지 넓어져 탭을 가로챔
-                        // 그 위에 닫기 영역을 올림
-                        HStack(spacing: 0) {
-                            dismissArea
-                                .frame(width: proxy.safeAreaInsets.leading)
-                            Spacer(minLength: 0)
-                            dismissArea
-                                .frame(width: proxy.safeAreaInsets.trailing)
-                        }
-                        .ignoresSafeArea()
                     }
                 }
             }
@@ -155,13 +145,21 @@ private struct ProminentSheet<Content: View>: View {
 
     private func bottomSheet(in proxy: GeometryProxy) -> some View {
         let shape = UnevenRoundedRectangle(topLeadingRadius: CornerRadius.sheet, topTrailingRadius: CornerRadius.sheet)
-        let bottomInset = proxy.safeAreaInsets.bottom
+        let insets = proxy.safeAreaInsets
+        // Duo 세로 막대 위쪽의 시각·카메라 표시를 가리지 않게 그 아래까지만 올림
+        let topMargin = deviceType == .duo && 0 < max(insets.leading, insets.trailing) ? CGFloat(160) : 10
 
         return content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             // 아래 안전 영역까지 시트 바탕을 깔고, 내용은 안전 영역 위에 둠
-            .safeAreaPadding(.bottom, bottomInset)
-            .frame(height: height(of: detent, in: proxy.size.height - 10) + bottomInset)
+            .safeAreaPadding(.bottom, insets.bottom)
+            .overlay(alignment: .top) {
+                grabber
+            }
+            // 시스템 시트처럼 바탕은 옆 안전 영역(Duo 세로 칸)까지 덮고, 내용은 안전 영역 안에 둠
+            .padding(.leading, insets.leading)
+            .padding(.trailing, insets.trailing)
+            .frame(height: height(of: detent, in: proxy.size.height - topMargin) + insets.bottom)
             .background(Color.secondaryBackground)
             .clipShape(shape)
             .overlay {
@@ -170,9 +168,8 @@ private struct ProminentSheet<Content: View>: View {
                     .strokeBorder(Color.separator)
                     .padding([.horizontal, .bottom], -1)
             }
-            .overlay(alignment: .top) {
-                grabber
-            }
+            .padding(.leading, -insets.leading)
+            .padding(.trailing, -insets.trailing)
             .offset(y: dragOffset)
             .ignoresSafeArea(edges: .bottom)
     }
