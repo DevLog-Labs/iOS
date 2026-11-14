@@ -24,6 +24,8 @@ struct MainFeature {
         var windowControlsInset = CGFloat.zero
         // Duo 세로 칸 자리의 양옆 안전 영역
         var verticalBarInsets = EdgeInsets()
+        // 화면 키보드가 떠 있는 동안 직접 그린 하단 탭 바를 숨김
+        var isKeyboardVisible = false
         var readableContentWidth = CGFloat.infinity
         var navigationHistories: [MainTab: NavigationHistoryState] = [:]
         var navigationSteps: [MainTab: NavigationStep] = [:]

@@ -41,7 +41,8 @@ struct MainView: View {
         let isSystemTabBarHidden = showsSideBar || usesCustomTabBar
         let verticalBarWidth = deviceType == .duo
             ? max(store.verticalBarInsets.leading, store.verticalBarInsets.trailing) : 0
-        let showsTabBar = !showsSideBar && usesCustomTabBar && verticalBarWidth == 0
+        // 시스템 탭 바처럼 키보드가 올라오면 키보드 뒤로 사라짐
+        let showsTabBar = !showsSideBar && usesCustomTabBar && verticalBarWidth == 0 && !store.isKeyboardVisible
 
         HStack(spacing: 0) {
             if showsSideBar {
@@ -195,8 +196,12 @@ struct MainView: View {
                 }
             }
         }
-        // 시스템 탭 바처럼 키보드가 올라와도 화면 아래에 둠
-        .ignoresSafeArea(.keyboard, edges: showsTabBar ? .bottom : [])
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            store.send(.binding(.set(\.isKeyboardVisible, true)))
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            store.send(.binding(.set(\.isKeyboardVisible, false)))
+        }
         .onGeometryChange(for: EdgeInsets.self) { proxy in
             EdgeInsets(
                 top: 0,
