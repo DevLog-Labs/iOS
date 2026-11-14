@@ -84,10 +84,11 @@ struct RecordVersionDetailView: View {
     private var contentCard: some View {
         Group {
             if version.markdownContent.isEmpty {
-                ContentUnavailableView(
+                EmptyStateView(
                     RecordPresentation.text("development_record_content_empty_title"),
                     systemImage: "doc.text"
                 )
+                .padding(.bottom, 72)
             } else {
                 MarkdownContentView(content: version.markdownContent)
                     .frame(minHeight: 420)
