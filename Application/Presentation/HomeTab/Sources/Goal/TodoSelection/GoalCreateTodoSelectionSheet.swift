@@ -13,8 +13,8 @@ struct GoalCreateTodoSelectionSheet: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20 * AdaptiveSize.scale) {
-                HStack(spacing: 10 * AdaptiveSize.scale) {
+            LazyVStack(spacing: 20) {
+                HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(Color.tertiaryLabel)
                     TextField(
@@ -25,7 +25,7 @@ struct GoalCreateTodoSelectionSheet: View {
                     .autocorrectionDisabled()
                 }
                 .font(.adaptive(.title3))
-                .padding(16 * AdaptiveSize.scale)
+                .padding()
                 .background {
                     RoundedRectangle(cornerRadius: CornerRadius.control)
                         .fill(Color.secondaryBackground)
@@ -35,7 +35,7 @@ struct GoalCreateTodoSelectionSheet: View {
                 if store.isLoading, store.todos.isEmpty {
                     ProgressView()
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 40 * AdaptiveSize.scale)
+                        .padding(.vertical, 40)
                 } else if store.hasLoadFailure, store.todos.isEmpty {
                     ContentUnavailableView {
                         Label(
@@ -75,9 +75,9 @@ struct GoalCreateTodoSelectionSheet: View {
                     .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12 * AdaptiveSize.scale)
+                    .padding(.vertical, 12)
             }
-            .padding(16 * AdaptiveSize.scale)
+            .padding(16)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             ZStack {
@@ -108,8 +108,8 @@ struct GoalCreateTodoSelectionSheet: View {
                     .topBarButtonStyle()
                 }
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
-            .padding(.vertical, 12 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
             .background(Color.background, ignoresSafeAreaEdges: .top)
         }
         .scrollDismissesKeyboard(.interactively)

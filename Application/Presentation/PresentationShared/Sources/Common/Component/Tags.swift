@@ -41,14 +41,14 @@ public struct Tag: View {
     }
 
     public var body: some View {
-        HStack(spacing: 4 * AdaptiveSize.scale) {
+        HStack(spacing: 4) {
             Text(name)
                 .foregroundStyle(Color.accent)
                 .bold()
                 .lineLimit(1)
-                .padding(.vertical, 4 * AdaptiveSize.scale)
-                .padding(.leading, 8 * AdaptiveSize.scale)
-                .padding(.trailing, isEditing ? 0 : 8 * AdaptiveSize.scale)
+                .padding(.vertical, 4)
+                .padding(.leading, 8)
+                .padding(.trailing, isEditing ? 0 : 8)
                 .overlay {
                     if isCopyEnabled {
                         TagCopyMenuView(tagText: name)

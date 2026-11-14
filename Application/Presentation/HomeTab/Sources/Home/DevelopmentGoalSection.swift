@@ -17,11 +17,11 @@ struct DevelopmentGoalSection: View {
     let onRetry: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 12) {
             header
             content
         }
-        .padding(.top, 8 * AdaptiveSize.scale)
+        .padding(.top, 8)
     }
 
     @ViewBuilder
@@ -29,7 +29,7 @@ struct DevelopmentGoalSection: View {
         if !hasLoaded && isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 32 * AdaptiveSize.scale)
+                .padding(.vertical, 32)
         } else if !hasLoaded && hasLoadFailure {
             ContentUnavailableView {
                 Label(
@@ -62,7 +62,7 @@ struct DevelopmentGoalSection: View {
                 )
             }
         } else {
-            LazyVStack(spacing: 16 * AdaptiveSize.scale) {
+            LazyVStack(spacing: 16) {
                 ForEach(items) { item in
                     Button {
                         onSelect(item)
@@ -76,7 +76,7 @@ struct DevelopmentGoalSection: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8 * AdaptiveSize.scale) {
+        HStack(spacing: 8) {
             Text("home_development_goal_section_title", bundle: PresentationResources.bundle)
                 .font(.adaptive(.title2))
                 .foregroundStyle(Color.label)
@@ -89,8 +89,8 @@ struct DevelopmentGoalSection: View {
                 )
                 .font(.adaptive(.subheadline).weight(.medium))
                 .foregroundStyle(Color.accent)
-                .padding(.horizontal, 10 * AdaptiveSize.scale)
-                .padding(.vertical, 5 * AdaptiveSize.scale)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
                 .background(Color.accent.opacity(0.1), in: .capsule)
             }
             Spacer()
@@ -102,10 +102,10 @@ private struct DevelopmentGoalCard: View {
     let item: DevelopmentGoalItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
-            HStack(spacing: 12 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 12) {
                 DevelopmentGoalStatusBadge()
-                Spacer(minLength: 12 * AdaptiveSize.scale)
+                Spacer(minLength: 12)
                 if let recentRecord = item.recentRecord {
                     Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
                         .font(.adaptive(.caption))
@@ -132,7 +132,7 @@ private struct DevelopmentGoalCard: View {
             Divider().overlay(Color.secondarySeparator)
 
             if let recentRecord = item.recentRecord {
-                VStack(alignment: .leading, spacing: 3 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 3) {
                     Text("home_development_goal_recent_record", bundle: PresentationResources.bundle)
                         .font(.adaptive(.caption))
                         .foregroundStyle(Color.tertiaryLabel)
@@ -147,7 +147,7 @@ private struct DevelopmentGoalCard: View {
                     .foregroundStyle(Color.tertiaryLabel)
             }
         }
-        .padding(18 * AdaptiveSize.scale)
+        .padding(18)
         .background(Color.secondaryBackground, in: .rect)
         .contentShape(.rect)
     }
@@ -162,8 +162,8 @@ struct DevelopmentTodoProgressView: View {
                 .font(.adaptive(.caption))
                 .foregroundStyle(Color.tertiaryLabel)
         } else {
-            VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
-                HStack(spacing: 8 * AdaptiveSize.scale) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 8) {
                     Text(
                         String.localizedStringWithFormat(
                             String(
@@ -176,7 +176,7 @@ struct DevelopmentTodoProgressView: View {
                     )
                     .font(.adaptive(.caption).weight(.medium))
                     .foregroundStyle(Color.secondaryLabel)
-                    Spacer(minLength: 8 * AdaptiveSize.scale)
+                    Spacer(minLength: 8)
                     Text(
                         String.localizedStringWithFormat(
                             String(
@@ -199,7 +199,7 @@ struct DevelopmentTodoProgressView: View {
                                 .frame(width: proxy.size.width * progress.fraction)
                         }
                 }
-                .frame(height: 8 * AdaptiveSize.scale)
+                .frame(height: 8)
             }
         }
     }
@@ -214,8 +214,8 @@ private struct DevelopmentGoalStatusBadge: View {
         }
         .font(.adaptive(.caption).weight(.semibold))
         .foregroundStyle(Color.accent)
-        .padding(.horizontal, 10 * AdaptiveSize.scale)
-        .padding(.vertical, 5 * AdaptiveSize.scale)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
         .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.badge))
     }
 }

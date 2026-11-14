@@ -10,7 +10,7 @@ import Domain
 
 public struct TodoItemRow: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @ScaledMetric(relativeTo: .headline) private var labelWidth = 28 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .headline) private var labelWidth = CGFloat(28)
     private let item: TodoListItem
 
     public init(_ item: TodoListItem) {
@@ -18,14 +18,14 @@ public struct TodoItemRow: View {
     }
 
     public var body: some View {
-        HStack(spacing: 12 * AdaptiveSize.scale) {
+        HStack(spacing: 12) {
             Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                 .resizable()
                 .frame(width: labelWidth, height: labelWidth)
                 .foregroundStyle(item.isCompleted ? Color.accent : Color.tertiaryLabel)
 
-            VStack(alignment: .leading, spacing: 4 * AdaptiveSize.scale) {
-                HStack(alignment: .firstTextBaseline, spacing: 8 * AdaptiveSize.scale) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(item.title)
                         .font(.adaptive(.headline))
                         .foregroundStyle(item.isCompleted ? Color.secondaryLabel : .label)
@@ -38,21 +38,21 @@ public struct TodoItemRow: View {
                         .fixedSize(horizontal: true, vertical: false)
                 }
 
-                HStack(spacing: 8 * AdaptiveSize.scale) {
+                HStack(spacing: 8) {
                     RelativeTimeText(date: item.updatedAt)
 
                     if !item.tags.isEmpty {
                         TagList(
                             item.tags,
                             lineLimit: 1,
-                            verticalSpacing: 4 * AdaptiveSize.scale,
-                            horizontalSpacing: 4 * AdaptiveSize.scale
+                            verticalSpacing: 4,
+                            horizontalSpacing: 4
                         )
                     }
                 }
             }
 
-            Spacer(minLength: 4 * AdaptiveSize.scale)
+            Spacer(minLength: 4)
 
             if item.isPinned {
                 Image(systemName: "star.fill")
@@ -67,7 +67,7 @@ public struct TodoItemRow: View {
                     .foregroundStyle(Color.tertiaryLabel)
             }
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
     }
 }

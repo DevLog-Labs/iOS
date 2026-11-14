@@ -41,7 +41,7 @@ public struct ProfileView: View {
         NavigationStack(path: $router.path) {
             PaneSplitView {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+                    LazyVStack(alignment: .leading, spacing: 16) {
                         UserInfoCard(store: store, isSelected: isSelected)
                         ActivityCard(store: store) { todoId in
                             showTodo(.activity(todoId))
@@ -51,8 +51,8 @@ public struct ProfileView: View {
                             showTodo(.recentTodo(todoId))
                         }
                     }
-                    .padding(.horizontal, 16 * AdaptiveSize.scale)
-                    .padding(.bottom, 24 * AdaptiveSize.scale)
+                    .padding(.horizontal, 16)
+                    .padding(.bottom, 24)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -154,10 +154,10 @@ public struct ProfileView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 8 * AdaptiveSize.scale)
+            .padding(.bottom, 8)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }

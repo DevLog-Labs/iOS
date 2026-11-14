@@ -19,10 +19,10 @@ struct TimelineRow: View {
         Button {
             onSelect()
         } label: {
-            HStack(spacing: 8 * AdaptiveSize.scale) {
-                HStack(alignment: .top, spacing: 16 * AdaptiveSize.scale) {
+            HStack(spacing: 8) {
+                HStack(alignment: .top, spacing: 16) {
                     timelineIndicator
-                    VStack(alignment: .leading, spacing: 5 * AdaptiveSize.scale) {
+                    VStack(alignment: .leading, spacing: 5) {
                         Text(item.title)
                             .font(.adaptive(.body).weight(.semibold))
                             .foregroundStyle(Color.label)
@@ -41,7 +41,7 @@ struct TimelineRow: View {
                         }
                     }
                 }
-                Spacer(minLength: 8 * AdaptiveSize.scale)
+                Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
                     .font(.adaptive(.callout).weight(.semibold))
                     .foregroundStyle(Color.separator)
@@ -66,8 +66,8 @@ struct TimelineRow: View {
         Text(statusText)
             .font(.adaptive(.caption))
             .foregroundStyle(item.hasDraft ? Color.warning : .accent)
-            .padding(.horizontal, 9 * AdaptiveSize.scale)
-            .padding(.vertical, 4 * AdaptiveSize.scale)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 4)
             .background(
                 item.hasDraft ? Color.warning.opacity(0.12) : Color.tintFill,
                 in: .rect(cornerRadius: CornerRadius.badge)
@@ -92,8 +92,8 @@ struct GoalStatusBadge: View {
         Label(status.title, systemImage: systemImage)
         .font(.adaptive(.caption).weight(.semibold))
         .foregroundStyle(foreground)
-        .padding(.horizontal, 11 * AdaptiveSize.scale)
-        .padding(.vertical, 6 * AdaptiveSize.scale)
+        .padding(.horizontal, 11)
+        .padding(.vertical, 6)
         .background(background, in: .rect(cornerRadius: CornerRadius.badge))
     }
 

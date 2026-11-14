@@ -71,7 +71,7 @@ private struct ItemActionsModifier<Actions: View>: ViewModifier {
 
             ZStack(alignment: .trailing) {
                 Group(subviews: actions) { subviews in
-                    HStack(spacing: 8 * AdaptiveSize.scale) {
+                    HStack(spacing: 8) {
                         ForEach(subviews) { subview in
                             subview
                                 .background {
@@ -85,7 +85,7 @@ private struct ItemActionsModifier<Actions: View>: ViewModifier {
                         }
                     }
                 }
-                .padding(.leading, 12 * AdaptiveSize.scale)
+                .padding(.leading, 12)
                 .padding(.trailing, ItemActionsFeature.trailingPadding)
                 .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
                     store.send(.view(.setTrayWidth(width)))

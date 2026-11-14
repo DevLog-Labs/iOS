@@ -20,12 +20,12 @@ struct AccountView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
+            LazyVStack(alignment: .leading, spacing: 24) {
                 AccountCurrentSection(store: store)
                 AccountSocialSection(store: store)
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
-            .padding(.bottom, 24 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -63,10 +63,10 @@ struct AccountView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12 * AdaptiveSize.scale)
+            .padding(.bottom, 12)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
@@ -78,26 +78,26 @@ private struct AccountCurrentSection: View {
 
     var body: some View {
         if let currentProvider = store.currentProvider {
-            VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text("account_current_section", bundle: PresentationResources.bundle)
                     .font(.adaptive(.title3).weight(.semibold))
 
-                HStack(spacing: 12 * AdaptiveSize.scale) {
+                HStack(spacing: 12) {
                     ProviderIdentity(
                         provider: currentProvider,
                         status: nil
                     )
 
-                    Spacer(minLength: 8 * AdaptiveSize.scale)
+                    Spacer(minLength: 8)
 
                     Text("account_signed_in", bundle: PresentationResources.bundle)
                         .font(.adaptive(.caption).weight(.semibold))
                         .foregroundStyle(Color.accent)
-                        .padding(.horizontal, 12 * AdaptiveSize.scale)
-                        .padding(.vertical, 7 * AdaptiveSize.scale)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
                         .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.badge))
                 }
-                .padding(16 * AdaptiveSize.scale)
+                .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
@@ -110,7 +110,7 @@ private struct AccountSocialSection: View {
 
     var body: some View {
         let providers = AuthProvider.allCases.filter { $0 != store.currentProvider }
-        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("account_social_section", bundle: PresentationResources.bundle)
                 .font(.adaptive(.title3).weight(.semibold))
 
@@ -133,8 +133,8 @@ private struct AccountSocialSection: View {
 
                     if provider != providers.last {
                         Divider().overlay(Color.separator)
-                            .padding(.leading, 64 * AdaptiveSize.scale)
-                            .padding(.trailing, 16 * AdaptiveSize.scale)
+                            .padding(.leading, 64)
+                            .padding(.trailing, 16)
                     }
                 }
             }
@@ -151,7 +151,7 @@ private struct ProviderRow: View {
     let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 12 * AdaptiveSize.scale) {
+        HStack(spacing: 12) {
             ProviderIdentity(
                 provider: provider,
                 status: String(
@@ -160,7 +160,7 @@ private struct ProviderRow: View {
                 )
             )
 
-            Spacer(minLength: 8 * AdaptiveSize.scale)
+            Spacer(minLength: 8)
 
             Button(action: action) {
                 ZStack {
@@ -176,8 +176,8 @@ private struct ProviderRow: View {
                 }
                 .font(.adaptive(.caption).weight(.semibold))
                 .foregroundStyle(isConnected ? Color.danger : Color.white)
-                .padding(.horizontal, 12 * AdaptiveSize.scale)
-                .padding(.vertical, 7 * AdaptiveSize.scale)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 7)
                 .background(isConnected ? Color.clear : Color.accent, in: .rect(cornerRadius: CornerRadius.control))
                 .overlay {
                     RoundedRectangle(cornerRadius: CornerRadius.control)
@@ -188,7 +188,7 @@ private struct ProviderRow: View {
             .disabled(isDisabled)
             .opacity(isDisabled && !showsProgress ? 0.5 : 1)
         }
-        .padding(16 * AdaptiveSize.scale)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -198,12 +198,12 @@ private struct ProviderIdentity: View {
     let status: String?
 
     var body: some View {
-        HStack(spacing: 12 * AdaptiveSize.scale) {
+        HStack(spacing: 12) {
             Image(provider.imageName, bundle: PresentationResources.bundle)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 20 * AdaptiveSize.scale, height: 20 * AdaptiveSize.scale)
-                .frame(width: 36 * AdaptiveSize.scale, height: 36 * AdaptiveSize.scale)
+                .frame(width: 20, height: 20)
+                .frame(width: 36, height: 36)
                 .background(Color.fill, in: Circle())
 
             VStack(alignment: .leading, spacing: 2) {

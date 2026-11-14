@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LoginButton: View {
-    @ScaledMetric(relativeTo: .body) private var height = 22 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .body) private var height = CGFloat(22)
     private var logo: Image?
     private var text = ""
     private let showsProgressView: Bool
@@ -40,7 +40,7 @@ struct LoginButton: View {
             }
             .font(.adaptive(.body))
             .contentShape(.rect(cornerRadius: CornerRadius.control))
-            .frame(width: 300 * AdaptiveSize.scale, height: height + 24 * AdaptiveSize.scale)
+            .frame(width: 300, height: height + 24)
             .background {
                 RoundedRectangle(cornerRadius: CornerRadius.control)
                     .stroke(Color.separator, lineWidth: 1)
@@ -52,7 +52,7 @@ struct LoginButton: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: height, height: height)
-                        .padding(.leading, 16 * AdaptiveSize.scale)
+                        .padding(.leading)
                 }
             }
         }

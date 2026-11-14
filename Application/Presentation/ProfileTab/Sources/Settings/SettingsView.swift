@@ -25,7 +25,7 @@ struct SettingsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
+            LazyVStack(alignment: .leading, spacing: 24) {
                 AppSettingsCard(
                     themeName: store.theme.localizedName(in: PresentationResources.bundle),
                     isNetworkConnected: store.isNetworkConnected,
@@ -51,8 +51,8 @@ struct SettingsView: View {
 
                 deleteAccountContent
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
-            .padding(.bottom, 24 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -82,17 +82,17 @@ struct SettingsView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12 * AdaptiveSize.scale)
+            .padding(.bottom, 12)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
     }
 
     private var deleteAccountContent: some View {
-        VStack(spacing: 16 * AdaptiveSize.scale) {
+        VStack(spacing: 16) {
             Button {
                 store.send(.setAlert(.deleteAuth))
             } label: {
@@ -108,7 +108,7 @@ struct SettingsView: View {
                 }
                 .font(.adaptive(.body))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 24 * AdaptiveSize.scale)
+                .padding(.vertical, 24)
                 .contentShape(.rect(cornerRadius: CornerRadius.group))
                 .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
@@ -120,6 +120,6 @@ struct SettingsView: View {
                 .foregroundStyle(Color.secondaryLabel)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 24 * AdaptiveSize.scale)
+        .padding(.top, 24)
     }
 }

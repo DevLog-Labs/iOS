@@ -39,7 +39,7 @@ public struct TodoEditorView: View {
         NavigationStack {
             ZStack {
                 Color.background.ignoresSafeArea()
-                VStack(spacing: 8 * AdaptiveSize.scale) {
+                VStack(spacing: 8) {
                     ToolBar(
                         store: store,
                         isWideLayout: isWideLayout,
@@ -48,8 +48,8 @@ public struct TodoEditorView: View {
                     )
                     GeometryReader { geometry in
                         ScrollView {
-                            VStack(spacing: 16 * AdaptiveSize.scale) {
-                                VStack(alignment: .trailing, spacing: 16 * AdaptiveSize.scale) {
+                            VStack(spacing: 16) {
+                                VStack(alignment: .trailing, spacing: 16) {
                                     TitleField(store: store, field: _field)
                                     ModePicker(store: store, field: _field)
                                 }
@@ -67,11 +67,11 @@ public struct TodoEditorView: View {
                                     field = .content
                                 }
                             }
-                            .padding(.horizontal, 16 * AdaptiveSize.scale)
+                            .padding(.horizontal)
                             .frame(maxWidth: readableContentWidth)
                             .frame(maxWidth: .infinity)
                         }
-                        .contentMargins(.vertical, 16 * AdaptiveSize.scale, for: .scrollContent)
+                        .contentMargins(.vertical, 16, for: .scrollContent)
                     }
                 }
             }
@@ -132,7 +132,7 @@ private struct ToolBar: View {
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title1,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
-    ).lineHeight * AdaptiveSize.scale
+    ).lineHeight
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     let store: StoreOf<TodoEditorFeature>
@@ -169,7 +169,7 @@ private struct ToolBar: View {
                 EditorToolbarActions(store: store, onSubmit: onSubmit)
             }
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.horizontal)
         .frame(maxWidth: readableContentWidth)
         .padding(.top, 12 + windowControlsInset)
     }
@@ -179,7 +179,7 @@ struct EditorToolbarActions: View {
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title1,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
-    ).lineHeight * AdaptiveSize.scale
+    ).lineHeight
     let store: StoreOf<TodoEditorFeature>
     let onSubmit: () -> Void
 
@@ -292,7 +292,7 @@ private struct TitleField: View {
         )
         .font(.adaptive(.body))
         .focused($field, equals: .title)
-        .padding(16 * AdaptiveSize.scale)
+        .padding()
         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }
 }
@@ -334,7 +334,7 @@ private struct ModePicker: View {
             Text(title)
                 .font(.adaptive(.body))
                 .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
-                .frame(maxWidth: .infinity, minHeight: 36 * AdaptiveSize.scale)
+                .frame(maxWidth: .infinity, minHeight: 36)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: CornerRadius.segment)
@@ -387,7 +387,7 @@ private struct ContentView: View {
                         )
                         // SwiftUI 포커싱 시스템에 등록하기 위해 사용
                         .focused($field, equals: .content)
-                        .padding(12 * AdaptiveSize.scale)
+                        .padding(12)
                         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
             } else {
@@ -402,7 +402,7 @@ private struct ContentView: View {
                     )
                     // MarkdownRenderer 내부의 좌우 여백을 상쇄해 입력 본문과 정렬
                     .padding(.horizontal, -16)
-                    .padding(12 * AdaptiveSize.scale)
+                    .padding(12)
                     .frame(minHeight: minimumHeight, alignment: .topLeading)
                     .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
@@ -419,7 +419,7 @@ private struct ContentView: View {
     }
 
     private var previewPlaceholder: some View {
-        VStack(spacing: 8 * AdaptiveSize.scale) {
+        VStack(spacing: 8) {
             Text(String(localized: "todo_editor_markdown_preview_title", bundle: PresentationResources.bundle))
                 .font(.adaptive(.headline))
             Text(String(localized: "todo_editor_markdown_preview_message", bundle: PresentationResources.bundle))
@@ -427,7 +427,7 @@ private struct ContentView: View {
                 .foregroundStyle(Color.secondaryLabel)
         }
         .multilineTextAlignment(.center)
-        .padding(12 * AdaptiveSize.scale)
+        .padding(12)
         .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .center)
         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }

@@ -24,13 +24,13 @@ struct RecordVersionHistoryView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
+            LazyVStack(alignment: .leading, spacing: 24) {
                 titleSection
                 currentVersionCard
                 historyCard
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
-            .padding(.bottom, 24 * AdaptiveSize.scale)
+            .padding(.horizontal)
+            .padding(.bottom, 24)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .safeAreaInset(edge: .bottom, spacing: 0) { footer }
@@ -52,13 +52,13 @@ struct RecordVersionHistoryView: View {
             NavigationBackButton(action: { dismiss() })
             Spacer()
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal)
+        .padding(.vertical, 12)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleSection: some View {
-        VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(RecordPresentation.text("development_record_history_title"))
                 .font(.adaptive(.largeTitle).bold())
 
@@ -74,15 +74,15 @@ struct RecordVersionHistoryView: View {
     @ViewBuilder
     private var currentVersionCard: some View {
         if let currentVersion {
-            HStack(alignment: .center, spacing: 16 * AdaptiveSize.scale) {
+            HStack(alignment: .center, spacing: 16) {
                 Image(systemName: "doc.text")
                     .font(.adaptive(.title2))
                     .foregroundStyle(Color.accent)
-                    .frame(width: 56 * AdaptiveSize.scale, height: 56 * AdaptiveSize.scale)
+                    .frame(width: 56, height: 56)
                     .background(Color.accent.opacity(0.12), in: .rect(cornerRadius: CornerRadius.control))
 
-                VStack(alignment: .leading, spacing: 6 * AdaptiveSize.scale) {
-                    HStack(spacing: 8 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 8) {
                         Text(RecordPresentation.text("development_record_current_version"))
                             .font(.adaptive(.headline))
 
@@ -96,7 +96,7 @@ struct RecordVersionHistoryView: View {
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(20 * AdaptiveSize.scale)
+            .padding(20)
             .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.group))
         }
     }
@@ -120,7 +120,7 @@ struct RecordVersionHistoryView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(24 * AdaptiveSize.scale)
+        .padding(24)
         .background(Color.secondaryBackground, in: .rect)
     }
 
@@ -136,8 +136,8 @@ struct RecordVersionHistoryView: View {
         .font(.adaptive(.caption))
         .foregroundStyle(Color.secondaryLabel)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 24 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 12)
         .background(Color.background, ignoresSafeAreaEdges: .bottom)
     }
 }
@@ -148,12 +148,12 @@ private struct VersionHistoryRow: View {
     let isLast: Bool
 
     var body: some View {
-        HStack(spacing: 8 * AdaptiveSize.scale) {
-            HStack(alignment: .top, spacing: 16 * AdaptiveSize.scale) {
+        HStack(spacing: 8) {
+            HStack(alignment: .top, spacing: 16) {
                 timelineIndicator
 
-                VStack(alignment: .leading, spacing: 5 * AdaptiveSize.scale) {
-                    HStack(spacing: 8 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack(spacing: 8) {
                         RecordVersionBadge(number: version.number, isCurrent: false)
 
                         if isCurrent {
@@ -179,7 +179,7 @@ private struct VersionHistoryRow: View {
                 }
             }
 
-            Spacer(minLength: 8 * AdaptiveSize.scale)
+            Spacer(minLength: 8)
 
             Image(systemName: "chevron.right")
                 .font(.adaptive(.callout).weight(.semibold))
@@ -243,8 +243,8 @@ private struct VersionHistoryRow: View {
         Text(title)
             .font(.adaptive(.caption).weight(.semibold))
             .foregroundStyle(foreground)
-            .padding(.horizontal, 9 * AdaptiveSize.scale)
-            .padding(.vertical, 5 * AdaptiveSize.scale)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
             .background(background, in: .rect(cornerRadius: CornerRadius.badge))
     }
 }
@@ -257,8 +257,8 @@ struct RecordVersionBadge: View {
         Text(RecordPresentation.versionLabel(number))
             .font(.adaptive(.caption).weight(.semibold))
             .foregroundStyle(isCurrent ? Color.white : Color.accent)
-            .padding(.horizontal, 10 * AdaptiveSize.scale)
-            .padding(.vertical, 5 * AdaptiveSize.scale)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
             .background(
                 isCurrent ? Color.accent : Color.tintFill,
                 in: .rect(cornerRadius: CornerRadius.badge)

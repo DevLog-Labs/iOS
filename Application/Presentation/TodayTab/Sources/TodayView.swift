@@ -42,7 +42,7 @@ public struct TodayView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         TodayAchievementCard(store: store)
-                            .padding(.bottom, 8 * AdaptiveSize.scale)
+                            .padding(.bottom, 8)
 
                         if sections.isEmpty, !store.isLoading {
                             TodayEmptyContent(store: store)
@@ -61,12 +61,12 @@ public struct TodayView: View {
                                     },
                                     onInspect: { store.send(.showTodoInspector($0)) }
                                 )
-                                .padding(.bottom, section.id == sections.last?.id ? 0 : 8 * AdaptiveSize.scale)
+                                .padding(.bottom, section.id == sections.last?.id ? 0 : 8)
                             }
-                            .padding(.bottom, 12 * AdaptiveSize.scale)
+                            .padding(.bottom, 12)
                         }
                     }
-                    .padding(.horizontal, 16 * AdaptiveSize.scale)
+                    .padding(.horizontal)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -81,16 +81,16 @@ public struct TodayView: View {
                             if !isiOSAppOnMac {
                                 title
                                     .font(.adaptive(.largeTitle).bold())
-                                    .padding(.bottom, 8 * AdaptiveSize.scale)
+                                    .padding(.bottom, 8)
                             }
                             TodayFilterBar(store: store)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 16 * AdaptiveSize.scale)
+                        .padding(.horizontal)
                         .frame(maxWidth: readableContentWidth)
                         .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
-                        .padding(.bottom, 8 * AdaptiveSize.scale)
+                        .padding(.bottom, 8)
                     }
                     .background(Color.background)
                     .toolbarBackground(Color.background)
@@ -194,8 +194,8 @@ private struct TodayAchievementCard: View {
     let store: StoreOf<TodayFeature>
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
-            HStack(spacing: 10 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 20) {
+            HStack(spacing: 10) {
                 Text(String(
                     localized: "today_achievement_title",
                     bundle: PresentationResources.bundle)
@@ -205,25 +205,25 @@ private struct TodayAchievementCard: View {
                 Text(achievementStatusTitle)
                     .font(.adaptive(.callout).weight(.semibold))
                     .foregroundStyle(Color.tintLabel)
-                    .padding(.horizontal, 12 * AdaptiveSize.scale)
-                    .padding(.vertical, 6 * AdaptiveSize.scale)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
                     .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
 
-                Spacer(minLength: 8 * AdaptiveSize.scale)
+                Spacer(minLength: 8)
 
                 progressCount
             }
 
             ProgressView(value: store.todayAchievement?.progress ?? 0)
         }
-        .padding(20 * AdaptiveSize.scale)
+        .padding(20)
         .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
 
     @ViewBuilder
     private var progressCount: some View {
         if let achievement = store.todayAchievement {
-            HStack(alignment: .firstTextBaseline, spacing: 5 * AdaptiveSize.scale) {
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
                 Text("\(achievement.completedCount)")
                     .font(.adaptive(.title2).bold())
                     .foregroundStyle(Color.accent)
@@ -250,7 +250,7 @@ private struct TodayFilterBar: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            LazyHStack(spacing: 8 * AdaptiveSize.scale) {
+            LazyHStack(spacing: 8) {
                 ForEach(TodayFeature.TodoScope.allCases, id: \.self) { scope in
                     let isSelected = store.selectedTodoScope == scope
                     Button {
@@ -258,7 +258,7 @@ private struct TodayFilterBar: View {
                             _ = store.send(.setTodoScope(scope))
                         }
                     } label: {
-                        HStack(spacing: 6 * AdaptiveSize.scale) {
+                        HStack(spacing: 6) {
                             Text(scope.title)
                             Text("\(store.summaryCounts[scope, default: 0])")
                                 .fontWeight(.bold)
@@ -295,7 +295,7 @@ private struct TodayFilterBar: View {
                         })
                     ]
                 ) {
-                    HStack(spacing: 6 * AdaptiveSize.scale) {
+                    HStack(spacing: 6) {
                         Image(systemName: category?.symbolName ?? "tray.2")
                             .foregroundStyle(category?.color ?? Color.fillLabel)
                         Text(
@@ -313,8 +313,8 @@ private struct TodayFilterBar: View {
             }
         }
         .scrollIndicators(.hidden)
-        .padding(.horizontal, -16 * AdaptiveSize.scale)
-        .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
+        .padding(.horizontal, -16)
+        .contentMargins(.horizontal, 16, for: .scrollContent)
     }
 }
 

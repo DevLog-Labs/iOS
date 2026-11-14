@@ -19,7 +19,7 @@ struct TodoDetailContentView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
+            LazyVStack(alignment: .leading, spacing: 20) {
                 if showsTitle {
                     ScrollView(.horizontal) {
                         LazyHStack(alignment: .firstTextBaseline, spacing: 0, pinnedViews: .sectionFooters) {
@@ -28,9 +28,9 @@ struct TodoDetailContentView: View {
                             } footer: {
                                 Text("#\(number)")
                                     .foregroundStyle(Color.tertiaryLabel)
-                                    .padding(.leading, 8 * AdaptiveSize.scale)
+                                    .padding(.leading, 8)
                                     .background {
-                                        Color.background.padding(.trailing, -16 * AdaptiveSize.scale)
+                                        Color.background.padding(.trailing, -16)
                                     }
                             }
                         }
@@ -39,8 +39,8 @@ struct TodoDetailContentView: View {
                     }
                     .scrollBounceBehavior(.always, axes: .horizontal)
                     .scrollIndicators(.hidden)
-                    .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
-                    .padding(.horizontal, -16 * AdaptiveSize.scale)
+                    .contentMargins(.horizontal, 16, for: .scrollContent)
+                    .padding(.horizontal, -16)
                 }
 
                 Group {
@@ -59,13 +59,13 @@ struct TodoDetailContentView: View {
                             isScrollEnabled: false,
                             onOpenTodoID: onOpenTodoID
                         )
-                        .frame(minHeight: 120 * AdaptiveSize.scale, alignment: .top)
+                        .frame(minHeight: 120, alignment: .top)
                     }
                 }
-                .padding(.vertical, 16 * AdaptiveSize.scale)
+                .padding(.vertical, 16)
                 .background(Color.secondaryBackground, in: .rect)
             }
-            .padding(16 * AdaptiveSize.scale)
+            .padding()
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }

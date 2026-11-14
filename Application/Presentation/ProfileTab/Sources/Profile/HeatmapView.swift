@@ -35,7 +35,7 @@ struct HeatmapView: View {
                     )
                 }
             }
-            .padding(.vertical, 2 * AdaptiveSize.scale)
+            .padding(.vertical, 2)
             .frame(width: layout.contentWidth, alignment: .leading)
             .frame(minWidth: availableWidth)
         }

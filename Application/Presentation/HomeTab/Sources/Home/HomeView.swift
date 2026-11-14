@@ -44,12 +44,12 @@ public struct HomeView: View {
     public var body: some View {
         NavigationStack(path: $router.path) {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     HomeDevelopmentSummary(store: store)
                     HomeTodoSection(store: store)
                     HomeDevelopmentGoals(store: store)
                 }
-                .padding(.horizontal, 16 * AdaptiveSize.scale)
+                .padding(.horizontal, 16)
                 .frame(maxWidth: readableContentWidth)
                 .frame(maxWidth: .infinity)
             }
@@ -123,7 +123,7 @@ public struct HomeView: View {
                 HomeCreateButton(store: store)
             }
         } else {
-            HStack(spacing: 12 * AdaptiveSize.scale) {
+            HStack(spacing: 12) {
                 Text("DevLog")
                     .font(.adaptive(.largeTitle).weight(.bold))
                 Spacer()
@@ -132,10 +132,10 @@ public struct HomeView: View {
                     HomeCreateButton(store: store)
                 }
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 8 * AdaptiveSize.scale)
+            .padding(.bottom, 8)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
@@ -156,7 +156,7 @@ public struct HomeView: View {
             } label: {
                 Image(systemName: "magnifyingglass")
                     .font(.adaptive(.title3).weight(.semibold))
-                    .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
+                    .frame(width: 28, height: 28)
             }
             .adaptiveButtonStyle(
                 shape: .circle,
@@ -264,7 +264,7 @@ private struct HomeCreateButton: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.adaptive(.title3).weight(.semibold))
-                    .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
+                    .frame(width: 28, height: 28)
             }
             .adaptiveButtonStyle(
                 shape: .circle,
@@ -306,7 +306,7 @@ private struct HomeDevelopmentGoals: View {
 
 private struct HomeTodoSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .title2) private var iconSize = 64 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .title2) private var iconSize = CGFloat(64)
     let store: StoreOf<HomeFeature>
 
     var body: some View {
@@ -339,7 +339,7 @@ private struct HomeTodoSection: View {
                         Button {
                             store.send(.view(.tapManageTodoCategory))
                         } label: {
-                            VStack(spacing: 10 * AdaptiveSize.scale) {
+                            VStack(spacing: 10) {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .strokeBorder(
                                         Color.tertiaryLabel,
@@ -376,13 +376,13 @@ private struct HomeTodoSection: View {
                         Image(systemName: store.isTodoCategoryExpanded ? "chevron.up" : "chevron.down")
                             .font(.adaptive(.title3).weight(.semibold))
                             .foregroundStyle(Color.tertiaryLabel)
-                            .frame(width: 32 * AdaptiveSize.scale, height: 32 * AdaptiveSize.scale)
+                            .frame(width: 32, height: 32)
                     }
                     Spacer()
                 }
             }
         }
-        .padding(.bottom, 12 * AdaptiveSize.scale)
+        .padding(.bottom, 12)
         .background(Color.secondaryBackground, in: Rectangle())
     }
 }
@@ -393,7 +393,7 @@ private struct HomeTodoCategoryLink: View {
 
     var body: some View {
         NavigationLink(value: HomeRoute.category(item)) {
-            VStack(spacing: 10 * AdaptiveSize.scale) {
+            VStack(spacing: 10) {
                 Image(systemName: item.symbolName)
                     .font(.adaptive(.title2).bold())
                     .frame(width: iconSize, height: iconSize)
@@ -437,7 +437,7 @@ private struct HomeContentPicker: View {
                                     imageColor: item.color
                                 )
                             }
-                            .listRowInsets(EdgeInsets(top: 0, leading: 16 * AdaptiveSize.scale, bottom: 0, trailing: 16 * AdaptiveSize.scale))
+                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                         }
                     }
                 } header: {
@@ -458,7 +458,7 @@ private struct HomeContentPicker: View {
                             imageColor: Color.accent
                         )
                     }
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16 * AdaptiveSize.scale, bottom: 0, trailing: 16 * AdaptiveSize.scale))
+                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
                 } header: {
                     Text("development_goal_title", bundle: PresentationResources.bundle)
                         .foregroundStyle(Color(.label))
@@ -481,7 +481,7 @@ private struct HomeContentPicker: View {
 }
 
 private struct HomeContentPickerLabel: View {
-    @ScaledMetric(relativeTo: .largeTitle) private var labelWidth = 34 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .largeTitle) private var labelWidth = CGFloat(34)
     let text: String
     let systemName: String
     let imageColor: Color

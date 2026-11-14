@@ -19,22 +19,22 @@ struct ThemeView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
+            LazyVStack(alignment: .leading, spacing: 24) {
                 VStack(spacing: 0) {
                     ForEach(Self.themes) { option in
                         themeButton(option)
 
                         if option != Self.themes.last {
                             Divider().overlay(Color.separator)
-                                .padding(.leading, 68 * AdaptiveSize.scale)
-                                .padding(.trailing, 16 * AdaptiveSize.scale)
+                                .padding(.leading, 68)
+                                .padding(.trailing, 16)
                         }
                     }
                 }
                 .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
-            .padding(.bottom, 24 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 24)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -65,33 +65,33 @@ struct ThemeView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12 * AdaptiveSize.scale)
+            .padding(.bottom, 12)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
     }
 
     private func themeButton(_ option: SystemTheme) -> some View {
-        HStack(spacing: 12 * AdaptiveSize.scale) {
+        HStack(spacing: 12) {
             Image(systemName: option.symbolName)
                 .font(.adaptive(.headline))
-                .frame(width: 36 * AdaptiveSize.scale, height: 36 * AdaptiveSize.scale)
+                .frame(width: 36, height: 36)
                 .iconStyle(color: option.iconColor, in: Circle())
 
             Text(option.localizedName(in: PresentationResources.bundle))
                 .foregroundStyle(Color.label)
 
-            Spacer(minLength: 8 * AdaptiveSize.scale)
+            Spacer(minLength: 8)
 
             Image(systemName: theme == option ? "checkmark.circle.fill" : "circle")
                 .font(.adaptive(.title2))
                 .foregroundStyle(theme == option ? Color.accent : Color.separator)
 
         }
-        .padding(16 * AdaptiveSize.scale)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(.rect)
         .onTapGesture {

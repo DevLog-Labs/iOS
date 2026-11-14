@@ -86,7 +86,7 @@ private struct PushNotificationListContent: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
-    @ScaledMetric(relativeTo: .headline) private var iconSize = 36 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .headline) private var iconSize = 36
     let store: StoreOf<PushNotificationListFeature>
 
     @ViewBuilder
@@ -97,7 +97,7 @@ private struct PushNotificationListContent: View {
         let sections = store.query.sortOrder == .latest ? [recent, previous] : [previous, recent]
 
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
+            LazyVStack(alignment: .leading, spacing: 20) {
                 if notifications.isEmpty {
                     EmptyStateView(
                         String(localized: "push_notifications_empty", bundle: PresentationResources.bundle),
@@ -108,8 +108,8 @@ private struct PushNotificationListContent: View {
                         let items = sections[index]
                         let isRecent = (index == 0) == (store.query.sortOrder == .latest)
                         if !items.isEmpty {
-                            VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
-                                    HStack(spacing: 8 * AdaptiveSize.scale) {
+                            VStack(alignment: .leading, spacing: 12) {
+                                    HStack(spacing: 8) {
                                         Text(String(
                                             localized: isRecent ? "push_notifications_new" : "push_notifications_previous",
                                             bundle: PresentationResources.bundle
@@ -121,19 +121,19 @@ private struct PushNotificationListContent: View {
                                         Spacer()
                                     }
 
-                                    LazyVStack(spacing: 12 * AdaptiveSize.scale) {
+                                    LazyVStack(spacing: 12) {
                                         ForEach(items) { item in
                                             let category = TodoCategoryItem(from: item.todoCategory)
 
-                                            HStack(alignment: .top, spacing: 12 * AdaptiveSize.scale) {
+                                            HStack(alignment: .top, spacing: 12) {
                                                 Image(systemName: category.symbolName)
                                                     .font(.adaptive(.headline))
                                                     .foregroundStyle(Color.white)
                                                     .frame(width: iconSize, height: iconSize)
                                                     .background(category.color, in: .rect(cornerRadius: CornerRadius.control))
 
-                                                VStack(alignment: .leading, spacing: 6 * AdaptiveSize.scale) {
-                                                    HStack(alignment: .firstTextBaseline, spacing: 8 * AdaptiveSize.scale) {
+                                                VStack(alignment: .leading, spacing: 6) {
+                                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
                                                         Text(item.title)
                                                             .font(.adaptive(.headline))
                                                             .foregroundStyle(
@@ -141,7 +141,7 @@ private struct PushNotificationListContent: View {
                                                             )
                                                             .lineLimit(2)
 
-                                                        Spacer(minLength: 4 * AdaptiveSize.scale)
+                                                        Spacer(minLength: 4)
 
                                                         TimelineView(.periodic(from: .now, by: 1.0)) { context in
                                                             Text(timeAgoText(from: item.receivedAt, now: context.date))
@@ -153,7 +153,7 @@ private struct PushNotificationListContent: View {
                                                         if !item.isRead {
                                                             Circle()
                                                                 .fill(Color.accent)
-                                                                .frame(width: 7 * AdaptiveSize.scale, height: 7 * AdaptiveSize.scale)
+                                                                .frame(width: 7, height: 7)
                                                         }
                                                     }
 
@@ -164,7 +164,7 @@ private struct PushNotificationListContent: View {
                                                         .lineLimit(3)
                                                 }
                                             }
-                                            .padding(16 * AdaptiveSize.scale)
+                                            .padding(16)
                                             .frame(maxWidth: .infinity, alignment: .leading)
                                             .background(Color.secondaryBackground, in: .rect)
                                             .contentShape(.rect)
@@ -204,7 +204,7 @@ private struct PushNotificationListContent: View {
                     }
                 }
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -215,11 +215,11 @@ private struct PushNotificationListContent: View {
                 if isiOSAppOnMac {
                     PaneTitleBar(title)
                 }
-                VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 12) {
                     if !isiOSAppOnMac {
                         title
                             .font(.adaptive(.largeTitle).bold())
-                            .padding(.bottom, 8 * AdaptiveSize.scale)
+                            .padding(.bottom, 8)
                     }
 
                     ScrollView(.horizontal) {
@@ -227,14 +227,14 @@ private struct PushNotificationListContent: View {
                     }
                     .scrollIndicators(.hidden)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, -16 * AdaptiveSize.scale)
-                    .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
+                    .padding(.horizontal, -16)
+                    .contentMargins(.horizontal, 16, for: .scrollContent)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16 * AdaptiveSize.scale)
+                .padding(.horizontal, 16)
                 .frame(maxWidth: readableContentWidth)
                 .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
-                .padding(.bottom, 8 * AdaptiveSize.scale)
+                .padding(.bottom, 8)
             }
             .background(Color.background)
             .toolbarBackground(Color.background)
@@ -290,13 +290,13 @@ private struct PushNotificationFilterBar: View {
     @Bindable var store: StoreOf<PushNotificationListFeature>
 
     var body: some View {
-        LazyHStack(spacing: 8 * AdaptiveSize.scale) {
+        LazyHStack(spacing: 8) {
             Button {
                 if 0 < store.appliedFilterCount {
                     store.send(.view(.resetFilters))
                 }
             } label: {
-                HStack(spacing: 6 * AdaptiveSize.scale) {
+                HStack(spacing: 6) {
                     Text(String(localized: "push_timefilter_all", bundle: PresentationResources.bundle))
                     if 0 < store.appliedFilterCount {
                         filterBadge
@@ -366,7 +366,7 @@ private struct PushNotificationFilterBar: View {
             .foregroundStyle(Color.accent)
             .lineLimit(1)
             .minimumScaleFactor(0.6)
-            .frame(width: 20 * AdaptiveSize.scale, height: 20 * AdaptiveSize.scale)
+            .frame(width: 20, height: 20)
             .background(Circle().fill(Color.accent.opacity(0.1)))
     }
 }

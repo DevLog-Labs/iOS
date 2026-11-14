@@ -9,20 +9,20 @@ import SwiftUI
 import PresentationShared
 
 struct AppInformationCard: View {
-    @ScaledMetric(relativeTo: .headline) private var iconSize = 36 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .headline) private var iconSize = 36
     let appVersion: String?
     let privacyPolicyURL: URL?
     let betaTestURL: URL?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("settings_information_section", bundle: PresentationResources.bundle)
                 .font(.adaptive(.title3).bold())
                 .foregroundStyle(Color.label)
 
             VStack(spacing: 0) {
                 if let appVersion {
-                    HStack(spacing: 12 * AdaptiveSize.scale) {
+                    HStack(spacing: 12) {
                         Image(systemName: "info.circle")
                             .font(.adaptive(.headline))
                             .frame(width: iconSize, height: iconSize)
@@ -30,25 +30,25 @@ struct AppInformationCard: View {
                         Text(String(localized: "settings_version", bundle: PresentationResources.bundle))
                             .foregroundStyle(Color.label)
 
-                        Spacer(minLength: 8 * AdaptiveSize.scale)
+                        Spacer(minLength: 8)
 
                         Text(appVersion)
                             .foregroundStyle(Color.secondaryLabel)
                             .multilineTextAlignment(.trailing)
                     }
-                    .padding(16 * AdaptiveSize.scale)
+                    .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
                 if let privacyPolicyURL {
                     if appVersion != nil {
                         Divider().overlay(Color.separator)
-                            .padding(.leading, 64 * AdaptiveSize.scale)
-                            .padding(.trailing, 16 * AdaptiveSize.scale)
+                            .padding(.leading, 64)
+                            .padding(.trailing, 16)
                     }
 
                     Link(destination: privacyPolicyURL) {
-                        HStack(spacing: 12 * AdaptiveSize.scale) {
+                        HStack(spacing: 12) {
                             Image(systemName: "doc.text")
                                 .font(.adaptive(.headline))
                                 .frame(width: iconSize, height: iconSize)
@@ -60,13 +60,13 @@ struct AppInformationCard: View {
                             ))
                             .foregroundStyle(Color.label)
 
-                            Spacer(minLength: 8 * AdaptiveSize.scale)
+                            Spacer(minLength: 8)
 
                             Image(systemName: "chevron.right")
                                 .font(.adaptive(.footnote).weight(.semibold))
                                 .foregroundStyle(Color.secondaryLabel)
                         }
-                        .padding(16 * AdaptiveSize.scale)
+                        .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(Rectangle())
                     }
@@ -76,18 +76,18 @@ struct AppInformationCard: View {
                 if let betaTestURL {
                     if appVersion != nil || privacyPolicyURL != nil {
                         Divider().overlay(Color.separator)
-                            .padding(.leading, 64 * AdaptiveSize.scale)
-                            .padding(.trailing, 16 * AdaptiveSize.scale)
+                            .padding(.leading, 64)
+                            .padding(.trailing, 16)
                     }
 
                     Link(destination: betaTestURL) {
-                        HStack(spacing: 12 * AdaptiveSize.scale) {
+                        HStack(spacing: 12) {
                             Image(systemName: "flask")
                                 .font(.adaptive(.headline))
                                 .frame(width: iconSize, height: iconSize)
                                 .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
 
-                            VStack(alignment: .leading, spacing: 4 * AdaptiveSize.scale) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "settings_join_beta", bundle: PresentationResources.bundle))
                                     .foregroundStyle(Color.label)
                                 Text(String(
@@ -98,13 +98,13 @@ struct AppInformationCard: View {
                                 .foregroundStyle(Color.secondaryLabel)
                             }
 
-                            Spacer(minLength: 8 * AdaptiveSize.scale)
+                            Spacer(minLength: 8)
 
                             Image(systemName: "chevron.right")
                                 .font(.adaptive(.footnote).weight(.semibold))
                                 .foregroundStyle(Color.secondaryLabel)
                         }
-                        .padding(16 * AdaptiveSize.scale)
+                        .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .contentShape(.rect)
                     }

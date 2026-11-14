@@ -14,23 +14,23 @@ struct RecentActivityCard: View {
     let onSelectTodo: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 12) {
             Text("profile_recent_title", bundle: PresentationResources.bundle)
                 .font(.adaptive(.title3).bold())
-                .padding(.horizontal, 16 * AdaptiveSize.scale)
+                .padding(.horizontal, 16)
 
             if store.isRecentTodosLoading && store.recentTodos.isEmpty {
                 LoadingView()
-                    .frame(maxWidth: .infinity, minHeight: 80 * AdaptiveSize.scale)
+                    .frame(maxWidth: .infinity, minHeight: 80)
                     .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
             } else if store.recentTodos.isEmpty {
                 Text("profile_recent_empty", bundle: PresentationResources.bundle)
                     .font(.adaptive(.callout))
                     .foregroundStyle(Color.secondaryLabel)
-                    .frame(maxWidth: .infinity, minHeight: 80 * AdaptiveSize.scale)
+                    .frame(maxWidth: .infinity, minHeight: 80)
                     .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
             } else {
-                VStack(spacing: 12 * AdaptiveSize.scale) {
+                VStack(spacing: 12) {
                     ForEach(store.recentTodos) { todo in
                         Button {
                             onSelectTodo(todo.id)
@@ -51,13 +51,13 @@ struct RecentActivityCard: View {
 
 private struct RecentTodoCard: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @ScaledMetric(relativeTo: .title3) private var iconSize = 44 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .title3) private var iconSize = CGFloat(44)
     let todo: RecentTodoItem
     let isSelected: Bool
 
     var body: some View {
         let category = TodoCategoryItem(from: todo.category)
-        HStack(spacing: 12 * AdaptiveSize.scale) {
+        HStack(spacing: 12) {
             Image(systemName: category.symbolName)
                 .font(.adaptive(.title3).weight(.semibold))
                 .frame(width: iconSize, height: iconSize)
@@ -66,8 +66,8 @@ private struct RecentTodoCard: View {
                     in: RoundedRectangle(cornerRadius: CornerRadius.control)
                 )
 
-            VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
-                HStack(alignment: .top, spacing: 8 * AdaptiveSize.scale) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .top, spacing: 8) {
                     Text(todo.title)
                         .foregroundStyle(Color.label)
                         .font(.adaptive(.headline))
@@ -79,7 +79,7 @@ private struct RecentTodoCard: View {
                     }
                 }
 
-                HStack(spacing: 6 * AdaptiveSize.scale) {
+                HStack(spacing: 6) {
                     Text(verbatim: "#\(todo.number)")
                         .font(.adaptive(.caption).weight(.semibold))
                         .foregroundStyle(Color.accent)
@@ -110,7 +110,7 @@ private struct RecentTodoCard: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16 * AdaptiveSize.scale)
+        .padding(16)
         .background(isSelected ? Color.tintFill : .secondaryBackground, in: Rectangle())
         .contentShape(.rect)
     }
