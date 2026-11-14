@@ -408,22 +408,26 @@ private struct TodoListFilterHeader: View {
         ScrollView(.horizontal) {
             HStack(spacing: 8) {
                 if 0 < store.appliedFilterCount {
-                    Menu {
-                        Text(
+                    DropdownMenu(sections: [
+                        DropdownMenuSection(
                             String.localizedStringWithFormat(
                                 String(
                                     localized: "todo_list_filters_applied_format",
                                     bundle: PresentationResources.bundle
                                 ),
                                 Int64(store.appliedFilterCount)
-                            )
+                            ),
+                            items: [
+                                DropdownMenuItem(
+                                    String(localized: "todo_list_clear_filters", bundle: PresentationResources.bundle),
+                                    systemImage: "xmark",
+                                    role: .destructive
+                                ) {
+                                    store.send(.view(.resetFilters))
+                                }
+                            ]
                         )
-                        Button(role: .destructive) {
-                            store.send(.view(.resetFilters))
-                        } label: {
-                            Text(String(localized: "todo_list_clear_filters", bundle: PresentationResources.bundle))
-                        }
-                    } label: {
+                    ]) {
                         HStack(spacing: 6) {
                             Text("\(store.appliedFilterCount)")
                             Image(systemName: "xmark")
@@ -433,19 +437,25 @@ private struct TodoListFilterHeader: View {
                     }
                 }
 
-                Menu {
-                    Toggle(isOn: $store.query.isPinned) {
-                        Text(String(localized: "todo_pinned", bundle: PresentationResources.bundle))
-                    }
-
-                    Picker(selection: $store.query.completionFilter) {
-                        ForEach([TodoQuery.CompletionFilter.all, .incomplete, .completed], id: \.self) { option in
-                            Text(option.title).tag(option)
+                DropdownMenu(sections: [
+                    DropdownMenuSection(items: [
+                        DropdownMenuItem(
+                            String(localized: "todo_pinned", bundle: PresentationResources.bundle),
+                            systemImage: "star",
+                            isChecked: store.query.isPinned
+                        ) {
+                            store.send(.binding(.set(\.query.isPinned, !store.query.isPinned)))
                         }
-                    } label: {
-                        Text(String(localized: "todo_list_completion_status", bundle: PresentationResources.bundle))
-                    }
-                } label: {
+                    ]),
+                    DropdownMenuSection(
+                        String(localized: "todo_list_completion_status", bundle: PresentationResources.bundle),
+                        items: [TodoQuery.CompletionFilter.all, .incomplete, .completed].map { option in
+                            DropdownMenuItem(option.title, isChecked: store.query.completionFilter == option) {
+                                store.send(.binding(.set(\.query.completionFilter, option)))
+                            }
+                        }
+                    )
+                ]) {
                     let condition = store.state.query.isPinned || store.state.query.completionFilter != .all
                     HStack(spacing: 6) {
                         Image(systemName: "line.3.horizontal.decrease")
@@ -456,22 +466,24 @@ private struct TodoListFilterHeader: View {
                     .adaptiveButtonStyle(color: condition ? .primaryContainer : .controlBackground)
                 }
 
-                Menu {
-                    Picker(selection: $store.query.sortTarget) {
-                        ForEach([TodoQuery.SortTarget.createdAt, .updatedAt], id: \.self) { option in
-                            Text(option.title).tag(option)
+                DropdownMenu(sections: [
+                    DropdownMenuSection(
+                        String(localized: "todo_list_sort_by", bundle: PresentationResources.bundle),
+                        items: [TodoQuery.SortTarget.createdAt, .updatedAt].map { option in
+                            DropdownMenuItem(option.title, isChecked: store.query.sortTarget == option) {
+                                store.send(.binding(.set(\.query.sortTarget, option)))
+                            }
                         }
-                    } label: {
-                        Text(String(localized: "todo_list_sort_by", bundle: PresentationResources.bundle))
-                    }
-                    Picker(selection: $store.query.sortOrder) {
-                        ForEach([TodoQuery.SortOrder.latest, .oldest], id: \.self) { option in
-                            Text(option.title).tag(option)
+                    ),
+                    DropdownMenuSection(
+                        String(localized: "todo_list_sort_order", bundle: PresentationResources.bundle),
+                        items: [TodoQuery.SortOrder.latest, .oldest].map { option in
+                            DropdownMenuItem(option.title, isChecked: store.query.sortOrder == option) {
+                                store.send(.binding(.set(\.query.sortOrder, option)))
+                            }
                         }
-                    } label: {
-                        Text(String(localized: "todo_list_sort_order", bundle: PresentationResources.bundle))
-                    }
-                } label: {
+                    )
+                ]) {
                     let condition = store.state.query.sortTarget == .createdAt && store.state.query.sortOrder == .latest
                     HStack(spacing: 6) {
                         Image(systemName: "arrow.up.arrow.down")
