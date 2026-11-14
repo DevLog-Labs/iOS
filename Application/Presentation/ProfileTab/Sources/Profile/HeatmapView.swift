@@ -125,7 +125,7 @@ private struct MonthCompactHeatmapView: View {
             Text(month.monthStart.formatted(.dateTime.month(.abbreviated)))
                 .frame(height: layout.cellSize)
                 .font(.caption)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.secondaryLabel)
 
             VStack(alignment: .leading, spacing: layout.cellSpacing) {
                 ForEach(orderedWeekdays, id: \.self) { weekday in
@@ -165,7 +165,12 @@ private struct MonthCompactHeatmapView: View {
     }
 
     private func selectionInnerBorderColor(for day: HeatmapDay?) -> Color {
-        isSelected(day) ? .white : .clear
+        if isSelected(day) {
+            return .white
+        }
+        guard let day, day.isVisible else { return .clear }
+        // 칸의 옅은 테두리
+        return Calendar.current.startOfDay(for: .now) < day.date ? .heatmapFutureBorder : .heatmapBorder
     }
 
     private func selectionOuterBorderColor(for day: HeatmapDay?) -> Color {
@@ -177,11 +182,14 @@ private struct MonthCompactHeatmapView: View {
 
     private func fillColor(for day: HeatmapDay?, with maxCount: Int) -> Color {
         guard let day, day.isVisible else { return .clear }
-        let count = dayCount(for: day)
-        if count == 0 {
-            return Color(.systemGray5)
+        // 오늘 이후 칸은 별도 색
+        if Calendar.current.startOfDay(for: .now) < day.date {
+            return .heatmapFuture
         }
-        return Color.accent.opacity(opacity(for: count, max: maxCount))
+        let count = dayCount(for: day)
+        // 빈 칸과 3단계 색
+        let colors = [Color.heatmapEmpty, .heatmapLevel1, .heatmapLevel2, .accent]
+        return colors[count == 0 ? 0 : (count * 3 + maxCount - 1) / maxCount]
     }
 
     private func dayCount(for day: HeatmapDay) -> Int {
@@ -196,11 +204,5 @@ private struct MonthCompactHeatmapView: View {
             value += day.deletedCount
         }
         return value
-    }
-
-    private func opacity(for count: Int, max: Int) -> Double {
-        guard 0 < count && 0 < max else { return 0 }
-        let ratio = Double(count) / Double(max)
-        return ceil(ratio * 10) / 10
     }
 }

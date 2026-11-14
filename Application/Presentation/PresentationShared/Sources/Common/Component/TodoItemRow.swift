@@ -22,19 +22,19 @@ public struct TodoItemRow: View {
             Image(systemName: item.isCompleted ? "checkmark.circle.fill" : "circle")
                 .resizable()
                 .frame(width: labelWidth, height: labelWidth)
-                .foregroundStyle(item.isCompleted ? Color.accent : Color.textTertiary)
+                .foregroundStyle(item.isCompleted ? Color.accent : Color.tertiaryLabel)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(item.title)
                         .font(.headline)
-                        .foregroundStyle(item.isCompleted ? Color.textSecondary : .primary)
+                        .foregroundStyle(item.isCompleted ? Color.secondaryLabel : .label)
                         .lineLimit(1)
                         .layoutPriority(1)
 
                     Text("#\(item.number)")
                         .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
                         .fixedSize(horizontal: true, vertical: false)
                 }
 
@@ -64,7 +64,7 @@ public struct TodoItemRow: View {
             if !isiOSAppOnMac {
                 Image(systemName: "chevron.right")
                     .font(.caption2.bold())
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
             }
         }
         .padding(.horizontal, 16)

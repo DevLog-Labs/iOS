@@ -23,7 +23,7 @@ struct GoalTodoLinkSheet: View {
                 sheetContent
                 Text(RecordPresentation.text("development_goal_todo_optional_footer"))
                     .font(.footnote)
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
@@ -32,7 +32,7 @@ struct GoalTodoLinkSheet: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .overlay {
             if store.isUpdating {
                 LoadingView()
@@ -99,13 +99,13 @@ struct GoalTodoLinkSheet: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var searchField: some View {
         HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(Color.textTertiary)
+                .foregroundStyle(Color.tertiaryLabel)
             TextField(
                 RecordPresentation.text("development_goal_todo_search"),
                 text: $store.searchText
@@ -117,8 +117,8 @@ struct GoalTodoLinkSheet: View {
         .padding()
         .background {
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.surface)
-                .strokeBorder(Color.border, lineWidth: 1)
+                .fill(Color.secondaryBackground)
+                .strokeBorder(Color.separator, lineWidth: 1)
         }
     }
 

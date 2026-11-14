@@ -27,10 +27,10 @@ struct TodoDetailContentView: View {
                                 Text(title)
                             } footer: {
                                 Text("#\(number)")
-                                    .foregroundStyle(Color.textTertiary)
+                                    .foregroundStyle(Color.tertiaryLabel)
                                     .padding(.leading, 8)
                                     .background {
-                                        Color.appBackground.padding(.trailing, -16)
+                                        Color.background.padding(.trailing, -16)
                                     }
                             }
                         }
@@ -63,7 +63,7 @@ struct TodoDetailContentView: View {
                     }
                 }
                 .padding(.vertical, 16)
-                .background(Color.surface, in: .rect(cornerRadius: 24))
+                .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
             }
             .padding()
             .frame(maxWidth: readableContentWidth)

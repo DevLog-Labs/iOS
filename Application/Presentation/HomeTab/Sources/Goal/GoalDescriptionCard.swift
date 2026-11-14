@@ -24,13 +24,13 @@ struct GoalDescriptionCard: View {
             } else if description.isEmpty {
                 Text(RecordPresentation.text("development_goal_description_empty_message"))
                     .font(.body)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
             } else {
                 MarkdownContentView(content: description)
                     .frame(minHeight: 120)
             }
         }
         .padding(20)
-        .background(Color.surface, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
     }
 }

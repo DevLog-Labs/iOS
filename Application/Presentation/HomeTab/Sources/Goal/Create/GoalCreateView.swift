@@ -49,7 +49,7 @@ public struct GoalCreateView: View {
                     onSave: save
                 )
             }
-            .background(Color.appBackground.ignoresSafeArea())
+            .background(Color.background.ignoresSafeArea())
             .toolbarVisibility(.hidden, for: .navigationBar)
             .prominentAlert(store, state: \.alert, action: \.alert)
             .sheet(item: $store.scope(state: \.todoSelection, action: \.todoSelection)) {
@@ -95,7 +95,7 @@ private struct GoalCreateTopBar: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 }
 
@@ -115,7 +115,7 @@ private struct GoalCreateTitleField: View {
             .focused(focusedField, equals: .title)
             .font(.body)
             .padding()
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
         }
         .disabled(store.isSaving)
     }
@@ -139,7 +139,7 @@ private struct GoalCreateDescriptionEditor: View {
                         TextEditorContentLayout(minimumHeight: 120) {
                             Text(RecordPresentation.text("development_goal_create_markdown_hint"))
                                 .font(.caption)
-                                .foregroundStyle(Color.textTertiary)
+                                .foregroundStyle(Color.tertiaryLabel)
                             UIKitTextEditor
                                 .composable(
                                     update: { textEditor in
@@ -160,7 +160,7 @@ private struct GoalCreateDescriptionEditor: View {
                                 )
                                 .focused(focusedField, equals: .content)
                                 .padding(12)
-                                .background(Color.surface, in: .rect(cornerRadius: 16))
+                                .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                         }
                         .contentShape(.rect)
                         .onTapGesture { focusedField.wrappedValue = .content }
@@ -172,12 +172,12 @@ private struct GoalCreateDescriptionEditor: View {
                                         .font(.headline)
                                     Text(RecordPresentation.text("development_goal_create_preview_empty_message"))
                                         .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Color.secondaryLabel)
                                 }
                                 .multilineTextAlignment(.center)
                                 .padding(12)
                                 .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
-                                .background(Color.surface, in: .rect(cornerRadius: 16))
+                                .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                             } else {
                                 MarkdownContentView(
                                     content: store.markdownContent,
@@ -187,7 +187,7 @@ private struct GoalCreateDescriptionEditor: View {
                                     .padding(.horizontal, -16)
                                     .padding(12)
                                     .frame(minHeight: 120, alignment: .topLeading)
-                                    .background(Color.surface, in: .rect(cornerRadius: 16))
+                                    .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                             }
                         }
                     }
@@ -221,7 +221,7 @@ private struct GoalCreateModePicker: View {
             }
         }
         .padding(2)
-        .background(Color.border, in: .rect(cornerRadius: 16))
+        .background(Color.separator, in: .rect(cornerRadius: 16))
     }
 }
 
@@ -234,13 +234,13 @@ private struct GoalCreateModeButton: View {
         Button(action: action) {
             Text(title)
                 .font(.body)
-                .foregroundStyle(isSelected ? Color.accent : Color.textSecondary)
+                .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
                 .frame(maxWidth: .infinity, minHeight: 36)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.surface)
-                            .shadow(color: Color.textSecondary.opacity(0.08), radius: 2, y: 2)
+                            .fill(Color.secondaryBackground)
+                            .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }
                 }
                 .contentShape(.rect)
@@ -260,7 +260,7 @@ private struct GoalCreateStatusField: View {
                 Spacer()
             }
             .padding(20)
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: 16))
         }
     }
 }
@@ -277,10 +277,10 @@ private struct GoalCreateTodoField: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(RecordPresentation.text("development_goal_create_todo_optional"))
                         .font(.callout)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                     Text(RecordPresentation.text("development_goal_create_todo_hint"))
                         .font(.footnote)
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
                 }
                 Spacer(minLength: 12)
                 Button {
@@ -291,12 +291,12 @@ private struct GoalCreateTodoField: View {
                         .foregroundStyle(Color.accent)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 9)
-                        .background(Color.primaryContainer, in: .capsule)
+                        .background(Color.tintFill, in: .capsule)
                 }
                 .buttonStyle(.plain)
             }
             .padding(20)
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: 16))
         }
         .disabled(store.isSaving)
     }
@@ -339,7 +339,7 @@ private struct GoalCreateSaveBar: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
+        .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 }
 

@@ -20,7 +20,7 @@ struct HeatmapWidget: Widget {
             provider: HeatmapWidgetProvider()
         ) { entry in
             HeatmapWidgetEntryView(entry: entry)
-                .containerBackground(Color.surface, for: .widget)
+                .containerBackground(Color.secondaryBackground, for: .widget)
                 .widgetURL(WidgetDeepLink.heatmapURL)
         }
         .configurationDisplayName(LocalizedStringResource("widget_heatmap_title"))

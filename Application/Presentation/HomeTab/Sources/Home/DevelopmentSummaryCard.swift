@@ -21,7 +21,7 @@ struct DevelopmentSummaryCard: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("home_development_summary_eyebrow", bundle: PresentationResources.bundle)
                         .font(.subheadline)
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
                     summaryTitle
                 }
                 Spacer(minLength: 16)
@@ -35,7 +35,7 @@ struct DevelopmentSummaryCard: View {
             summaryContent
         }
         .padding(20)
-        .background(Color.surface, in: .rect(cornerRadius: 28))
+        .groupBackground(in: .rect(cornerRadius: 28))
     }
 
     @ViewBuilder
@@ -58,7 +58,7 @@ struct DevelopmentSummaryCard: View {
             )
         )
         .font(.title2.weight(.semibold))
-        .foregroundStyle(Color.primary)
+        .foregroundStyle(Color.label)
         .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -71,11 +71,11 @@ struct DevelopmentSummaryCard: View {
         } else if !hasLoaded && hasLoadFailure {
             Text("common_error_message", bundle: PresentationResources.bundle)
                 .font(.subheadline)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
         } else if items.isEmpty {
             Text("home_development_summary_empty_message", bundle: PresentationResources.bundle)
                 .font(.subheadline)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
         } else {
             VStack(alignment: .leading, spacing: 8) {
                 DevelopmentTodoProgressView(progress: todoProgress)
@@ -84,16 +84,16 @@ struct DevelopmentSummaryCard: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("home_development_summary_recent_record", bundle: PresentationResources.bundle)
                             .font(.caption.weight(.medium))
-                            .foregroundStyle(Color.textTertiary)
+                            .foregroundStyle(Color.tertiaryLabel)
                         HStack(spacing: 12) {
                             Text(recentRecord.title)
                                 .font(.subheadline.weight(.medium))
-                                .foregroundStyle(Color.primary)
+                                .foregroundStyle(Color.label)
                                 .lineLimit(1)
                             Spacer(minLength: 12)
                             Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
                                 .font(.caption)
-                                .foregroundStyle(Color.textTertiary)
+                                .foregroundStyle(Color.tertiaryLabel)
                         }
                     }
                 }

@@ -16,7 +16,7 @@ struct GoalCreateTodoSelectionSheet: View {
             LazyVStack(spacing: 20) {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass")
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
                     TextField(
                         RecordPresentation.text("development_goal_todo_search"),
                         text: $store.searchText
@@ -28,8 +28,8 @@ struct GoalCreateTodoSelectionSheet: View {
                 .padding()
                 .background {
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(Color.surface)
-                        .strokeBorder(Color.border, lineWidth: 1)
+                        .fill(Color.secondaryBackground)
+                        .strokeBorder(Color.separator, lineWidth: 1)
                 }
 
                 if store.isLoading, store.todos.isEmpty {
@@ -72,7 +72,7 @@ struct GoalCreateTodoSelectionSheet: View {
 
                 Text(RecordPresentation.text("development_goal_todo_optional_footer"))
                     .font(.footnote)
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
@@ -110,10 +110,10 @@ struct GoalCreateTodoSelectionSheet: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
         .scrollDismissesKeyboard(.interactively)
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .onAppear { store.send(.view(.fetch)) }
         .presentationDragIndicator(.visible)
     }

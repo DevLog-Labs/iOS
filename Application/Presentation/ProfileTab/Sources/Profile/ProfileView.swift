@@ -74,7 +74,7 @@ public struct ProfileView: View {
                         }
                     }
                 }
-                .background(Color.appBackground)
+                .background(Color.background)
             } detail: {
                 switch store.selectedTodoRoute {
                 case .activity(let todoId):
@@ -158,8 +158,8 @@ public struct ProfileView: View {
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 8)
-            .background(Color.appBackground)
-            .toolbarBackground(Color.appBackground)
+            .background(Color.background)
+            .toolbarBackground(Color.background)
         }
     }
 

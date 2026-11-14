@@ -49,7 +49,7 @@ public struct RecordEditorView: View {
             }
             .safeAreaInset(edge: .top, spacing: 0) { topBar }
             .safeAreaInset(edge: .bottom, spacing: 0) { confirmBar }
-            .background(Color.appBackground.ignoresSafeArea())
+            .background(Color.background.ignoresSafeArea())
             .toolbarVisibility(.hidden, for: .navigationBar)
             .prominentAlert(store, state: \.alert, action: \.alert)
             .onChange(of: store.result) { _, result in
@@ -98,7 +98,7 @@ public struct RecordEditorView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var versionCard: some View {
@@ -107,7 +107,7 @@ public struct RecordEditorView: View {
                 .font(.body)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
-                .background(Color.surface, in: .rect(cornerRadius: 16))
+                .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
         }
     }
 
@@ -120,7 +120,7 @@ public struct RecordEditorView: View {
             .font(.body)
             .focused($focusedField, equals: .title)
             .padding()
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
         }
         .disabled(store.isLoading)
     }
@@ -134,7 +134,7 @@ public struct RecordEditorView: View {
                 TextEditorContentLayout(minimumHeight: 340) {
                     Text(RecordPresentation.text("development_record_markdown_hint"))
                         .font(.caption)
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
                     UIKitTextEditor
                         .composable(
                             update: { textEditor in
@@ -155,7 +155,7 @@ public struct RecordEditorView: View {
                         )
                         .focused($focusedField, equals: .content)
                         .padding(12)
-                        .background(Color.surface, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                 }
                 .frame(minHeight: 340, alignment: .topLeading)
                 .contentShape(.rect)
@@ -168,12 +168,12 @@ public struct RecordEditorView: View {
                                 .font(.headline)
                             Text(RecordPresentation.text("development_record_preview_empty_message"))
                                 .font(.subheadline)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.secondaryLabel)
                         }
                         .multilineTextAlignment(.center)
                         .padding(12)
                         .frame(maxWidth: .infinity, minHeight: 340, alignment: .center)
-                        .background(Color.surface, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                     } else {
                         MarkdownContentView(
                             content: store.markdownContent,
@@ -183,7 +183,7 @@ public struct RecordEditorView: View {
                         .padding(.horizontal, -16)
                         .padding(12)
                         .frame(minHeight: 340, alignment: .topLeading)
-                        .background(Color.surface, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                     }
                 }
                 .frame(minHeight: 340, alignment: .topLeading)
@@ -223,11 +223,11 @@ public struct RecordEditorView: View {
                 RecordPresentation.versionLabel(store.versionNumber)
             ))
             .font(.caption)
-            .foregroundStyle(Color.textTertiary)
+            .foregroundStyle(Color.tertiaryLabel)
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
+        .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 
 }
@@ -266,7 +266,7 @@ private struct ModePicker: View {
             )
         }
         .padding(2)
-        .background(Color.border, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.separator, in: RoundedRectangle(cornerRadius: 16))
     }
 
     private func modeButton(
@@ -288,13 +288,13 @@ private struct ModePicker: View {
         } label: {
             Text(title)
                 .font(.body)
-                .foregroundStyle(isSelected ? Color.accent : Color.textSecondary)
+                .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
                 .frame(maxWidth: .infinity, minHeight: 36)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.surface)
-                            .shadow(color: Color.textSecondary.opacity(0.08), radius: 2, y: 2)
+                            .fill(Color.secondaryBackground)
+                            .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }
                 }
                 .contentShape(.rect)

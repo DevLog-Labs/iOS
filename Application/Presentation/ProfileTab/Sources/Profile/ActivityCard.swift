@@ -72,7 +72,7 @@ struct ActivityCard: View {
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.caption2)
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.secondaryLabel)
                 }
                 .buttonStyle(.plain)
                 Spacer()
@@ -98,7 +98,7 @@ struct ActivityCard: View {
             }
         }
         .padding(16)
-        .background(Color.surface, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
     }
 
     @ViewBuilder
@@ -113,7 +113,7 @@ struct ActivityCard: View {
             if activities.isEmpty {
                 Text(String(localized: "profile_activity_none", bundle: PresentationResources.bundle))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 8)
             } else {
@@ -122,7 +122,7 @@ struct ActivityCard: View {
                         selectActivity(activity)
                     } label: {
                         let item = TodoCategoryItem(from: activity.category)
-                        let rowColor = activity.isDeleted ? Color.secondary : .primary
+                        let rowColor = activity.isDeleted ? Color.secondaryLabel : .label
                         HStack(spacing: 8) {
                             Image(systemName: item.symbolName)
                                 .foregroundStyle(item.color)
@@ -133,7 +133,7 @@ struct ActivityCard: View {
                                 .foregroundStyle(rowColor)
                             Text("#\(activity.number)")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.secondaryLabel)
                             ForEach(activity.activityKindItems) { item in
                                 Text(item.title)
                                     .font(.caption2)
@@ -150,7 +150,7 @@ struct ActivityCard: View {
                             if !activity.isDeleted, !isiOSAppOnMac {
                                 Image(systemName: "chevron.right")
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.tertiary)
+                                    .foregroundStyle(Color.tertiaryLabel)
                             }
                         }
                         .contentShape(.rect)
@@ -158,7 +158,7 @@ struct ActivityCard: View {
                         .background {
                             if store.selectedTodoRoute == .activity(activity.todoId) {
                                 RoundedRectangle(cornerRadius: 8)
-                                    .fill(Color.primaryContainer)
+                                    .fill(Color.tintFill)
                                     .padding(.horizontal, -8)
                                     .padding(.vertical, -2)
                             }
@@ -188,7 +188,7 @@ struct QuarterPickerSheet: View {
                 HStack {
                     Text(String(localized: "profile_year", bundle: PresentationResources.bundle))
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.secondaryLabel)
                     Spacer()
                     Picker(
                         "",
@@ -245,9 +245,9 @@ struct QuarterPickerSheet: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.accent : Color.surfaceSecondary)
+                    .fill(isSelected ? Color.accent : Color.tertiaryBackground)
             )
-            .foregroundStyle(isSelected ? .white : isEnabled ? .primary : .secondary)
+            .foregroundStyle(isSelected ? Color.white : isEnabled ? .label : .secondaryLabel)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

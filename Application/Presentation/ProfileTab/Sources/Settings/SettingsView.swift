@@ -59,7 +59,7 @@ struct SettingsView: View {
         // Mac 제목 줄 구분선과 첫 항목 사이 여백
         .contentMargins(.top, showsPaneTitleBar ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .background(Color.appBackground)
+        .background(Color.background)
         .duoToolbarVisibility()
         .prominentAlert(store, state: \.alert, action: \.alert)
     }
@@ -86,8 +86,8 @@ struct SettingsView: View {
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 12)
-            .background(Color.appBackground)
-            .toolbarBackground(Color.appBackground)
+            .background(Color.background)
+            .toolbarBackground(Color.background)
         }
     }
 
@@ -110,14 +110,14 @@ struct SettingsView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
                 .contentShape(.rect(cornerRadius: 16))
-                .background(Color.surface, in: .rect(cornerRadius: 16))
+                .groupBackground(in: .rect(cornerRadius: 16))
             }
             .buttonStyle(.plain)
             .disabled(!store.isNetworkConnected || store.isLoading)
 
             Text("settings_delete_account_subtitle", bundle: PresentationResources.bundle)
                 .font(.footnote)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 24)

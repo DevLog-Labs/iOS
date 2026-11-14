@@ -38,7 +38,7 @@ struct GoalDetailRecordActionBar: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
+        .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 
     private var secondaryAddRecordButton: some View {
@@ -50,7 +50,7 @@ struct GoalDetailRecordActionBar: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: buttonLabelHeight)
         }
-        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .primaryContainer)
+        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .tintFill)
         .disabled(isDisabled)
     }
 

@@ -14,7 +14,7 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
     private let actions: Actions
 
     public init(
-        background: Color = .appBackground,
+        background: Color = .background,
         @ViewBuilder title: () -> Title,
         @ViewBuilder actions: () -> Actions
     ) {
@@ -43,7 +43,7 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
         .background(background, ignoresSafeAreaEdges: .top)
         .overlay(alignment: .bottom) {
             Rectangle()
-                .fill(Color.border)
+                .fill(Color.separator)
                 .frame(height: 1)
         }
     }

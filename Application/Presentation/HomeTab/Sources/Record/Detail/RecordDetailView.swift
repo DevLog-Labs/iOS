@@ -64,7 +64,7 @@ public struct RecordDetailView: View {
             .padding()
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .toolbarVisibility(.hidden, for: .navigationBar)
         .onAppear { store.send(.view(.fetch)) }
         .prominentAlert(store, state: \.alert, action: \.alert)
@@ -102,7 +102,7 @@ public struct RecordDetailView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     @ViewBuilder
@@ -148,11 +148,11 @@ public struct RecordDetailView: View {
                         .foregroundStyle(Color.accent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .background(Color.primaryContainer, in: .capsule)
+                        .background(Color.tintFill, in: .capsule)
 
                     Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
                         .font(.callout)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                 }
             }
         }
@@ -173,7 +173,7 @@ public struct RecordDetailView: View {
         .padding(.vertical, 16)
         .background {
             RoundedRectangle(cornerRadius: 24)
-                .fill(Color.surface)
+                .fill(Color.secondaryBackground)
         }
     }
 
@@ -194,7 +194,7 @@ public struct RecordDetailView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(24)
-        .background(Color.surface, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
     }
 
     private var actionSection: some View {
@@ -236,13 +236,13 @@ public struct RecordDetailView: View {
                 systemImage: "clock.arrow.circlepath"
             )
             .font(.headline)
-            .foregroundStyle(Color.onPrimaryContainer)
+            .foregroundStyle(Color.tintLabel)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
         }
         .adaptiveButtonStyle(
             shape: RoundedRectangle(cornerRadius: 16),
-            color: .primaryContainer
+            color: .tintFill
         )
     }
 

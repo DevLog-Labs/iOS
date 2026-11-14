@@ -32,7 +32,7 @@ struct RecordVersionDetailView: View {
                 restoreBar
             }
         }
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .toolbarVisibility(.hidden, for: .navigationBar)
         .prominentAlert(
             store,
@@ -58,7 +58,7 @@ struct RecordVersionDetailView: View {
         }
         .padding(.horizontal)
         .padding(.bottom, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleSection: some View {
@@ -68,7 +68,7 @@ struct RecordVersionDetailView: View {
 
             Text(version.title)
                 .font(.title3)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
                 .lineLimit(2)
 
             HStack(spacing: 8) {
@@ -76,7 +76,7 @@ struct RecordVersionDetailView: View {
                 kindBadge
                 Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
                     .font(.caption)
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
             }
         }
     }
@@ -94,7 +94,7 @@ struct RecordVersionDetailView: View {
             }
         }
         .padding(.vertical, 16)
-        .background(Color.surface, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
     }
 
     private var currentVersionCard: some View {
@@ -116,10 +116,10 @@ struct RecordVersionDetailView: View {
             .foregroundStyle(statusColor)
         }
         .font(.subheadline)
-        .foregroundStyle(Color.textSecondary)
+        .foregroundStyle(Color.secondaryLabel)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
-        .background(Color.surfaceSecondary, in: .rect(cornerRadius: 18))
+        .background(Color.tertiaryBackground, in: .rect(cornerRadius: 18))
     }
 
     private var statusSystemImage: String {
@@ -128,7 +128,7 @@ struct RecordVersionDetailView: View {
     }
 
     private var statusColor: Color {
-        if !store.allowsMutation { return .textSecondary }
+        if !store.allowsMutation { return .secondaryLabel }
         return store.record.draft == nil ? .accent : .warning
     }
 
@@ -146,7 +146,7 @@ struct RecordVersionDetailView: View {
         .disabled(store.isRestoring || store.record.draft != nil)
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
+        .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 
     @ViewBuilder
@@ -155,14 +155,14 @@ struct RecordVersionDetailView: View {
         case .initial:
             statusBadge(
                 RecordPresentation.text("development_record_version_initial"),
-                foreground: .textSecondary,
-                background: .surfaceSecondary
+                foreground: .secondaryLabel,
+                background: .tertiaryBackground
             )
         case .correction:
             statusBadge(
                 RecordPresentation.text("development_record_version_correction"),
                 foreground: .accent,
-                background: .primaryContainer
+                background: .tintFill
             )
         case .rollback:
             statusBadge(

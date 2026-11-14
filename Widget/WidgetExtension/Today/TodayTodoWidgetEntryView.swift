@@ -37,7 +37,7 @@ struct TodayTodoWidgetEntryView: View {
             Spacer()
             Text("widget_today_reinstall_message")
                 .font(.caption)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
                 .lineLimit(3)
             Spacer()
         }
@@ -104,7 +104,7 @@ struct TodayTodoWidgetEntryView: View {
             } else {
                 Text("widget_today_empty_small")
                     .font(.caption2)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
@@ -152,7 +152,7 @@ struct TodayTodoWidgetEntryView: View {
 
     private func placeholder(width: CGFloat, height: CGFloat) -> some View {
         RoundedRectangle(cornerRadius: 4)
-            .fill(Color.textSecondary.opacity(0.18))
+            .fill(Color.secondaryLabel.opacity(0.18))
             .frame(width: width, height: height)
     }
 }

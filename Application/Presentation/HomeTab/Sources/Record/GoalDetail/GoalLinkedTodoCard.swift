@@ -24,7 +24,7 @@ struct GoalLinkedTodoCard: View {
             content
         }
         .padding([.horizontal, .top])
-        .background(Color.surface, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
     }
 
     private var header: some View {
@@ -41,7 +41,7 @@ struct GoalLinkedTodoCard: View {
                 .foregroundStyle(Color.accent)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 9)
-                .background(Color.primaryContainer, in: .capsule)
+                .background(Color.tintFill, in: .capsule)
                 .disabled(isLoading)
             }
         }
@@ -83,7 +83,7 @@ struct GoalLinkedTodoCard: View {
                         onSelect(todo.id)
                     }
                     if todo.id != todos.last?.id {
-                        Divider()
+                        Divider().overlay(Color.secondarySeparator)
                     }
                 }
             }
@@ -100,16 +100,16 @@ private struct GoalLinkedTodoRow: View {
             HStack(spacing: 14) {
                 Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundStyle(todo.isCompleted ? Color.accent : Color.border)
+                    .foregroundStyle(todo.isCompleted ? Color.accent : Color.separator)
                 Text(todo.title)
                     .font(.body)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.label)
                     .multilineTextAlignment(.leading)
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 Image(systemName: "chevron.right")
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(Color.border)
+                    .foregroundStyle(Color.separator)
             }
             .padding(.vertical, 12)
             .contentShape(.rect)

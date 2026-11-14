@@ -155,10 +155,10 @@ private struct DropdownMenuPanel: View {
                 .scrollBounceBehavior(.basedOnSize)
                 .scrollIndicators(.hidden)
                 .frame(width: width, height: visibleHeight)
-                .background(Color.surface, in: .rect(cornerRadius: radius))
+                .background(Color.secondaryBackground, in: .rect(cornerRadius: radius))
                 .overlay {
                     RoundedRectangle(cornerRadius: radius)
-                        .strokeBorder(Color.border, lineWidth: 1)
+                        .strokeBorder(Color.separator, lineWidth: 1)
                 }
                 .clipShape(.rect(cornerRadius: radius))
                 .shadow(color: Color.black.opacity(0.4), radius: 16, y: 12)
@@ -173,7 +173,7 @@ private struct DropdownMenuPanel: View {
                 DropdownMenuRow(
                     title: submenu.title,
                     systemImage: "chevron.left",
-                    imageColor: Color.textSecondary
+                    imageColor: Color.secondaryLabel
                 ) {
                     self.submenu = nil
                 }
@@ -227,7 +227,7 @@ private struct DropdownMenuSectionTitle: View {
     var body: some View {
         Text(title)
             .font(.system(size: isiOSAppOnMac ? 11.5 : 13, weight: .semibold))
-            .foregroundStyle(Color.textSecondary)
+            .foregroundStyle(Color.secondaryLabel)
             .lineLimit(1)
             .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 24 : 30, alignment: .leading)
             .padding(.horizontal, isiOSAppOnMac ? 10 : 14)
@@ -237,7 +237,7 @@ private struct DropdownMenuSectionTitle: View {
 private struct DropdownMenuDivider: View {
     var body: some View {
         Rectangle()
-            .fill(Color.border)
+            .fill(Color.separator)
             .frame(height: 1)
             .padding(.vertical, 4)
             .padding(.horizontal, -4)
@@ -293,7 +293,7 @@ private struct DropdownMenuRow: View {
                 if let systemImage {
                     Image(systemName: systemImage)
                         .font(.system(size: iconSize * 0.8))
-                        .foregroundStyle(isDestructive ? Color.danger : imageColor ?? .textSecondary)
+                        .foregroundStyle(isDestructive ? Color.danger : imageColor ?? .secondaryLabel)
                         .frame(width: iconSize, height: iconSize)
                 }
 
@@ -309,7 +309,7 @@ private struct DropdownMenuRow: View {
                 } else if hasSubmenu {
                     Image(systemName: "chevron.right")
                         .font(.system(size: iconSize * 0.7, weight: .semibold))
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                 }
             }
             .font(.system(size: isiOSAppOnMac ? 13 : 15))
@@ -337,7 +337,7 @@ private struct DropdownMenuRowStyle: ButtonStyle {
         var body: some View {
             configuration.label
                 .background(
-                    configuration.isPressed || isHovered ? Color.controlBackground : .clear,
+                    configuration.isPressed || isHovered ? Color.fill : .clear,
                     in: .rect(cornerRadius: radius)
                 )
                 .onHover { isHovered = $0 }

@@ -26,7 +26,7 @@ public struct NavigationBackButton: View {
                     .font(.title3.weight(.semibold))
                     .frame(width: 28, height: 28)
             }
-            .adaptiveButtonStyle(shape: .circle, color: .surface, glassEffect: .enabled)
+            .adaptiveButtonStyle(shape: .circle, color: .secondaryBackground, glassEffect: .enabled)
         }
     }
 }

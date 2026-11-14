@@ -43,17 +43,17 @@ public struct TodoDetailPane: View {
             VStack(spacing: 12) {
                 Image(systemName: "doc.text")
                     .font(.largeTitle)
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
                 placeholder
                     .font(.callout)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             // 목록 칸 제목 줄과 구분선 높이 맞춤
             .safeAreaInset(edge: .top, spacing: 0) {
                 PaneTitleBar(Text(verbatim: ""))
             }
-            .background(Color.appBackground)
+            .background(Color.background)
         }
     }
 }

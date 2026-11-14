@@ -25,26 +25,26 @@ struct TimelineRow: View {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(item.title)
                             .font(.body.weight(.semibold))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.label)
                             .lineLimit(2)
                         status
                         if item.hasDraft {
                             RelativeTimeText(
                                 date: item.date,
                                 bodyFont: .caption,
-                                bodyColor: .textTertiary
+                                bodyColor: .tertiaryLabel
                             )
                         } else {
                             Text(item.date, format: .dateTime.month().day())
                                 .font(.caption)
-                                .foregroundStyle(Color.textTertiary)
+                                .foregroundStyle(Color.tertiaryLabel)
                         }
                     }
                 }
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right")
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(Color.border)
+                    .foregroundStyle(Color.separator)
             }
             .contentShape(.rect)
             .frame(minHeight: RecordTimelineLayout.rowHeight, alignment: .top)
@@ -69,7 +69,7 @@ struct TimelineRow: View {
             .padding(.horizontal, 9)
             .padding(.vertical, 4)
             .background(
-                item.hasDraft ? Color.warning.opacity(0.12) : Color.primaryContainer,
+                item.hasDraft ? Color.warning.opacity(0.12) : Color.tintFill,
                 in: .rect(cornerRadius: 8)
             )
     }
@@ -115,18 +115,18 @@ struct GoalStatusBadge: View {
         case .completed:
             .white
         case .archived:
-            .textSecondary
+            .secondaryLabel
         }
     }
 
     private var background: Color {
         switch status {
         case .inProgress:
-            .primaryContainer
+            .tintFill
         case .completed:
             .accent
         case .archived:
-            .surfaceSecondary
+            .tertiaryBackground
         }
     }
 }

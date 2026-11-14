@@ -189,10 +189,10 @@ private struct ToastOverlayView<Label: View>: View {
             Group {
                 if #available(iOS 26.0, *) {
                     toastButton
-                        .glassEffect(.regular.tint(Color.surface.opacity(0.65)), in: .capsule)
+                        .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0.65)), in: .capsule)
                 } else {
                     toastButton
-                        .background(Color.surface.opacity(0.45), in: .capsule)
+                        .background(Color.secondaryBackground.opacity(0.45), in: .capsule)
                         .background(.regularMaterial, in: .capsule)
                 }
             }

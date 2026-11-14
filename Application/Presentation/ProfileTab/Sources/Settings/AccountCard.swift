@@ -20,7 +20,7 @@ struct AccountCard: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("settings_account_section", bundle: PresentationResources.bundle)
                 .font(.title3.bold())
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.label)
 
             VStack(spacing: 0) {
                 Button(action: onAccount) {
@@ -31,13 +31,13 @@ struct AccountCard: View {
                             .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
 
                         Text(String(localized: "settings_account", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.label)
 
                         Spacer(minLength: 8)
 
                         Image(systemName: "chevron.right")
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -47,7 +47,7 @@ struct AccountCard: View {
                 .buttonStyle(.plain)
                 .disabled(!isNetworkConnected)
 
-                Divider()
+                Divider().overlay(Color.separator)
                     .padding(.leading, 64)
                     .padding(.trailing, 16)
 
@@ -69,7 +69,7 @@ struct AccountCard: View {
 
                         Image(systemName: "chevron.right")
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -79,7 +79,7 @@ struct AccountCard: View {
                 .buttonStyle(.plain)
                 .disabled(!isNetworkConnected || isLoading)
             }
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: 16))
         }
     }
 }

@@ -282,7 +282,7 @@ private struct SideBar: View {
             VStack(spacing: 0) {
                 if let history {
                     // 칸 제목 줄과 같은 높이의 ← → 줄
-                    PaneTitleBar(background: .surface) {
+                    PaneTitleBar(background: .secondaryBackground) {
                         EmptyView()
                     } actions: {
                         SideBarHistoryButton(
@@ -315,7 +315,7 @@ private struct SideBar: View {
             .padding(.top, geometry.windowControlsInset)
         }
         .background {
-            Color.surface
+            Color.secondaryBackground
                 .ignoresSafeArea(.container, edges: .vertical)
         }
     }
@@ -329,7 +329,7 @@ private struct SideBarHistoryButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .foregroundStyle(isEnabled ? Color.primary : .textTertiary)
+                .foregroundStyle(isEnabled ? Color.label : .tertiaryLabel)
         }
         .topBarButtonStyle()
         .disabled(!isEnabled)
@@ -362,13 +362,13 @@ private struct SideBarButton: View {
                         .background(Color.accent, in: .capsule)
                 }
             }
-            .foregroundStyle(isSelected ? Color.onPrimaryContainer : .primary)
+            .foregroundStyle(isSelected ? Color.tintLabel : .label)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.primaryContainer : .clear)
+                    .fill(isSelected ? Color.tintFill : .clear)
             }
             .contentShape(.rect)
         }

@@ -13,7 +13,7 @@ struct PreviewView: View {
 
     var body: some View {
         ZStack {
-            Color.appBackground.ignoresSafeArea()
+            Color.background.ignoresSafeArea()
             if let todo = store.todo {
                 TodoDetailContentView(
                     title: todo.title,

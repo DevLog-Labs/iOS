@@ -40,7 +40,7 @@ struct LoginView: View {
                     .multilineTextAlignment(.center)
                 Text(String(localized: "login_intro_description", bundle: PresentationResources.bundle))
                     .padding(.horizontal)
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
             }
             Spacer()
@@ -67,7 +67,7 @@ struct LoginView: View {
             .padding(.bottom, 30)
             Text(String(localized: "login_terms_notice", bundle: PresentationResources.bundle))
                 .font(.caption2)
-                .foregroundStyle(Color.gray)
+                .foregroundStyle(Color.secondaryLabel)
                 .multilineTextAlignment(.center)
                 .padding(.vertical)
         }
