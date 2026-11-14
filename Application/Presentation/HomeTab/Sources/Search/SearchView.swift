@@ -110,7 +110,7 @@ struct SearchView: View {
         .background {
             Rectangle()
                 .fill(Color.background)
-            RoundedRectangle(cornerRadius: 12)
+            RoundedRectangle(cornerRadius: CornerRadius.group)
                 .fill(Color.tintFill)
         }
     }
@@ -173,7 +173,7 @@ private struct SearchField: View {
         .font(.title3)
         .padding()
         .background {
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(Color.secondaryBackground)
         }
         .onAppear {
@@ -250,7 +250,7 @@ private struct SearchResults: View {
                         }
                     }
                     .background {
-                        RoundedRectangle(cornerRadius: 16)
+                        Rectangle()
                             .fill(Color.secondaryBackground)
                     }
                     if store.shouldShowMoreTodos {
@@ -282,7 +282,7 @@ private struct SearchResultRow: View {
         let category = TodoCategoryItem(from: item.category)
 
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 14)
+            RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(category.color.opacity(0.2))
                 .frame(width: iconSize, height: iconSize)
                 .overlay {
@@ -370,7 +370,7 @@ private struct RecentSearchQuries: View {
                 }
             }
             .background {
-                RoundedRectangle(cornerRadius: 16)
+                Rectangle()
                     .fill(Color.secondaryBackground)
             }
         }

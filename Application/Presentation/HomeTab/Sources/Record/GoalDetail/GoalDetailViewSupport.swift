@@ -70,7 +70,7 @@ struct TimelineRow: View {
             .padding(.vertical, 4)
             .background(
                 item.hasDraft ? Color.warning.opacity(0.12) : Color.tintFill,
-                in: .rect(cornerRadius: 8)
+                in: .rect(cornerRadius: CornerRadius.badge)
             )
     }
 
@@ -94,7 +94,7 @@ struct GoalStatusBadge: View {
         .foregroundStyle(foreground)
         .padding(.horizontal, 11)
         .padding(.vertical, 6)
-        .background(background, in: .capsule)
+        .background(background, in: .rect(cornerRadius: CornerRadius.badge))
     }
 
     private var systemImage: String {

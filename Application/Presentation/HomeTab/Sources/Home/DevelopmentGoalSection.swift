@@ -148,7 +148,7 @@ private struct DevelopmentGoalCard: View {
             }
         }
         .padding(18)
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect)
         .contentShape(.rect)
     }
 }
@@ -216,6 +216,6 @@ private struct DevelopmentGoalStatusBadge: View {
         .foregroundStyle(Color.accent)
         .padding(.horizontal, 10)
         .padding(.vertical, 5)
-        .background(Color.accent.opacity(0.1), in: .capsule)
+        .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.badge))
     }
 }

@@ -115,7 +115,7 @@ private struct GoalCreateTitleField: View {
             .focused(focusedField, equals: .title)
             .font(.body)
             .padding()
-            .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+            .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
         .disabled(store.isSaving)
     }
@@ -160,7 +160,7 @@ private struct GoalCreateDescriptionEditor: View {
                                 )
                                 .focused(focusedField, equals: .content)
                                 .padding(12)
-                                .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                                .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                         }
                         .contentShape(.rect)
                         .onTapGesture { focusedField.wrappedValue = .content }
@@ -177,7 +177,7 @@ private struct GoalCreateDescriptionEditor: View {
                                 .multilineTextAlignment(.center)
                                 .padding(12)
                                 .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
-                                .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                                .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                             } else {
                                 MarkdownContentView(
                                     content: store.markdownContent,
@@ -187,7 +187,7 @@ private struct GoalCreateDescriptionEditor: View {
                                     .padding(.horizontal, -16)
                                     .padding(12)
                                     .frame(minHeight: 120, alignment: .topLeading)
-                                    .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                                    .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                             }
                         }
                     }
@@ -221,7 +221,7 @@ private struct GoalCreateModePicker: View {
             }
         }
         .padding(2)
-        .background(Color.separator, in: .rect(cornerRadius: 16))
+        .background(Color.separator, in: .rect(cornerRadius: CornerRadius.control))
     }
 }
 
@@ -238,7 +238,7 @@ private struct GoalCreateModeButton: View {
                 .frame(maxWidth: .infinity, minHeight: 36)
                 .background {
                     if isSelected {
-                        RoundedRectangle(cornerRadius: 14)
+                        RoundedRectangle(cornerRadius: CornerRadius.segment)
                             .fill(Color.secondaryBackground)
                             .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }
@@ -260,7 +260,7 @@ private struct GoalCreateStatusField: View {
                 Spacer()
             }
             .padding(20)
-            .groupBackground(in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 }
@@ -291,12 +291,12 @@ private struct GoalCreateTodoField: View {
                         .foregroundStyle(Color.accent)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 9)
-                        .background(Color.tintFill, in: .capsule)
+                        .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.control))
                 }
                 .buttonStyle(.plain)
             }
             .padding(20)
-            .groupBackground(in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
         .disabled(store.isSaving)
     }
@@ -333,7 +333,7 @@ private struct GoalCreateSaveBar: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
             }
-            .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
+            .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!isSaveEnabled)
 
         }

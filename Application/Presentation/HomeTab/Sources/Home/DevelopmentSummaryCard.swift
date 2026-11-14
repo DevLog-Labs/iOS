@@ -29,13 +29,13 @@ struct DevelopmentSummaryCard: View {
                     .font(.title2.weight(.semibold))
                     .foregroundStyle(Color.accent)
                     .frame(width: 64, height: 64)
-                    .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: 20))
+                    .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.control))
             }
 
             summaryContent
         }
         .padding(20)
-        .groupBackground(in: .rect(cornerRadius: 28))
+        .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
 
     @ViewBuilder

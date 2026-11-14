@@ -60,7 +60,7 @@ struct CategoryManageView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
                 }
-                .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
+                .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
                 .padding(.horizontal)
                 .padding(.vertical, 12)
                 .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
@@ -194,7 +194,7 @@ private struct CategoryManageSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 10)
             }
-            .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
+            .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!store.canSubmitUserCategory)
             .padding(.horizontal)
             .padding(.vertical, 12)
@@ -248,7 +248,7 @@ private struct CategoryManageSheet: View {
                     .monospacedDigit()
             }
             .padding()
-            .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+            .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
             .tint(Color.accent)
 
             Text(store.nameMessage)
@@ -323,7 +323,7 @@ private struct CategoryManageSheet: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity)
-            .groupBackground(in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 
@@ -347,7 +347,7 @@ private struct CategoryManageSheet: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .groupBackground(in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 }

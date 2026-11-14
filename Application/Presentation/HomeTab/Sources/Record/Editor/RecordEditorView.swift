@@ -107,7 +107,7 @@ public struct RecordEditorView: View {
                 .font(.body)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding()
-                .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
     }
 
@@ -120,7 +120,7 @@ public struct RecordEditorView: View {
             .font(.body)
             .focused($focusedField, equals: .title)
             .padding()
-            .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+            .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
         .disabled(store.isLoading)
     }
@@ -155,7 +155,7 @@ public struct RecordEditorView: View {
                         )
                         .focused($focusedField, equals: .content)
                         .padding(12)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
                 .frame(minHeight: 340, alignment: .topLeading)
                 .contentShape(.rect)
@@ -173,7 +173,7 @@ public struct RecordEditorView: View {
                         .multilineTextAlignment(.center)
                         .padding(12)
                         .frame(maxWidth: .infinity, minHeight: 340, alignment: .center)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                     } else {
                         MarkdownContentView(
                             content: store.markdownContent,
@@ -183,7 +183,7 @@ public struct RecordEditorView: View {
                         .padding(.horizontal, -16)
                         .padding(12)
                         .frame(minHeight: 340, alignment: .topLeading)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                     }
                 }
                 .frame(minHeight: 340, alignment: .topLeading)
@@ -215,7 +215,7 @@ public struct RecordEditorView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
             }
-            .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
+            .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!store.canConfirmVersion)
 
             Text(String.localizedStringWithFormat(
@@ -266,7 +266,7 @@ private struct ModePicker: View {
             )
         }
         .padding(2)
-        .background(Color.separator, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.separator, in: RoundedRectangle(cornerRadius: CornerRadius.control))
     }
 
     private func modeButton(
@@ -292,7 +292,7 @@ private struct ModePicker: View {
                 .frame(maxWidth: .infinity, minHeight: 36)
                 .background {
                     if isSelected {
-                        RoundedRectangle(cornerRadius: 14)
+                        RoundedRectangle(cornerRadius: CornerRadius.segment)
                             .fill(Color.secondaryBackground)
                             .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }

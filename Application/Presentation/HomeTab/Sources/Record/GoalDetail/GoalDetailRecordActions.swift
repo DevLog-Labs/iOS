@@ -50,7 +50,7 @@ struct GoalDetailRecordActionBar: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: buttonLabelHeight)
         }
-        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .tintFill)
+        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .tintFill)
         .disabled(isDisabled)
     }
 
@@ -73,7 +73,7 @@ struct GoalDetailRecordActionBar: View {
                 .frame(maxWidth: .infinity)
                 .frame(height: buttonLabelHeight)
         }
-        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
+        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
         .disabled(isDisabled)
     }
 }

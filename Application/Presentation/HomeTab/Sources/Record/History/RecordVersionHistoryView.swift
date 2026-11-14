@@ -79,7 +79,7 @@ struct RecordVersionHistoryView: View {
                     .font(.title2)
                     .foregroundStyle(Color.accent)
                     .frame(width: 56, height: 56)
-                    .background(Color.accent.opacity(0.12), in: .rect(cornerRadius: 16))
+                    .background(Color.accent.opacity(0.12), in: .rect(cornerRadius: CornerRadius.control))
 
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 8) {
@@ -97,7 +97,7 @@ struct RecordVersionHistoryView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
-            .background(Color.tintFill, in: .rect(cornerRadius: 24))
+            .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 
@@ -121,7 +121,7 @@ struct RecordVersionHistoryView: View {
             }
         }
         .padding(24)
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 28))
+        .background(Color.secondaryBackground, in: .rect)
     }
 
     private var footer: some View {
@@ -245,7 +245,7 @@ private struct VersionHistoryRow: View {
             .foregroundStyle(foreground)
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
-            .background(background, in: .rect(cornerRadius: 8))
+            .background(background, in: .rect(cornerRadius: CornerRadius.badge))
     }
 }
 
@@ -261,7 +261,7 @@ struct RecordVersionBadge: View {
             .padding(.vertical, 5)
             .background(
                 isCurrent ? Color.accent : Color.tintFill,
-                in: .capsule
+                in: .rect(cornerRadius: CornerRadius.badge)
             )
     }
 }

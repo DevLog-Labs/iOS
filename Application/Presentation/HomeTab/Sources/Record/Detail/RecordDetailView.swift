@@ -139,7 +139,7 @@ public struct RecordDetailView: View {
                     .padding(.vertical, 7)
                     .background(
                         version == nil ? Color.warning.opacity(0.12) : Color.accent,
-                        in: .capsule
+                        in: .rect(cornerRadius: CornerRadius.badge)
                     )
 
                 if let version {
@@ -148,7 +148,7 @@ public struct RecordDetailView: View {
                         .foregroundStyle(Color.accent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 7)
-                        .background(Color.tintFill, in: .capsule)
+                        .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
 
                     Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
                         .font(.callout)
@@ -173,7 +173,7 @@ public struct RecordDetailView: View {
         }
         .padding(.vertical, 16)
         .background {
-            RoundedRectangle(cornerRadius: 24)
+            Rectangle()
                 .fill(Color.secondaryBackground)
         }
     }
@@ -195,7 +195,7 @@ public struct RecordDetailView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(24)
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect)
     }
 
     private var actionSection: some View {
@@ -225,7 +225,7 @@ public struct RecordDetailView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 10)
         }
-        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
+        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
     }
 
     private var historyButton: some View {
@@ -242,7 +242,7 @@ public struct RecordDetailView: View {
             .padding(.vertical, 10)
         }
         .adaptiveButtonStyle(
-            shape: RoundedRectangle(cornerRadius: 16),
+            shape: RoundedRectangle(cornerRadius: CornerRadius.control),
             color: .tintFill
         )
     }
