@@ -28,7 +28,7 @@ public struct PushNotificationListView: View {
     public var body: some View {
         NavigationStack {
             PushNotificationListContent(store: store)
-                .background(Color.appBackground)
+                .background(Color.background)
                 .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
                     let task = store.send(.view(.refresh))
                     await task.finish()
@@ -72,7 +72,7 @@ public struct PushNotificationListView: View {
         }
         .environment(\.windowControlsInset, 0)
         .environment(\.deviceType, .bar)
-        .background(Color.appBackground)
+        .background(Color.background)
         .presentationDragIndicator(.visible)
     }
 
@@ -102,10 +102,10 @@ private struct PushNotificationListContent: View {
                 if notifications.isEmpty {
                     Text(String(localized: "push_notifications_empty", bundle: PresentationResources.bundle))
                         .font(.callout)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 32)
-                        .background(Color.surface, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                 } else {
                     ForEach(sections.indices, id: \.self) { index in
                         let items = sections[index]
@@ -140,7 +140,7 @@ private struct PushNotificationListContent: View {
                                                         Text(item.title)
                                                             .font(.headline)
                                                             .foregroundStyle(
-                                                                item.isRead ? Color.textSecondary : .textPrimary
+                                                                item.isRead ? Color.secondaryLabel : .label
                                                             )
                                                             .lineLimit(2)
 
@@ -149,7 +149,7 @@ private struct PushNotificationListContent: View {
                                                         TimelineView(.periodic(from: .now, by: 1.0)) { context in
                                                             Text(timeAgoText(from: item.receivedAt, now: context.date))
                                                                 .font(.caption)
-                                                                .foregroundStyle(Color.textTertiary)
+                                                                .foregroundStyle(Color.tertiaryLabel)
                                                                 .lineLimit(1)
                                                         }
 
@@ -162,14 +162,14 @@ private struct PushNotificationListContent: View {
 
                                                     Text(item.body)
                                                         .font(.subheadline)
-                                                        .foregroundStyle(Color.textSecondary)
+                                                        .foregroundStyle(Color.secondaryLabel)
                                                         .multilineTextAlignment(.leading)
                                                         .lineLimit(3)
                                                 }
                                             }
                                             .padding(16)
                                             .frame(maxWidth: .infinity, alignment: .leading)
-                                            .background(Color.surface, in: .rect(cornerRadius: 16))
+                                            .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                                             .contentShape(.rect(cornerRadius: 16))
                                             .onTapGesture {
                                                 store.send(.view(.selectNotification(item.id)))
@@ -239,8 +239,8 @@ private struct PushNotificationListContent: View {
                 .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
                 .padding(.bottom, 8)
             }
-            .background(Color.appBackground)
-            .toolbarBackground(Color.appBackground)
+            .background(Color.background)
+            .toolbarBackground(Color.background)
         }
         .scrollDisabled(notifications.isEmpty || store.isLoading)
     }
@@ -306,9 +306,9 @@ private struct PushNotificationFilterBar: View {
                     }
                 }
                 .font(.callout)
-                .foregroundStyle(store.appliedFilterCount == 0 ? Color.onPrimaryContainer : .onControlBackground)
+                .foregroundStyle(store.appliedFilterCount == 0 ? Color.tintLabel : .fillLabel)
                 .adaptiveButtonStyle(
-                    color: store.appliedFilterCount == 0 ? .primaryContainer : .controlBackground
+                    color: store.appliedFilterCount == 0 ? .tintFill : .fill
                 )
             }
 
@@ -325,8 +325,8 @@ private struct PushNotificationFilterBar: View {
                     )
                 )
                 .font(.callout)
-                .foregroundStyle(condition ? Color.onPrimaryContainer : .onControlBackground)
-                .adaptiveButtonStyle(color: condition ? .primaryContainer : .controlBackground)
+                .foregroundStyle(condition ? Color.tintLabel : .fillLabel)
+                .adaptiveButtonStyle(color: condition ? .tintFill : .fill)
             }
 
             DropdownMenu(sections: [
@@ -345,8 +345,8 @@ private struct PushNotificationFilterBar: View {
                     Image(systemName: "chevron.down")
                 }
                 .font(.callout)
-                .foregroundStyle(condition ? Color.onControlBackground : .onPrimaryContainer)
-                .adaptiveButtonStyle(color: condition ? .controlBackground : .primaryContainer)
+                .foregroundStyle(condition ? Color.fillLabel : .tintLabel)
+                .adaptiveButtonStyle(color: condition ? .fill : .tintFill)
             }
 
             Button {
@@ -357,8 +357,8 @@ private struct PushNotificationFilterBar: View {
                 let condition = store.query.unreadOnly
                 Text(String(localized: "push_unread", bundle: PresentationResources.bundle))
                     .font(.callout)
-                    .foregroundStyle(condition ? Color.onPrimaryContainer : .onControlBackground)
-                    .adaptiveButtonStyle(color: condition ? .primaryContainer : .controlBackground)
+                    .foregroundStyle(condition ? Color.tintLabel : .fillLabel)
+                    .adaptiveButtonStyle(color: condition ? .tintFill : .fill)
             }
         }
     }

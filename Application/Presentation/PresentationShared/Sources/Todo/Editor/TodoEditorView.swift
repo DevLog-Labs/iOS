@@ -38,7 +38,7 @@ public struct TodoEditorView: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                Color.appBackground.ignoresSafeArea()
+                Color.background.ignoresSafeArea()
                 VStack(spacing: 8) {
                     ToolBar(
                         store: store,
@@ -194,10 +194,10 @@ struct EditorToolbarActions: View {
                 } label: {
                     Image(systemName: "info.circle")
                         .frame(width: iconSize, height: iconSize)
-                        .foregroundStyle(Color.textPrimary)
+                        .foregroundStyle(Color.label)
                 }
                 .font(.title)
-                .adaptiveButtonStyle(shape: .circle, color: Color.surface, glassEffect: .enabled)
+                .adaptiveButtonStyle(shape: .circle, color: Color.secondaryBackground, glassEffect: .enabled)
             }
             if store.isLoading {
                 if #available(iOS 26.0, *) {
@@ -206,7 +206,7 @@ struct EditorToolbarActions: View {
                 } else {
                     ProgressView()
                         .frame(width: iconSize, height: iconSize)
-                        .adaptiveButtonStyle(shape: .circle, color: Color.surface, glassEffect: .enabled)
+                        .adaptiveButtonStyle(shape: .circle, color: Color.secondaryBackground, glassEffect: .enabled)
                 }
             } else {
                 if #available(iOS 26.0, *) {
@@ -284,12 +284,12 @@ private struct TitleField: View {
                     bundle: PresentationResources.bundle
                 )
             )
-            .foregroundStyle(Color.textSecondary),
+            .foregroundStyle(Color.secondaryLabel),
         )
         .font(.body)
         .focused($field, equals: .title)
         .padding()
-        .background(Color.surface, in: .rect(cornerRadius: 16))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
     }
 }
 
@@ -309,7 +309,7 @@ private struct ModePicker: View {
             )
         }
         .padding(2)
-        .background(Color.border, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.separator, in: RoundedRectangle(cornerRadius: 16))
     }
 
     @ViewBuilder
@@ -329,13 +329,13 @@ private struct ModePicker: View {
         } label: {
             Text(title)
                 .font(.body)
-                .foregroundStyle(isSelected ? Color.accent : Color.textSecondary)
+                .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
                 .frame(maxWidth: .infinity, minHeight: 36)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.surface)
-                            .shadow(color: Color.textSecondary.opacity(0.08), radius: 2, y: 2)
+                            .fill(Color.secondaryBackground)
+                            .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }
                 }
                 .contentShape(.rect)
@@ -384,7 +384,7 @@ private struct ContentView: View {
                         // SwiftUI 포커싱 시스템에 등록하기 위해 사용
                         .focused($field, equals: .content)
                         .padding(12)
-                        .background(Color.surface, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                 }
             } else {
                 if store.content.isEmpty {
@@ -400,7 +400,7 @@ private struct ContentView: View {
                     .padding(.horizontal, -16)
                     .padding(12)
                     .frame(minHeight: minimumHeight, alignment: .topLeading)
-                    .background(Color.surface, in: .rect(cornerRadius: 16))
+                    .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                 }
             }
         }
@@ -411,7 +411,7 @@ private struct ContentView: View {
     private var markdownHint: some View {
         Text(String(localized: "todo_editor_markdown_hint", bundle: PresentationResources.bundle))
             .font(.caption)
-            .foregroundStyle(Color.textTertiary)
+            .foregroundStyle(Color.tertiaryLabel)
     }
 
     private var previewPlaceholder: some View {
@@ -420,12 +420,12 @@ private struct ContentView: View {
                 .font(.headline)
             Text(String(localized: "todo_editor_markdown_preview_message", bundle: PresentationResources.bundle))
                 .font(.subheadline)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
         }
         .multilineTextAlignment(.center)
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .center)
-        .background(Color.surface, in: .rect(cornerRadius: 16))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
     }
 }
 

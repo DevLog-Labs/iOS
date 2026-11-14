@@ -37,7 +37,7 @@ struct PushNotificationSettingsView: View {
             .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .background(Color.appBackground)
+        .background(Color.background)
         .duoToolbarVisibility()
         .onAppear { store.send(.fetchSettings) }
         .prominentAlert(store, state: \.alert, action: \.alert)
@@ -74,8 +74,8 @@ struct PushNotificationSettingsView: View {
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 12)
-            .background(Color.appBackground)
-            .toolbarBackground(Color.appBackground)
+            .background(Color.background)
+            .toolbarBackground(Color.background)
         }
     }
 }
@@ -106,11 +106,11 @@ private struct EnableCard: View {
                 }
             }
 
-            Divider().overlay(Color.border)
+            Divider().overlay(Color.separator)
 
             Text("push_settings_footer", bundle: PresentationResources.bundle)
                 .font(.footnote)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -129,7 +129,7 @@ private struct TimeCard: View {
             ForEach(Self.presetHours, id: \.self) { hour in
                 if let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) {
                     presetTimeButton(date, hour: hour)
-                    Divider().overlay(Color.border)
+                    Divider().overlay(Color.separator)
                 }
             }
             customTimeButton
@@ -150,7 +150,7 @@ private struct TimeCard: View {
         } label: {
             HStack {
                 Text(formattedTimeString(date))
-                    .foregroundStyle(Color.textPrimary)
+                    .foregroundStyle(Color.label)
                 Spacer()
                 if let loadingRow,
                    store.isLoading && store.activeLoadingRow == loadingRow {
@@ -172,7 +172,7 @@ private struct TimeCard: View {
         } label: {
             HStack(spacing: 8) {
                 Text("push_settings_custom", bundle: PresentationResources.bundle)
-                    .foregroundStyle(Color.textPrimary)
+                    .foregroundStyle(Color.label)
                 Spacer(minLength: 8)
                 if store.isLoading && store.activeLoadingRow == .customTime {
                     ProgressView()
@@ -180,10 +180,10 @@ private struct TimeCard: View {
                     selectionIndicator(isSelected: store.pushNotificationMinute != 0)
                 }
                 Text(formattedTimeString(store.viewPushNotificationTime))
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                 Image(systemName: "chevron.right")
                     .font(.footnote.weight(.semibold))
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -206,7 +206,7 @@ private struct TimeCard: View {
         } else {
             Image(systemName: "circle")
                 .font(.title2)
-                .foregroundStyle(Color.border)
+                .foregroundStyle(Color.separator)
         }
     }
 
@@ -221,7 +221,7 @@ private struct CustomTimeTipCard: View {
             Image(systemName: "info")
                 .font(.caption.weight(.semibold))
                 .frame(width: 28, height: 28)
-                .background(Color.surface, in: Circle())
+                .background(Color.secondaryBackground, in: Circle())
             Text("push_settings_custom_hint", bundle: PresentationResources.bundle)
                 .font(.footnote)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -230,7 +230,7 @@ private struct CustomTimeTipCard: View {
         .padding(16)
         .background(Color.accent.opacity(0.08), in: .rect(cornerRadius: 16))
         .padding(.bottom, 16)
-        .background(Color.appBackground)
+        .background(Color.background)
     }
 }
 

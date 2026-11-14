@@ -35,7 +35,7 @@ struct LoginButton: View {
                     ProgressView()
                 } else {
                     Text(text)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                 }
             }
             .font(.system(.body))
@@ -43,8 +43,8 @@ struct LoginButton: View {
             .frame(width: 300, height: height + 24)
             .background {
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.border, lineWidth: 1)
-                    .fill(Color.surface)
+                    .stroke(Color.separator, lineWidth: 1)
+                    .fill(Color.secondaryBackground)
             }
             .overlay(alignment: .leading) {
                 if let logo, !showsProgressView {

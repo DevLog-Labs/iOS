@@ -32,7 +32,7 @@ struct TodoSection: View {
                 if section.category == .today {
                     Text(String(localized: "today_pinned_first", bundle: PresentationResources.bundle))
                         .font(.callout)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                 }
             }
 
@@ -46,13 +46,13 @@ struct TodoSection: View {
                         onInspect: { onInspect(item) }
                     )
                     if index < section.items.count - 1 {
-                        Divider().overlay(Color.borderSubtle)
+                        Divider().overlay(Color.secondarySeparator)
                     }
                 }
             }
             .background {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.surface)
+                    .fill(Color.secondaryBackground)
             }
             // 선택한 행 배경이 카드 모서리를 넘지 않도록 자름
             .clipShape(.rect(cornerRadius: 16))
@@ -78,13 +78,13 @@ private struct TodoRow: View {
                     Text(item.title)
                         .font(.headline)
                         .strikethrough(item.isCompleted)
-                        .foregroundStyle(item.isCompleted ? Color.textSecondary : .textPrimary)
+                        .foregroundStyle(item.isCompleted ? Color.secondaryLabel : .label)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                     if !item.content.isEmpty {
                         Text(item.content)
                             .font(.subheadline)
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                             .lineLimit(1)
                             .multilineTextAlignment(.leading)
                     }
@@ -93,7 +93,7 @@ private struct TodoRow: View {
                 Spacer()
                 Image(systemName: "chevron.right")
                     .font(.callout.bold())
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
                     // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
                     .opacity(isNavigationEnabled && !isiOSAppOnMac ? 1 : 0)
             }
@@ -104,7 +104,7 @@ private struct TodoRow: View {
         .buttonStyle(.plain)
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(isSelected ? Color.primaryContainer : .clear)
+        .background(isSelected ? Color.tintFill : .clear)
     }
 
     @ViewBuilder
@@ -145,12 +145,12 @@ private struct TodoRow: View {
         if calendar.startOfDay(for: date) < calendar.startOfDay(for: Date()) {
             return .danger
         }
-        return .textSecondary
+        return .secondaryLabel
     }
 }
 
 private extension TodayFeature.SectionCategory {
     var accentColor: Color {
-        self == .overdue ? .danger : .textPrimary
+        self == .overdue ? .danger : .label
     }
 }

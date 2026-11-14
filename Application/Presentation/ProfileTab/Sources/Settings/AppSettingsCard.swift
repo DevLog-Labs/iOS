@@ -19,7 +19,7 @@ struct AppSettingsCard: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("settings_app_section", bundle: PresentationResources.bundle)
                 .font(.title3.bold())
-                .foregroundStyle(Color.textPrimary)
+                .foregroundStyle(Color.label)
 
             VStack(spacing: 0) {
                 Button(action: onTheme) {
@@ -29,17 +29,17 @@ struct AppSettingsCard: View {
                             .frame(width: iconSize, height: iconSize)
                             .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
                         Text(String(localized: "settings_theme", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.textPrimary)
+                            .foregroundStyle(Color.label)
 
                         Spacer(minLength: 8)
 
                         Text(themeName)
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                             .multilineTextAlignment(.trailing)
 
                         Image(systemName: "chevron.right")
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -47,7 +47,7 @@ struct AppSettingsCard: View {
                 }
                 .buttonStyle(.plain)
 
-                Divider().overlay(Color.border)
+                Divider().overlay(Color.separator)
                     .padding(.leading, 64)
                     .padding(.trailing, 16)
                 Button(action: onNotifications) {
@@ -57,13 +57,13 @@ struct AppSettingsCard: View {
                             .frame(width: iconSize, height: iconSize)
                             .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
                         Text(String(localized: "settings_notifications", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.textPrimary)
+                            .foregroundStyle(Color.label)
 
                         Spacer(minLength: 8)
 
                         Image(systemName: "chevron.right")
                             .font(.footnote.weight(.semibold))
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)

@@ -22,13 +22,13 @@ struct RecentActivityCard: View {
             if store.isRecentTodosLoading && store.recentTodos.isEmpty {
                 LoadingView()
                     .frame(maxWidth: .infinity, minHeight: 80)
-                    .background(Color.surface, in: RoundedRectangle(cornerRadius: 16))
+                    .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
             } else if store.recentTodos.isEmpty {
                 Text("profile_recent_empty", bundle: PresentationResources.bundle)
                     .font(.callout)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .frame(maxWidth: .infinity, minHeight: 80)
-                    .background(Color.surface, in: RoundedRectangle(cornerRadius: 16))
+                    .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
             } else {
                 VStack(spacing: 12) {
                     ForEach(store.recentTodos) { todo in
@@ -69,7 +69,7 @@ private struct RecentTodoCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .top, spacing: 8) {
                     Text(todo.title)
-                        .foregroundStyle(Color.textPrimary)
+                        .foregroundStyle(Color.label)
                         .font(.headline)
                         .lineLimit(2)
                     if todo.isPinned {
@@ -85,13 +85,13 @@ private struct RecentTodoCard: View {
                         .foregroundStyle(Color.accent)
                     Text(category.localizedName)
                         .font(.caption)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                         .lineLimit(1)
                     Spacer(minLength: 0)
                     RelativeTimeText(
                         date: todo.updatedAt,
                         bodyFont: .caption2,
-                        bodyColor: .textTertiary
+                        bodyColor: .tertiaryLabel
                     )
                     .fixedSize(horizontal: true, vertical: false)
                 }
@@ -106,12 +106,12 @@ private struct RecentTodoCard: View {
             if !isiOSAppOnMac {
                 Image(systemName: "chevron.right")
                     .font(.callout.bold())
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(isSelected ? Color.primaryContainer : .surface, in: RoundedRectangle(cornerRadius: 16))
+        .background(isSelected ? Color.tintFill : .secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
         .contentShape(.rect)
     }
 }

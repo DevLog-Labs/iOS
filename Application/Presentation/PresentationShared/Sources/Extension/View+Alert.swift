@@ -112,7 +112,7 @@ where State: ObservableState {
                 if let message = state.message {
                     Text(message)
                         .font(.body)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -136,7 +136,7 @@ where State: ObservableState {
                     .foregroundStyle(
                         state.usesDefaultAction(for: button)
                             ? Color.accent
-                            : Color.textSecondary
+                            : Color.secondaryLabel
                     )
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
@@ -145,7 +145,7 @@ where State: ObservableState {
             .frame(height: 56)
         }
         .frame(maxWidth: 420)
-        .background(Color.surface, in: .rect(cornerRadius: 28))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 28))
         .clipShape(.rect(cornerRadius: 28))
         .shadow(color: Color.black.opacity(0.18), radius: 24, y: 12)
     }

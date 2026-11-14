@@ -25,7 +25,7 @@ struct ThemeView: View {
                         themeButton(option)
 
                         if option != Self.themes.last {
-                            Divider().overlay(Color.border)
+                            Divider().overlay(Color.separator)
                                 .padding(.leading, 68)
                                 .padding(.trailing, 16)
                         }
@@ -41,7 +41,7 @@ struct ThemeView: View {
         // Mac 제목 줄 구분선과 첫 항목 사이 여백
         .contentMargins(.top, showsPaneTitleBar ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .background(Color.appBackground)
+        .background(Color.background)
         .duoToolbarVisibility()
     }
 
@@ -69,8 +69,8 @@ struct ThemeView: View {
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 12)
-            .background(Color.appBackground)
-            .toolbarBackground(Color.appBackground)
+            .background(Color.background)
+            .toolbarBackground(Color.background)
         }
     }
 
@@ -82,13 +82,13 @@ struct ThemeView: View {
                 .iconStyle(color: option.iconColor, in: Circle())
 
             Text(option.localizedName(in: PresentationResources.bundle))
-                .foregroundStyle(Color.textPrimary)
+                .foregroundStyle(Color.label)
 
             Spacer(minLength: 8)
 
             Image(systemName: theme == option ? "checkmark.circle.fill" : "circle")
                 .font(.title2)
-                .foregroundStyle(theme == option ? Color.accent : Color.border)
+                .foregroundStyle(theme == option ? Color.accent : Color.separator)
 
         }
         .padding(16)
@@ -119,7 +119,7 @@ private extension SystemTheme {
         case .light:
             return .warning
         case .dark:
-            return .onControlBackground
+            return .fillLabel
         }
     }
 }

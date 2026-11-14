@@ -55,7 +55,7 @@ public struct GoalDetailView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .safeAreaInset(edge: .bottom, spacing: 0) { recordActionBar }
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .toolbarVisibility(.hidden, for: .navigationBar)
         .onAppear { store.send(.view(.fetch)) }
         .prominentAlert(store, state: \.alert, action: \.alert)
@@ -142,7 +142,7 @@ public struct GoalDetailView: View {
                         }
                         .adaptiveButtonStyle(
                             shape: .circle,
-                            color: .surface,
+                            color: .secondaryBackground,
                             glassEffect: .enabled
                         )
                 }
@@ -150,7 +150,7 @@ public struct GoalDetailView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleBar: some View {
@@ -162,7 +162,7 @@ public struct GoalDetailView: View {
                 ScrollView(.horizontal) {
                     Text(store.goalTitle)
                         .font(.headline)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                         .lineLimit(1)
                 }
                 .scrollIndicators(.hidden)
@@ -176,7 +176,7 @@ public struct GoalDetailView: View {
         }
         .padding(.bottom, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.appBackground)
+        .background(Color.background)
     }
 
     @ViewBuilder
@@ -224,7 +224,7 @@ public struct GoalDetailView: View {
         .padding([.horizontal, .top])   // TimelineView 자체의 하단 패딩과 겹치기 때문에 .bottom은 제외
         .background {
             RoundedRectangle(cornerRadius: 24)
-                .fill(Color.surface)
+                .fill(Color.secondaryBackground)
         }
     }
 

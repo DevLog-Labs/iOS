@@ -18,7 +18,7 @@ struct AppInformationCard: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("settings_information_section", bundle: PresentationResources.bundle)
                 .font(.title3.bold())
-                .foregroundStyle(Color.textPrimary)
+                .foregroundStyle(Color.label)
 
             VStack(spacing: 0) {
                 if let appVersion {
@@ -28,12 +28,12 @@ struct AppInformationCard: View {
                             .frame(width: iconSize, height: iconSize)
                             .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
                         Text(String(localized: "settings_version", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.textPrimary)
+                            .foregroundStyle(Color.label)
 
                         Spacer(minLength: 8)
 
                         Text(appVersion)
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                             .multilineTextAlignment(.trailing)
                     }
                     .padding(16)
@@ -42,7 +42,7 @@ struct AppInformationCard: View {
 
                 if let privacyPolicyURL {
                     if appVersion != nil {
-                        Divider().overlay(Color.border)
+                        Divider().overlay(Color.separator)
                             .padding(.leading, 64)
                             .padding(.trailing, 16)
                     }
@@ -58,13 +58,13 @@ struct AppInformationCard: View {
                                 localized: "settings_privacy_policy",
                                 bundle: PresentationResources.bundle
                             ))
-                            .foregroundStyle(Color.textPrimary)
+                            .foregroundStyle(Color.label)
 
                             Spacer(minLength: 8)
 
                             Image(systemName: "chevron.right")
                                 .font(.footnote.weight(.semibold))
-                                .foregroundStyle(Color.textSecondary)
+                                .foregroundStyle(Color.secondaryLabel)
                         }
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -75,7 +75,7 @@ struct AppInformationCard: View {
 
                 if let betaTestURL {
                     if appVersion != nil || privacyPolicyURL != nil {
-                        Divider().overlay(Color.border)
+                        Divider().overlay(Color.separator)
                             .padding(.leading, 64)
                             .padding(.trailing, 16)
                     }
@@ -89,20 +89,20 @@ struct AppInformationCard: View {
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "settings_join_beta", bundle: PresentationResources.bundle))
-                                    .foregroundStyle(Color.textPrimary)
+                                    .foregroundStyle(Color.label)
                                 Text(String(
                                     localized: "settings_join_beta_subtitle",
                                     bundle: PresentationResources.bundle
                                 ))
                                 .font(.footnote)
-                                .foregroundStyle(Color.textSecondary)
+                                .foregroundStyle(Color.secondaryLabel)
                             }
 
                             Spacer(minLength: 8)
 
                             Image(systemName: "chevron.right")
                                 .font(.footnote.weight(.semibold))
-                                .foregroundStyle(Color.textSecondary)
+                                .foregroundStyle(Color.secondaryLabel)
                         }
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)

@@ -34,7 +34,7 @@ struct RecordVersionHistoryView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .safeAreaInset(edge: .bottom, spacing: 0) { footer }
-        .background(Color.appBackground)
+        .background(Color.background)
         .toolbarVisibility(.hidden, for: .navigationBar)
         .navigationDestination(
             item: $store.scope(state: \.versionDetail, action: \.versionDetail),
@@ -54,7 +54,7 @@ struct RecordVersionHistoryView: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleSection: some View {
@@ -65,7 +65,7 @@ struct RecordVersionHistoryView: View {
             if let currentVersion {
                 Text(currentVersion.title)
                     .font(.title3)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .lineLimit(2)
             }
         }
@@ -91,13 +91,13 @@ struct RecordVersionHistoryView: View {
 
                     Text(RecordPresentation.text("development_record_current_version_message"))
                         .font(.subheadline)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(20)
-            .background(Color.primaryContainer, in: .rect(cornerRadius: 24))
+            .background(Color.tintFill, in: .rect(cornerRadius: 24))
         }
     }
 
@@ -121,7 +121,7 @@ struct RecordVersionHistoryView: View {
             }
         }
         .padding(24)
-        .background(Color.surface, in: .rect(cornerRadius: 28))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 28))
     }
 
     private var footer: some View {
@@ -134,11 +134,11 @@ struct RecordVersionHistoryView: View {
             systemImage: "lock"
         )
         .font(.caption)
-        .foregroundStyle(Color.textSecondary)
+        .foregroundStyle(Color.secondaryLabel)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .bottom)
+        .background(Color.background, ignoresSafeAreaEdges: .bottom)
     }
 }
 
@@ -169,11 +169,11 @@ private struct VersionHistoryRow: View {
 
                     Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
                         .font(.caption)
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
 
                     Text(version.title)
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.textPrimary)
+                        .foregroundStyle(Color.label)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                 }
@@ -183,7 +183,7 @@ private struct VersionHistoryRow: View {
 
             Image(systemName: "chevron.right")
                 .font(.callout.weight(.semibold))
-                .foregroundStyle(Color.border)
+                .foregroundStyle(Color.separator)
         }
         .contentShape(.rect)
         .frame(minHeight: RecordTimelineLayout.rowHeight, alignment: .top)
@@ -203,7 +203,7 @@ private struct VersionHistoryRow: View {
 
     private var timelineIndicator: some View {
         Circle()
-            .fill(isCurrent ? Color.accent : Color.textTertiary)
+            .fill(isCurrent ? Color.accent : Color.tertiaryLabel)
             .frame(
                 width: RecordTimelineLayout.markerSize,
                 height: RecordTimelineLayout.markerSize
@@ -217,14 +217,14 @@ private struct VersionHistoryRow: View {
         case .initial:
             statusBadge(
                 RecordPresentation.text("development_record_version_initial"),
-                foreground: .textSecondary,
-                background: .surfaceSecondary
+                foreground: .secondaryLabel,
+                background: .tertiaryBackground
             )
         case .correction:
             statusBadge(
                 RecordPresentation.text("development_record_version_correction"),
                 foreground: .accent,
-                background: .primaryContainer
+                background: .tintFill
             )
         case .rollback:
             statusBadge(
@@ -260,7 +260,7 @@ struct RecordVersionBadge: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 5)
             .background(
-                isCurrent ? Color.accent : Color.primaryContainer,
+                isCurrent ? Color.accent : Color.tintFill,
                 in: .capsule
             )
     }

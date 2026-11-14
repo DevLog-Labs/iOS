@@ -133,7 +133,7 @@ public final class CardCollectionView<
                     var listConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
                     listConfiguration.backgroundColor = .clear
                     listConfiguration.separatorConfiguration.color = UIColor(
-                        named: ProcessInfo.processInfo.isiOSAppOnMac ? "BorderMac" : "Border",
+                        named: ProcessInfo.processInfo.isiOSAppOnMac ? "SeparatorMac" : "Separator",
                         in: PresentationResources.bundle,
                         compatibleWith: nil
                     ) ?? .separator
@@ -193,9 +193,9 @@ public final class CardCollectionView<
         private func makeDataSource(
             for collectionView: CardCollectionView
         ) -> UICollectionViewDiffableDataSource<Int, Item.ID> {
-            let surface = UIColor(named: "Surface", in: PresentationResources.bundle, compatibleWith: nil)
+            let secondaryBackground = UIColor(named: "SecondaryBackground", in: PresentationResources.bundle, compatibleWith: nil)
                 ?? .secondarySystemGroupedBackground
-            let handle = UIColor(named: "TextTertiary", in: PresentationResources.bundle, compatibleWith: nil)
+            let handle = UIColor(named: "TertiaryLabel", in: PresentationResources.bundle, compatibleWith: nil)
                 ?? .tertiaryLabel
 
             let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item.ID> {
@@ -207,7 +207,7 @@ public final class CardCollectionView<
                 cell.configurationUpdateHandler = { cell, state in
                     var background = UIBackgroundConfiguration.clear()
                     if state.cellDragState != .none {
-                        background.backgroundColor = surface
+                        background.backgroundColor = secondaryBackground
                         background.cornerRadius = 12
                     }
                     cell.backgroundConfiguration = background
@@ -286,7 +286,7 @@ public final class CardCollectionView<
 private final class CardBackgroundView: UICollectionReusableView {
     override init(frame: CGRect) {
         super.init(frame: frame)
-        backgroundColor = UIColor(named: "Surface", in: PresentationResources.bundle, compatibleWith: nil)
+        backgroundColor = UIColor(named: "SecondaryBackground", in: PresentationResources.bundle, compatibleWith: nil)
             ?? .secondarySystemGroupedBackground
         layer.cornerRadius = 16
         layer.cornerCurve = .continuous

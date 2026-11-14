@@ -32,7 +32,7 @@ public struct TodoPropertiesView: View {
     public var body: some View {
         content
             .safeAreaInset(edge: .top, spacing: 0) { toolBar }
-            .background(Color.appBackground.ignoresSafeArea())
+            .background(Color.background.ignoresSafeArea())
             .presentationDragIndicator(.visible)
     }
 
@@ -68,7 +68,7 @@ public struct TodoPropertiesView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var content: some View {
@@ -93,18 +93,18 @@ public struct TodoPropertiesView: View {
                     }
                     .padding(.vertical, 12)
 
-                    Divider().overlay(Color.border)
+                    Divider().overlay(Color.separator)
 
                     Toggle(isOn: $store.isCompleted) {
                         HStack(spacing: 12) {
-                            optionIcon("circle", color: Color.textSecondary)
+                            optionIcon("circle", color: Color.secondaryLabel)
                             Text(String(localized: "todo_completed", bundle: PresentationResources.bundle))
                         }
                     }
                     .tint(Color.accent)
                     .padding(.vertical, 12)
 
-                    Divider().overlay(Color.border)
+                    Divider().overlay(Color.separator)
 
                     Toggle(isOn: $store.isPinned) {
                         HStack(spacing: 12) {
@@ -115,7 +115,7 @@ public struct TodoPropertiesView: View {
                     .tint(Color.accent)
                     .padding(.vertical, 12)
 
-                    Divider().overlay(Color.border)
+                    Divider().overlay(Color.separator)
 
                     dueDateControl
                         .padding(.vertical, 12)
@@ -140,7 +140,7 @@ public struct TodoPropertiesView: View {
                             .onSubmit { submitTag() }
                             .padding(.vertical, 8)
                             .padding(.horizontal, 12)
-                            .background(Color.controlBackground, in: .rect(cornerRadius: 12))
+                            .background(Color.fill, in: .rect(cornerRadius: 12))
                             .tint(Color.accent)
 
                             Button {
@@ -148,10 +148,10 @@ public struct TodoPropertiesView: View {
                             } label: {
                                 Image(systemName: "plus")
                                     .font(.title2.weight(.semibold))
-                                    .foregroundStyle(canSubmitTag ? Color.surface : Color.textSecondary)
+                                    .foregroundStyle(canSubmitTag ? Color.secondaryBackground : Color.secondaryLabel)
                                     .padding(12)
                                     .background(
-                                        canSubmitTag ? Color.accent : Color.controlBackground,
+                                        canSubmitTag ? Color.accent : Color.fill,
                                         in: Circle()
                                     )
                             }
@@ -161,7 +161,7 @@ public struct TodoPropertiesView: View {
 
                         if store.tags.isEmpty {
                             Text(String(localized: "todo_no_tags", bundle: PresentationResources.bundle))
-                                .foregroundStyle(Color.textSecondary)
+                                .foregroundStyle(Color.secondaryLabel)
                                 .padding(.vertical, 4)
                         } else {
                             TagList(
@@ -197,9 +197,9 @@ public struct TodoPropertiesView: View {
     private var dueDateControl: some View {
         DueDatePicker(selection: $store.selectedDueDate) {
             HStack(spacing: 12) {
-                optionIcon("calendar", color: Color.textSecondary)
+                optionIcon("calendar", color: Color.secondaryLabel)
                 Text(String(localized: "todo_due_date", bundle: PresentationResources.bundle))
-                    .foregroundStyle(Color.textPrimary)
+                    .foregroundStyle(Color.label)
                 Spacer()
                 if let dueDate = store.dueDate {
                     Tag(dueDateText(for: dueDate), isEditing: true) {
@@ -208,7 +208,7 @@ public struct TodoPropertiesView: View {
                     .padding(.vertical, -4)
                 } else {
                     Text(String(localized: "todo_none", bundle: PresentationResources.bundle))
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                 }
             }
         }

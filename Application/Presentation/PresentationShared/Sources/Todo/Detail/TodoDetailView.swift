@@ -36,7 +36,7 @@ public struct TodoDetailView: View {
 
     public var body: some View {
         ZStack {
-            Color.appBackground.ignoresSafeArea()
+            Color.background.ignoresSafeArea()
             if let todo = store.todo {
                 TodoDetailContentView(
                     title: todo.title,
@@ -111,7 +111,7 @@ public struct TodoDetailView: View {
                     HStack(spacing: 8) {
                         Text(todo.title)
                         Text(verbatim: "#\(todo.number)")
-                            .foregroundStyle(Color.textTertiary)
+                            .foregroundStyle(Color.tertiaryLabel)
                     }
                 }
             } actions: {
@@ -140,7 +140,7 @@ public struct TodoDetailView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 12)
             .padding(.top, windowControlsInset)
-            .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
     }
 
@@ -161,7 +161,7 @@ public struct TodoDetailView: View {
                     .font(.title3.weight(.semibold))
                     .frame(width: 28, height: 28)
             }
-            .adaptiveButtonStyle(shape: .circle, color: .surface, glassEffect: .enabled)
+            .adaptiveButtonStyle(shape: .circle, color: .secondaryBackground, glassEffect: .enabled)
         }
     }
 
@@ -224,7 +224,7 @@ public struct TodoDetailView: View {
             .environment(\.windowControlsInset, 0)
             .environment(\.deviceType, .bar)
             .environment(\.showsPaneTitleBar, false)
-            .background(Color.appBackground)
+            .background(Color.background)
             .presentationDragIndicator(.visible)
         }
     }
@@ -249,18 +249,18 @@ private struct InfoSheetView: View {
                             .lineLimit(1)
                     }
 
-                    Divider().overlay(Color.border)
+                    Divider().overlay(Color.separator)
 
                     optionRow(
                         systemImage: "circle",
-                        color: Color.textSecondary,
+                        color: Color.secondaryLabel,
                         title: String(localized: "todo_completed", bundle: PresentationResources.bundle)
                     ) {
                         Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(todo.isCompleted ? Color.accent : Color.textTertiary)
+                            .foregroundStyle(todo.isCompleted ? Color.accent : Color.tertiaryLabel)
                     }
 
-                    Divider().overlay(Color.border)
+                    Divider().overlay(Color.separator)
 
                     optionRow(
                         systemImage: "star.fill",
@@ -268,25 +268,25 @@ private struct InfoSheetView: View {
                         title: String(localized: "todo_pinned", bundle: PresentationResources.bundle)
                     ) {
                         Image(systemName: todo.isPinned ? "star.fill" : "star")
-                            .foregroundStyle(todo.isPinned ? Color.orange : Color.textTertiary)
+                            .foregroundStyle(todo.isPinned ? Color.orange : Color.tertiaryLabel)
                     }
 
-                    Divider().overlay(Color.border)
+                    Divider().overlay(Color.separator)
 
                     optionRow(
                         systemImage: "calendar",
-                        color: Color.textSecondary,
+                        color: Color.secondaryLabel,
                         title: String(localized: "todo_due_date", bundle: PresentationResources.bundle)
                     ) {
                         if let dueDate = todo.dueDate {
                             Tag(dueDateText(for: dueDate), isEditing: false)
                         } else {
                             Text(String(localized: "todo_none", bundle: PresentationResources.bundle))
-                                .foregroundStyle(Color.textSecondary)
+                                .foregroundStyle(Color.secondaryLabel)
                         }
                     }
                 }
-                .background(Color.surface)
+                .background(Color.secondaryBackground)
                 .clipShape(.rect(cornerRadius: 16))
 
                 VStack(alignment: .leading, spacing: 12) {
@@ -297,14 +297,14 @@ private struct InfoSheetView: View {
                     Group {
                         if todo.tags.isEmpty {
                             Text(String(localized: "todo_no_tags", bundle: PresentationResources.bundle))
-                                .foregroundStyle(Color.textSecondary)
+                                .foregroundStyle(Color.secondaryLabel)
                         } else {
                             TagList(todo.tags, verticalSpacing: 4, horizontalSpacing: 4)
                         }
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.surface)
+                    .background(Color.secondaryBackground)
                     .clipShape(.rect(cornerRadius: 16))
                 }
             }
@@ -312,7 +312,7 @@ private struct InfoSheetView: View {
             .padding(.bottom, 16)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .presentationDragIndicator(.visible)
     }
 
@@ -336,7 +336,7 @@ private struct InfoSheetView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private func optionRow<Trailing: View>(

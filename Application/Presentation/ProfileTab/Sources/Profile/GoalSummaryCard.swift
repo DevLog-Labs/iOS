@@ -58,7 +58,7 @@ struct GoalSummaryCard: View {
                 HStack(spacing: 12) {
                     Text("common_error_message", bundle: PresentationResources.bundle)
                         .font(.caption)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                     Spacer(minLength: 0)
                     Button(action: onRetry) {
                         Text("profile_goal_retry", bundle: PresentationResources.bundle)
@@ -92,7 +92,7 @@ struct GoalSummaryCard: View {
             statusTile(
                 title: DevelopmentGoal.Status.archived.title,
                 symbol: "archivebox",
-                color: .textSecondary,
+                color: .secondaryLabel,
                 count: counts.archived
             )
         }
@@ -106,7 +106,7 @@ struct GoalSummaryCard: View {
                 .iconStyle(color: color, in: Circle())
             Text(title)
                 .font(.caption)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
             Text(verbatim: String(count))
                 .font(.title3.bold())
                 .foregroundStyle(color)

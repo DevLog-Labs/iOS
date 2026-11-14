@@ -59,7 +59,7 @@ struct GoalTodoSelectionSection: View {
                     }
                 }
             }
-            .background(Color.surface)
+            .background(Color.secondaryBackground)
             .compositingGroup()
             .clipShape(.rect(cornerRadius: 20))
         }
@@ -76,11 +76,11 @@ struct GoalTodoSelectionRow: View {
             HStack(spacing: 14) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.title2)
-                    .foregroundStyle(isSelected ? Color.accent : Color.border)
+                    .foregroundStyle(isSelected ? Color.accent : Color.separator)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(todo.title)
                         .font(.body.weight(isSelected ? .semibold : .regular))
-                        .foregroundStyle(Color.textPrimary)
+                        .foregroundStyle(Color.label)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                     HStack(spacing: 8) {
@@ -88,7 +88,7 @@ struct GoalTodoSelectionRow: View {
                         Text(todo.dueDate ?? todo.updatedAt, format: .dateTime.month().day())
                     }
                     .font(.caption)
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if todo.isPinned {
@@ -98,7 +98,7 @@ struct GoalTodoSelectionRow: View {
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(isSelected ? Color.primaryContainer : .clear)
+            .background(isSelected ? Color.tintFill : .clear)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)

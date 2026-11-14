@@ -9,27 +9,27 @@ import SwiftUI
 
 public extension Color {
     static let accent = Color("AccentColor", bundle: PresentationResources.bundle)
-    static let appBackground = Color("AppBackground", bundle: PresentationResources.bundle)
-    static let border = Color(
-        ProcessInfo.processInfo.isiOSAppOnMac ? "BorderMac" : "Border",
-        bundle: PresentationResources.bundle
-    )
-    static let borderSubtle = Color("BorderSubtle", bundle: PresentationResources.bundle)
-    static let controlBackground = Color("ControlBackground", bundle: PresentationResources.bundle)
-    static let onControlBackground = Color("OnControlBackground", bundle: PresentationResources.bundle)
+    static let background = Color("Background", bundle: PresentationResources.bundle)
     static let danger = Color("Danger", bundle: PresentationResources.bundle)
+    static let fill = Color("Fill", bundle: PresentationResources.bundle)
+    static let fillLabel = Color("FillLabel", bundle: PresentationResources.bundle)
     static let info = Color("Info", bundle: PresentationResources.bundle)
-    static let onPrimaryContainer = Color("OnPrimaryContainer", bundle: PresentationResources.bundle)
-    static let primaryContainer = Color("PrimaryContainer", bundle: PresentationResources.bundle)
-    static let success = Color("Success", bundle: PresentationResources.bundle)
-    static let surface = Color("Surface", bundle: PresentationResources.bundle)
-    static let surfaceSecondary = Color("SurfaceSecondary", bundle: PresentationResources.bundle)
-    static let textPrimary = Color(
-        ProcessInfo.processInfo.isiOSAppOnMac ? "TextPrimaryMac" : "TextPrimary",
+    static let label = Color(
+        ProcessInfo.processInfo.isiOSAppOnMac ? "LabelMac" : "Label",
         bundle: PresentationResources.bundle
     )
-    static let textSecondary = Color("TextSecondary", bundle: PresentationResources.bundle)
-    static let textTertiary = Color("TextTertiary", bundle: PresentationResources.bundle)
+    static let secondaryBackground = Color("SecondaryBackground", bundle: PresentationResources.bundle)
+    static let secondaryLabel = Color("SecondaryLabel", bundle: PresentationResources.bundle)
+    static let secondarySeparator = Color("SecondarySeparator", bundle: PresentationResources.bundle)
+    static let separator = Color(
+        ProcessInfo.processInfo.isiOSAppOnMac ? "SeparatorMac" : "Separator",
+        bundle: PresentationResources.bundle
+    )
+    static let success = Color("Success", bundle: PresentationResources.bundle)
+    static let tertiaryBackground = Color("TertiaryBackground", bundle: PresentationResources.bundle)
+    static let tertiaryLabel = Color("TertiaryLabel", bundle: PresentationResources.bundle)
+    static let tintFill = Color("TintFill", bundle: PresentationResources.bundle)
+    static let tintLabel = Color("TintLabel", bundle: PresentationResources.bundle)
     static let warning = Color("Warning", bundle: PresentationResources.bundle)
     static let categoryFeature = Color("CategoryFeature", bundle: PresentationResources.bundle)
     static let categoryImprovement = Color("CategoryImprovement", bundle: PresentationResources.bundle)
@@ -44,7 +44,7 @@ public extension Color {
     static let heatmapBorder = Color("HeatmapBorder", bundle: PresentationResources.bundle)
     static let heatmapFuture = Color("HeatmapFuture", bundle: PresentationResources.bundle)
     static let heatmapFutureBorder = Color("HeatmapFutureBorder", bundle: PresentationResources.bundle)
-    static let switchTrackOff = Color("SwitchTrackOff", bundle: PresentationResources.bundle)
+    static let switchOffFill = Color("SwitchOffFill", bundle: PresentationResources.bundle)
     static let sheetGrabber = Color("SheetGrabber", bundle: PresentationResources.bundle)
-    static let scrim = Color("Scrim", bundle: PresentationResources.bundle)
+    static let dimming = Color("Dimming", bundle: PresentationResources.bundle)
 }

@@ -40,9 +40,9 @@ struct SearchView: View {
                         .frame(maxWidth: readableContentWidth)
                         .padding(.bottom, 8)
                 }
-                .background(Color.appBackground)
+                .background(Color.background)
             }
-            .background(Color.appBackground.ignoresSafeArea())
+            .background(Color.background.ignoresSafeArea())
             .prominentAlert(store, state: \.alert, action: \.alert)
             .navigationDestination(for: Path.self, interactivePop: { _ in true }) { path in
                 switch path {
@@ -83,7 +83,7 @@ struct SearchView: View {
         .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
         .padding(.bottom, 8)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var tipCard: some View {
@@ -100,18 +100,18 @@ struct SearchView: View {
                     localized: "search_todo_number_tip_message",
                     bundle: PresentationResources.bundle
                 ))
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .font(.caption)
             }
             Spacer()
         }
-        .foregroundStyle(Color.onPrimaryContainer)
+        .foregroundStyle(Color.tintLabel)
         .padding()
         .background {
             Rectangle()
-                .fill(Color.appBackground)
+                .fill(Color.background)
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color.primaryContainer)
+                .fill(Color.tintFill)
         }
     }
 
@@ -122,7 +122,7 @@ struct SearchView: View {
                 localized: "search_scope_instruction",
                 bundle: PresentationResources.bundle
             ))
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
                 .multilineTextAlignment(.center)
             Spacer()
         }
@@ -146,7 +146,7 @@ private struct SearchField: View {
     var body: some View {
         HStack {
             Image(systemName: "magnifyingglass")
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
             TextField(
                 "",
                 text: searchQuery,
@@ -154,7 +154,7 @@ private struct SearchField: View {
                     localized: "search_prompt",
                     bundle: PresentationResources.bundle)
                 )
-                .foregroundStyle(Color.textSecondary),
+                .foregroundStyle(Color.secondaryLabel),
             )
             .focused($isFocused)
             .onSubmit {
@@ -165,7 +165,7 @@ private struct SearchField: View {
                     store.send(.binding(.set(\.searchQuery, "")))
                 } label: {
                     Image(systemName: "xmark.circle.fill")
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                 }
                 .buttonStyle(.plain)
             }
@@ -174,7 +174,7 @@ private struct SearchField: View {
         .padding()
         .background {
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.surface)
+                .fill(Color.secondaryBackground)
         }
         .onAppear {
             isFocused = true
@@ -207,10 +207,10 @@ private struct SearchResults: View {
                         Int64(store.todos.count)
                     ))
                     .font(.callout.bold())
-                    .foregroundStyle(Color.onPrimaryContainer)
+                    .foregroundStyle(Color.tintLabel)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.primaryContainer, in: .capsule)
+                    .background(Color.tintFill, in: .capsule)
                 }
                 if store.isHashOnlyQuery {
                     VStack(spacing: 8) {
@@ -224,7 +224,7 @@ private struct SearchResults: View {
                             bundle: PresentationResources.bundle)
                         )
                         .font(.subheadline)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                         .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
@@ -246,12 +246,12 @@ private struct SearchResults: View {
                                     .todoDetailPreview(todoId: item.id)
                             }
                             .buttonStyle(.plain)
-                            if index < todos.count - 1 { Divider().overlay(Color.borderSubtle) }
+                            if index < todos.count - 1 { Divider().overlay(Color.secondarySeparator) }
                         }
                     }
                     .background {
                         RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.surface)
+                            .fill(Color.secondaryBackground)
                     }
                     if store.shouldShowMoreTodos {
                         Button {
@@ -261,10 +261,10 @@ private struct SearchResults: View {
                                 localized: "search_show_more",
                                 bundle: PresentationResources.bundle)
                             )
-                            .foregroundStyle(Color.onPrimaryContainer)
+                            .foregroundStyle(Color.tintLabel)
                             .font(.callout.bold())
                         }
-                        .adaptiveButtonStyle(color: .primaryContainer)
+                        .adaptiveButtonStyle(color: .tintFill)
                     }
                 }
             }
@@ -301,16 +301,16 @@ private struct SearchResultRow: View {
                     Text(item.createdAt.formatted(.dateTime.month().day().weekday(.abbreviated)))
                 }
                 .font(.subheadline)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
                 .lineLimit(1)
             }
             Spacer(minLength: 8)
             Image(systemName: item.isPinned ? "star.fill" : "star")
                 .font(.title3)
-                .foregroundStyle(item.isPinned ? Color.orange : .textTertiary)
+                .foregroundStyle(item.isPinned ? Color.orange : .tertiaryLabel)
             Image(systemName: "chevron.right")
                 .font(.callout.bold())
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
         }
         .padding()
     }
@@ -333,7 +333,7 @@ private struct RecentSearchQuries: View {
                         .font(.callout)
                         .foregroundStyle(
                             store.recentQueries.isEmpty ?
-                            Color.textSecondary : .onPrimaryContainer
+                            Color.secondaryLabel : .tintLabel
                         )
                 }
                 .disabled(store.recentQueries.isEmpty)
@@ -348,7 +348,7 @@ private struct RecentSearchQuries: View {
                         HStack {
                             HStack {
                                 Image(systemName: "magnifyingglass")
-                                    .foregroundStyle(Color.textSecondary)
+                                    .foregroundStyle(Color.secondaryLabel)
                                 Text(query)
                                     .lineLimit(1)
                                 Spacer()
@@ -361,17 +361,17 @@ private struct RecentSearchQuries: View {
                                 store.send(.removeRecentQuery(query))
                             } label: {
                                 Image(systemName: "xmark")
-                                    .foregroundStyle(Color.textSecondary)
+                                    .foregroundStyle(Color.secondaryLabel)
                             }
                         }
                         .padding()
-                        if idx < store.recentQueries.count - 1 { Divider().overlay(Color.borderSubtle) }
+                        if idx < store.recentQueries.count - 1 { Divider().overlay(Color.secondarySeparator) }
                     }
                 }
             }
             .background {
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color.surface)
+                    .fill(Color.secondaryBackground)
             }
         }
         .frame(maxWidth: .infinity)

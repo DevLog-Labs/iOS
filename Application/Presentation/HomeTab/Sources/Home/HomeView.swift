@@ -56,7 +56,7 @@ public struct HomeView: View {
             // Mac 제목 줄 구분선과 첫 카드 사이 여백
             .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
             .safeAreaInset(edge: .top, spacing: 0) { topBar }
-            .background(Color.appBackground)
+            .background(Color.background)
             .duoToolbarVisibility()
             .toolbar {
                 if deviceType == .duo {
@@ -136,8 +136,8 @@ public struct HomeView: View {
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 8)
-            .background(Color.appBackground)
-            .toolbarBackground(Color.appBackground)
+            .background(Color.background)
+            .toolbarBackground(Color.background)
         }
     }
 
@@ -160,7 +160,7 @@ public struct HomeView: View {
             }
             .adaptiveButtonStyle(
                 shape: .circle,
-                color: .surface,
+                color: .secondaryBackground,
                 glassEffect: .enabled
             )
         }
@@ -268,7 +268,7 @@ private struct HomeCreateButton: View {
             }
             .adaptiveButtonStyle(
                 shape: .circle,
-                color: .surface,
+                color: .secondaryBackground,
                 glassEffect: .enabled
             )
             .disabled(!store.isNetworkConnected)
@@ -342,18 +342,18 @@ private struct HomeTodoSection: View {
                             VStack(spacing: 10) {
                                 RoundedRectangle(cornerRadius: 20)
                                     .strokeBorder(
-                                        Color.textTertiary,
+                                        Color.tertiaryLabel,
                                         style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])
                                     )
                                     .frame(width: iconSize, height: iconSize)
                                     .overlay {
                                         Image(systemName: "square.grid.2x2")
                                             .font(.title2.bold())
-                                            .foregroundStyle(Color.textTertiary)
+                                            .foregroundStyle(Color.tertiaryLabel)
                                     }
                                 Text("todo_edit", bundle: PresentationResources.bundle)
                                     .font(.subheadline)
-                                    .foregroundStyle(Color.textTertiary)
+                                    .foregroundStyle(Color.tertiaryLabel)
                             }
                             .frame(maxWidth: .infinity)
                             .contentShape(.rect)
@@ -375,7 +375,7 @@ private struct HomeTodoSection: View {
                     } label: {
                         Image(systemName: store.isTodoCategoryExpanded ? "chevron.up" : "chevron.down")
                             .font(.title3.weight(.semibold))
-                            .foregroundStyle(Color.textTertiary)
+                            .foregroundStyle(Color.tertiaryLabel)
                             .frame(width: 32, height: 32)
                     }
                     Spacer()
@@ -383,7 +383,7 @@ private struct HomeTodoSection: View {
             }
         }
         .padding(.bottom, 12)
-        .background(Color.surface, in: RoundedRectangle(cornerRadius: 28))
+        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 28))
     }
 }
 
@@ -403,7 +403,7 @@ private struct HomeTodoCategoryLink: View {
                     )
                 Text(item.localizedName)
                     .font(.subheadline)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.8)
@@ -497,7 +497,7 @@ private struct HomeContentPickerLabel: View {
                         .font(.title3)
                 }
             Text(text)
-                .foregroundStyle(Color.textPrimary)
+                .foregroundStyle(Color.label)
             Spacer()
         }
         .contentShape(.rect)

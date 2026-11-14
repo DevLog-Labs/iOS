@@ -102,7 +102,7 @@ private struct ResizablePaneModifier: ViewModifier {
                     .gesture(resizeGesture)
                     .overlay(alignment: .trailing) {
                         Rectangle()
-                            .fill(Color.border)
+                            .fill(Color.separator)
                             .frame(width: 2)
                     }
                     .ignoresSafeArea(.container, edges: .vertical)

@@ -32,7 +32,7 @@ struct AccountView: View {
         // Mac 제목 줄 구분선과 첫 항목 사이 여백
         .contentMargins(.top, showsPaneTitleBar ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .background(Color.appBackground)
+        .background(Color.background)
         .duoToolbarVisibility()
         .onAppear { store.send(.onAppear) }
         .prominentAlert(store, state: \.alert, action: \.alert)
@@ -67,8 +67,8 @@ struct AccountView: View {
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 12)
-            .background(Color.appBackground)
-            .toolbarBackground(Color.appBackground)
+            .background(Color.background)
+            .toolbarBackground(Color.background)
         }
     }
 }
@@ -146,7 +146,7 @@ private struct AccountSocialSection: View {
                     )
 
                     if provider != providers.last {
-                        Divider().overlay(Color.border)
+                        Divider().overlay(Color.separator)
                             .padding(.leading, 64)
                             .padding(.trailing, 16)
                     }
@@ -218,17 +218,17 @@ private struct ProviderIdentity: View {
                 .scaledToFit()
                 .frame(width: 20, height: 20)
                 .frame(width: 36, height: 36)
-                .background(Color.controlBackground, in: Circle())
+                .background(Color.fill, in: Circle())
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(provider.displayName)
                     .font(.headline)
-                    .foregroundStyle(Color.textPrimary)
+                    .foregroundStyle(Color.label)
 
                 if let status {
                     Text(status)
                         .font(.footnote)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                 }
             }
         }

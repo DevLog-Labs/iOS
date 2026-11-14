@@ -91,10 +91,10 @@ public struct TodayView: View {
                         .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
                         .padding(.bottom, 8)
                     }
-                    .background(Color.appBackground)
-                    .toolbarBackground(Color.appBackground)
+                    .background(Color.background)
+                    .toolbarBackground(Color.background)
                 }
-                .background(Color.appBackground)
+                .background(Color.background)
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
             } detail: {
@@ -120,7 +120,7 @@ public struct TodayView: View {
             TodayTodoInspector(store: store)
         }
         // inspector 컨테이너의 상단 safe area 배경
-        .background(Color.appBackground)
+        .background(Color.background)
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.fetchData)
@@ -193,10 +193,10 @@ private struct TodayAchievementCard: View {
 
                 Text(achievementStatusTitle)
                     .font(.callout.weight(.semibold))
-                    .foregroundStyle(Color.onPrimaryContainer)
+                    .foregroundStyle(Color.tintLabel)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.primaryContainer, in: .capsule)
+                    .background(Color.tintFill, in: .capsule)
 
                 Spacer(minLength: 8)
 
@@ -220,11 +220,11 @@ private struct TodayAchievementCard: View {
                 Text("\(achievement.totalCount)")
             }
             .font(.callout.weight(.semibold))
-            .foregroundStyle(Color.textSecondary)
+            .foregroundStyle(Color.secondaryLabel)
         } else {
             Text("-- / --")
                 .font(.callout.weight(.semibold))
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
         }
     }
 
@@ -253,9 +253,9 @@ private struct TodayFilterBar: View {
                                 .fontWeight(.bold)
                         }
                         .font(.callout)
-                        .foregroundStyle(isSelected ? Color.onPrimaryContainer : .onControlBackground)
+                        .foregroundStyle(isSelected ? Color.tintLabel : .fillLabel)
                     }
-                    .adaptiveButtonStyle(color: isSelected ? Color.primaryContainer : .controlBackground)
+                    .adaptiveButtonStyle(color: isSelected ? Color.tintFill : .fill)
                 }
 
                 let category = store.selectedCategory
@@ -286,7 +286,7 @@ private struct TodayFilterBar: View {
                 ) {
                     HStack(spacing: 6) {
                         Image(systemName: category?.symbolName ?? "tray.2")
-                            .foregroundStyle(category?.color ?? Color.onControlBackground)
+                            .foregroundStyle(category?.color ?? Color.fillLabel)
                         Text(
                             category?.localizedName
                                 ?? String(
@@ -296,8 +296,8 @@ private struct TodayFilterBar: View {
                         )
                     }
                     .font(.callout)
-                    .foregroundStyle(isSelected ? Color.onPrimaryContainer : .onControlBackground)
-                    .adaptiveButtonStyle(color: isSelected ? Color.primaryContainer : .controlBackground)
+                    .foregroundStyle(isSelected ? Color.tintLabel : .fillLabel)
+                    .adaptiveButtonStyle(color: isSelected ? Color.tintFill : .fill)
                 }
             }
         }
@@ -316,7 +316,7 @@ private struct TodayEmptyContent: View {
                 .font(.headline)
             Text(emptyStateContent.message)
                 .font(.callout)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -324,7 +324,7 @@ private struct TodayEmptyContent: View {
         .padding(.horizontal, 20)
         .background {
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.surface)
+                .fill(Color.secondaryBackground)
         }
     }
 

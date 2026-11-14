@@ -79,7 +79,7 @@ struct DevelopmentGoalSection: View {
         HStack(spacing: 8) {
             Text("home_development_goal_section_title", bundle: PresentationResources.bundle)
                 .font(.title2)
-                .foregroundStyle(Color.textPrimary)
+                .foregroundStyle(Color.label)
             if hasLoaded {
                 Text(
                     String.localizedStringWithFormat(
@@ -109,46 +109,46 @@ private struct DevelopmentGoalCard: View {
                 if let recentRecord = item.recentRecord {
                     Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
                         .font(.caption)
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
                 }
             }
 
             Text(item.goal.title)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(Color.textPrimary)
+                .foregroundStyle(Color.label)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if !item.goal.description.isEmpty {
                 Text(item.goal.description)
                     .font(.subheadline)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             DevelopmentTodoProgressView(progress: item.todoProgress)
 
-            Divider().overlay(Color.borderSubtle)
+            Divider().overlay(Color.secondarySeparator)
 
             if let recentRecord = item.recentRecord {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("home_development_goal_recent_record", bundle: PresentationResources.bundle)
                         .font(.caption)
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
                     Text(recentRecord.title)
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.textPrimary)
+                        .foregroundStyle(Color.label)
                         .lineLimit(1)
                 }
             } else {
                 Text("development_record_empty_title", bundle: PresentationResources.bundle)
                     .font(.caption)
-                    .foregroundStyle(Color.textTertiary)
+                    .foregroundStyle(Color.tertiaryLabel)
             }
         }
         .padding(18)
-        .background(Color.surface, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
         .contentShape(.rect)
     }
 }
@@ -160,7 +160,7 @@ struct DevelopmentTodoProgressView: View {
         if progress.isEmpty {
             Text("home_development_goal_todo_empty", bundle: PresentationResources.bundle)
                 .font(.caption)
-                .foregroundStyle(Color.textTertiary)
+                .foregroundStyle(Color.tertiaryLabel)
         } else {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 8) {
@@ -175,7 +175,7 @@ struct DevelopmentTodoProgressView: View {
                         )
                     )
                     .font(.caption.weight(.medium))
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     Spacer(minLength: 8)
                     Text(
                         String.localizedStringWithFormat(
@@ -192,7 +192,7 @@ struct DevelopmentTodoProgressView: View {
 
                 GeometryReader { proxy in
                     Capsule()
-                        .fill(Color.border.opacity(0.6))
+                        .fill(Color.separator.opacity(0.6))
                         .overlay(alignment: .leading) {
                             Capsule()
                                 .fill(Color.accent)

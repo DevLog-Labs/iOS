@@ -27,7 +27,7 @@ struct UserInfoCard: View {
                             .resizable()
                             .scaledToFill()
                             .symbolRenderingMode(.palette)
-                            .foregroundStyle(Color.onPrimaryContainer, Color.primaryContainer)
+                            .foregroundStyle(Color.tintLabel, Color.tintFill)
                     }
                 }
                 .frame(width: 64, height: 64)
@@ -40,7 +40,7 @@ struct UserInfoCard: View {
                         .bold()
                     Text(store.email)
                         .font(.caption)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                 }
                 Spacer(minLength: 0)
             }
@@ -53,9 +53,9 @@ struct UserInfoCard: View {
                         text: $store.statusMessage
                     ) {
                         Text("profile_status_placeholder", bundle: PresentationResources.bundle)
-                            .foregroundStyle(Color.textTertiary)
+                            .foregroundStyle(Color.tertiaryLabel)
                     }
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .tint(Color.accent)
                     .frame(height: UIFont.preferredFont(forTextStyle: .body).lineHeight)
                     .focused($focused)
@@ -75,7 +75,7 @@ struct UserInfoCard: View {
                 .padding(8)
                 .background(
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(Color.surfaceSecondary)
+                        .fill(Color.tertiaryBackground)
                 )
                 if store.showDoneButton {
                     Button {
@@ -91,7 +91,7 @@ struct UserInfoCard: View {
             .opacity(store.isNetworkConnected ? 1 : 0.7)
         }
         .padding(16)
-        .background(Color.surface, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 16))
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if !isSelected {
                 focused = false

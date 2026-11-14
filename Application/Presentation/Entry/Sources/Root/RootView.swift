@@ -33,7 +33,7 @@ public struct RootView: View {
 
     public var body: some View {
         ZStack {
-            Color.appBackground.ignoresSafeArea()
+            Color.background.ignoresSafeArea()
             if let signIn = store.signIn {
                 if signIn {
                     MainView(
@@ -70,7 +70,7 @@ public struct RootView: View {
             })
         }
         .environment(\.deviceType, .bar)
-        .background(Color.appBackground)
+        .background(Color.background)
         .presentationDragIndicator(.visible)
     }
 }

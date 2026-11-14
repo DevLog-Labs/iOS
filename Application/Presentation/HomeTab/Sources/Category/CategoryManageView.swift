@@ -21,7 +21,7 @@ struct CategoryManageView: View {
                     header: UIHostingConfiguration {
                         Text(String(localized: "todo_manage_description", bundle: PresentationResources.bundle))
                             .font(.footnote)
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
                     }
@@ -63,9 +63,9 @@ struct CategoryManageView: View {
                 .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
                 .padding(.horizontal)
                 .padding(.vertical, 12)
-                .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
+                .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
             }
-            .background(Color.appBackground.ignoresSafeArea())
+            .background(Color.background.ignoresSafeArea())
             .sheet(
                 item: $store.scope(state: \.categorySheet, action: \.categorySheet)
                     .activePresentation(when: isTabContentActive)
@@ -101,7 +101,7 @@ struct CategoryManageView: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 }
 
@@ -114,7 +114,7 @@ private struct CategoryManageRow: View {
     var body: some View {
         if item.isUserCategory {
             CategoryManageRowContent(item: item, onToggle: onToggle)
-                .background(Color.surface)
+                .background(Color.secondaryBackground)
                 .itemActions {
                     ItemActionButton(
                         title: String(localized: "todo_edit", bundle: PresentationResources.bundle),
@@ -198,9 +198,9 @@ private struct CategoryManageSheet: View {
             .disabled(!store.canSubmitUserCategory)
             .padding(.horizontal)
             .padding(.vertical, 12)
-            .background(deviceType == .duo ? Color.appBackground : .surface, ignoresSafeAreaEdges: .bottom)
+            .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
         }
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .presentationDragIndicator(.visible)
     }
 
@@ -225,7 +225,7 @@ private struct CategoryManageSheet: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var nameCard: some View {
@@ -238,22 +238,22 @@ private struct CategoryManageSheet: View {
                 TextField(
                     "",
                     text: $store.category.name,
-                    prompt: Text(store.placeholder).foregroundStyle(Color.textSecondary)
+                    prompt: Text(store.placeholder).foregroundStyle(Color.secondaryLabel)
                 )
                 .font(.body)
 
                 Text(store.categoryNameCountText)
                     .font(.footnote)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                     .monospacedDigit()
             }
             .padding()
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
             .tint(Color.accent)
 
             Text(store.nameMessage)
                 .font(.footnote)
-                .foregroundStyle(store.isDuplicatedName ? Color.danger : Color.textSecondary)
+                .foregroundStyle(store.isDuplicatedName ? Color.danger : Color.secondaryLabel)
                 .padding(.horizontal, 16)
         }
     }
@@ -336,12 +336,12 @@ private struct CategoryManageSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(String(localized: "todo_manage_preview_description", bundle: PresentationResources.bundle))
                     .font(.footnote)
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
 
                 HStack(spacing: 12) {
                     CategoryManageRowContent(item: store.todoCategoryItem, onToggle: {})
                     Image(systemName: "line.3.horizontal")
-                        .foregroundStyle(Color.textTertiary)
+                        .foregroundStyle(Color.tertiaryLabel)
                 }
                 .allowsHitTesting(false)
             }

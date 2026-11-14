@@ -20,7 +20,7 @@ struct TodayTodoWidget: Widget {
             provider: TodayTodoWidgetProvider()
         ) { entry in
             TodayTodoWidgetEntryView(entry: entry)
-                .containerBackground(Color.surface, for: .widget)
+                .containerBackground(Color.secondaryBackground, for: .widget)
                 .widgetURL(WidgetDeepLink.todayTodoURL)
         }
         .description("widget_today_description")

@@ -63,7 +63,7 @@ struct TodoListView: View {
         ) { coverStore in
             fullScreenCoverContent(coverStore)
         }
-        .background(Color.appBackground.ignoresSafeArea())
+        .background(Color.background.ignoresSafeArea())
         .task { store.send(.view(.onAppear)) }
     }
 
@@ -101,10 +101,10 @@ private struct TodoListContent: View {
                 if visibleTodos.isEmpty, !store.state.isLoading {
                     Text(String(localized: "todo_list_empty", bundle: PresentationResources.bundle))
                         .font(.callout)
-                        .foregroundStyle(Color.textSecondary)
+                        .foregroundStyle(Color.secondaryLabel)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 32)
-                        .background(Color.surface, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
                         .padding(.horizontal, 16)
                         .frame(maxWidth: readableContentWidth)
                         .frame(maxWidth: .infinity)
@@ -117,7 +117,7 @@ private struct TodoListContent: View {
                             let isLast = index == visibleTodos.count - 1
 
                             TodoItemRow(todo)
-                                .background(todo.id == store.selectedTodoId ? Color.primaryContainer : .surface)
+                                .background(todo.id == store.selectedTodoId ? Color.tintFill : .secondaryBackground)
                                 .contentShape(.rect)
                                 .todoDetailPreview(todoId: todo.id)
                                 .onTapGesture {
@@ -154,7 +154,7 @@ private struct TodoListContent: View {
                                 }
                                 .overlay(alignment: .bottom) {
                                     if !isLast {
-                                        Divider().overlay(Color.borderSubtle)
+                                        Divider().overlay(Color.secondarySeparator)
                                     }
                                 }
                                 .onAppear {
@@ -164,7 +164,7 @@ private struct TodoListContent: View {
                                 }
                         }
                     }
-                    .background(Color.surface)
+                    .background(Color.secondaryBackground)
                     .clipShape(.rect(cornerRadius: 16))
                     .padding(.horizontal, 16)
                     .frame(maxWidth: readableContentWidth)
@@ -275,7 +275,7 @@ private struct TodoListTopBar: View {
             .padding(.top, showsPaneTitleBar ? 12 : windowControlsInset)
             .padding(.bottom, 12)
         }
-        .background(Color.appBackground, ignoresSafeAreaEdges: .top)
+        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     @ViewBuilder
@@ -303,7 +303,7 @@ private struct TodoListTopBar: View {
                 }
                 .adaptiveButtonStyle(
                     shape: .circle,
-                    color: .surface,
+                    color: .secondaryBackground,
                     glassEffect: .enabled
                 )
                 .matchedGeometryEffect(id: "todo-search", in: searchTransition)
@@ -327,7 +327,7 @@ private struct TodoListTopBar: View {
             }
             .adaptiveButtonStyle(
                 shape: .circle,
-                color: .surface,
+                color: .secondaryBackground,
                 glassEffect: .enabled
             )
         }
@@ -354,7 +354,7 @@ private struct TodoListSearchBar: View {
         HStack(spacing: 8) {
             HStack(spacing: 8) {
                 Image(systemName: "magnifyingglass")
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                 TextField(
                     "",
                     text: $store.searchQuery,
@@ -362,7 +362,7 @@ private struct TodoListSearchBar: View {
                         localized: "search_prompt",
                         bundle: PresentationResources.bundle
                     ))
-                    .foregroundStyle(Color.textSecondary)
+                    .foregroundStyle(Color.secondaryLabel)
                 )
                 .focused($isSearchFocused)
                 .task {
@@ -374,7 +374,7 @@ private struct TodoListSearchBar: View {
                         store.send(.binding(.set(\.searchQuery, "")))
                     } label: {
                         Image(systemName: "xmark.circle.fill")
-                            .foregroundStyle(Color.textSecondary)
+                            .foregroundStyle(Color.secondaryLabel)
                     }
                     .buttonStyle(.plain)
                 }
@@ -382,7 +382,7 @@ private struct TodoListSearchBar: View {
             .frame(maxWidth: .infinity)
             .adaptiveButtonStyle(
                 shape: Capsule(),
-                color: .surface,
+                color: .secondaryBackground,
                 glassEffect: .enabled
             )
             .matchedGeometryEffect(id: "todo-search", in: searchTransition)
@@ -432,8 +432,8 @@ private struct TodoListFilterHeader: View {
                             Text("\(store.appliedFilterCount)")
                             Image(systemName: "xmark")
                         }
-                        .foregroundStyle(Color.onPrimaryContainer)
-                        .adaptiveButtonStyle(color: .primaryContainer)
+                        .foregroundStyle(Color.tintLabel)
+                        .adaptiveButtonStyle(color: .tintFill)
                     }
                 }
 
@@ -462,8 +462,8 @@ private struct TodoListFilterHeader: View {
                         Text(String(localized: "todo_list_filter_options", bundle: PresentationResources.bundle))
                         Image(systemName: "chevron.down")
                     }
-                    .foregroundStyle(condition ? Color.onPrimaryContainer : .onControlBackground)
-                    .adaptiveButtonStyle(color: condition ? .primaryContainer : .controlBackground)
+                    .foregroundStyle(condition ? Color.tintLabel : .fillLabel)
+                    .adaptiveButtonStyle(color: condition ? .tintFill : .fill)
                 }
 
                 DropdownMenu(sections: [
@@ -490,8 +490,8 @@ private struct TodoListFilterHeader: View {
                         Text(String(localized: "todo_list_sort_by", bundle: PresentationResources.bundle))
                         Image(systemName: "chevron.down")
                     }
-                    .foregroundStyle(condition ? Color.onControlBackground : .onPrimaryContainer)
-                    .adaptiveButtonStyle(color: condition ? .controlBackground : .primaryContainer)
+                    .foregroundStyle(condition ? Color.fillLabel : .tintLabel)
+                    .adaptiveButtonStyle(color: condition ? .fill : .tintFill)
                 }
             }
         }

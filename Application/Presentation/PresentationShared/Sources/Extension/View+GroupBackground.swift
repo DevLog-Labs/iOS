@@ -21,11 +21,11 @@ private struct GroupBackgroundModifier<S: InsettableShape>: ViewModifier {
     func body(content: Content) -> some View {
         if isiOSAppOnMac {
             content
-                .background(Color.surface, in: shape)
-                .overlay { shape.strokeBorder(Color.border) }
+                .background(Color.secondaryBackground, in: shape)
+                .overlay { shape.strokeBorder(Color.separator) }
         } else {
             // 다크는 밝은 카드, 라이트는 바탕 없이 구분선만 표시
-            content.background(colorScheme == .dark ? Color.surfaceSecondary : .clear, in: shape)
+            content.background(colorScheme == .dark ? Color.tertiaryBackground : .clear, in: shape)
         }
     }
 }

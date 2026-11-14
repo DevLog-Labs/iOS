@@ -81,7 +81,7 @@ private struct ProminentMenu<Label: View, Action: Hashable>: View {
             ) {
                 customMenu
                     .presentationCompactAdaptation(.popover)
-                    .presentationBackground(Color.surface)
+                    .presentationBackground(Color.secondaryBackground)
             }
         }
     }
@@ -107,7 +107,7 @@ private struct ProminentMenu<Label: View, Action: Hashable>: View {
             }
         }
         .frame(minWidth: 220)
-        .background(Color.surface, in: .rect(cornerRadius: 20))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: 20))
         .compositingGroup()
         .clipShape(.rect(cornerRadius: 20))
         .shadow(color: Color.black.opacity(0.18), radius: 20, y: 10)

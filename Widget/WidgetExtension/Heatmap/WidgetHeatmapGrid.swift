@@ -108,7 +108,7 @@ private struct WidgetHeatmapMonthGrid: View {
 
         let count = dayCount(for: day)
         if count == 0 {
-            return Color.surfaceSecondary
+            return Color.tertiaryBackground
         }
 
         return Color.accent.opacity(opacity(for: count, max: maxCount))

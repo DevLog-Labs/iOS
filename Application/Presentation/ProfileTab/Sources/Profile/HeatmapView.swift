@@ -125,7 +125,7 @@ private struct MonthCompactHeatmapView: View {
             Text(month.monthStart.formatted(.dateTime.month(.abbreviated)))
                 .frame(height: layout.cellSize)
                 .font(.caption)
-                .foregroundStyle(Color.textSecondary)
+                .foregroundStyle(Color.secondaryLabel)
 
             VStack(alignment: .leading, spacing: layout.cellSpacing) {
                 ForEach(orderedWeekdays, id: \.self) { weekday in
