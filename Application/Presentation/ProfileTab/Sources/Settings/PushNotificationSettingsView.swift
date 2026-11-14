@@ -101,7 +101,7 @@ private struct EnableCard: View {
                 } else {
                     Toggle("", isOn: $store.pushNotificationEnable)
                         .labelsHidden()
-                        .tint(.accent)
+                        .toggleStyle(.pill)
                         .disabled(store.activeLoadingRow != nil)
                 }
             }

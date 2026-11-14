@@ -157,7 +157,7 @@ private struct CategoryManageRowContent: View {
                 isOn: Binding(get: { item.isVisible }, set: { _ in onToggle() })
             )
             .labelsHidden()
-            .tint(Color.accent)
+            .toggleStyle(.pill)
         }
         .padding(.trailing, 12)
         .frame(minHeight: 44)

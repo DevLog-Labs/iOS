@@ -101,7 +101,7 @@ public struct TodoPropertiesView: View {
                             Text(String(localized: "todo_completed", bundle: PresentationResources.bundle))
                         }
                     }
-                    .tint(Color.accent)
+                    .toggleStyle(.pill)
                     .padding(.vertical, 12)
 
                     Divider().overlay(Color.separator)
@@ -112,7 +112,7 @@ public struct TodoPropertiesView: View {
                             Text(String(localized: "todo_pinned", bundle: PresentationResources.bundle))
                         }
                     }
-                    .tint(Color.accent)
+                    .toggleStyle(.pill)
                     .padding(.vertical, 12)
 
                     Divider().overlay(Color.separator)
