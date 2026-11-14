@@ -43,10 +43,12 @@ struct DevelopmentRecordRepositoryImplTests {
         let version = try await repository.confirmDraft(
             goalId: "goal-1",
             recordId: "record-1",
-            versionId: "version-2",
-            kind: .correction,
-            sourceVersionId: "version-1",
-            draftRevisionId: "revision-1"
+            confirmation: .init(
+                versionId: "version-2",
+                kind: .correction,
+                sourceVersionId: "version-1",
+                draftRevisionId: "revision-1"
+            )
         )
 
         let request = try #require(await service.confirmationRequest())

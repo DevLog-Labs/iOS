@@ -46,4 +46,4 @@ public typealias NotificationDependencyPreparation = PushNotificationDependencyP
 public typealias ProfilePresentationDependencyPreparation = ProfileDependencyPreparation
 public typealias TodayPresentationDependencyPreparation = TodayDependencyPreparation
 
-public typealias DevelopmentPresentationDependencyPreparation = DevelopmentDependencyPreparation
+public typealias DevelopmentDependencyPreparation = HomeTab.DevelopmentDependencyPreparation

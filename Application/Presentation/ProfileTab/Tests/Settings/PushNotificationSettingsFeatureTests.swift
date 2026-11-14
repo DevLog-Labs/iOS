@@ -5,8 +5,6 @@
 //  Created by opfic on 6/12/26.
 //
 
-// swiftlint:disable file_length
-
 import Testing
 import Foundation
 import Domain

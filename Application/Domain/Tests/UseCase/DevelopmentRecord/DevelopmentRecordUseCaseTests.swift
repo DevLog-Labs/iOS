@@ -123,8 +123,7 @@ struct DevelopmentRecordUseCaseTests {
             recordId: "record-1",
             baseVersionId: nil,
             draftRevisionId: "revision-1",
-            title: "수정 기록",
-            markdownContent: "수정 본문"
+            content: .init(title: "수정 기록", markdownContent: "수정 본문")
         )
 
         #expect(result == savedRecord)
@@ -180,8 +179,7 @@ struct DevelopmentRecordUseCaseTests {
             recordId: "record-1",
             baseVersionId: currentVersion.id,
             draftRevisionId: "revision-1",
-            title: "수정 정정 초안",
-            markdownContent: "수정 본문"
+            content: .init(title: "수정 정정 초안", markdownContent: "수정 본문")
         )
 
         let requests = await repository.draftRequests()
@@ -216,8 +214,7 @@ struct DevelopmentRecordUseCaseTests {
             recordId: "record-1",
             baseVersionId: currentVersion.id,
             draftRevisionId: nil,
-            title: "정정 초안",
-            markdownContent: "본문"
+            content: .init(title: "정정 초안", markdownContent: "본문")
         )
 
         #expect(result == savedRecord)

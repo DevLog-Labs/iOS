@@ -32,18 +32,6 @@ struct PushNotificationMapper {
             )
         }
 
-        if let title = data[PushNotificationFieldKey.title.rawValue] as? String,
-           let body = data[PushNotificationFieldKey.body.rawValue] as? String {
-            return PushNotificationResponse(
-                id: documentID,
-                legacy: .init(title: title, body: body),
-                receivedAt: receivedAt.dateValue(),
-                isRead: isRead,
-                todoId: todoId,
-                todoCategory: .raw(todoCategory)
-            )
-        }
-
         return PushNotificationResponse(
             id: documentID,
             todoTitle: nil,
@@ -56,8 +44,6 @@ struct PushNotificationMapper {
 }
 
 enum PushNotificationFieldKey: String {
-    case title
-    case body
     case todoTitle
     case receivedAt
     case isRead
