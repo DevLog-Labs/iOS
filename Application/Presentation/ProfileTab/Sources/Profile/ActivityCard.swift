@@ -16,10 +16,10 @@ struct ActivityCard: View {
     let onSelectTodoID: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
             HStack {
                 Text(String(localized: "profile_quarterly_activity", bundle: PresentationResources.bundle))
-                    .font(.headline)
+                    .font(.adaptive(.headline))
                 Spacer()
                 if !store.isViewingCurrentQuarter {
                     Button {
@@ -66,11 +66,11 @@ struct ActivityCard: View {
                 Button {
                     store.send(.openQuarterPicker)
                 } label: {
-                    HStack(spacing: 4) {
+                    HStack(spacing: 4 * AdaptiveSize.scale) {
                         Text(store.quarterTitle)
-                            .font(.subheadline)
+                            .font(.adaptive(.subheadline))
                         Image(systemName: "chevron.up.chevron.down")
-                            .font(.caption2)
+                            .font(.adaptive(.caption2))
                     }
                     .foregroundStyle(Color.secondaryLabel)
                 }
@@ -97,7 +97,7 @@ struct ActivityCard: View {
                 }
             }
         }
-        .padding(16)
+        .padding(16 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
     }
 
@@ -105,17 +105,17 @@ struct ActivityCard: View {
     private func selectedDayDetailSection(for day: HeatmapDay) -> some View {
         let activities = store.selectedDayActivities
 
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
             Text(day.date.formatted(.dateTime.year().month(.wide).day()))
-                .font(.subheadline)
+                .font(.adaptive(.subheadline))
                 .bold()
 
             if activities.isEmpty {
                 Text(String(localized: "profile_activity_none", bundle: PresentationResources.bundle))
-                    .font(.caption)
+                    .font(.adaptive(.caption))
                     .foregroundStyle(Color.secondaryLabel)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8)
+                    .padding(.vertical, 8 * AdaptiveSize.scale)
             } else {
                 ForEach(activities) { activity in
                     Button {
@@ -123,22 +123,22 @@ struct ActivityCard: View {
                     } label: {
                         let item = TodoCategoryItem(from: activity.category)
                         let rowColor = activity.isDeleted ? Color.secondaryLabel : .label
-                        HStack(spacing: 8) {
+                        HStack(spacing: 8 * AdaptiveSize.scale) {
                             Image(systemName: item.symbolName)
                                 .foregroundStyle(item.color)
-                                .frame(width: 20)
+                                .frame(width: 20 * AdaptiveSize.scale)
                             Text(activity.title)
-                                .font(.caption)
+                                .font(.adaptive(.caption))
                                 .lineLimit(1)
                                 .foregroundStyle(rowColor)
                             Text("#\(activity.number)")
-                                .font(.caption)
+                                .font(.adaptive(.caption))
                                 .foregroundStyle(Color.secondaryLabel)
                             ForEach(activity.activityKindItems) { item in
                                 Text(item.title)
-                                    .font(.caption2)
+                                    .font(.adaptive(.caption2))
                                     .foregroundStyle(item.badgeColor)
-                                    .padding(.horizontal, 6)
+                                    .padding(.horizontal, 6 * AdaptiveSize.scale)
                                     .padding(.vertical, 2)
                                     .background(
                                         RoundedRectangle(cornerRadius: CornerRadius.badge)
@@ -149,7 +149,7 @@ struct ActivityCard: View {
                             // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
                             if !activity.isDeleted, !isiOSAppOnMac {
                                 Image(systemName: "chevron.right")
-                                    .font(.caption.weight(.semibold))
+                                    .font(.adaptive(.caption).weight(.semibold))
                                     .foregroundStyle(Color.tertiaryLabel)
                             }
                         }
@@ -170,7 +170,7 @@ struct ActivityCard: View {
                 }
             }
         }
-        .padding(.top, 4)
+        .padding(.top, 4 * AdaptiveSize.scale)
     }
 
     private func selectActivity(_ activity: HeatmapActivityItem) {
@@ -184,10 +184,10 @@ struct QuarterPickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
                 HStack {
                     Text(String(localized: "profile_year", bundle: PresentationResources.bundle))
-                        .font(.subheadline)
+                        .font(.adaptive(.subheadline))
                         .foregroundStyle(Color.secondaryLabel)
                     Spacer()
                     Picker(
@@ -203,7 +203,7 @@ struct QuarterPickerSheet: View {
                     .labelsHidden()
                 }
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4), spacing: 12) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12 * AdaptiveSize.scale), count: 4), spacing: 12 * AdaptiveSize.scale) {
                     ForEach(1...4, id: \.self) { quarter in
                         quarterSelectionButton(for: quarter)
                     }
@@ -211,7 +211,7 @@ struct QuarterPickerSheet: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(20)
+            .padding(20 * AdaptiveSize.scale)
             .navigationTitle(String(localized: "profile_select_quarter", bundle: PresentationResources.bundle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -239,9 +239,9 @@ struct QuarterPickerSheet: View {
                     Int64(quarter)
                 )
             )
-            .font(.subheadline.weight(.semibold))
+            .font(.adaptive(.subheadline).weight(.semibold))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, 12 * AdaptiveSize.scale)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.control)
                     .fill(isSelected ? Color.accent : Color.tertiaryBackground)

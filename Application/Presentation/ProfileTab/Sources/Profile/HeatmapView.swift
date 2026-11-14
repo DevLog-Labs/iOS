@@ -124,7 +124,7 @@ private struct MonthCompactHeatmapView: View {
         VStack(alignment: .leading, spacing: layout.monthTitleSpacing) {
             Text(month.monthStart.formatted(.dateTime.month(.abbreviated)))
                 .frame(height: layout.cellSize)
-                .font(.caption)
+                .font(.adaptive(.caption))
                 .foregroundStyle(Color.secondaryLabel)
 
             VStack(alignment: .leading, spacing: layout.cellSpacing) {

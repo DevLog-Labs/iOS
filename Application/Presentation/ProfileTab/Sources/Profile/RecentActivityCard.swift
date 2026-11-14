@@ -14,23 +14,23 @@ struct RecentActivityCard: View {
     let onSelectTodo: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
             Text("profile_recent_title", bundle: PresentationResources.bundle)
-                .font(.title3.bold())
-                .padding(.horizontal, 16)
+                .font(.adaptive(.title3).bold())
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
 
             if store.isRecentTodosLoading && store.recentTodos.isEmpty {
                 LoadingView()
-                    .frame(maxWidth: .infinity, minHeight: 80)
+                    .frame(maxWidth: .infinity, minHeight: 80 * AdaptiveSize.scale)
                     .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
             } else if store.recentTodos.isEmpty {
                 Text("profile_recent_empty", bundle: PresentationResources.bundle)
-                    .font(.callout)
+                    .font(.adaptive(.callout))
                     .foregroundStyle(Color.secondaryLabel)
-                    .frame(maxWidth: .infinity, minHeight: 80)
+                    .frame(maxWidth: .infinity, minHeight: 80 * AdaptiveSize.scale)
                     .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
             } else {
-                VStack(spacing: 12) {
+                VStack(spacing: 12 * AdaptiveSize.scale) {
                     ForEach(store.recentTodos) { todo in
                         Button {
                             onSelectTodo(todo.id)
@@ -51,40 +51,40 @@ struct RecentActivityCard: View {
 
 private struct RecentTodoCard: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @ScaledMetric(relativeTo: .title3) private var iconSize = CGFloat(44)
+    @ScaledMetric(relativeTo: .title3) private var iconSize = 44 * AdaptiveSize.scale
     let todo: RecentTodoItem
     let isSelected: Bool
 
     var body: some View {
         let category = TodoCategoryItem(from: todo.category)
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * AdaptiveSize.scale) {
             Image(systemName: category.symbolName)
-                .font(.title3.weight(.semibold))
+                .font(.adaptive(.title3).weight(.semibold))
                 .frame(width: iconSize, height: iconSize)
                 .iconStyle(
                     color: category.color,
                     in: RoundedRectangle(cornerRadius: CornerRadius.control)
                 )
 
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top, spacing: 8) {
+            VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
+                HStack(alignment: .top, spacing: 8 * AdaptiveSize.scale) {
                     Text(todo.title)
                         .foregroundStyle(Color.label)
-                        .font(.headline)
+                        .font(.adaptive(.headline))
                         .lineLimit(2)
                     if todo.isPinned {
                         Image(systemName: "star.fill")
-                            .font(.caption.weight(.semibold))
+                            .font(.adaptive(.caption).weight(.semibold))
                             .foregroundStyle(Color.accent)
                     }
                 }
 
-                HStack(spacing: 6) {
+                HStack(spacing: 6 * AdaptiveSize.scale) {
                     Text(verbatim: "#\(todo.number)")
-                        .font(.caption.weight(.semibold))
+                        .font(.adaptive(.caption).weight(.semibold))
                         .foregroundStyle(Color.accent)
                     Text(category.localizedName)
-                        .font(.caption)
+                        .font(.adaptive(.caption))
                         .foregroundStyle(Color.secondaryLabel)
                         .lineLimit(1)
                     Spacer(minLength: 0)
@@ -105,12 +105,12 @@ private struct RecentTodoCard: View {
             // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
             if !isiOSAppOnMac {
                 Image(systemName: "chevron.right")
-                    .font(.callout.bold())
+                    .font(.adaptive(.callout).bold())
                     .foregroundStyle(Color.tertiaryLabel)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(16)
+        .padding(16 * AdaptiveSize.scale)
         .background(isSelected ? Color.tintFill : .secondaryBackground, in: Rectangle())
         .contentShape(.rect)
     }

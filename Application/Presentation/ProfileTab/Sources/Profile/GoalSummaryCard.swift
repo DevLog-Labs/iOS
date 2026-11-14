@@ -43,39 +43,39 @@ struct GoalSummaryCard: View {
     let onRetry: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
             Text("development_goal_title", bundle: PresentationResources.bundle)
-                .font(.title3.bold())
+                .font(.adaptive(.title3).bold())
 
             if hasLoaded {
                 statusGrid
             } else if isLoading || !hasLoadFailure {
                 ProgressView()
-                    .frame(maxWidth: .infinity, minHeight: 80)
+                    .frame(maxWidth: .infinity, minHeight: 80 * AdaptiveSize.scale)
             }
 
             if hasLoadFailure {
-                HStack(spacing: 12) {
+                HStack(spacing: 12 * AdaptiveSize.scale) {
                     Text("common_error_message", bundle: PresentationResources.bundle)
-                        .font(.caption)
+                        .font(.adaptive(.caption))
                         .foregroundStyle(Color.secondaryLabel)
                     Spacer(minLength: 0)
                     Button(action: onRetry) {
                         Text("profile_goal_retry", bundle: PresentationResources.bundle)
-                            .font(.caption.weight(.semibold))
+                            .font(.adaptive(.caption).weight(.semibold))
                     }
                 }
             }
         }
-        .padding(16)
+        .padding(16 * AdaptiveSize.scale)
         .groupBackground(in: RoundedRectangle(cornerRadius: CornerRadius.group))
     }
 
     private var statusGrid: some View {
         let counts = GoalCounts(goals: goals)
         let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: 8))
-            : AnyLayout(HStackLayout(spacing: 8))
+            ? AnyLayout(VStackLayout(spacing: 8 * AdaptiveSize.scale))
+            : AnyLayout(HStackLayout(spacing: 8 * AdaptiveSize.scale))
         return layout {
             statusTile(
                 title: DevelopmentGoal.Status.inProgress.title,
@@ -99,20 +99,20 @@ struct GoalSummaryCard: View {
     }
 
     private func statusTile(title: String, symbol: String, color: Color, count: Int) -> some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 8 * AdaptiveSize.scale) {
             Image(systemName: symbol)
-                .font(.subheadline.weight(.semibold))
-                .frame(width: 36, height: 36)
+                .font(.adaptive(.subheadline).weight(.semibold))
+                .frame(width: 36 * AdaptiveSize.scale, height: 36 * AdaptiveSize.scale)
                 .iconStyle(color: color, in: Circle())
             Text(title)
-                .font(.caption)
+                .font(.adaptive(.caption))
                 .foregroundStyle(Color.secondaryLabel)
             Text(verbatim: String(count))
-                .font(.title3.bold())
+                .font(.adaptive(.title3).bold())
                 .foregroundStyle(color)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(color.opacity(0.07), in: Rectangle())
     }
 }

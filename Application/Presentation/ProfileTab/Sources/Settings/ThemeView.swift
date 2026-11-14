@@ -19,22 +19,22 @@ struct ThemeView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
                 VStack(spacing: 0) {
                     ForEach(Self.themes) { option in
                         themeButton(option)
 
                         if option != Self.themes.last {
                             Divider().overlay(Color.separator)
-                                .padding(.leading, 68)
-                                .padding(.trailing, 16)
+                                .padding(.leading, 68 * AdaptiveSize.scale)
+                                .padding(.trailing, 16 * AdaptiveSize.scale)
                         }
                     }
                 }
                 .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.bottom, 24 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -56,7 +56,7 @@ struct ThemeView: View {
         } else {
             ZStack {
                 title
-                    .font(.headline)
+                    .font(.adaptive(.headline))
 
                 if deviceType != .duo {
                     HStack {
@@ -65,33 +65,33 @@ struct ThemeView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12)
+            .padding(.bottom, 12 * AdaptiveSize.scale)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
     }
 
     private func themeButton(_ option: SystemTheme) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * AdaptiveSize.scale) {
             Image(systemName: option.symbolName)
-                .font(.headline)
-                .frame(width: 36, height: 36)
+                .font(.adaptive(.headline))
+                .frame(width: 36 * AdaptiveSize.scale, height: 36 * AdaptiveSize.scale)
                 .iconStyle(color: option.iconColor, in: Circle())
 
             Text(option.localizedName(in: PresentationResources.bundle))
                 .foregroundStyle(Color.label)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 8 * AdaptiveSize.scale)
 
             Image(systemName: theme == option ? "checkmark.circle.fill" : "circle")
-                .font(.title2)
+                .font(.adaptive(.title2))
                 .foregroundStyle(theme == option ? Color.accent : Color.separator)
 
         }
-        .padding(16)
+        .padding(16 * AdaptiveSize.scale)
         .frame(maxWidth: .infinity, alignment: .leading)
         .contentShape(.rect)
         .onTapGesture {

@@ -20,12 +20,12 @@ struct AccountView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
                 AccountCurrentSection(store: store)
                 AccountSocialSection(store: store)
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.bottom, 24 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -54,7 +54,7 @@ struct AccountView: View {
         } else {
             ZStack {
                 title
-                    .font(.headline)
+                    .font(.adaptive(.headline))
 
                 if deviceType != .duo {
                     HStack {
@@ -63,10 +63,10 @@ struct AccountView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12)
+            .padding(.bottom, 12 * AdaptiveSize.scale)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
@@ -78,26 +78,26 @@ private struct AccountCurrentSection: View {
 
     var body: some View {
         if let currentProvider = store.currentProvider {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
                 Text("account_current_section", bundle: PresentationResources.bundle)
-                    .font(.title3.weight(.semibold))
+                    .font(.adaptive(.title3).weight(.semibold))
 
-                HStack(spacing: 12) {
+                HStack(spacing: 12 * AdaptiveSize.scale) {
                     ProviderIdentity(
                         provider: currentProvider,
                         status: nil
                     )
 
-                    Spacer(minLength: 8)
+                    Spacer(minLength: 8 * AdaptiveSize.scale)
 
                     Text("account_signed_in", bundle: PresentationResources.bundle)
-                        .font(.caption.weight(.semibold))
+                        .font(.adaptive(.caption).weight(.semibold))
                         .foregroundStyle(Color.accent)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
+                        .padding(.horizontal, 12 * AdaptiveSize.scale)
+                        .padding(.vertical, 7 * AdaptiveSize.scale)
                         .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.badge))
                 }
-                .padding(16)
+                .padding(16 * AdaptiveSize.scale)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
@@ -110,9 +110,9 @@ private struct AccountSocialSection: View {
 
     var body: some View {
         let providers = AuthProvider.allCases.filter { $0 != store.currentProvider }
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
             Text("account_social_section", bundle: PresentationResources.bundle)
-                .font(.title3.weight(.semibold))
+                .font(.adaptive(.title3).weight(.semibold))
 
             VStack(spacing: 0) {
                 ForEach(providers, id: \.self) { provider in
@@ -133,8 +133,8 @@ private struct AccountSocialSection: View {
 
                     if provider != providers.last {
                         Divider().overlay(Color.separator)
-                            .padding(.leading, 64)
-                            .padding(.trailing, 16)
+                            .padding(.leading, 64 * AdaptiveSize.scale)
+                            .padding(.trailing, 16 * AdaptiveSize.scale)
                     }
                 }
             }
@@ -151,7 +151,7 @@ private struct ProviderRow: View {
     let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * AdaptiveSize.scale) {
             ProviderIdentity(
                 provider: provider,
                 status: String(
@@ -160,7 +160,7 @@ private struct ProviderRow: View {
                 )
             )
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 8 * AdaptiveSize.scale)
 
             Button(action: action) {
                 ZStack {
@@ -174,10 +174,10 @@ private struct ProviderRow: View {
                             .tint(isConnected ? Color.danger : Color.white)
                     }
                 }
-                .font(.caption.weight(.semibold))
+                .font(.adaptive(.caption).weight(.semibold))
                 .foregroundStyle(isConnected ? Color.danger : Color.white)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 7)
+                .padding(.horizontal, 12 * AdaptiveSize.scale)
+                .padding(.vertical, 7 * AdaptiveSize.scale)
                 .background(isConnected ? Color.clear : Color.accent, in: .rect(cornerRadius: CornerRadius.control))
                 .overlay {
                     RoundedRectangle(cornerRadius: CornerRadius.control)
@@ -188,7 +188,7 @@ private struct ProviderRow: View {
             .disabled(isDisabled)
             .opacity(isDisabled && !showsProgress ? 0.5 : 1)
         }
-        .padding(16)
+        .padding(16 * AdaptiveSize.scale)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -198,22 +198,22 @@ private struct ProviderIdentity: View {
     let status: String?
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * AdaptiveSize.scale) {
             Image(provider.imageName, bundle: PresentationResources.bundle)
                 .resizable()
                 .scaledToFit()
-                .frame(width: 20, height: 20)
-                .frame(width: 36, height: 36)
+                .frame(width: 20 * AdaptiveSize.scale, height: 20 * AdaptiveSize.scale)
+                .frame(width: 36 * AdaptiveSize.scale, height: 36 * AdaptiveSize.scale)
                 .background(Color.fill, in: Circle())
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(provider.displayName)
-                    .font(.headline)
+                    .font(.adaptive(.headline))
                     .foregroundStyle(Color.label)
 
                 if let status {
                     Text(status)
-                        .font(.footnote)
+                        .font(.adaptive(.footnote))
                         .foregroundStyle(Color.secondaryLabel)
                 }
             }
