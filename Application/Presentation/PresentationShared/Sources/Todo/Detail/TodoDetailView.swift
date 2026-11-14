@@ -85,7 +85,7 @@ public struct TodoDetailView: View {
             store.send(.setTodo(todo))
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .sheet(
+        .prominentSheet(
             item: $store.scope(state: \.sheet, action: \.sheet)
                 .activePresentation(when: isTabContentActive)
         ) { store in
@@ -225,7 +225,6 @@ public struct TodoDetailView: View {
             .environment(\.deviceType, .bar)
             .environment(\.showsPaneTitleBar, false)
             .background(Color.background)
-            .presentationDragIndicator(.visible)
         }
     }
 }
@@ -313,7 +312,6 @@ private struct InfoSheetView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background.ignoresSafeArea())
-        .presentationDragIndicator(.visible)
     }
 
     private var topBar: some View {

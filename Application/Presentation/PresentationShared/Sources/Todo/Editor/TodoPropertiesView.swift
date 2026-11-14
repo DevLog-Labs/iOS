@@ -33,7 +33,6 @@ public struct TodoPropertiesView: View {
         content
             .safeAreaInset(edge: .top, spacing: 0) { toolBar }
             .background(Color.background.ignoresSafeArea())
-            .presentationDragIndicator(.visible)
     }
 
     private var toolBar: some View {
@@ -273,7 +272,7 @@ private struct DueDatePicker<Content: View>: View {
         } label: {
             content()
         }
-        .sheet(isPresented: $isPresented.activePresentation(when: isTabContentActive)) {
+        .prominentSheet(isPresented: $isPresented.activePresentation(when: isTabContentActive)) {
             DatePicker(
                 "",
                 selection: $dueDate,
@@ -281,8 +280,7 @@ private struct DueDatePicker<Content: View>: View {
             )
             .labelsHidden()
             .datePickerStyle(.graphical)
-            .presentationDragIndicator(.visible)
-            .presentationDetents([.height(height)])
+            .sheetDetent(.height(height))
             .background {
                 GeometryReader { geometry in
                     Color.clear.onAppear {

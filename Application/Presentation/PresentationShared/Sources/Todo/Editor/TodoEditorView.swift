@@ -81,11 +81,15 @@ public struct TodoEditorView: View {
             }
             .toolbarVisibility(.hidden, for: .navigationBar)
             .prominentAlert(store, state: \.alert, action: \.alert)
-            .inspector(isPresented: $store.isInspectorPresented) {
+            .inspector(isPresented: isWideLayout ? $store.isInspectorPresented : .constant(false)) {
                 EditorInspector(store: store, isWideLayout: isWideLayout)
                     .environment(\.windowControlsInset, 0)
                     .inspectorColumnWidth(min: 320, ideal: 420, max: 520)
-                    .presentationDetents([.large])
+            }
+            // 좁은 화면의 세부 정보는 시스템 시트 대신 직접 그린 시트로 표시
+            .prominentSheet(isPresented: isWideLayout ? .constant(false) : $store.isInspectorPresented) {
+                EditorInspector(store: store, isWideLayout: isWideLayout)
+                    .environment(\.windowControlsInset, 0)
             }
         }
         .environment(\.windowControlsInset, store.windowControlsInset)
