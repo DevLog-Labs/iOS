@@ -108,7 +108,7 @@ public struct TodoDetailView: View {
         if showsPaneTitleBar {
             PaneTitleBar {
                 if let todo = store.todo {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 8 * AdaptiveSize.scale) {
                         Text(todo.title)
                         Text(verbatim: "#\(todo.number)")
                             .foregroundStyle(Color.tertiaryLabel)
@@ -121,7 +121,7 @@ public struct TodoDetailView: View {
                 }
             }
         } else {
-            HStack(spacing: 12) {
+            HStack(spacing: 12 * AdaptiveSize.scale) {
                 NavigationBackButton {
                     if let onBack {
                         onBack()
@@ -135,10 +135,10 @@ public struct TodoDetailView: View {
                     editButton
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .padding(.vertical, 12 * AdaptiveSize.scale)
             .padding(.top, windowControlsInset)
             .background(Color.background, ignoresSafeAreaEdges: .top)
         }
@@ -158,8 +158,8 @@ public struct TodoDetailView: View {
                 store.send(.setSheet(.info))
             } label: {
                 Image(systemName: "info.circle")
-                    .font(.title3.weight(.semibold))
-                    .frame(width: 28, height: 28)
+                    .font(.adaptive(.title3).weight(.semibold))
+                    .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
             }
             .adaptiveButtonStyle(shape: .circle, color: .secondaryBackground, glassEffect: .enabled)
         }
@@ -236,7 +236,7 @@ private struct InfoSheetView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
                 VStack(alignment: .leading, spacing: 0) {
                     optionRow(
                         systemImage: "tag.fill",
@@ -288,27 +288,27 @@ private struct InfoSheetView: View {
                 .background(Color.secondaryBackground)
                 .clipShape(.rect(cornerRadius: CornerRadius.group))
 
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
                     Text(String(localized: "todo_tags", bundle: PresentationResources.bundle))
-                        .font(.headline)
-                        .padding(.horizontal, 16)
+                        .font(.adaptive(.headline))
+                        .padding(.horizontal, 16 * AdaptiveSize.scale)
 
                     Group {
                         if todo.tags.isEmpty {
                             Text(String(localized: "todo_no_tags", bundle: PresentationResources.bundle))
                                 .foregroundStyle(Color.secondaryLabel)
                         } else {
-                            TagList(todo.tags, verticalSpacing: 4, horizontalSpacing: 4)
+                            TagList(todo.tags, verticalSpacing: 4 * AdaptiveSize.scale, horizontalSpacing: 4 * AdaptiveSize.scale)
                         }
                     }
-                    .padding(16)
+                    .padding(16 * AdaptiveSize.scale)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.secondaryBackground)
                     .clipShape(.rect(cornerRadius: CornerRadius.group))
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.bottom, 16 * AdaptiveSize.scale)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background.ignoresSafeArea())
@@ -317,7 +317,7 @@ private struct InfoSheetView: View {
     private var topBar: some View {
         ZStack {
             Text(String(localized: "todo_details", bundle: PresentationResources.bundle))
-                .font(.headline)
+                .font(.adaptive(.headline))
             HStack {
                 Button {
                     onClose()
@@ -332,8 +332,8 @@ private struct InfoSheetView: View {
                 Spacer()
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
@@ -343,22 +343,22 @@ private struct InfoSheetView: View {
         title: String,
         @ViewBuilder trailing: () -> Trailing
     ) -> some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * AdaptiveSize.scale) {
             Image(systemName: systemImage)
-                .font(.title3)
+                .font(.adaptive(.title3))
                 .foregroundStyle(color)
-                .frame(width: 28, height: 28)
+                .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
 
             Text(title)
-                .font(.headline)
+                .font(.adaptive(.headline))
                 .layoutPriority(1)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 8 * AdaptiveSize.scale)
 
             trailing()
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
     }
 
     private func dueDateText(for dueDate: Date) -> String {

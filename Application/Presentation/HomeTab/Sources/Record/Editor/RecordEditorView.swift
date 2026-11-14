@@ -39,13 +39,13 @@ public struct RecordEditorView: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
+                LazyVStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
                     versionCard
                     titleCard
                     contentEditor
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 20)
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
+                .padding(.bottom, 20 * AdaptiveSize.scale)
             }
             .safeAreaInset(edge: .top, spacing: 0) { topBar }
             .safeAreaInset(edge: .bottom, spacing: 0) { confirmBar }
@@ -80,7 +80,7 @@ public struct RecordEditorView: View {
                     ? "development_record_editor_correction_title"
                     : "development_record_editor_title"
             ))
-                .font(.headline)
+                .font(.adaptive(.headline))
             Spacer()
             Button {
                 focusedField = nil
@@ -96,17 +96,17 @@ public struct RecordEditorView: View {
             .topBarButtonStyle()
             .disabled(!store.isReadyToSave)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var versionCard: some View {
         FieldSection(title: RecordPresentation.text("development_record_version")) {
             Text(RecordPresentation.versionLabel(store.versionNumber))
-                .font(.body)
+                .font(.adaptive(.body))
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
+                .padding(16 * AdaptiveSize.scale)
                 .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
     }
@@ -117,23 +117,23 @@ public struct RecordEditorView: View {
                 RecordPresentation.text("development_record_title_placeholder"),
                 text: $store.title
             )
-            .font(.body)
+            .font(.adaptive(.body))
             .focused($focusedField, equals: .title)
-            .padding()
+            .padding(16 * AdaptiveSize.scale)
             .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
         .disabled(store.isLoading)
     }
 
     private var contentEditor: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 16 * AdaptiveSize.scale) {
             ModePicker(store: store, focusedField: _focusedField)
 
             switch store.selectedTab {
             case .write:
-                TextEditorContentLayout(minimumHeight: 340) {
+                TextEditorContentLayout(minimumHeight: 340 * AdaptiveSize.scale) {
                     Text(RecordPresentation.text("development_record_markdown_hint"))
-                        .font(.caption)
+                        .font(.adaptive(.caption))
                         .foregroundStyle(Color.tertiaryLabel)
                     UIKitTextEditor
                         .composable(
@@ -154,25 +154,25 @@ public struct RecordEditorView: View {
                             sizeThatFits: { UIKitTextEditor.fittingSize(proposal: $0, textEditor: $1) }
                         )
                         .focused($focusedField, equals: .content)
-                        .padding(12)
+                        .padding(12 * AdaptiveSize.scale)
                         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
-                .frame(minHeight: 340, alignment: .topLeading)
+                .frame(minHeight: 340 * AdaptiveSize.scale, alignment: .topLeading)
                 .contentShape(.rect)
                 .onTapGesture { focusedField = .content }
             case .preview:
                 Group {
                     if store.markdownContent.isEmpty {
-                        VStack(spacing: 8) {
+                        VStack(spacing: 8 * AdaptiveSize.scale) {
                             Text(RecordPresentation.text("development_record_preview_empty_title"))
-                                .font(.headline)
+                                .font(.adaptive(.headline))
                             Text(RecordPresentation.text("development_record_preview_empty_message"))
-                                .font(.subheadline)
+                                .font(.adaptive(.subheadline))
                                 .foregroundStyle(Color.secondaryLabel)
                         }
                         .multilineTextAlignment(.center)
-                        .padding(12)
-                        .frame(maxWidth: .infinity, minHeight: 340, alignment: .center)
+                        .padding(12 * AdaptiveSize.scale)
+                        .frame(maxWidth: .infinity, minHeight: 340 * AdaptiveSize.scale, alignment: .center)
                         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                     } else {
                         MarkdownContentView(
@@ -181,12 +181,12 @@ public struct RecordEditorView: View {
                         )
                         // MarkdownRenderer 내부의 좌우 여백을 상쇄해 입력 본문과 정렬
                         .padding(.horizontal, -16)
-                        .padding(12)
-                        .frame(minHeight: 340, alignment: .topLeading)
+                        .padding(12 * AdaptiveSize.scale)
+                        .frame(minHeight: 340 * AdaptiveSize.scale, alignment: .topLeading)
                         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                     }
                 }
-                .frame(minHeight: 340, alignment: .topLeading)
+                .frame(minHeight: 340 * AdaptiveSize.scale, alignment: .topLeading)
             }
 
         }
@@ -194,7 +194,7 @@ public struct RecordEditorView: View {
     }
 
     private var confirmBar: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 8 * AdaptiveSize.scale) {
             Button {
                 focusedField = nil
                 store.send(.view(.confirm))
@@ -210,10 +210,10 @@ public struct RecordEditorView: View {
                         ))
                     }
                 }
-                .font(.headline)
+                .font(.adaptive(.headline))
                 .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
+                .padding(.vertical, 10 * AdaptiveSize.scale)
             }
             .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!store.canConfirmVersion)
@@ -222,11 +222,11 @@ public struct RecordEditorView: View {
                 RecordPresentation.text("development_record_confirm_hint_format"),
                 RecordPresentation.versionLabel(store.versionNumber)
             ))
-            .font(.caption)
+            .font(.adaptive(.caption))
             .foregroundStyle(Color.tertiaryLabel)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 
@@ -242,9 +242,9 @@ private struct FieldSection<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14 * AdaptiveSize.scale) {
             Text(title)
-                .font(.headline)
+                .font(.adaptive(.headline))
             content
         }
     }
@@ -287,9 +287,9 @@ private struct ModePicker: View {
             }
         } label: {
             Text(title)
-                .font(.body)
+                .font(.adaptive(.body))
                 .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
-                .frame(maxWidth: .infinity, minHeight: 36)
+                .frame(maxWidth: .infinity, minHeight: 36 * AdaptiveSize.scale)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: CornerRadius.segment)

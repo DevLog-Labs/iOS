@@ -41,7 +41,7 @@ public struct ProfileView: View {
         NavigationStack(path: $router.path) {
             PaneSplitView {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16) {
+                    LazyVStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
                         UserInfoCard(store: store, isSelected: isSelected)
                         ActivityCard(store: store) { todoId in
                             showTodo(.activity(todoId))
@@ -51,8 +51,8 @@ public struct ProfileView: View {
                             showTodo(.recentTodo(todoId))
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
+                    .padding(.horizontal, 16 * AdaptiveSize.scale)
+                    .padding(.bottom, 24 * AdaptiveSize.scale)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -147,17 +147,17 @@ public struct ProfileView: View {
             VStack(alignment: .leading) {
                 HStack {
                     Text("nav_profile", bundle: PresentationResources.bundle)
-                        .font(.largeTitle.bold())
+                        .font(.adaptive(.largeTitle).bold())
                     Spacer()
                     if deviceType != .duo {
                         settingsButton
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 8)
+            .padding(.bottom, 8 * AdaptiveSize.scale)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }

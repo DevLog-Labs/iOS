@@ -19,20 +19,20 @@ struct PushNotificationSettingsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
                 EnableCard(store: store)
 
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
                     Text("push_settings_time_section", bundle: PresentationResources.bundle)
-                        .font(.title3.weight(.semibold))
+                        .font(.adaptive(.title3).weight(.semibold))
                     TimeCard(store: store)
                 }
 
                 CustomTimeTipCard()
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 20)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.top, 20 * AdaptiveSize.scale)
+            .padding(.bottom, 24 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -61,7 +61,7 @@ struct PushNotificationSettingsView: View {
         } else {
             ZStack {
                 title
-                    .font(.headline)
+                    .font(.adaptive(.headline))
 
                 if deviceType != .duo {
                     HStack {
@@ -70,10 +70,10 @@ struct PushNotificationSettingsView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12)
+            .padding(.bottom, 12 * AdaptiveSize.scale)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
@@ -84,17 +84,17 @@ private struct EnableCard: View {
     @Bindable var store: StoreOf<PushNotificationSettingsFeature>
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+            HStack(spacing: 12 * AdaptiveSize.scale) {
                 Image(systemName: "bell")
-                    .font(.headline)
-                    .frame(width: 36, height: 36)
+                    .font(.adaptive(.headline))
+                    .frame(width: 36 * AdaptiveSize.scale, height: 36 * AdaptiveSize.scale)
                     .iconStyle(color: .accent, in: Circle())
 
                 Text("push_settings_enable", bundle: PresentationResources.bundle)
-                    .font(.title3)
+                    .font(.adaptive(.title3))
 
-                Spacer(minLength: 8)
+                Spacer(minLength: 8 * AdaptiveSize.scale)
 
                 if store.isLoading && store.activeLoadingRow == .enable {
                     ProgressView()
@@ -109,10 +109,10 @@ private struct EnableCard: View {
             Divider().overlay(Color.separator)
 
             Text("push_settings_footer", bundle: PresentationResources.bundle)
-                .font(.footnote)
+                .font(.adaptive(.footnote))
                 .foregroundStyle(Color.secondaryLabel)
         }
-        .padding(16)
+        .padding(16 * AdaptiveSize.scale)
         .frame(maxWidth: .infinity, alignment: .leading)
         .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
@@ -159,7 +159,7 @@ private struct TimeCard: View {
                     selectionIndicator(isSelected: isSelected)
                 }
             }
-            .padding(16)
+            .padding(16 * AdaptiveSize.scale)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
@@ -170,10 +170,10 @@ private struct TimeCard: View {
         Button {
             store.send(.tapCustomTime)
         } label: {
-            HStack(spacing: 8) {
+            HStack(spacing: 8 * AdaptiveSize.scale) {
                 Text("push_settings_custom", bundle: PresentationResources.bundle)
                     .foregroundStyle(Color.label)
-                Spacer(minLength: 8)
+                Spacer(minLength: 8 * AdaptiveSize.scale)
                 if store.isLoading && store.activeLoadingRow == .customTime {
                     ProgressView()
                 } else {
@@ -182,10 +182,10 @@ private struct TimeCard: View {
                 Text(formattedTimeString(store.viewPushNotificationTime))
                     .foregroundStyle(Color.secondaryLabel)
                 Image(systemName: "chevron.right")
-                    .font(.footnote.weight(.semibold))
+                    .font(.adaptive(.footnote).weight(.semibold))
                     .foregroundStyle(Color.secondaryLabel)
             }
-            .padding(16)
+            .padding(16 * AdaptiveSize.scale)
             .frame(maxWidth: .infinity, alignment: .leading)
             .contentShape(Rectangle())
         }
@@ -199,13 +199,13 @@ private struct TimeCard: View {
                 Image(systemName: "circle.fill")
                     .foregroundStyle(Color.accent)
                 Image(systemName: "checkmark")
-                    .font(.caption2.bold())
+                    .font(.adaptive(.caption2).bold())
                     .foregroundStyle(Color.white)
             }
-            .font(.title2)
+            .font(.adaptive(.title2))
         } else {
             Image(systemName: "circle")
-                .font(.title2)
+                .font(.adaptive(.title2))
                 .foregroundStyle(Color.separator)
         }
     }
@@ -217,19 +217,19 @@ private struct TimeCard: View {
 
 private struct CustomTimeTipCard: View {
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * AdaptiveSize.scale) {
             Image(systemName: "info")
-                .font(.caption.weight(.semibold))
-                .frame(width: 28, height: 28)
+                .font(.adaptive(.caption).weight(.semibold))
+                .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
                 .background(Color.secondaryBackground, in: Circle())
             Text("push_settings_custom_hint", bundle: PresentationResources.bundle)
-                .font(.footnote)
+                .font(.adaptive(.footnote))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         .foregroundStyle(Color.accent)
-        .padding(16)
+        .padding(16 * AdaptiveSize.scale)
         .background(Color.accent.opacity(0.08), in: .rect(cornerRadius: CornerRadius.group))
-        .padding(.bottom, 16)
+        .padding(.bottom, 16 * AdaptiveSize.scale)
         .background(Color.background)
     }
 }

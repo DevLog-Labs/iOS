@@ -59,6 +59,8 @@ public struct RootView: View {
             store.send(.presentTodoDetail(todoId))
             clearPushNotificationRoute()
         }
+        // 글자 크기를 정하지 않은 글자도 Mac 크기로 표시
+        .font(AdaptiveSize.macFontSize(.body).map { .system(size: $0) })
     }
 
     private func sheetContent(todoId: String) -> some View {

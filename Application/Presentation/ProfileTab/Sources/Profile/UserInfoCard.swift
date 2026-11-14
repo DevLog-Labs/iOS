@@ -14,8 +14,8 @@ struct UserInfoCard: View {
     let isSelected: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+            HStack(spacing: 16 * AdaptiveSize.scale) {
                 Group {
                     if let data = store.avatarImageData?.data,
                        let uiImage = UIImage(data: data) {
@@ -30,16 +30,16 @@ struct UserInfoCard: View {
                             .foregroundStyle(Color.tintLabel, Color.tintFill)
                     }
                 }
-                .frame(width: 64, height: 64)
+                .frame(width: 64 * AdaptiveSize.scale, height: 64 * AdaptiveSize.scale)
                 .clipShape(.circle)
                 .transaction { $0.animation = nil }
 
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 4 * AdaptiveSize.scale) {
                     Text(store.name)
-                        .font(.title2)
+                        .font(.adaptive(.title2))
                         .bold()
                     Text(store.email)
-                        .font(.caption)
+                        .font(.adaptive(.caption))
                         .foregroundStyle(Color.secondaryLabel)
                 }
                 Spacer(minLength: 0)
@@ -57,7 +57,7 @@ struct UserInfoCard: View {
                     }
                     .foregroundStyle(Color.secondaryLabel)
                     .tint(Color.accent)
-                    .frame(height: UIFont.preferredFont(forTextStyle: .body).lineHeight)
+                    .frame(height: UIFont.preferredFont(forTextStyle: .body).lineHeight * AdaptiveSize.scale)
                     .focused($focused)
                     .disabled(!store.isNetworkConnected)
 
@@ -72,7 +72,7 @@ struct UserInfoCard: View {
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
                 }
-                .padding(8)
+                .padding(8 * AdaptiveSize.scale)
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.control)
                         .fill(Color.tertiaryBackground)
@@ -90,7 +90,7 @@ struct UserInfoCard: View {
             }
             .opacity(store.isNetworkConnected ? 1 : 0.7)
         }
-        .padding(16)
+        .padding(16 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if !isSelected {

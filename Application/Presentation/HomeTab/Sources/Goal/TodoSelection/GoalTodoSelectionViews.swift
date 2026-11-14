@@ -37,15 +37,15 @@ struct GoalTodoSelectionSection: View {
     let onToggle: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
+            HStack(spacing: 10 * AdaptiveSize.scale) {
                 Image(systemName: section.category.symbolName)
-                    .font(.caption.weight(.semibold))
+                    .font(.adaptive(.caption).weight(.semibold))
                     .foregroundStyle(Color.white)
-                    .frame(width: 30, height: 30)
+                    .frame(width: 30 * AdaptiveSize.scale, height: 30 * AdaptiveSize.scale)
                     .background(section.category.color, in: .circle)
                 Text(section.category.localizedName)
-                    .font(.headline)
+                    .font(.adaptive(.headline))
                 Spacer()
             }
 
@@ -73,21 +73,21 @@ struct GoalTodoSelectionRow: View {
 
     var body: some View {
         Button(action: onToggle) {
-            HStack(spacing: 14) {
+            HStack(spacing: 14 * AdaptiveSize.scale) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
+                    .font(.adaptive(.title2))
                     .foregroundStyle(isSelected ? Color.accent : Color.separator)
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 4 * AdaptiveSize.scale) {
                     Text(todo.title)
-                        .font(.body.weight(isSelected ? .semibold : .regular))
+                        .font(.adaptive(.body).weight(isSelected ? .semibold : .regular))
                         .foregroundStyle(Color.label)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
-                    HStack(spacing: 8) {
+                    HStack(spacing: 8 * AdaptiveSize.scale) {
                         Text("#\(todo.number)")
                         Text(todo.dueDate ?? todo.updatedAt, format: .dateTime.month().day())
                     }
-                    .font(.caption)
+                    .font(.adaptive(.caption))
                     .foregroundStyle(Color.tertiaryLabel)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -96,8 +96,8 @@ struct GoalTodoSelectionRow: View {
                         .foregroundStyle(Color.warning)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.vertical, 12 * AdaptiveSize.scale)
             .background(isSelected ? Color.tintFill : .clear)
             .contentShape(.rect)
         }

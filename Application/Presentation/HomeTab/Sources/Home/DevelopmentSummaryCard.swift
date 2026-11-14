@@ -16,25 +16,25 @@ struct DevelopmentSummaryCard: View {
     let hasLoadFailure: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 6 * AdaptiveSize.scale) {
                     Text("home_development_summary_eyebrow", bundle: PresentationResources.bundle)
-                        .font(.subheadline)
+                        .font(.adaptive(.subheadline))
                         .foregroundStyle(Color.tertiaryLabel)
                     summaryTitle
                 }
-                Spacer(minLength: 16)
+                Spacer(minLength: 16 * AdaptiveSize.scale)
                 Image(systemName: "flag.checkered")
-                    .font(.title2.weight(.semibold))
+                    .font(.adaptive(.title2).weight(.semibold))
                     .foregroundStyle(Color.accent)
-                    .frame(width: 64, height: 64)
+                    .frame(width: 64 * AdaptiveSize.scale, height: 64 * AdaptiveSize.scale)
                     .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.control))
             }
 
             summaryContent
         }
-        .padding(20)
+        .padding(20 * AdaptiveSize.scale)
         .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
 
@@ -57,7 +57,7 @@ struct DevelopmentSummaryCard: View {
                 items.count
             )
         )
-        .font(.title2.weight(.semibold))
+        .font(.adaptive(.title2).weight(.semibold))
         .foregroundStyle(Color.label)
         .fixedSize(horizontal: false, vertical: true)
     }
@@ -67,32 +67,32 @@ struct DevelopmentSummaryCard: View {
         if !hasLoaded && isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .padding(.vertical, 12 * AdaptiveSize.scale)
         } else if !hasLoaded && hasLoadFailure {
             Text("common_error_message", bundle: PresentationResources.bundle)
-                .font(.subheadline)
+                .font(.adaptive(.subheadline))
                 .foregroundStyle(Color.secondaryLabel)
         } else if items.isEmpty {
             Text("home_development_summary_empty_message", bundle: PresentationResources.bundle)
-                .font(.subheadline)
+                .font(.adaptive(.subheadline))
                 .foregroundStyle(Color.secondaryLabel)
         } else {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
                 DevelopmentTodoProgressView(progress: todoProgress)
 
                 if let recentRecord {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
                         Text("home_development_summary_recent_record", bundle: PresentationResources.bundle)
-                            .font(.caption.weight(.medium))
+                            .font(.adaptive(.caption).weight(.medium))
                             .foregroundStyle(Color.tertiaryLabel)
-                        HStack(spacing: 12) {
+                        HStack(spacing: 12 * AdaptiveSize.scale) {
                             Text(recentRecord.title)
-                                .font(.subheadline.weight(.medium))
+                                .font(.adaptive(.subheadline).weight(.medium))
                                 .foregroundStyle(Color.label)
                                 .lineLimit(1)
-                            Spacer(minLength: 12)
+                            Spacer(minLength: 12 * AdaptiveSize.scale)
                             Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
-                                .font(.caption)
+                                .font(.adaptive(.caption))
                                 .foregroundStyle(Color.tertiaryLabel)
                         }
                     }

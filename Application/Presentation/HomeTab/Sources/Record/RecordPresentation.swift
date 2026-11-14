@@ -19,10 +19,10 @@ enum RecordPresentation {
 }
 
 enum RecordTimelineLayout {
-    static let rowHeight: CGFloat = 88
-    static let markerSize: CGFloat = 13
+    static let rowHeight = 88 * AdaptiveSize.scale
+    static let markerSize = 13 * AdaptiveSize.scale
     static let lineWidth: CGFloat = 2
-    static let markerTopPadding: CGFloat = 3
+    static let markerTopPadding = 3 * AdaptiveSize.scale
     static let lineXOffset = (markerSize - lineWidth) / 2
     static let lineYOffset = markerTopPadding + markerSize / 2
 }

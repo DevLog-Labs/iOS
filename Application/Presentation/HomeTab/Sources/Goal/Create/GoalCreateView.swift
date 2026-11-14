@@ -27,14 +27,14 @@ public struct GoalCreateView: View {
     public var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 24) {
+                LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
                     GoalCreateTitleField(store: store, focusedField: $focusedField)
                     GoalCreateDescriptionEditor(store: store, focusedField: $focusedField)
                     GoalCreateStatusField()
                     GoalCreateTodoField(store: store)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 20)
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
+                .padding(.bottom, 20 * AdaptiveSize.scale)
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 GoalCreateTopBar(
@@ -77,7 +77,7 @@ private struct GoalCreateTopBar: View {
     var body: some View {
         ZStack {
             Text(RecordPresentation.text("development_goal_create_title"))
-                .font(.headline)
+                .font(.adaptive(.headline))
 
             HStack {
                 Button(action: onClose) {
@@ -93,8 +93,8 @@ private struct GoalCreateTopBar: View {
                 Spacer()
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 }
@@ -104,17 +104,17 @@ private struct GoalCreateTitleField: View {
     let focusedField: FocusState<GoalCreateField?>.Binding
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14 * AdaptiveSize.scale) {
             Text(RecordPresentation.text("development_goal_create_title_label"))
-                .font(.headline)
+                .font(.adaptive(.headline))
 
             TextField(
                 RecordPresentation.text("development_goal_create_title_placeholder"),
                 text: $store.title
             )
             .focused(focusedField, equals: .title)
-            .font(.body)
-            .padding()
+            .font(.adaptive(.body))
+            .padding(16 * AdaptiveSize.scale)
             .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
         }
         .disabled(store.isSaving)
@@ -126,19 +126,19 @@ private struct GoalCreateDescriptionEditor: View {
     let focusedField: FocusState<GoalCreateField?>.Binding
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14 * AdaptiveSize.scale) {
             Text(RecordPresentation.text("development_goal_create_description_label"))
-                .font(.headline)
+                .font(.adaptive(.headline))
 
-            VStack(spacing: 16) {
+            VStack(spacing: 16 * AdaptiveSize.scale) {
                 GoalCreateModePicker(store: store, focusedField: focusedField)
 
                 Group {
                     switch store.selectedTab {
                     case .write:
-                        TextEditorContentLayout(minimumHeight: 120) {
+                        TextEditorContentLayout(minimumHeight: 120 * AdaptiveSize.scale) {
                             Text(RecordPresentation.text("development_goal_create_markdown_hint"))
-                                .font(.caption)
+                                .font(.adaptive(.caption))
                                 .foregroundStyle(Color.tertiaryLabel)
                             UIKitTextEditor
                                 .composable(
@@ -159,7 +159,7 @@ private struct GoalCreateDescriptionEditor: View {
                                     sizeThatFits: { UIKitTextEditor.fittingSize(proposal: $0, textEditor: $1) }
                                 )
                                 .focused(focusedField, equals: .content)
-                                .padding(12)
+                                .padding(12 * AdaptiveSize.scale)
                                 .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                         }
                         .contentShape(.rect)
@@ -167,16 +167,16 @@ private struct GoalCreateDescriptionEditor: View {
                     case .preview:
                         Group {
                             if store.markdownContent.isEmpty {
-                                VStack(spacing: 8) {
+                                VStack(spacing: 8 * AdaptiveSize.scale) {
                                     Text(RecordPresentation.text("development_goal_create_preview_empty_title"))
-                                        .font(.headline)
+                                        .font(.adaptive(.headline))
                                     Text(RecordPresentation.text("development_goal_create_preview_empty_message"))
-                                        .font(.subheadline)
+                                        .font(.adaptive(.subheadline))
                                         .foregroundStyle(Color.secondaryLabel)
                                 }
                                 .multilineTextAlignment(.center)
-                                .padding(12)
-                                .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
+                                .padding(12 * AdaptiveSize.scale)
+                                .frame(maxWidth: .infinity, minHeight: 120 * AdaptiveSize.scale, alignment: .center)
                                 .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                             } else {
                                 MarkdownContentView(
@@ -185,14 +185,14 @@ private struct GoalCreateDescriptionEditor: View {
                                 )
                                     // MarkdownRenderer 내부의 좌우 여백을 상쇄해 입력 본문과 정렬
                                     .padding(.horizontal, -16)
-                                    .padding(12)
-                                    .frame(minHeight: 120, alignment: .topLeading)
+                                    .padding(12 * AdaptiveSize.scale)
+                                    .frame(minHeight: 120 * AdaptiveSize.scale, alignment: .topLeading)
                                     .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                             }
                         }
                     }
                 }
-                .frame(minHeight: 120, alignment: .topLeading)
+                .frame(minHeight: 120 * AdaptiveSize.scale, alignment: .topLeading)
             }
         }
         .disabled(store.isSaving)
@@ -233,9 +233,9 @@ private struct GoalCreateModeButton: View {
     var body: some View {
         Button(action: action) {
             Text(title)
-                .font(.body)
+                .font(.adaptive(.body))
                 .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
-                .frame(maxWidth: .infinity, minHeight: 36)
+                .frame(maxWidth: .infinity, minHeight: 36 * AdaptiveSize.scale)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: CornerRadius.segment)
@@ -251,15 +251,15 @@ private struct GoalCreateModeButton: View {
 
 private struct GoalCreateStatusField: View {
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14 * AdaptiveSize.scale) {
             Text(RecordPresentation.text("development_goal_create_status"))
-                .font(.headline)
+                .font(.adaptive(.headline))
 
             HStack {
                 GoalStatusBadge(status: .inProgress)
                 Spacer()
             }
-            .padding(20)
+            .padding(20 * AdaptiveSize.scale)
             .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
@@ -269,33 +269,33 @@ private struct GoalCreateTodoField: View {
     @Bindable var store: StoreOf<GoalCreateFeature>
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14 * AdaptiveSize.scale) {
             Text(RecordPresentation.text("development_goal_create_todo_label"))
-                .font(.headline)
+                .font(.adaptive(.headline))
 
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 12 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 4 * AdaptiveSize.scale) {
                     Text(RecordPresentation.text("development_goal_create_todo_optional"))
-                        .font(.callout)
+                        .font(.adaptive(.callout))
                         .foregroundStyle(Color.secondaryLabel)
                     Text(RecordPresentation.text("development_goal_create_todo_hint"))
-                        .font(.footnote)
+                        .font(.adaptive(.footnote))
                         .foregroundStyle(Color.tertiaryLabel)
                 }
-                Spacer(minLength: 12)
+                Spacer(minLength: 12 * AdaptiveSize.scale)
                 Button {
                     store.send(.view(.selectTodos))
                 } label: {
                     Text(todoButtonTitle)
-                        .font(.callout.weight(.semibold))
+                        .font(.adaptive(.callout).weight(.semibold))
                         .foregroundStyle(Color.accent)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 9)
+                        .padding(.horizontal, 16 * AdaptiveSize.scale)
+                        .padding(.vertical, 9 * AdaptiveSize.scale)
                         .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.control))
                 }
                 .buttonStyle(.plain)
             }
-            .padding(20)
+            .padding(20 * AdaptiveSize.scale)
             .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
         .disabled(store.isSaving)
@@ -328,17 +328,17 @@ private struct GoalCreateSaveBar: View {
                         Text(RecordPresentation.text("development_goal_save"))
                     }
                 }
-                .font(.headline)
+                .font(.adaptive(.headline))
                 .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
+                .padding(.vertical, 10 * AdaptiveSize.scale)
             }
             .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!isSaveEnabled)
 
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 }

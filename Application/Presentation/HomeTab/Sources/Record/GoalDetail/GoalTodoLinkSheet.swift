@@ -13,22 +13,22 @@ struct GoalTodoLinkSheet: View {
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title2,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
-    ).lineHeight
+    ).lineHeight * AdaptiveSize.scale
     @Bindable var store: StoreOf<GoalTodoLinkFeature>
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
+            LazyVStack(spacing: 20 * AdaptiveSize.scale) {
                 searchField
                 sheetContent
                 Text(RecordPresentation.text("development_goal_todo_optional_footer"))
-                    .font(.footnote)
+                    .font(.adaptive(.footnote))
                     .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 12 * AdaptiveSize.scale)
             }
-            .padding(16)
+            .padding(16 * AdaptiveSize.scale)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .scrollDismissesKeyboard(.interactively)
@@ -45,7 +45,7 @@ struct GoalTodoLinkSheet: View {
     private var topBar: some View {
         ZStack {
             Text(RecordPresentation.text("development_goal_todo_link_title"))
-                .font(.headline)
+                .font(.adaptive(.headline))
             HStack {
                 Button {
                     store.send(.view(.close))
@@ -59,7 +59,7 @@ struct GoalTodoLinkSheet: View {
                 .topBarButtonStyle()
                 .disabled(store.isUpdating)
                 Spacer()
-                HStack(spacing: 8) {
+                HStack(spacing: 8 * AdaptiveSize.scale) {
                     if #available(iOS 26.0, *) {
                         Image(systemName: "ellipsis")
                             .prominentMenu(
@@ -71,7 +71,7 @@ struct GoalTodoLinkSheet: View {
                             .topBarButtonStyle()
                     } else {
                         Image(systemName: "ellipsis")
-                            .font(.title3.weight(.semibold))
+                            .font(.adaptive(.title3).weight(.semibold))
                             .frame(width: iconSize, height: iconSize)
                             .prominentMenu(
                                 items: clearSelectionMenuItems,
@@ -96,13 +96,13 @@ struct GoalTodoLinkSheet: View {
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var searchField: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 10 * AdaptiveSize.scale) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color.tertiaryLabel)
             TextField(
@@ -112,8 +112,8 @@ struct GoalTodoLinkSheet: View {
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
         }
-        .font(.title3)
-        .padding()
+        .font(.adaptive(.title3))
+        .padding(16 * AdaptiveSize.scale)
         .background {
             RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(Color.secondaryBackground)
@@ -136,7 +136,7 @@ struct GoalTodoLinkSheet: View {
         if store.isLoading, store.todos.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
+                .padding(.vertical, 40 * AdaptiveSize.scale)
         } else if store.hasLoadFailure, store.todos.isEmpty {
             ContentUnavailableView {
                 Label(

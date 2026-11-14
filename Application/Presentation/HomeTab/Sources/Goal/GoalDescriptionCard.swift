@@ -13,24 +13,24 @@ struct GoalDescriptionCard: View {
     let isLoading: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
             Text(RecordPresentation.text("development_goal_description_title"))
-                .font(.title3.bold())
+                .font(.adaptive(.title3).bold())
 
             if isLoading {
                 ProgressView()
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
+                    .padding(.vertical, 16 * AdaptiveSize.scale)
             } else if description.isEmpty {
                 Text(RecordPresentation.text("development_goal_description_empty_message"))
-                    .font(.body)
+                    .font(.adaptive(.body))
                     .foregroundStyle(Color.secondaryLabel)
             } else {
                 MarkdownContentView(content: description)
-                    .frame(minHeight: 120)
+                    .frame(minHeight: 120 * AdaptiveSize.scale)
             }
         }
-        .padding(20)
+        .padding(20 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: .rect)
     }
 }

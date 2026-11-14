@@ -25,7 +25,7 @@ struct SettingsView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: 24 * AdaptiveSize.scale) {
                 AppSettingsCard(
                     themeName: store.theme.localizedName(in: PresentationResources.bundle),
                     isNetworkConnected: store.isNetworkConnected,
@@ -51,8 +51,8 @@ struct SettingsView: View {
 
                 deleteAccountContent
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.bottom, 24 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -73,7 +73,7 @@ struct SettingsView: View {
         } else {
             ZStack {
                 title
-                    .font(.headline)
+                    .font(.adaptive(.headline))
 
                 if deviceType != .duo {
                     HStack {
@@ -82,17 +82,17 @@ struct SettingsView: View {
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12)
+            .padding(.bottom, 12 * AdaptiveSize.scale)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
     }
 
     private var deleteAccountContent: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 16 * AdaptiveSize.scale) {
             Button {
                 store.send(.setAlert(.deleteAuth))
             } label: {
@@ -106,9 +106,9 @@ struct SettingsView: View {
                             .foregroundStyle(Color.danger)
                     }
                 }
-                .font(.system(.body))
+                .font(.adaptive(.body))
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
+                .padding(.vertical, 24 * AdaptiveSize.scale)
                 .contentShape(.rect(cornerRadius: CornerRadius.group))
                 .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
@@ -116,10 +116,10 @@ struct SettingsView: View {
             .disabled(!store.isNetworkConnected || store.isLoading)
 
             Text("settings_delete_account_subtitle", bundle: PresentationResources.bundle)
-                .font(.footnote)
+                .font(.adaptive(.footnote))
                 .foregroundStyle(Color.secondaryLabel)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 24)
+        .padding(.top, 24 * AdaptiveSize.scale)
     }
 }

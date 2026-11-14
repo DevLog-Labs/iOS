@@ -9,12 +9,12 @@ import SwiftUI
 
 public struct RelativeTimeText: View {
     let date: Date
-    var bodyFont: Font = .caption2
+    var bodyFont = Font.adaptive(.caption2)
     var bodyColor: Color = .secondaryLabel
 
     public init(
         date: Date,
-        bodyFont: Font = .caption2,
+        bodyFont: Font = .adaptive(.caption2),
         bodyColor: Color = .secondaryLabel
     ) {
         self.date = date

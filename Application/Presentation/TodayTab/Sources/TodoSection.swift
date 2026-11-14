@@ -17,21 +17,21 @@ struct TodoSection: View {
     let onInspect: (TodayTodoItem) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+            HStack(spacing: 8 * AdaptiveSize.scale) {
                 Text(section.title)
-                    .font(.title3.bold())
+                    .font(.adaptive(.title3).bold())
                     .foregroundStyle(section.category.accentColor)
                 Text("\(section.items.count)")
-                    .font(.callout.bold())
+                    .font(.adaptive(.callout).bold())
                     .foregroundStyle(section.category.accentColor)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
+                    .padding(.horizontal, 10 * AdaptiveSize.scale)
+                    .padding(.vertical, 5 * AdaptiveSize.scale)
                     .background(section.category.accentColor.opacity(0.1), in: .capsule)
                 Spacer()
                 if section.category == .today {
                     Text(String(localized: "today_pinned_first", bundle: PresentationResources.bundle))
-                        .font(.callout)
+                        .font(.adaptive(.callout))
                         .foregroundStyle(Color.secondaryLabel)
                 }
             }
@@ -74,16 +74,16 @@ private struct TodoRow: View {
             onSelect()
         } label: {
             HStack {
-                VStack(alignment: .leading, spacing: 6) {
+                VStack(alignment: .leading, spacing: 6 * AdaptiveSize.scale) {
                     Text(item.title)
-                        .font(.headline)
+                        .font(.adaptive(.headline))
                         .strikethrough(item.isCompleted)
                         .foregroundStyle(item.isCompleted ? Color.secondaryLabel : .label)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                     if !item.content.isEmpty {
                         Text(item.content)
-                            .font(.subheadline)
+                            .font(.adaptive(.subheadline))
                             .foregroundStyle(Color.secondaryLabel)
                             .lineLimit(1)
                             .multilineTextAlignment(.leading)
@@ -92,7 +92,7 @@ private struct TodoRow: View {
                 }
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .font(.callout.bold())
+                    .font(.adaptive(.callout).bold())
                     .foregroundStyle(Color.tertiaryLabel)
                     // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
                     .opacity(isNavigationEnabled && !isiOSAppOnMac ? 1 : 0)
@@ -102,15 +102,15 @@ private struct TodoRow: View {
             }
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 14 * AdaptiveSize.scale)
         .background(isSelected ? Color.tintFill : .clear)
     }
 
     @ViewBuilder
     private var todoMetadata: some View {
         let category = TodoCategoryItem(from: item.category)
-        HStack(spacing: 10) {
+        HStack(spacing: 10 * AdaptiveSize.scale) {
             Text("#\(item.number)")
                 .foregroundStyle(Color.accent)
 
@@ -118,14 +118,14 @@ private struct TodoRow: View {
                 .foregroundStyle(category.color)
 
             if let dueDate = item.dueDate {
-                HStack(spacing: 4) {
+                HStack(spacing: 4 * AdaptiveSize.scale) {
                     Image(systemName: "clock")
                     Text(dueDateText(dueDate))
                 }
                 .foregroundStyle(dueDateColor(dueDate))
             }
         }
-        .font(.caption.weight(.semibold))
+        .font(.adaptive(.caption).weight(.semibold))
         .lineLimit(1)
     }
 

@@ -10,7 +10,7 @@ import PresentationShared
 
 struct GoalDetailRecordActionBar: View {
     @Environment(\.deviceType) private var deviceType
-    @ScaledMetric(relativeTo: .headline) private var buttonLabelHeight = CGFloat(40)
+    @ScaledMetric(relativeTo: .headline) private var buttonLabelHeight = 40 * AdaptiveSize.scale
     let hasDraft: Bool
     let isDisabled: Bool
     let onAddRecord: () -> Void
@@ -20,11 +20,11 @@ struct GoalDetailRecordActionBar: View {
         Group {
             if hasDraft {
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 12) {
+                    HStack(spacing: 12 * AdaptiveSize.scale) {
                         secondaryAddRecordButton
                         continueRecordButton
                     }
-                    VStack(alignment: .trailing, spacing: 8) {
+                    VStack(alignment: .trailing, spacing: 8 * AdaptiveSize.scale) {
                         secondaryAddRecordButton
                         continueRecordButton
                     }
@@ -36,15 +36,15 @@ struct GoalDetailRecordActionBar: View {
                 )
             }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 
     private var secondaryAddRecordButton: some View {
         Button(action: onAddRecord) {
             Text(RecordPresentation.text("development_record_add"))
-                .font(.callout)
+                .font(.adaptive(.callout))
                 .foregroundStyle(Color.accent)
                 .fixedSize(horizontal: true, vertical: false)
                 .frame(maxWidth: .infinity)
@@ -67,7 +67,7 @@ struct GoalDetailRecordActionBar: View {
     ) -> some View {
         Button(action: action) {
             Text(title)
-                .font(.headline)
+                .font(.adaptive(.headline))
                 .foregroundStyle(Color.white)
                 .fixedSize(horizontal: true, vertical: false)
                 .frame(maxWidth: .infinity)

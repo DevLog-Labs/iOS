@@ -24,13 +24,13 @@ public struct EmptyStateView: View {
     public var body: some View {
         VStack(spacing: 8) {
             Image(systemName: systemImage)
-                .font(.title2)
+                .font(.adaptive(.title2))
                 .foregroundStyle(Color.secondaryLabel)
                 .frame(width: iconSize, height: iconSize)
                 .background(Color.tertiaryBackground, in: .circle)
                 .padding(.bottom, 4)
             Text(title)
-                .font(.headline.bold())
+                .font(.adaptive(.headline).bold())
             if let message {
                 Text(message)
                     .font(.system(size: messageSize))

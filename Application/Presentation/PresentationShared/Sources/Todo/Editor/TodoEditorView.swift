@@ -39,7 +39,7 @@ public struct TodoEditorView: View {
         NavigationStack {
             ZStack {
                 Color.background.ignoresSafeArea()
-                VStack(spacing: 8) {
+                VStack(spacing: 8 * AdaptiveSize.scale) {
                     ToolBar(
                         store: store,
                         isWideLayout: isWideLayout,
@@ -48,8 +48,8 @@ public struct TodoEditorView: View {
                     )
                     GeometryReader { geometry in
                         ScrollView {
-                            VStack(spacing: 16) {
-                                VStack(alignment: .trailing, spacing: 16) {
+                            VStack(spacing: 16 * AdaptiveSize.scale) {
+                                VStack(alignment: .trailing, spacing: 16 * AdaptiveSize.scale) {
                                     TitleField(store: store, field: _field)
                                     ModePicker(store: store, field: _field)
                                 }
@@ -67,11 +67,11 @@ public struct TodoEditorView: View {
                                     field = .content
                                 }
                             }
-                            .padding(.horizontal)
+                            .padding(.horizontal, 16 * AdaptiveSize.scale)
                             .frame(maxWidth: readableContentWidth)
                             .frame(maxWidth: .infinity)
                         }
-                        .contentMargins(.vertical, 16, for: .scrollContent)
+                        .contentMargins(.vertical, 16 * AdaptiveSize.scale, for: .scrollContent)
                     }
                 }
             }
@@ -132,7 +132,7 @@ private struct ToolBar: View {
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title1,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
-    ).lineHeight
+    ).lineHeight * AdaptiveSize.scale
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     let store: StoreOf<TodoEditorFeature>
@@ -163,13 +163,13 @@ private struct ToolBar: View {
             }
             Spacer()
             Text(store.navigationTitle)
-                .font(.title3.bold())
+                .font(.adaptive(.title3).bold())
             Spacer()
             if showsActions {
                 EditorToolbarActions(store: store, onSubmit: onSubmit)
             }
         }
-        .padding(.horizontal)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
         .frame(maxWidth: readableContentWidth)
         .padding(.top, 12 + windowControlsInset)
     }
@@ -179,7 +179,7 @@ struct EditorToolbarActions: View {
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title1,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
-    ).lineHeight
+    ).lineHeight * AdaptiveSize.scale
     let store: StoreOf<TodoEditorFeature>
     let onSubmit: () -> Void
 
@@ -200,7 +200,7 @@ struct EditorToolbarActions: View {
                         .frame(width: iconSize, height: iconSize)
                         .foregroundStyle(Color.label)
                 }
-                .font(.title)
+                .font(.adaptive(.title))
                 .adaptiveButtonStyle(shape: .circle, color: Color.secondaryBackground, glassEffect: .enabled)
             }
             if store.isLoading {
@@ -290,9 +290,9 @@ private struct TitleField: View {
             )
             .foregroundStyle(Color.secondaryLabel),
         )
-        .font(.body)
+        .font(.adaptive(.body))
         .focused($field, equals: .title)
-        .padding()
+        .padding(16 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }
 }
@@ -332,9 +332,9 @@ private struct ModePicker: View {
             }
         } label: {
             Text(title)
-                .font(.body)
+                .font(.adaptive(.body))
                 .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
-                .frame(maxWidth: .infinity, minHeight: 36)
+                .frame(maxWidth: .infinity, minHeight: 36 * AdaptiveSize.scale)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: CornerRadius.segment)
@@ -387,7 +387,7 @@ private struct ContentView: View {
                         )
                         // SwiftUI 포커싱 시스템에 등록하기 위해 사용
                         .focused($field, equals: .content)
-                        .padding(12)
+                        .padding(12 * AdaptiveSize.scale)
                         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
             } else {
@@ -402,7 +402,7 @@ private struct ContentView: View {
                     )
                     // MarkdownRenderer 내부의 좌우 여백을 상쇄해 입력 본문과 정렬
                     .padding(.horizontal, -16)
-                    .padding(12)
+                    .padding(12 * AdaptiveSize.scale)
                     .frame(minHeight: minimumHeight, alignment: .topLeading)
                     .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
@@ -414,20 +414,20 @@ private struct ContentView: View {
 
     private var markdownHint: some View {
         Text(String(localized: "todo_editor_markdown_hint", bundle: PresentationResources.bundle))
-            .font(.caption)
+            .font(.adaptive(.caption))
             .foregroundStyle(Color.tertiaryLabel)
     }
 
     private var previewPlaceholder: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 8 * AdaptiveSize.scale) {
             Text(String(localized: "todo_editor_markdown_preview_title", bundle: PresentationResources.bundle))
-                .font(.headline)
+                .font(.adaptive(.headline))
             Text(String(localized: "todo_editor_markdown_preview_message", bundle: PresentationResources.bundle))
-                .font(.subheadline)
+                .font(.adaptive(.subheadline))
                 .foregroundStyle(Color.secondaryLabel)
         }
         .multilineTextAlignment(.center)
-        .padding(12)
+        .padding(12 * AdaptiveSize.scale)
         .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .center)
         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }

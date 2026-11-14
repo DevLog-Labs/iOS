@@ -17,11 +17,11 @@ struct DevelopmentGoalSection: View {
     let onRetry: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
             header
             content
         }
-        .padding(.top, 8)
+        .padding(.top, 8 * AdaptiveSize.scale)
     }
 
     @ViewBuilder
@@ -29,7 +29,7 @@ struct DevelopmentGoalSection: View {
         if !hasLoaded && isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 32)
+                .padding(.vertical, 32 * AdaptiveSize.scale)
         } else if !hasLoaded && hasLoadFailure {
             ContentUnavailableView {
                 Label(
@@ -62,7 +62,7 @@ struct DevelopmentGoalSection: View {
                 )
             }
         } else {
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: 16 * AdaptiveSize.scale) {
                 ForEach(items) { item in
                     Button {
                         onSelect(item)
@@ -76,9 +76,9 @@ struct DevelopmentGoalSection: View {
     }
 
     private var header: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 8 * AdaptiveSize.scale) {
             Text("home_development_goal_section_title", bundle: PresentationResources.bundle)
-                .font(.title2)
+                .font(.adaptive(.title2))
                 .foregroundStyle(Color.label)
             if hasLoaded {
                 Text(
@@ -87,10 +87,10 @@ struct DevelopmentGoalSection: View {
                         items.count
                     )
                 )
-                .font(.subheadline.weight(.medium))
+                .font(.adaptive(.subheadline).weight(.medium))
                 .foregroundStyle(Color.accent)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
+                .padding(.horizontal, 10 * AdaptiveSize.scale)
+                .padding(.vertical, 5 * AdaptiveSize.scale)
                 .background(Color.accent.opacity(0.1), in: .capsule)
             }
             Spacer()
@@ -102,26 +102,26 @@ private struct DevelopmentGoalCard: View {
     let item: DevelopmentGoalItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+            HStack(spacing: 12 * AdaptiveSize.scale) {
                 DevelopmentGoalStatusBadge()
-                Spacer(minLength: 12)
+                Spacer(minLength: 12 * AdaptiveSize.scale)
                 if let recentRecord = item.recentRecord {
                     Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
-                        .font(.caption)
+                        .font(.adaptive(.caption))
                         .foregroundStyle(Color.tertiaryLabel)
                 }
             }
 
             Text(item.goal.title)
-                .font(.title3.weight(.semibold))
+                .font(.adaptive(.title3).weight(.semibold))
                 .foregroundStyle(Color.label)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
             if !item.goal.description.isEmpty {
                 Text(item.goal.description)
-                    .font(.subheadline)
+                    .font(.adaptive(.subheadline))
                     .foregroundStyle(Color.secondaryLabel)
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -132,22 +132,22 @@ private struct DevelopmentGoalCard: View {
             Divider().overlay(Color.secondarySeparator)
 
             if let recentRecord = item.recentRecord {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 3 * AdaptiveSize.scale) {
                     Text("home_development_goal_recent_record", bundle: PresentationResources.bundle)
-                        .font(.caption)
+                        .font(.adaptive(.caption))
                         .foregroundStyle(Color.tertiaryLabel)
                     Text(recentRecord.title)
-                        .font(.subheadline.weight(.medium))
+                        .font(.adaptive(.subheadline).weight(.medium))
                         .foregroundStyle(Color.label)
                         .lineLimit(1)
                 }
             } else {
                 Text("development_record_empty_title", bundle: PresentationResources.bundle)
-                    .font(.caption)
+                    .font(.adaptive(.caption))
                     .foregroundStyle(Color.tertiaryLabel)
             }
         }
-        .padding(18)
+        .padding(18 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: .rect)
         .contentShape(.rect)
     }
@@ -159,11 +159,11 @@ struct DevelopmentTodoProgressView: View {
     var body: some View {
         if progress.isEmpty {
             Text("home_development_goal_todo_empty", bundle: PresentationResources.bundle)
-                .font(.caption)
+                .font(.adaptive(.caption))
                 .foregroundStyle(Color.tertiaryLabel)
         } else {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 8) {
+            VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
+                HStack(spacing: 8 * AdaptiveSize.scale) {
                     Text(
                         String.localizedStringWithFormat(
                             String(
@@ -174,9 +174,9 @@ struct DevelopmentTodoProgressView: View {
                             progress.totalCount
                         )
                     )
-                    .font(.caption.weight(.medium))
+                    .font(.adaptive(.caption).weight(.medium))
                     .foregroundStyle(Color.secondaryLabel)
-                    Spacer(minLength: 8)
+                    Spacer(minLength: 8 * AdaptiveSize.scale)
                     Text(
                         String.localizedStringWithFormat(
                             String(
@@ -186,7 +186,7 @@ struct DevelopmentTodoProgressView: View {
                             progress.percentage
                         )
                     )
-                    .font(.caption.weight(.semibold))
+                    .font(.adaptive(.caption).weight(.semibold))
                     .foregroundStyle(Color.accent)
                 }
 
@@ -199,7 +199,7 @@ struct DevelopmentTodoProgressView: View {
                                 .frame(width: proxy.size.width * progress.fraction)
                         }
                 }
-                .frame(height: 8)
+                .frame(height: 8 * AdaptiveSize.scale)
             }
         }
     }
@@ -212,10 +212,10 @@ private struct DevelopmentGoalStatusBadge: View {
         } icon: {
             Image(systemName: "clock")
         }
-        .font(.caption.weight(.semibold))
+        .font(.adaptive(.caption).weight(.semibold))
         .foregroundStyle(Color.accent)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
+        .padding(.horizontal, 10 * AdaptiveSize.scale)
+        .padding(.vertical, 5 * AdaptiveSize.scale)
         .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.badge))
     }
 }
