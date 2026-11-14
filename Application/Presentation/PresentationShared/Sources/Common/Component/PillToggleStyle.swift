@@ -19,13 +19,17 @@ public extension ToggleStyle where Self == PillToggleStyle {
 
 private struct PillToggle: View {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.labelsVisibility) private var labelsVisibility
     let configuration: ToggleStyleConfiguration
 
     var body: some View {
         HStack(spacing: 8) {
-            configuration.label
+            // 레이블을 숨긴 스위치는 시스템 스위치처럼 손잡이 폭만 차지
+            if labelsVisibility != .hidden {
+                configuration.label
 
-            Spacer(minLength: 0)
+                Spacer(minLength: 0)
+            }
 
             Button {
                 withAnimation(.easeOut(duration: 0.18)) {
