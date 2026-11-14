@@ -18,13 +18,13 @@ struct RecordVersionDetailView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
                 titleSection
                 contentCard
                 currentVersionCard
             }
             .padding(.horizontal)
-            .padding(.bottom, 20)
+            .padding(.bottom, 20 * AdaptiveSize.scale)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -57,25 +57,25 @@ struct RecordVersionDetailView: View {
             Spacer()
         }
         .padding(.horizontal)
-        .padding(.bottom, 12)
+        .padding(.bottom, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
             Text(RecordPresentation.text("development_record_previous_version_title"))
-                .font(.largeTitle.bold())
+                .font(.adaptive(.largeTitle).bold())
 
             Text(version.title)
-                .font(.title3)
+                .font(.adaptive(.title3))
                 .foregroundStyle(Color.secondaryLabel)
                 .lineLimit(2)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 8 * AdaptiveSize.scale) {
                 RecordVersionBadge(number: version.number, isCurrent: false)
                 kindBadge
                 Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
-                    .font(.caption)
+                    .font(.adaptive(.caption))
                     .foregroundStyle(Color.tertiaryLabel)
             }
         }
@@ -88,13 +88,13 @@ struct RecordVersionDetailView: View {
                     RecordPresentation.text("development_record_content_empty_title"),
                     systemImage: "doc.text"
                 )
-                .padding(.bottom, 72)
+                .padding(.bottom, 72 * AdaptiveSize.scale)
             } else {
                 MarkdownContentView(content: version.markdownContent)
-                    .frame(minHeight: 420)
+                    .frame(minHeight: 420 * AdaptiveSize.scale)
             }
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, 16 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: .rect)
     }
 
@@ -116,10 +116,10 @@ struct RecordVersionDetailView: View {
             )
             .foregroundStyle(statusColor)
         }
-        .font(.subheadline)
+        .font(.adaptive(.subheadline))
         .foregroundStyle(Color.secondaryLabel)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18)
+        .padding(18 * AdaptiveSize.scale)
         .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.group))
     }
 
@@ -138,15 +138,15 @@ struct RecordVersionDetailView: View {
             store.send(.view(.restore(version)))
         } label: {
             Text(RecordPresentation.text("development_record_restore_button"))
-                .font(.headline)
+                .font(.adaptive(.headline))
                 .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
+                .padding(.vertical, 10 * AdaptiveSize.scale)
         }
         .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
         .disabled(store.isRestoring || store.record.draft != nil)
         .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 
@@ -180,10 +180,10 @@ struct RecordVersionDetailView: View {
         background: Color
     ) -> some View {
         Text(title)
-            .font(.caption.weight(.semibold))
+            .font(.adaptive(.caption).weight(.semibold))
             .foregroundStyle(foreground)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
+            .padding(.horizontal, 9 * AdaptiveSize.scale)
+            .padding(.vertical, 5 * AdaptiveSize.scale)
             .background(background, in: .rect(cornerRadius: CornerRadius.badge))
     }
 }

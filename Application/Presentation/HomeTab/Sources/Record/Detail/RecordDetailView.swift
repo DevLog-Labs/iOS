@@ -34,7 +34,7 @@ public struct RecordDetailView: View {
 
     public var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
                 switch store.contentState {
                 case .draft(let draft):
                     recordContent(
@@ -101,7 +101,7 @@ public struct RecordDetailView: View {
             Spacer()
         }
         .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
@@ -119,24 +119,24 @@ public struct RecordDetailView: View {
         title: String,
         version: DevelopmentRecord.Version?
     ) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 14 * AdaptiveSize.scale) {
             ScrollView(.horizontal) {
                 Text(title)
-                    .font(.title.bold())
+                    .font(.adaptive(.title).bold())
                     .lineLimit(1)
             }
             .scrollIndicators(.hidden)
 
-            HStack(spacing: 10) {
+            HStack(spacing: 10 * AdaptiveSize.scale) {
                 Text(
                     version == nil
                         ? RecordPresentation.text("development_record_draft")
                         : RecordPresentation.text("development_record_confirmed")
                 )
-                    .font(.callout.weight(.semibold))
+                    .font(.adaptive(.callout).weight(.semibold))
                     .foregroundStyle(version == nil ? Color.warning : Color.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
+                    .padding(.horizontal, 12 * AdaptiveSize.scale)
+                    .padding(.vertical, 7 * AdaptiveSize.scale)
                     .background(
                         version == nil ? Color.warning.opacity(0.12) : Color.accent,
                         in: .rect(cornerRadius: CornerRadius.badge)
@@ -144,14 +144,14 @@ public struct RecordDetailView: View {
 
                 if let version {
                     Text(RecordPresentation.versionLabel(version.number))
-                        .font(.callout.weight(.semibold))
+                        .font(.adaptive(.callout).weight(.semibold))
                         .foregroundStyle(Color.accent)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
+                        .padding(.horizontal, 12 * AdaptiveSize.scale)
+                        .padding(.vertical, 7 * AdaptiveSize.scale)
                         .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
 
                     Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
-                        .font(.callout)
+                        .font(.adaptive(.callout))
                         .foregroundStyle(Color.secondaryLabel)
                 }
             }
@@ -159,19 +159,19 @@ public struct RecordDetailView: View {
     }
 
     private func contentCard(markdownContent: String) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
             if markdownContent.isEmpty {
                 EmptyStateView(
                     RecordPresentation.text("development_record_content_empty_title"),
                     systemImage: "doc.text"
                 )
-                .padding(.bottom, 72)
+                .padding(.bottom, 72 * AdaptiveSize.scale)
             } else {
                 MarkdownContentView(content: markdownContent)
-                    .frame(minHeight: 420)
+                    .frame(minHeight: 420 * AdaptiveSize.scale)
             }
         }
-        .padding(.vertical, 16)
+        .padding(.vertical, 16 * AdaptiveSize.scale)
         .background {
             Rectangle()
                 .fill(Color.secondaryBackground)
@@ -179,7 +179,7 @@ public struct RecordDetailView: View {
     }
 
     private var failureContent: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 20 * AdaptiveSize.scale) {
             ContentUnavailableView(
                 RecordPresentation.text("common_error_title"),
                 systemImage: "exclamationmark.triangle",
@@ -194,18 +194,18 @@ public struct RecordDetailView: View {
             .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity)
-        .padding(24)
+        .padding(24 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: .rect)
     }
 
     private var actionSection: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 12) {
+            HStack(spacing: 12 * AdaptiveSize.scale) {
                 correctionButton
                 historyButton
             }
 
-            VStack(spacing: 12) {
+            VStack(spacing: 12 * AdaptiveSize.scale) {
                 correctionButton
                 historyButton
             }
@@ -220,10 +220,10 @@ public struct RecordDetailView: View {
                 RecordPresentation.text("development_record_correct"),
                 systemImage: "pencil"
             )
-            .font(.headline)
+            .font(.adaptive(.headline))
             .foregroundStyle(Color.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .padding(.vertical, 10 * AdaptiveSize.scale)
         }
         .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
     }
@@ -236,10 +236,10 @@ public struct RecordDetailView: View {
                 RecordPresentation.text("development_record_history_title"),
                 systemImage: "clock.arrow.circlepath"
             )
-            .font(.headline)
+            .font(.adaptive(.headline))
             .foregroundStyle(Color.tintLabel)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .padding(.vertical, 10 * AdaptiveSize.scale)
         }
         .adaptiveButtonStyle(
             shape: RoundedRectangle(cornerRadius: CornerRadius.control),

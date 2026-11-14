@@ -34,7 +34,7 @@ public struct GoalDetailView: View {
 
     private var mainContent: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
+            LazyVStack(spacing: 12 * AdaptiveSize.scale) {
                 titleBar
                 GoalDescriptionCard(
                     description: store.goal?.description ?? "",
@@ -132,8 +132,8 @@ public struct GoalDetailView: View {
                         .topBarButtonStyle()
                 } else {
                     Image(systemName: "ellipsis")
-                        .font(.title3.weight(.semibold))
-                        .frame(width: 28, height: 28)
+                        .font(.adaptive(.title3).weight(.semibold))
+                        .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
                         .prominentMenu(
                             items: statusMenuItems(status),
                             isEnabled: !store.isLoading && !store.isTransitioning
@@ -149,19 +149,19 @@ public struct GoalDetailView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.vertical, 12)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleBar: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
             Text(RecordPresentation.text("development_goal_title"))
-                .font(.largeTitle.bold())
+                .font(.adaptive(.largeTitle).bold())
 
             if !store.goalTitle.isEmpty {
                 ScrollView(.horizontal) {
                     Text(store.goalTitle)
-                        .font(.headline)
+                        .font(.adaptive(.headline))
                         .foregroundStyle(Color.secondaryLabel)
                         .lineLimit(1)
                 }
@@ -174,14 +174,14 @@ public struct GoalDetailView: View {
                 GoalStatusBadge(status: status)
             }
         }
-        .padding(.bottom, 8)
+        .padding(.bottom, 8 * AdaptiveSize.scale)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.background)
     }
 
     @ViewBuilder
     private var timelineCard: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 18 * AdaptiveSize.scale) {
             if !store.hasLoaded, store.hasLoadFailure {
                 ContentUnavailableView {
                     Label(
@@ -201,7 +201,7 @@ public struct GoalDetailView: View {
             } else if !store.hasLoaded || store.isLoading, store.items.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 32)
+                    .padding(.vertical, 32 * AdaptiveSize.scale)
             } else if store.items.isEmpty {
                 ContentUnavailableView(
                     RecordPresentation.text("development_record_empty_title"),

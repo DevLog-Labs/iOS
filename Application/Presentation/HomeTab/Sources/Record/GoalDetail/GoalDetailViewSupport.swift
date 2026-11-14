@@ -19,31 +19,31 @@ struct TimelineRow: View {
         Button {
             onSelect()
         } label: {
-            HStack(spacing: 8) {
-                HStack(alignment: .top, spacing: 16) {
+            HStack(spacing: 8 * AdaptiveSize.scale) {
+                HStack(alignment: .top, spacing: 16 * AdaptiveSize.scale) {
                     timelineIndicator
-                    VStack(alignment: .leading, spacing: 5) {
+                    VStack(alignment: .leading, spacing: 5 * AdaptiveSize.scale) {
                         Text(item.title)
-                            .font(.body.weight(.semibold))
+                            .font(.adaptive(.body).weight(.semibold))
                             .foregroundStyle(Color.label)
                             .lineLimit(2)
                         status
                         if item.hasDraft {
                             RelativeTimeText(
                                 date: item.date,
-                                bodyFont: .caption,
+                                bodyFont: .adaptive(.caption),
                                 bodyColor: .tertiaryLabel
                             )
                         } else {
                             Text(item.date, format: .dateTime.month().day())
-                                .font(.caption)
+                                .font(.adaptive(.caption))
                                 .foregroundStyle(Color.tertiaryLabel)
                         }
                     }
                 }
-                Spacer(minLength: 8)
+                Spacer(minLength: 8 * AdaptiveSize.scale)
                 Image(systemName: "chevron.right")
-                    .font(.callout.weight(.semibold))
+                    .font(.adaptive(.callout).weight(.semibold))
                     .foregroundStyle(Color.separator)
             }
             .contentShape(.rect)
@@ -64,10 +64,10 @@ struct TimelineRow: View {
 
     private var status: some View {
         Text(statusText)
-            .font(.caption)
+            .font(.adaptive(.caption))
             .foregroundStyle(item.hasDraft ? Color.warning : .accent)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 4)
+            .padding(.horizontal, 9 * AdaptiveSize.scale)
+            .padding(.vertical, 4 * AdaptiveSize.scale)
             .background(
                 item.hasDraft ? Color.warning.opacity(0.12) : Color.tintFill,
                 in: .rect(cornerRadius: CornerRadius.badge)
@@ -90,10 +90,10 @@ struct GoalStatusBadge: View {
 
     var body: some View {
         Label(status.title, systemImage: systemImage)
-        .font(.caption.weight(.semibold))
+        .font(.adaptive(.caption).weight(.semibold))
         .foregroundStyle(foreground)
-        .padding(.horizontal, 11)
-        .padding(.vertical, 6)
+        .padding(.horizontal, 11 * AdaptiveSize.scale)
+        .padding(.vertical, 6 * AdaptiveSize.scale)
         .background(background, in: .rect(cornerRadius: CornerRadius.badge))
     }
 

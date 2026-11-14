@@ -13,8 +13,8 @@ struct GoalCreateTodoSelectionSheet: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
-                HStack(spacing: 10) {
+            LazyVStack(spacing: 20 * AdaptiveSize.scale) {
+                HStack(spacing: 10 * AdaptiveSize.scale) {
                     Image(systemName: "magnifyingglass")
                         .foregroundStyle(Color.tertiaryLabel)
                     TextField(
@@ -24,7 +24,7 @@ struct GoalCreateTodoSelectionSheet: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 }
-                .font(.title3)
+                .font(.adaptive(.title3))
                 .padding()
                 .background {
                     RoundedRectangle(cornerRadius: CornerRadius.control)
@@ -35,7 +35,7 @@ struct GoalCreateTodoSelectionSheet: View {
                 if store.isLoading, store.todos.isEmpty {
                     ProgressView()
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 40)
+                        .padding(.vertical, 40 * AdaptiveSize.scale)
                 } else if store.hasLoadFailure, store.todos.isEmpty {
                     ContentUnavailableView {
                         Label(
@@ -71,18 +71,18 @@ struct GoalCreateTodoSelectionSheet: View {
                 }
 
                 Text(RecordPresentation.text("development_goal_todo_optional_footer"))
-                    .font(.footnote)
+                    .font(.adaptive(.footnote))
                     .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
+                    .padding(.vertical, 12 * AdaptiveSize.scale)
             }
-            .padding(16)
+            .padding(16 * AdaptiveSize.scale)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             ZStack {
                 Text(RecordPresentation.text("development_goal_todo_link_title"))
-                    .font(.headline)
+                    .font(.adaptive(.headline))
                 HStack {
                     Button {
                         store.send(.view(.close))
@@ -108,8 +108,8 @@ struct GoalCreateTodoSelectionSheet: View {
                     .topBarButtonStyle()
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.vertical, 12 * AdaptiveSize.scale)
             .background(Color.background, ignoresSafeAreaEdges: .top)
         }
         .scrollDismissesKeyboard(.interactively)

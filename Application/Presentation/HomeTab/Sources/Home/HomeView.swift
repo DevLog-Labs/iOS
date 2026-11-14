@@ -44,12 +44,12 @@ public struct HomeView: View {
     public var body: some View {
         NavigationStack(path: $router.path) {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
                     HomeDevelopmentSummary(store: store)
                     HomeTodoSection(store: store)
                     HomeDevelopmentGoals(store: store)
                 }
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
                 .frame(maxWidth: readableContentWidth)
                 .frame(maxWidth: .infinity)
             }
@@ -123,19 +123,19 @@ public struct HomeView: View {
                 HomeCreateButton(store: store)
             }
         } else {
-            HStack(spacing: 12) {
+            HStack(spacing: 12 * AdaptiveSize.scale) {
                 Text("DevLog")
-                    .font(.largeTitle.weight(.bold))
+                    .font(.adaptive(.largeTitle).weight(.bold))
                 Spacer()
                 if deviceType != .duo {
                     searchButton
                     HomeCreateButton(store: store)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 8)
+            .padding(.bottom, 8 * AdaptiveSize.scale)
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
@@ -155,8 +155,8 @@ public struct HomeView: View {
                 store.send(.store(.setPresentation(.searchView, true)))
             } label: {
                 Image(systemName: "magnifyingglass")
-                    .font(.title3.weight(.semibold))
-                    .frame(width: 28, height: 28)
+                    .font(.adaptive(.title3).weight(.semibold))
+                    .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
             }
             .adaptiveButtonStyle(
                 shape: .circle,
@@ -263,8 +263,8 @@ private struct HomeCreateButton: View {
                 store.send(.store(.setPresentation(.contentPicker, true)))
             } label: {
                 Image(systemName: "plus")
-                    .font(.title3.weight(.semibold))
-                    .frame(width: 28, height: 28)
+                    .font(.adaptive(.title3).weight(.semibold))
+                    .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
             }
             .adaptiveButtonStyle(
                 shape: .circle,
@@ -306,7 +306,7 @@ private struct HomeDevelopmentGoals: View {
 
 private struct HomeTodoSection: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .title2) private var iconSize = CGFloat(64)
+    @ScaledMetric(relativeTo: .title2) private var iconSize = 64 * AdaptiveSize.scale
     let store: StoreOf<HomeFeature>
 
     var body: some View {
@@ -339,7 +339,7 @@ private struct HomeTodoSection: View {
                         Button {
                             store.send(.view(.tapManageTodoCategory))
                         } label: {
-                            VStack(spacing: 10) {
+                            VStack(spacing: 10 * AdaptiveSize.scale) {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .strokeBorder(
                                         Color.tertiaryLabel,
@@ -348,11 +348,11 @@ private struct HomeTodoSection: View {
                                     .frame(width: iconSize, height: iconSize)
                                     .overlay {
                                         Image(systemName: "square.grid.2x2")
-                                            .font(.title2.bold())
+                                            .font(.adaptive(.title2).bold())
                                             .foregroundStyle(Color.tertiaryLabel)
                                     }
                                 Text("todo_edit", bundle: PresentationResources.bundle)
-                                    .font(.subheadline)
+                                    .font(.adaptive(.subheadline))
                                     .foregroundStyle(Color.tertiaryLabel)
                             }
                             .frame(maxWidth: .infinity)
@@ -374,15 +374,15 @@ private struct HomeTodoSection: View {
                         )
                     } label: {
                         Image(systemName: store.isTodoCategoryExpanded ? "chevron.up" : "chevron.down")
-                            .font(.title3.weight(.semibold))
+                            .font(.adaptive(.title3).weight(.semibold))
                             .foregroundStyle(Color.tertiaryLabel)
-                            .frame(width: 32, height: 32)
+                            .frame(width: 32 * AdaptiveSize.scale, height: 32 * AdaptiveSize.scale)
                     }
                     Spacer()
                 }
             }
         }
-        .padding(.bottom, 12)
+        .padding(.bottom, 12 * AdaptiveSize.scale)
         .background(Color.secondaryBackground, in: Rectangle())
     }
 }
@@ -393,16 +393,16 @@ private struct HomeTodoCategoryLink: View {
 
     var body: some View {
         NavigationLink(value: HomeRoute.category(item)) {
-            VStack(spacing: 10) {
+            VStack(spacing: 10 * AdaptiveSize.scale) {
                 Image(systemName: item.symbolName)
-                    .font(.title2.bold())
+                    .font(.adaptive(.title2).bold())
                     .frame(width: iconSize, height: iconSize)
                     .iconStyle(
                         color: item.color,
                         in: RoundedRectangle(cornerRadius: CornerRadius.control)
                     )
                 Text(item.localizedName)
-                    .font(.subheadline)
+                    .font(.adaptive(.subheadline))
                     .foregroundStyle(Color.secondaryLabel)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
@@ -481,7 +481,7 @@ private struct HomeContentPicker: View {
 }
 
 private struct HomeContentPickerLabel: View {
-    @ScaledMetric(relativeTo: .largeTitle) private var labelWidth = CGFloat(34)
+    @ScaledMetric(relativeTo: .largeTitle) private var labelWidth = 34 * AdaptiveSize.scale
     let text: String
     let systemName: String
     let imageColor: Color
@@ -494,7 +494,7 @@ private struct HomeContentPickerLabel: View {
                 .overlay {
                     Image(systemName: systemName)
                         .foregroundStyle(Color.white)
-                        .font(.title3)
+                        .font(.adaptive(.title3))
                 }
             Text(text)
                 .foregroundStyle(Color.label)

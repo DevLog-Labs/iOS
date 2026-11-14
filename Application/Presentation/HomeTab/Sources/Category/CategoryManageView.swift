@@ -20,7 +20,7 @@ struct CategoryManageView: View {
                     items: store.preferences,
                     header: UIHostingConfiguration {
                         Text(String(localized: "todo_manage_description", bundle: PresentationResources.bundle))
-                            .font(.footnote)
+                            .font(.adaptive(.footnote))
                             .foregroundStyle(Color.secondaryLabel)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: .infinity)
@@ -55,14 +55,14 @@ struct CategoryManageView: View {
                         String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle),
                         systemImage: "plus.circle.fill"
                     )
-                    .font(.headline)
+                    .font(.adaptive(.headline))
                     .foregroundStyle(Color.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 10 * AdaptiveSize.scale)
                 }
                 .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
                 .padding(.horizontal)
-                .padding(.vertical, 12)
+                .padding(.vertical, 12 * AdaptiveSize.scale)
                 .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
             }
             .background(Color.background.ignoresSafeArea())
@@ -78,7 +78,7 @@ struct CategoryManageView: View {
     private var toolBar: some View {
         ZStack {
             Text(String(localized: "todo_category_manage", bundle: PresentationResources.bundle))
-                .font(.headline)
+                .font(.adaptive(.headline))
             HStack {
                 Spacer()
                 if #available(iOS 26.0, *) {
@@ -98,8 +98,8 @@ struct CategoryManageView: View {
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 }
@@ -140,16 +140,16 @@ private struct CategoryManageRowContent: View {
     let onToggle: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * AdaptiveSize.scale) {
             Image(systemName: item.symbolName)
-                .font(.headline)
-                .frame(width: 36, height: 36)
+                .font(.adaptive(.headline))
+                .frame(width: 36 * AdaptiveSize.scale, height: 36 * AdaptiveSize.scale)
                 .iconStyle(color: item.color, in: Circle())
 
             Text(item.localizedName)
                 .lineLimit(1)
 
-            Spacer(minLength: 8)
+            Spacer(minLength: 8 * AdaptiveSize.scale)
 
             Toggle(
                 item.localizedName,
@@ -158,8 +158,8 @@ private struct CategoryManageRowContent: View {
             .labelsHidden()
             .toggleStyle(.pill)
         }
-        .padding(.trailing, 12)
-        .frame(minHeight: 44)
+        .padding(.trailing, 12 * AdaptiveSize.scale)
+        .frame(minHeight: 44 * AdaptiveSize.scale)
     }
 }
 
@@ -173,13 +173,13 @@ private struct CategoryManageSheet: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 24) {
+            LazyVStack(spacing: 24 * AdaptiveSize.scale) {
                 nameCard
                 colorCard
                 previewCard
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.bottom, 16 * AdaptiveSize.scale)
         }
         .contentMargins(.top, 16, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { toolBar }
@@ -188,15 +188,15 @@ private struct CategoryManageSheet: View {
                 store.send(.tapSaveButton)
             } label: {
                 Text(store.submitTitle)
-                    .font(.headline)
+                    .font(.adaptive(.headline))
                     .foregroundStyle(Color.white)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+                    .padding(.vertical, 10 * AdaptiveSize.scale)
             }
             .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!store.canSubmitUserCategory)
             .padding(.horizontal)
-            .padding(.vertical, 12)
+            .padding(.vertical, 12 * AdaptiveSize.scale)
             .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
         }
         .background(Color.background.ignoresSafeArea())
@@ -205,7 +205,7 @@ private struct CategoryManageSheet: View {
     private var toolBar: some View {
         ZStack {
             Text(store.navigationTitle)
-                .font(.headline)
+                .font(.adaptive(.headline))
             HStack {
                 Button {
                     store.send(.tapCloseButton)
@@ -221,27 +221,27 @@ private struct CategoryManageSheet: View {
                 Spacer()
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
+        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 12 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var nameCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
             Text(String(localized: "todo_manage_name_placeholder", bundle: PresentationResources.bundle))
-                .font(.headline)
-                .padding(.horizontal, 16)
+                .font(.adaptive(.headline))
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
 
-            HStack(spacing: 8) {
+            HStack(spacing: 8 * AdaptiveSize.scale) {
                 TextField(
                     "",
                     text: $store.category.name,
                     prompt: Text(store.placeholder).foregroundStyle(Color.secondaryLabel)
                 )
-                .font(.body)
+                .font(.adaptive(.body))
 
                 Text(store.categoryNameCountText)
-                    .font(.footnote)
+                    .font(.adaptive(.footnote))
                     .foregroundStyle(Color.secondaryLabel)
                     .monospacedDigit()
             }
@@ -250,17 +250,17 @@ private struct CategoryManageSheet: View {
             .tint(Color.accent)
 
             Text(store.nameMessage)
-                .font(.footnote)
+                .font(.adaptive(.footnote))
                 .foregroundStyle(store.isDuplicatedName ? Color.danger : Color.secondaryLabel)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
         }
     }
 
     private var colorCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
             HStack {
                 Text(String(localized: "todo_manage_color", bundle: PresentationResources.bundle))
-                    .font(.headline)
+                    .font(.adaptive(.headline))
 
                 Spacer()
 
@@ -271,20 +271,20 @@ private struct CategoryManageSheet: View {
                         String(localized: "todo_manage_random_color", bundle: PresentationResources.bundle),
                         systemImage: "shuffle"
                     )
-                    .font(.subheadline)
+                    .font(.adaptive(.subheadline))
                     .foregroundStyle(Color.accent)
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 16 * AdaptiveSize.scale)
 
-            VStack(spacing: 16) {
+            VStack(spacing: 16 * AdaptiveSize.scale) {
                 Image(systemName: store.todoCategoryItem.symbolName)
-                    .font(.largeTitle)
-                    .frame(width: 88, height: 88)
+                    .font(.adaptive(.largeTitle))
+                    .frame(width: 88 * AdaptiveSize.scale, height: 88 * AdaptiveSize.scale)
                     .iconStyle(color: store.todoCategoryItem.color, in: Circle())
 
-                HStack(spacing: 4) {
+                HStack(spacing: 4 * AdaptiveSize.scale) {
                     ForEach(categoryColorHexValues, id: \.self) { colorHex in
                         let color = Color(hexString: colorHex) ?? .gray
                         let isSelected = store.category.colorHex.caseInsensitiveCompare(colorHex) == .orderedSame
@@ -294,11 +294,11 @@ private struct CategoryManageSheet: View {
                         } label: {
                             Circle()
                                 .fill(color)
-                                .padding(3)
+                                .padding(3 * AdaptiveSize.scale)
                                 .overlay {
                                     if isSelected {
                                         Image(systemName: "checkmark")
-                                            .font(.caption.bold())
+                                            .font(.adaptive(.caption).bold())
                                             .foregroundStyle(.white)
                                         Circle()
                                             .strokeBorder(color, lineWidth: 2)
@@ -319,31 +319,31 @@ private struct CategoryManageSheet: View {
                     .frame(maxWidth: .infinity)
                 }
             }
-            .padding(16)
+            .padding(16 * AdaptiveSize.scale)
             .frame(maxWidth: .infinity)
             .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 
     private var previewCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
             Text(String(localized: "todo_preview", bundle: PresentationResources.bundle))
-                .font(.headline)
-                .padding(.horizontal, 16)
+                .font(.adaptive(.headline))
+                .padding(.horizontal, 16 * AdaptiveSize.scale)
 
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
                 Text(String(localized: "todo_manage_preview_description", bundle: PresentationResources.bundle))
-                    .font(.footnote)
+                    .font(.adaptive(.footnote))
                     .foregroundStyle(Color.secondaryLabel)
 
-                HStack(spacing: 12) {
+                HStack(spacing: 12 * AdaptiveSize.scale) {
                     CategoryManageRowContent(item: store.todoCategoryItem, onToggle: {})
                     Image(systemName: "line.3.horizontal")
                         .foregroundStyle(Color.tertiaryLabel)
                 }
                 .allowsHitTesting(false)
             }
-            .padding(16)
+            .padding(16 * AdaptiveSize.scale)
             .frame(maxWidth: .infinity, alignment: .leading)
             .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }

@@ -161,7 +161,7 @@ private struct TodoListContent: View {
                     }
                     .background(Color.secondaryBackground)
                     .clipShape(.rect)
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 16 * AdaptiveSize.scale)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -235,16 +235,16 @@ private struct TodoListTopBar: View {
                 PaneTitleBar(title) { actions }
             }
 
-            VStack(spacing: 8) {
+            VStack(spacing: 8 * AdaptiveSize.scale) {
                 if !showsPaneTitleBar {
                     ZStack {
                         title
-                            .font(.headline)
+                            .font(.adaptive(.headline))
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
 
                         if deviceType != .duo {
-                            HStack(spacing: 12) {
+                            HStack(spacing: 12 * AdaptiveSize.scale) {
                                 NavigationBackButton {
                                     dismiss()
                                 }
@@ -255,12 +255,12 @@ private struct TodoListTopBar: View {
                             }
                         }
                     }
-                    .padding(.horizontal, 16)
+                    .padding(.horizontal, 16 * AdaptiveSize.scale)
                 }
 
                 if store.isSearching {
                     TodoListSearchBar(store: store, searchTransition: searchTransition)
-                        .padding(.horizontal, 16)
+                        .padding(.horizontal, 16 * AdaptiveSize.scale)
                 }
 
                 TodoListFilterHeader(store: store)
@@ -268,7 +268,7 @@ private struct TodoListTopBar: View {
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
             .padding(.top, showsPaneTitleBar ? 12 : windowControlsInset)
-            .padding(.bottom, 12)
+            .padding(.bottom, 12 * AdaptiveSize.scale)
         }
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
@@ -293,8 +293,8 @@ private struct TodoListTopBar: View {
                     }
                 } label: {
                     Image(systemName: "magnifyingglass")
-                        .font(.title3.weight(.semibold))
-                        .frame(width: 28, height: 28)
+                        .font(.adaptive(.title3).weight(.semibold))
+                        .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
                 }
                 .adaptiveButtonStyle(
                     shape: .circle,
@@ -317,8 +317,8 @@ private struct TodoListTopBar: View {
                 openTodoEditor()
             } label: {
                 Image(systemName: "plus")
-                    .font(.title3.weight(.semibold))
-                    .frame(width: 28, height: 28)
+                    .font(.adaptive(.title3).weight(.semibold))
+                    .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
             }
             .adaptiveButtonStyle(
                 shape: .circle,
@@ -346,8 +346,8 @@ private struct TodoListSearchBar: View {
     let searchTransition: Namespace.ID
 
     var body: some View {
-        HStack(spacing: 8) {
-            HStack(spacing: 8) {
+        HStack(spacing: 8 * AdaptiveSize.scale) {
+            HStack(spacing: 8 * AdaptiveSize.scale) {
                 Image(systemName: "magnifyingglass")
                     .foregroundStyle(Color.secondaryLabel)
                 TextField(
@@ -401,7 +401,7 @@ private struct TodoListFilterHeader: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 8) {
+            HStack(spacing: 8 * AdaptiveSize.scale) {
                 if 0 < store.appliedFilterCount {
                     DropdownMenu(sections: [
                         DropdownMenuSection(
@@ -423,7 +423,7 @@ private struct TodoListFilterHeader: View {
                             ]
                         )
                     ]) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 6 * AdaptiveSize.scale) {
                             Text("\(store.appliedFilterCount)")
                             Image(systemName: "xmark")
                         }
@@ -452,7 +452,7 @@ private struct TodoListFilterHeader: View {
                     )
                 ]) {
                     let condition = store.state.query.isPinned || store.state.query.completionFilter != .all
-                    HStack(spacing: 6) {
+                    HStack(spacing: 6 * AdaptiveSize.scale) {
                         Image(systemName: "line.3.horizontal.decrease")
                         Text(String(localized: "todo_list_filter_options", bundle: PresentationResources.bundle))
                         Image(systemName: "chevron.down")
@@ -480,7 +480,7 @@ private struct TodoListFilterHeader: View {
                     )
                 ]) {
                     let condition = store.state.query.sortTarget == .createdAt && store.state.query.sortOrder == .latest
-                    HStack(spacing: 6) {
+                    HStack(spacing: 6 * AdaptiveSize.scale) {
                         Image(systemName: "arrow.up.arrow.down")
                         Text(String(localized: "todo_list_sort_by", bundle: PresentationResources.bundle))
                         Image(systemName: "chevron.down")

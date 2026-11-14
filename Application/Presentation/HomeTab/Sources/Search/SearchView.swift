@@ -19,13 +19,13 @@ struct SearchView: View {
     var body: some View {
         NavigationStack(path: $router.path) {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
+                LazyVStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
                     SearchResults(
                         store: store,
                         onSelectTodo: { router.push(.todo($0)) }
                     )
                     RecentSearchQuries(store: store)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, 8 * AdaptiveSize.scale)
                     instruction
                 }
                 .padding(.horizontal)
@@ -38,7 +38,7 @@ struct SearchView: View {
                     tipCard
                         .padding(.horizontal)
                         .frame(maxWidth: readableContentWidth)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, 8 * AdaptiveSize.scale)
                 }
                 .background(Color.background)
             }
@@ -82,14 +82,14 @@ struct SearchView: View {
         .padding(.horizontal)
         .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
-        .padding(.bottom, 8)
+        .padding(.bottom, 8 * AdaptiveSize.scale)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var tipCard: some View {
         HStack(alignment: .top) {
             Image(systemName: "info.circle.fill")
-                .font(.title)
+                .font(.adaptive(.title))
             VStack(alignment: .leading) {
                 Text(String(
                     localized: "search_todo_number_tip_title",
@@ -101,7 +101,7 @@ struct SearchView: View {
                     bundle: PresentationResources.bundle
                 ))
                     .foregroundStyle(Color.secondaryLabel)
-                    .font(.caption)
+                    .font(.adaptive(.caption))
             }
             Spacer()
         }
@@ -170,7 +170,7 @@ private struct SearchField: View {
                 .buttonStyle(.plain)
             }
         }
-        .font(.title3)
+        .font(.adaptive(.title3))
         .padding()
         .background {
             RoundedRectangle(cornerRadius: CornerRadius.control)
@@ -190,13 +190,13 @@ private struct SearchResults: View {
         if !store.searchQuery.isEmpty {
             let todos = store.visibleTodos
 
-            VStack(spacing: 8) {
-                HStack(spacing: 12) {
+            VStack(spacing: 8 * AdaptiveSize.scale) {
+                HStack(spacing: 12 * AdaptiveSize.scale) {
                     Text(String(
                         localized: "search_results_title",
                         bundle: PresentationResources.bundle
                     ))
-                        .font(.title3)
+                        .font(.adaptive(.title3))
                         .bold()
                     Spacer()
                     Text(String.localizedStringWithFormat(
@@ -206,29 +206,29 @@ private struct SearchResults: View {
                         ),
                         Int64(store.todos.count)
                     ))
-                    .font(.callout.bold())
+                    .font(.adaptive(.callout).bold())
                     .foregroundStyle(Color.tintLabel)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12 * AdaptiveSize.scale)
+                    .padding(.vertical, 6 * AdaptiveSize.scale)
                     .background(Color.tintFill, in: .capsule)
                 }
                 if store.isHashOnlyQuery {
-                    VStack(spacing: 8) {
+                    VStack(spacing: 8 * AdaptiveSize.scale) {
                         Text(String(
                             localized: "search_hash_guide_title",
                             bundle: PresentationResources.bundle)
                         )
-                        .font(.headline)
+                        .font(.adaptive(.headline))
                         Text(String(
                             localized: "search_hash_guide_message",
                             bundle: PresentationResources.bundle)
                         )
-                        .font(.subheadline)
+                        .font(.adaptive(.subheadline))
                         .foregroundStyle(Color.secondaryLabel)
                         .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 32)
+                    .padding(.vertical, 32 * AdaptiveSize.scale)
                 } else if store.isLoading && todos.isEmpty {
                     ProgressView()
                 } else if todos.isEmpty {
@@ -262,54 +262,54 @@ private struct SearchResults: View {
                                 bundle: PresentationResources.bundle)
                             )
                             .foregroundStyle(Color.tintLabel)
-                            .font(.callout.bold())
+                            .font(.adaptive(.callout).bold())
                         }
                         .adaptiveButtonStyle(color: .tintFill)
                     }
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.bottom, 8)
+            .padding(.bottom, 8 * AdaptiveSize.scale)
         }
     }
 }
 
 private struct SearchResultRow: View {
-    @ScaledMetric(relativeTo: .title2) private var iconSize = CGFloat(48)
+    @ScaledMetric(relativeTo: .title2) private var iconSize = 48 * AdaptiveSize.scale
     let item: SearchTodoItem
 
     var body: some View {
         let category = TodoCategoryItem(from: item.category)
 
-        HStack(spacing: 12) {
+        HStack(spacing: 12 * AdaptiveSize.scale) {
             RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(category.color.opacity(0.2))
                 .frame(width: iconSize, height: iconSize)
                 .overlay {
                     Image(systemName: category.symbolName)
-                        .font(.title3.bold())
+                        .font(.adaptive(.title3).bold())
                         .foregroundStyle(category.color)
                 }
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 4 * AdaptiveSize.scale) {
                 Text(item.title)
-                    .font(.headline)
+                    .font(.adaptive(.headline))
                     .lineLimit(1)
-                HStack(spacing: 4) {
+                HStack(spacing: 4 * AdaptiveSize.scale) {
                     Text("#\(item.number)")
                         .foregroundStyle(Color.accent)
                     Text("·")
                     Text(item.createdAt.formatted(.dateTime.month().day().weekday(.abbreviated)))
                 }
-                .font(.subheadline)
+                .font(.adaptive(.subheadline))
                 .foregroundStyle(Color.secondaryLabel)
                 .lineLimit(1)
             }
-            Spacer(minLength: 8)
+            Spacer(minLength: 8 * AdaptiveSize.scale)
             Image(systemName: item.isPinned ? "star.fill" : "star")
-                .font(.title3)
+                .font(.adaptive(.title3))
                 .foregroundStyle(item.isPinned ? Color.orange : .tertiaryLabel)
             Image(systemName: "chevron.right")
-                .font(.callout.bold())
+                .font(.adaptive(.callout).bold())
                 .foregroundStyle(Color.secondaryLabel)
         }
         .padding()
@@ -320,17 +320,17 @@ private struct RecentSearchQuries: View {
     let store: StoreOf<SearchFeature>
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 8 * AdaptiveSize.scale) {
             HStack {
                 Text(String(localized: "search_recent", bundle: PresentationResources.bundle))
-                    .font(.title3)
+                    .font(.adaptive(.title3))
                     .bold()
                 Spacer()
                 Button {
                     store.send(.clearRecentQueries)
                 } label: {
                     Image(systemName: "trash")
-                        .font(.callout)
+                        .font(.adaptive(.callout))
                         .foregroundStyle(
                             store.recentQueries.isEmpty ?
                             Color.secondaryLabel : .tintLabel
