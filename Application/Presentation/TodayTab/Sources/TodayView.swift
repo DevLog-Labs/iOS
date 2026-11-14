@@ -13,6 +13,7 @@ import PresentationShared
 
 public struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
@@ -116,7 +117,17 @@ public struct TodayView: View {
             )
         }
         .navigationHistory(router)
-        .inspector(isPresented: $store.isTodoInspectorPresented) {
+        .inspector(
+            isPresented: isiOSAppOnMac || horizontalSizeClass == .regular
+                ? $store.isTodoInspectorPresented : .constant(false)
+        ) {
+            TodayTodoInspector(store: store)
+        }
+        // 좁은 화면의 세부 정보는 시스템 시트 대신 직접 그린 시트로 표시
+        .prominentSheet(
+            isPresented: isiOSAppOnMac || horizontalSizeClass == .regular
+                ? .constant(false) : $store.isTodoInspectorPresented
+        ) {
             TodayTodoInspector(store: store)
         }
         // inspector 컨테이너의 상단 safe area 배경
