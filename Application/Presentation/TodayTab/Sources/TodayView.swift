@@ -42,7 +42,7 @@ public struct TodayView: View {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         TodayAchievementCard(store: store)
-                            .padding(.bottom, 8)
+                            .padding(.bottom, 8 * AdaptiveSize.scale)
 
                         if sections.isEmpty, !store.isLoading {
                             TodayEmptyContent(store: store)
@@ -63,7 +63,7 @@ public struct TodayView: View {
                                 )
                                 .padding(.bottom, section.id == sections.last?.id ? 0 : 8)
                             }
-                            .padding(.bottom, 12)
+                            .padding(.bottom, 12 * AdaptiveSize.scale)
                         }
                     }
                     .padding(.horizontal)
@@ -80,8 +80,8 @@ public struct TodayView: View {
                         VStack(alignment: .leading) {
                             if !isiOSAppOnMac {
                                 title
-                                    .font(.largeTitle.bold())
-                                    .padding(.bottom, 8)
+                                    .font(.adaptive(.largeTitle).bold())
+                                    .padding(.bottom, 8 * AdaptiveSize.scale)
                             }
                             TodayFilterBar(store: store)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -90,7 +90,7 @@ public struct TodayView: View {
                         .padding(.horizontal)
                         .frame(maxWidth: readableContentWidth)
                         .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
-                        .padding(.bottom, 8)
+                        .padding(.bottom, 8 * AdaptiveSize.scale)
                     }
                     .background(Color.background)
                     .toolbarBackground(Color.background)
@@ -194,47 +194,47 @@ private struct TodayAchievementCard: View {
     let store: StoreOf<TodayFeature>
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack(spacing: 10) {
+        VStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
+            HStack(spacing: 10 * AdaptiveSize.scale) {
                 Text(String(
                     localized: "today_achievement_title",
                     bundle: PresentationResources.bundle)
                 )
-                .font(.title3.bold())
+                .font(.adaptive(.title3).bold())
 
                 Text(achievementStatusTitle)
-                    .font(.callout.weight(.semibold))
+                    .font(.adaptive(.callout).weight(.semibold))
                     .foregroundStyle(Color.tintLabel)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12 * AdaptiveSize.scale)
+                    .padding(.vertical, 6 * AdaptiveSize.scale)
                     .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
 
-                Spacer(minLength: 8)
+                Spacer(minLength: 8 * AdaptiveSize.scale)
 
                 progressCount
             }
 
             ProgressView(value: store.todayAchievement?.progress ?? 0)
         }
-        .padding(20)
+        .padding(20 * AdaptiveSize.scale)
         .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
 
     @ViewBuilder
     private var progressCount: some View {
         if let achievement = store.todayAchievement {
-            HStack(alignment: .firstTextBaseline, spacing: 5) {
+            HStack(alignment: .firstTextBaseline, spacing: 5 * AdaptiveSize.scale) {
                 Text("\(achievement.completedCount)")
-                    .font(.title2.bold())
+                    .font(.adaptive(.title2).bold())
                     .foregroundStyle(Color.accent)
                 Text("/")
                 Text("\(achievement.totalCount)")
             }
-            .font(.callout.weight(.semibold))
+            .font(.adaptive(.callout).weight(.semibold))
             .foregroundStyle(Color.secondaryLabel)
         } else {
             Text("-- / --")
-                .font(.callout.weight(.semibold))
+                .font(.adaptive(.callout).weight(.semibold))
                 .foregroundStyle(Color.secondaryLabel)
         }
     }
@@ -250,7 +250,7 @@ private struct TodayFilterBar: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            LazyHStack(spacing: 8) {
+            LazyHStack(spacing: 8 * AdaptiveSize.scale) {
                 ForEach(TodayFeature.TodoScope.allCases, id: \.self) { scope in
                     let isSelected = store.selectedTodoScope == scope
                     Button {
@@ -258,12 +258,12 @@ private struct TodayFilterBar: View {
                             _ = store.send(.setTodoScope(scope))
                         }
                     } label: {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 6 * AdaptiveSize.scale) {
                             Text(scope.title)
                             Text("\(store.summaryCounts[scope, default: 0])")
                                 .fontWeight(.bold)
                         }
-                        .font(.callout)
+                        .font(.adaptive(.callout))
                         .foregroundStyle(isSelected ? Color.tintLabel : .fillLabel)
                     }
                     .adaptiveButtonStyle(color: isSelected ? Color.tintFill : .fill)
@@ -295,7 +295,7 @@ private struct TodayFilterBar: View {
                         })
                     ]
                 ) {
-                    HStack(spacing: 6) {
+                    HStack(spacing: 6 * AdaptiveSize.scale) {
                         Image(systemName: category?.symbolName ?? "tray.2")
                             .foregroundStyle(category?.color ?? Color.fillLabel)
                         Text(
@@ -306,7 +306,7 @@ private struct TodayFilterBar: View {
                                 )
                         )
                     }
-                    .font(.callout)
+                    .font(.adaptive(.callout))
                     .foregroundStyle(isSelected ? Color.tintLabel : .fillLabel)
                     .adaptiveButtonStyle(color: isSelected ? Color.tintFill : .fill)
                 }
