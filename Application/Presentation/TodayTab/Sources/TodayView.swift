@@ -128,7 +128,7 @@ public struct TodayView: View {
             isPresented: isiOSAppOnMac || horizontalSizeClass == .regular
                 ? .constant(false) : $store.isTodoInspectorPresented
         ) {
-            TodayTodoInspector(store: store)
+            TodayTodoInspector(store: store, showsCloseButton: true)
         }
         // inspector 컨테이너의 상단 safe area 배경
         .background(Color.background)
@@ -358,6 +358,7 @@ private struct TodayEmptyContent: View {
 
 private struct TodayTodoInspector: View {
     let store: StoreOf<TodayFeature>
+    var showsCloseButton = false
 
     @ViewBuilder
     var body: some View {
@@ -365,6 +366,7 @@ private struct TodayTodoInspector: View {
             TodoPropertiesView(
                 store: editorStore,
                 showsEditorActions: true,
+                showsCloseButton: showsCloseButton,
                 onSubmit: { editorStore.send(.upsertTodo) },
                 onClose: { store.send(.dismissTodoInspector) }
             )
