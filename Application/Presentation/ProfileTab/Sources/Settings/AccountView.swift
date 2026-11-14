@@ -113,7 +113,7 @@ private struct AccountCurrentSection: View {
                 }
                 .padding(16)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.surface, in: .rect(cornerRadius: 16))
+                .groupBackground(in: .rect(cornerRadius: 16))
             }
         }
     }
@@ -152,7 +152,7 @@ private struct AccountSocialSection: View {
                     }
                 }
             }
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: 16))
         }
     }
 }
@@ -218,7 +218,7 @@ private struct ProviderIdentity: View {
                 .scaledToFit()
                 .frame(width: 20, height: 20)
                 .frame(width: 36, height: 36)
-                .background(Color.surfaceSecondary, in: Circle())
+                .background(Color.controlBackground, in: Circle())
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(provider.displayName)

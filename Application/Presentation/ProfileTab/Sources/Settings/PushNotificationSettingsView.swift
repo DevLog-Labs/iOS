@@ -114,7 +114,7 @@ private struct EnableCard: View {
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.surface, in: .rect(cornerRadius: 16))
+        .groupBackground(in: .rect(cornerRadius: 16))
     }
 }
 
@@ -134,7 +134,7 @@ private struct TimeCard: View {
             }
             customTimeButton
         }
-        .background(Color.surface, in: .rect(cornerRadius: 16))
+        .groupBackground(in: .rect(cornerRadius: 16))
         .disabled(!store.pushNotificationEnable || store.activeLoadingRow != nil)
         .opacity(store.pushNotificationEnable ? 1.0 : 0.7)
     }

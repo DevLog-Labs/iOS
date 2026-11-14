@@ -68,7 +68,7 @@ struct GoalSummaryCard: View {
             }
         }
         .padding(16)
-        .background(Color.surface, in: RoundedRectangle(cornerRadius: 16))
+        .groupBackground(in: RoundedRectangle(cornerRadius: 16))
     }
 
     private var statusGrid: some View {

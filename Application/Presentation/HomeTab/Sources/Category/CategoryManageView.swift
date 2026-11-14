@@ -323,7 +323,7 @@ private struct CategoryManageSheet: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity)
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: 16))
         }
     }
 
@@ -347,7 +347,7 @@ private struct CategoryManageSheet: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: 16))
         }
     }
 }

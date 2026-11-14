@@ -122,7 +122,7 @@ public struct TodoPropertiesView: View {
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(Color.surface, in: .rect(cornerRadius: 16))
+                .groupBackground(in: .rect(cornerRadius: 16))
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text(String(localized: "todo_tags", bundle: PresentationResources.bundle))
@@ -140,7 +140,7 @@ public struct TodoPropertiesView: View {
                             .onSubmit { submitTag() }
                             .padding(.vertical, 8)
                             .padding(.horizontal, 12)
-                            .background(Color.surfaceSecondary, in: .rect(cornerRadius: 12))
+                            .background(Color.controlBackground, in: .rect(cornerRadius: 12))
                             .tint(Color.accent)
 
                             Button {
@@ -151,7 +151,7 @@ public struct TodoPropertiesView: View {
                                     .foregroundStyle(canSubmitTag ? Color.surface : Color.textSecondary)
                                     .padding(12)
                                     .background(
-                                        canSubmitTag ? Color.accent : Color.surfaceSecondary,
+                                        canSubmitTag ? Color.accent : Color.controlBackground,
                                         in: Circle()
                                     )
                             }
@@ -177,7 +177,7 @@ public struct TodoPropertiesView: View {
                     }
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.surface, in: .rect(cornerRadius: 16))
+                    .groupBackground(in: .rect(cornerRadius: 16))
                 }
             }
             .padding(.horizontal, 16)

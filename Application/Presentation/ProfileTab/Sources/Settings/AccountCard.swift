@@ -79,7 +79,7 @@ struct AccountCard: View {
                 .buttonStyle(.plain)
                 .disabled(!isNetworkConnected || isLoading)
             }
-            .background(Color.surface, in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: 16))
         }
     }
 }

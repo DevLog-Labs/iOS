@@ -206,10 +206,7 @@ private struct TodayAchievementCard: View {
             ProgressView(value: store.todayAchievement?.progress ?? 0)
         }
         .padding(20)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.surface)
-        }
+        .groupBackground(in: .rect(cornerRadius: 16))
     }
 
     @ViewBuilder

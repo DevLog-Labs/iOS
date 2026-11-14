@@ -31,7 +31,7 @@ struct ThemeView: View {
                         }
                     }
                 }
-                .background(Color.surface, in: .rect(cornerRadius: 16))
+                .groupBackground(in: .rect(cornerRadius: 16))
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)

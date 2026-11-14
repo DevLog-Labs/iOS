@@ -35,7 +35,7 @@ struct DevelopmentSummaryCard: View {
             summaryContent
         }
         .padding(20)
-        .background(Color.surface, in: .rect(cornerRadius: 28))
+        .groupBackground(in: .rect(cornerRadius: 28))
     }
 
     @ViewBuilder
