@@ -173,6 +173,8 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
 
     private func presentDeleteNotificationToast(_ notificationId: String) {
         ToastPresenter.present(
+            message: String(localized: "push_notifications_delete_toast_message", bundle: PresentationResources.bundle),
+            systemImage: "arrow.uturn.backward",
             duration: 5,
             action: {
                 Task { @MainActor in
@@ -184,9 +186,7 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
                     await finishDeleteToast(notificationId)
                 }
             }
-        ) {
-            ToastLabel()
-        }
+        )
     }
 
     private func drainReceivedActions() async {

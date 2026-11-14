@@ -20,20 +20,20 @@ public final class ToastPresenter {
         presenter.item
     }
 
-    public static func present<Label: View>(
+    public static func present(
+        message: String,
+        systemImage: String,
         duration: TimeInterval = 2,
         action: (() -> Void)? = nil,
-        onDismiss: (() -> Void)? = nil,
-        @ViewBuilder label: @escaping () -> Label
+        onDismiss: (() -> Void)? = nil
     ) {
         presenter.present(
             ToastItem(
                 duration: duration,
                 action: action,
                 onDismiss: onDismiss,
-                label: {
-                    AnyView(label())
-                }
+                message: message,
+                systemImage: systemImage
             )
         )
     }
@@ -65,7 +65,8 @@ public struct ToastItem: Identifiable {
     public let duration: TimeInterval
     public let action: (() -> Void)?
     public let onDismiss: (() -> Void)?
-    fileprivate let label: () -> AnyView
+    fileprivate let message: String
+    fileprivate let systemImage: String
 }
 
 public extension View {
@@ -102,11 +103,11 @@ private struct ToastHostModifier: ViewModifier {
                         ),
                         duration: item.duration,
                         presentedOffset: placement.presentedOffset,
+                        message: item.message,
+                        systemImage: item.systemImage,
                         action: item.action,
                         onDismiss: item.onDismiss
-                    ) {
-                        item.label()
-                    }
+                    )
                     .id(item.id)
                     .padding(.horizontal, 12)
                     .padding(.bottom, placement.bottomPadding(toastBottomInset))
@@ -155,7 +156,7 @@ private enum ToastPresentationPlacement {
         case .top:
             return 50
         case .bottom:
-            return -50
+            return -16
         }
     }
 
@@ -169,13 +170,15 @@ private enum ToastPresentationPlacement {
     }
 }
 
-private struct ToastOverlayView<Label: View>: View {
+private struct ToastOverlayView: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Binding var isPresented: Bool
     let duration: TimeInterval
     let presentedOffset: CGFloat
+    let message: String
+    let systemImage: String
     let action: (() -> Void)?
     let onDismiss: (() -> Void)?
-    @ViewBuilder let label: () -> Label
 
     @State private var yOffset: CGFloat = 0
     @State private var opacityValue: Double = 0
@@ -186,60 +189,69 @@ private struct ToastOverlayView<Label: View>: View {
 
     var body: some View {
         if isPresented {
-            Group {
-                if #available(iOS 26.0, *) {
-                    toastButton
-                        .glassEffect(.regular.tint(Color.secondaryBackground.opacity(0.65)), in: .capsule)
-                } else {
-                    toastButton
-                        .background(Color.secondaryBackground.opacity(0.45), in: .capsule)
-                        .background(.regularMaterial, in: .capsule)
+            toastButton
+                .shadow(color: Color.black.opacity(0.35), radius: 12, y: 8)
+                .offset(y: yOffset)
+                .opacity(opacityValue)
+                .onChange(of: isPresented) { _, newValue in
+                    if newValue {
+                        resetForNewPresentation()
+                        presentAnimated()
+                        scheduleDismissIfNeeded()
+                    } else {
+                        cleanupPresentation()
+                    }
                 }
-            }
-            .overlay {
-                Capsule()
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [Color.primary.opacity(0.14), Color.primary.opacity(0.03)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ),
-                        lineWidth: 1
-                    )
-                    .allowsHitTesting(false)
-            }
-            .shadow(color: Color.black.opacity(0.16), radius: 16, y: 8)
-            .offset(y: yOffset)
-            .opacity(opacityValue)
-            .onChange(of: isPresented) { _, newValue in
-                if newValue {
-                    resetForNewPresentation()
+                .onAppear {
                     presentAnimated()
                     scheduleDismissIfNeeded()
-                } else {
+                }
+                .onDisappear {
                     cleanupPresentation()
                 }
-            }
-            .onAppear {
-                presentAnimated()
-                scheduleDismissIfNeeded()
-            }
-            .onDisappear {
-                cleanupPresentation()
-            }
-            .transition(.identity)
+                .transition(.identity)
         }
     }
 
     private var toastButton: some View {
-        Button(action: performAction) {
-            label()
-                .labelStyle(TrailingIconLabelStyle())
-                .padding(.vertical, 6)
-                .padding(.horizontal, 10)
+        let height = isiOSAppOnMac ? CGFloat(36) : 44
+        let padding = isiOSAppOnMac ? CGFloat(14) : 18
+        let buttonSize = isiOSAppOnMac ? CGFloat(24) : 30
+        let buttonPadding = isiOSAppOnMac ? CGFloat(5) : 6
+        // 모바일은 높이의 절반인 알약, Mac은 반경 10
+        let shape = RoundedRectangle(cornerRadius: isiOSAppOnMac ? 10 : height / 2)
+
+        return Button(action: performAction) {
+            HStack(spacing: 8) {
+                // 인포 토스트는 문구 앞 아이콘, 인터랙션 토스트는 문구 뒤 강조색 원 버튼
+                if action == nil {
+                    Image(systemName: systemImage)
+                        .foregroundStyle(Color.accent)
+                }
+
+                Text(message)
+                    .foregroundStyle(Color.label)
+
+                if action != nil {
+                    Image(systemName: systemImage)
+                        .foregroundStyle(Color.white)
+                        .frame(width: buttonSize, height: buttonSize)
+                        .background(Color.accent, in: .circle)
+                }
+            }
+            .font(isiOSAppOnMac ? .footnote : .subheadline)
+            .fontWeight(.medium)
+            .padding(.leading, padding)
+            .padding(.trailing, action == nil ? padding : buttonPadding)
+            .frame(minHeight: height)
+            .background(Color.secondaryBackground, in: shape)
+            .overlay {
+                shape
+                    .strokeBorder(Color.separator, lineWidth: 1)
+            }
         }
         .buttonStyle(.plain)
-        .contentShape(.capsule)
+        .contentShape(shape)
     }
 
     private func presentAnimated() {
@@ -311,14 +323,5 @@ private struct ToastOverlayView<Label: View>: View {
         isTapped = true
         dismissAnimated()
         action?()
-    }
-}
-
-private struct TrailingIconLabelStyle: LabelStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        HStack {
-            configuration.title
-            configuration.icon
-        }
     }
 }

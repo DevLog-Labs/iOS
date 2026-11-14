@@ -245,6 +245,8 @@ private struct PushNotificationListContent: View {
 
     private func presentDeleteNotificationToast(_ notificationId: String) {
         ToastPresenter.present(
+            message: String(localized: "push_notifications_delete_toast_message", bundle: PresentationResources.bundle),
+            systemImage: "arrow.uturn.backward",
             duration: 5,
             action: {
                 store.send(.view(.undoDelete))
@@ -252,9 +254,7 @@ private struct PushNotificationListContent: View {
             onDismiss: {
                 store.send(.view(.finishDeleteToast(notificationId)))
             }
-        ) {
-            ToastLabel()
-        }
+        )
     }
 
     private func timeAgoText(from date: Date, now: Date) -> String {
@@ -369,20 +369,5 @@ private struct PushNotificationFilterBar: View {
             .minimumScaleFactor(0.6)
             .frame(width: 20, height: 20)
             .background(Circle().fill(Color.accent.opacity(0.1)))
-    }
-}
-
-struct ToastLabel: View {
-    var body: some View {
-        Label {
-            Text(String(localized: "common_undo", bundle: PresentationResources.bundle))
-                .font(.caption)
-                .lineLimit(3)
-                .foregroundStyle(.blue)
-        } icon: {
-            Image(systemName: "arrow.uturn.left.circle.fill")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(.blue)
-            }
     }
 }
