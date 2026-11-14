@@ -238,7 +238,7 @@ private struct CategoryManageSheet: View {
                 TextField(
                     "",
                     text: $store.category.name,
-                    prompt: Text(store.placeholder).foregroundStyle(.secondary)
+                    prompt: Text(store.placeholder).foregroundStyle(Color.textSecondary)
                 )
                 .font(.body)
 

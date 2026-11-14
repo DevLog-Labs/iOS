@@ -194,7 +194,7 @@ struct EditorToolbarActions: View {
                 } label: {
                     Image(systemName: "info.circle")
                         .frame(width: iconSize, height: iconSize)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textPrimary)
                 }
                 .font(.title)
                 .adaptiveButtonStyle(shape: .circle, color: Color.surface, glassEffect: .enabled)
@@ -284,7 +284,7 @@ private struct TitleField: View {
                     bundle: PresentationResources.bundle
                 )
             )
-            .foregroundStyle(Color.secondary),
+            .foregroundStyle(Color.textSecondary),
         )
         .font(.body)
         .focused($field, equals: .title)
@@ -420,7 +420,7 @@ private struct ContentView: View {
                 .font(.headline)
             Text(String(localized: "todo_editor_markdown_preview_message", bundle: PresentationResources.bundle))
                 .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .foregroundStyle(Color.textSecondary)
         }
         .multilineTextAlignment(.center)
         .padding(12)

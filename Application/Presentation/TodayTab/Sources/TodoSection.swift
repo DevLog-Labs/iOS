@@ -78,7 +78,7 @@ private struct TodoRow: View {
                     Text(item.title)
                         .font(.headline)
                         .strikethrough(item.isCompleted)
-                        .foregroundStyle(item.isCompleted ? Color.textSecondary : .primary)
+                        .foregroundStyle(item.isCompleted ? Color.textSecondary : .textPrimary)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                     if !item.content.isEmpty {
@@ -151,6 +151,6 @@ private struct TodoRow: View {
 
 private extension TodayFeature.SectionCategory {
     var accentColor: Color {
-        self == .overdue ? .danger : .primary
+        self == .overdue ? .danger : .textPrimary
     }
 }

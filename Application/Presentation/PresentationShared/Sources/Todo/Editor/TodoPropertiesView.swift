@@ -161,7 +161,7 @@ public struct TodoPropertiesView: View {
 
                         if store.tags.isEmpty {
                             Text(String(localized: "todo_no_tags", bundle: PresentationResources.bundle))
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.textSecondary)
                                 .padding(.vertical, 4)
                         } else {
                             TagList(
@@ -199,7 +199,7 @@ public struct TodoPropertiesView: View {
             HStack(spacing: 12) {
                 optionIcon("calendar", color: Color.textSecondary)
                 Text(String(localized: "todo_due_date", bundle: PresentationResources.bundle))
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textPrimary)
                 Spacer()
                 if let dueDate = store.dueDate {
                     Tag(dueDateText(for: dueDate), isEditing: true) {

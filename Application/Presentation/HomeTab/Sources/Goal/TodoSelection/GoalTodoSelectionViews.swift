@@ -80,7 +80,7 @@ struct GoalTodoSelectionRow: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(todo.title)
                         .font(.body.weight(isSelected ? .semibold : .regular))
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textPrimary)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                     HStack(spacing: 8) {

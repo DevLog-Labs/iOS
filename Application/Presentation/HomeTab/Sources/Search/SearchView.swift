@@ -154,7 +154,7 @@ private struct SearchField: View {
                     localized: "search_prompt",
                     bundle: PresentationResources.bundle)
                 )
-                .foregroundStyle(Color.secondary),
+                .foregroundStyle(Color.textSecondary),
             )
             .focused($isFocused)
             .onSubmit {

@@ -28,7 +28,7 @@ public struct TodoItemRow: View {
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
                     Text(item.title)
                         .font(.headline)
-                        .foregroundStyle(item.isCompleted ? Color.textSecondary : .primary)
+                        .foregroundStyle(item.isCompleted ? Color.textSecondary : .textPrimary)
                         .lineLimit(1)
                         .layoutPriority(1)
 

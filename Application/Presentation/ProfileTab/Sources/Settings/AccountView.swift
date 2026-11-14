@@ -223,7 +223,7 @@ private struct ProviderIdentity: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(provider.displayName)
                     .font(.headline)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textPrimary)
 
                 if let status {
                     Text(status)

@@ -140,7 +140,7 @@ private struct PushNotificationListContent: View {
                                                         Text(item.title)
                                                             .font(.headline)
                                                             .foregroundStyle(
-                                                                item.isRead ? Color.textSecondary : .primary
+                                                                item.isRead ? Color.textSecondary : .textPrimary
                                                             )
                                                             .lineLimit(2)
 

@@ -58,7 +58,7 @@ struct DevelopmentSummaryCard: View {
             )
         )
         .font(.title2.weight(.semibold))
-        .foregroundStyle(Color.primary)
+        .foregroundStyle(Color.textPrimary)
         .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -88,7 +88,7 @@ struct DevelopmentSummaryCard: View {
                         HStack(spacing: 12) {
                             Text(recentRecord.title)
                                 .font(.subheadline.weight(.medium))
-                                .foregroundStyle(Color.primary)
+                                .foregroundStyle(Color.textPrimary)
                                 .lineLimit(1)
                             Spacer(minLength: 12)
                             Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())

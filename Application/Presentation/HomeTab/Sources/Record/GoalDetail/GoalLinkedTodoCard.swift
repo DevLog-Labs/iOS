@@ -103,7 +103,7 @@ private struct GoalLinkedTodoRow: View {
                     .foregroundStyle(todo.isCompleted ? Color.accent : Color.border)
                 Text(todo.title)
                     .font(.body)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textPrimary)
                     .multilineTextAlignment(.leading)
                     .lineLimit(2)
                     .frame(maxWidth: .infinity, alignment: .leading)

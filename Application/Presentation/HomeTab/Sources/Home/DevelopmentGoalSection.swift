@@ -79,7 +79,7 @@ struct DevelopmentGoalSection: View {
         HStack(spacing: 8) {
             Text("home_development_goal_section_title", bundle: PresentationResources.bundle)
                 .font(.title2)
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.textPrimary)
             if hasLoaded {
                 Text(
                     String.localizedStringWithFormat(
@@ -115,7 +115,7 @@ private struct DevelopmentGoalCard: View {
 
             Text(item.goal.title)
                 .font(.title3.weight(.semibold))
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.textPrimary)
                 .lineLimit(2)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -138,7 +138,7 @@ private struct DevelopmentGoalCard: View {
                         .foregroundStyle(Color.textTertiary)
                     Text(recentRecord.title)
                         .font(.subheadline.weight(.medium))
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textPrimary)
                         .lineLimit(1)
                 }
             } else {

@@ -72,7 +72,7 @@ struct ActivityCard: View {
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.caption2)
                     }
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.textSecondary)
                 }
                 .buttonStyle(.plain)
                 Spacer()
@@ -113,7 +113,7 @@ struct ActivityCard: View {
             if activities.isEmpty {
                 Text(String(localized: "profile_activity_none", bundle: PresentationResources.bundle))
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(Color.textSecondary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(.vertical, 8)
             } else {
@@ -122,7 +122,7 @@ struct ActivityCard: View {
                         selectActivity(activity)
                     } label: {
                         let item = TodoCategoryItem(from: activity.category)
-                        let rowColor = activity.isDeleted ? Color.secondary : .primary
+                        let rowColor = activity.isDeleted ? Color.textSecondary : .textPrimary
                         HStack(spacing: 8) {
                             Image(systemName: item.symbolName)
                                 .foregroundStyle(item.color)
@@ -133,7 +133,7 @@ struct ActivityCard: View {
                                 .foregroundStyle(rowColor)
                             Text("#\(activity.number)")
                                 .font(.caption)
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Color.textSecondary)
                             ForEach(activity.activityKindItems) { item in
                                 Text(item.title)
                                     .font(.caption2)
@@ -150,7 +150,7 @@ struct ActivityCard: View {
                             if !activity.isDeleted, !isiOSAppOnMac {
                                 Image(systemName: "chevron.right")
                                     .font(.caption.weight(.semibold))
-                                    .foregroundStyle(.tertiary)
+                                    .foregroundStyle(Color.textTertiary)
                             }
                         }
                         .contentShape(.rect)
@@ -188,7 +188,7 @@ struct QuarterPickerSheet: View {
                 HStack {
                     Text(String(localized: "profile_year", bundle: PresentationResources.bundle))
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.textSecondary)
                     Spacer()
                     Picker(
                         "",
@@ -247,7 +247,7 @@ struct QuarterPickerSheet: View {
                 RoundedRectangle(cornerRadius: 12)
                     .fill(isSelected ? Color.accent : Color.surfaceSecondary)
             )
-            .foregroundStyle(isSelected ? .white : isEnabled ? .primary : .secondary)
+            .foregroundStyle(isSelected ? Color.white : isEnabled ? .textPrimary : .textSecondary)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

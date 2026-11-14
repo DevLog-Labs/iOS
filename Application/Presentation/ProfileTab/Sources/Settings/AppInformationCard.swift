@@ -18,7 +18,7 @@ struct AppInformationCard: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("settings_information_section", bundle: PresentationResources.bundle)
                 .font(.title3.bold())
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.textPrimary)
 
             VStack(spacing: 0) {
                 if let appVersion {
@@ -28,7 +28,7 @@ struct AppInformationCard: View {
                             .frame(width: iconSize, height: iconSize)
                             .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
                         Text(String(localized: "settings_version", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textPrimary)
 
                         Spacer(minLength: 8)
 
@@ -58,7 +58,7 @@ struct AppInformationCard: View {
                                 localized: "settings_privacy_policy",
                                 bundle: PresentationResources.bundle
                             ))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textPrimary)
 
                             Spacer(minLength: 8)
 
@@ -89,7 +89,7 @@ struct AppInformationCard: View {
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "settings_join_beta", bundle: PresentationResources.bundle))
-                                    .foregroundStyle(Color.primary)
+                                    .foregroundStyle(Color.textPrimary)
                                 Text(String(
                                     localized: "settings_join_beta_subtitle",
                                     bundle: PresentationResources.bundle

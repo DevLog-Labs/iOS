@@ -173,7 +173,7 @@ private struct VersionHistoryRow: View {
 
                     Text(version.title)
                         .font(.body.weight(.semibold))
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textPrimary)
                         .multilineTextAlignment(.leading)
                         .lineLimit(2)
                 }

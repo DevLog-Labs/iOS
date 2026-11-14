@@ -329,7 +329,7 @@ private struct SideBarHistoryButton: View {
     var body: some View {
         Button(action: action) {
             Image(systemName: systemName)
-                .foregroundStyle(isEnabled ? Color.primary : .textTertiary)
+                .foregroundStyle(isEnabled ? Color.textPrimary : .textTertiary)
         }
         .topBarButtonStyle()
         .disabled(!isEnabled)
@@ -362,7 +362,7 @@ private struct SideBarButton: View {
                         .background(Color.accent, in: .capsule)
                 }
             }
-            .foregroundStyle(isSelected ? Color.onPrimaryContainer : .primary)
+            .foregroundStyle(isSelected ? Color.onPrimaryContainer : .textPrimary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)

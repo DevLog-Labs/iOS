@@ -69,7 +69,7 @@ private struct RecentTodoCard: View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .top, spacing: 8) {
                     Text(todo.title)
-                        .foregroundStyle(Color.primary)
+                        .foregroundStyle(Color.textPrimary)
                         .font(.headline)
                         .lineLimit(2)
                     if todo.isPinned {

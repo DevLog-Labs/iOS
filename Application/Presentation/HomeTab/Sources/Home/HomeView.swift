@@ -497,7 +497,7 @@ private struct HomeContentPickerLabel: View {
                         .font(.title3)
                 }
             Text(text)
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.textPrimary)
             Spacer()
         }
         .contentShape(.rect)

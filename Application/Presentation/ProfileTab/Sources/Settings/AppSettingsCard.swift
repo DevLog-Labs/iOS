@@ -19,7 +19,7 @@ struct AppSettingsCard: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("settings_app_section", bundle: PresentationResources.bundle)
                 .font(.title3.bold())
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.textPrimary)
 
             VStack(spacing: 0) {
                 Button(action: onTheme) {
@@ -29,7 +29,7 @@ struct AppSettingsCard: View {
                             .frame(width: iconSize, height: iconSize)
                             .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
                         Text(String(localized: "settings_theme", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textPrimary)
 
                         Spacer(minLength: 8)
 
@@ -57,7 +57,7 @@ struct AppSettingsCard: View {
                             .frame(width: iconSize, height: iconSize)
                             .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
                         Text(String(localized: "settings_notifications", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textPrimary)
 
                         Spacer(minLength: 8)
 

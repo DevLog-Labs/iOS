@@ -18,7 +18,7 @@ public extension View {
         if #available(iOS 26.0, *) {
             modifier(TopBarButtonStyleModifier(tint: tint, isInteractive: true))
         } else {
-            modifier(LegacyTopBarButtonStyleModifier(tint: tint ?? .primary))
+            modifier(LegacyTopBarButtonStyleModifier(tint: tint ?? .textPrimary))
         }
     }
 
@@ -219,7 +219,7 @@ private struct TopBarButtonStyleModifier: ViewModifier {
             // Mac에서는 리퀴드 글래스 없이 제목 줄에 맞는 작은 아이콘만 표시
             content
                 .font(.body.weight(.medium))
-                .foregroundStyle(tint ?? Color.primary)
+                .foregroundStyle(tint ?? Color.textPrimary)
                 .frame(width: macIconSize, height: macIconSize)
                 .padding(6)
                 .contentShape(.rect)
@@ -236,7 +236,7 @@ private struct TopBarButtonStyleModifier: ViewModifier {
         } else {
             content
                 .font(.title2.weight(.semibold))
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.textPrimary)
                 .frame(width: iconSize, height: iconSize)
                 .padding(9)
                 .glassEffect(.regular.interactive(isInteractive), in: .circle)

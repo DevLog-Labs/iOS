@@ -25,7 +25,7 @@ struct TimelineRow: View {
                     VStack(alignment: .leading, spacing: 5) {
                         Text(item.title)
                             .font(.body.weight(.semibold))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textPrimary)
                             .lineLimit(2)
                         status
                         if item.hasDraft {

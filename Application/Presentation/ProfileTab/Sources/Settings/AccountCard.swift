@@ -20,7 +20,7 @@ struct AccountCard: View {
         VStack(alignment: .leading, spacing: 16) {
             Text("settings_account_section", bundle: PresentationResources.bundle)
                 .font(.title3.bold())
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.textPrimary)
 
             VStack(spacing: 0) {
                 Button(action: onAccount) {
@@ -31,7 +31,7 @@ struct AccountCard: View {
                             .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
 
                         Text(String(localized: "settings_account", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.primary)
+                            .foregroundStyle(Color.textPrimary)
 
                         Spacer(minLength: 8)
 

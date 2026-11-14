@@ -150,7 +150,7 @@ private struct TimeCard: View {
         } label: {
             HStack {
                 Text(formattedTimeString(date))
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textPrimary)
                 Spacer()
                 if let loadingRow,
                    store.isLoading && store.activeLoadingRow == loadingRow {
@@ -172,7 +172,7 @@ private struct TimeCard: View {
         } label: {
             HStack(spacing: 8) {
                 Text("push_settings_custom", bundle: PresentationResources.bundle)
-                    .foregroundStyle(Color.primary)
+                    .foregroundStyle(Color.textPrimary)
                 Spacer(minLength: 8)
                 if store.isLoading && store.activeLoadingRow == .customTime {
                     ProgressView()

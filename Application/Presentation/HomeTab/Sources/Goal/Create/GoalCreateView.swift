@@ -172,7 +172,7 @@ private struct GoalCreateDescriptionEditor: View {
                                         .font(.headline)
                                     Text(RecordPresentation.text("development_goal_create_preview_empty_message"))
                                         .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(Color.textSecondary)
                                 }
                                 .multilineTextAlignment(.center)
                                 .padding(12)

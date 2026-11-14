@@ -67,7 +67,7 @@ struct LoginView: View {
             .padding(.bottom, 30)
             Text(String(localized: "login_terms_notice", bundle: PresentationResources.bundle))
                 .font(.caption2)
-                .foregroundStyle(Color.gray)
+                .foregroundStyle(Color.textSecondary)
                 .multilineTextAlignment(.center)
                 .padding(.vertical)
         }

@@ -82,7 +82,7 @@ struct ThemeView: View {
                 .iconStyle(color: option.iconColor, in: Circle())
 
             Text(option.localizedName(in: PresentationResources.bundle))
-                .foregroundStyle(Color.primary)
+                .foregroundStyle(Color.textPrimary)
 
             Spacer(minLength: 8)
 
