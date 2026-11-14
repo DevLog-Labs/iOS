@@ -61,7 +61,7 @@ struct GoalTodoSelectionSection: View {
             }
             .background(Color.secondaryBackground)
             .compositingGroup()
-            .clipShape(.rect(cornerRadius: 20))
+            .clipShape(.rect)
         }
     }
 }

@@ -287,7 +287,7 @@ private struct InfoSheetView: View {
                     }
                 }
                 .background(Color.secondaryBackground)
-                .clipShape(.rect(cornerRadius: 16))
+                .clipShape(.rect(cornerRadius: CornerRadius.group))
 
                 VStack(alignment: .leading, spacing: 12) {
                     Text(String(localized: "todo_tags", bundle: PresentationResources.bundle))
@@ -305,7 +305,7 @@ private struct InfoSheetView: View {
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .background(Color.secondaryBackground)
-                    .clipShape(.rect(cornerRadius: 16))
+                    .clipShape(.rect(cornerRadius: CornerRadius.group))
                 }
             }
             .padding(.horizontal, 16)

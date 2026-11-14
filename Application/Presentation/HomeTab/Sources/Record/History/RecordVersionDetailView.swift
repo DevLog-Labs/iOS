@@ -95,7 +95,7 @@ struct RecordVersionDetailView: View {
             }
         }
         .padding(.vertical, 16)
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect)
     }
 
     private var currentVersionCard: some View {
@@ -120,7 +120,7 @@ struct RecordVersionDetailView: View {
         .foregroundStyle(Color.secondaryLabel)
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(18)
-        .background(Color.tertiaryBackground, in: .rect(cornerRadius: 18))
+        .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.group))
     }
 
     private var statusSystemImage: String {
@@ -143,7 +143,7 @@ struct RecordVersionDetailView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
         }
-        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: 16), color: .accent)
+        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
         .disabled(store.isRestoring || store.record.draft != nil)
         .padding(.horizontal)
         .padding(.vertical, 12)
@@ -184,6 +184,6 @@ struct RecordVersionDetailView: View {
             .foregroundStyle(foreground)
             .padding(.horizontal, 9)
             .padding(.vertical, 5)
-            .background(background, in: .rect(cornerRadius: 8))
+            .background(background, in: .rect(cornerRadius: CornerRadius.badge))
     }
 }

@@ -24,7 +24,7 @@ struct GoalLinkedTodoCard: View {
             content
         }
         .padding([.horizontal, .top])
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect)
     }
 
     private var header: some View {
@@ -41,7 +41,7 @@ struct GoalLinkedTodoCard: View {
                 .foregroundStyle(Color.accent)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 9)
-                .background(Color.tintFill, in: .capsule)
+                .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.control))
                 .disabled(isLoading)
             }
         }

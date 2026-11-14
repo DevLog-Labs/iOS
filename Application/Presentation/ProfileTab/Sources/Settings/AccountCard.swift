@@ -28,7 +28,7 @@ struct AccountCard: View {
                         Image(systemName: "person.crop.circle")
                             .font(.headline)
                             .frame(width: iconSize, height: iconSize)
-                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
+                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
 
                         Text(String(localized: "settings_account", bundle: PresentationResources.bundle))
                             .foregroundStyle(Color.label)
@@ -56,7 +56,7 @@ struct AccountCard: View {
                         Image(systemName: "rectangle.portrait.and.arrow.right")
                             .font(.headline)
                             .frame(width: iconSize, height: iconSize)
-                            .iconStyle(color: .danger, in: RoundedRectangle(cornerRadius: 10))
+                            .iconStyle(color: .danger, in: RoundedRectangle(cornerRadius: CornerRadius.control))
 
                         Text(String(localized: "settings_sign_out", bundle: PresentationResources.bundle))
                             .foregroundStyle(Color.danger)
@@ -79,7 +79,7 @@ struct AccountCard: View {
                 .buttonStyle(.plain)
                 .disabled(!isNetworkConnected || isLoading)
             }
-            .groupBackground(in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 }

@@ -121,7 +121,7 @@ private struct DropdownMenuPanel: View {
 
     var body: some View {
         let width = CGFloat(isiOSAppOnMac ? 200 : 250)
-        let radius = CGFloat(isiOSAppOnMac ? 10 : 14)
+        let radius = CornerRadius.menu
         let spacing = CGFloat(6)
         let margin = CGFloat(16)
 

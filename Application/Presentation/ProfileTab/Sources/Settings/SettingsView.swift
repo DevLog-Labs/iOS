@@ -109,8 +109,8 @@ struct SettingsView: View {
                 .font(.system(.body))
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
-                .contentShape(.rect(cornerRadius: 16))
-                .groupBackground(in: .rect(cornerRadius: 16))
+                .contentShape(.rect(cornerRadius: CornerRadius.group))
+                .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
             .buttonStyle(.plain)
             .disabled(!store.isNetworkConnected || store.isLoading)

@@ -26,7 +26,7 @@ struct AppInformationCard: View {
                         Image(systemName: "info.circle")
                             .font(.headline)
                             .frame(width: iconSize, height: iconSize)
-                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
+                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
                         Text(String(localized: "settings_version", bundle: PresentationResources.bundle))
                             .foregroundStyle(Color.label)
 
@@ -52,7 +52,7 @@ struct AppInformationCard: View {
                             Image(systemName: "doc.text")
                                 .font(.headline)
                                 .frame(width: iconSize, height: iconSize)
-                                .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
+                                .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
 
                             Text(String(
                                 localized: "settings_privacy_policy",
@@ -85,7 +85,7 @@ struct AppInformationCard: View {
                             Image(systemName: "flask")
                                 .font(.headline)
                                 .frame(width: iconSize, height: iconSize)
-                                .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: 10))
+                                .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
 
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(String(localized: "settings_join_beta", bundle: PresentationResources.bundle))
@@ -111,7 +111,7 @@ struct AppInformationCard: View {
                     .buttonStyle(.plain)
                 }
             }
-            .groupBackground(in: .rect(cornerRadius: 16))
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         }
     }
 }

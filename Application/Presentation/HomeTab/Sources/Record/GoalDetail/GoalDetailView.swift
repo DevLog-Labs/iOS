@@ -223,7 +223,7 @@ public struct GoalDetailView: View {
         }
         .padding([.horizontal, .top])   // TimelineView 자체의 하단 패딩과 겹치기 때문에 .bottom은 제외
         .background {
-            RoundedRectangle(cornerRadius: 24)
+            Rectangle()
                 .fill(Color.secondaryBackground)
         }
     }

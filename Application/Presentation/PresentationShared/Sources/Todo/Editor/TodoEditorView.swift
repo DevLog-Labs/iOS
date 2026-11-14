@@ -289,7 +289,7 @@ private struct TitleField: View {
         .font(.body)
         .focused($field, equals: .title)
         .padding()
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }
 }
 
@@ -309,7 +309,7 @@ private struct ModePicker: View {
             )
         }
         .padding(2)
-        .background(Color.separator, in: RoundedRectangle(cornerRadius: 16))
+        .background(Color.separator, in: RoundedRectangle(cornerRadius: CornerRadius.control))
     }
 
     @ViewBuilder
@@ -333,7 +333,7 @@ private struct ModePicker: View {
                 .frame(maxWidth: .infinity, minHeight: 36)
                 .background {
                     if isSelected {
-                        RoundedRectangle(cornerRadius: 14)
+                        RoundedRectangle(cornerRadius: CornerRadius.segment)
                             .fill(Color.secondaryBackground)
                             .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }
@@ -384,7 +384,7 @@ private struct ContentView: View {
                         // SwiftUI 포커싱 시스템에 등록하기 위해 사용
                         .focused($field, equals: .content)
                         .padding(12)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
             } else {
                 if store.content.isEmpty {
@@ -400,7 +400,7 @@ private struct ContentView: View {
                     .padding(.horizontal, -16)
                     .padding(12)
                     .frame(minHeight: minimumHeight, alignment: .topLeading)
-                    .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                    .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
             }
         }
@@ -425,7 +425,7 @@ private struct ContentView: View {
         .multilineTextAlignment(.center)
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .center)
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }
 }
 

@@ -340,7 +340,7 @@ private struct HomeTodoSection: View {
                             store.send(.view(.tapManageTodoCategory))
                         } label: {
                             VStack(spacing: 10) {
-                                RoundedRectangle(cornerRadius: 20)
+                                RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .strokeBorder(
                                         Color.tertiaryLabel,
                                         style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])
@@ -383,7 +383,7 @@ private struct HomeTodoSection: View {
             }
         }
         .padding(.bottom, 12)
-        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: 28))
+        .background(Color.secondaryBackground, in: Rectangle())
     }
 }
 
@@ -399,7 +399,7 @@ private struct HomeTodoCategoryLink: View {
                     .frame(width: iconSize, height: iconSize)
                     .iconStyle(
                         color: item.color,
-                        in: RoundedRectangle(cornerRadius: 20)
+                        in: RoundedRectangle(cornerRadius: CornerRadius.control)
                     )
                 Text(item.localizedName)
                     .font(.subheadline)
@@ -488,7 +488,7 @@ private struct HomeContentPickerLabel: View {
 
     var body: some View {
         HStack {
-            RoundedRectangle(cornerRadius: 8)
+            RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(imageColor)
                 .frame(width: labelWidth, height: labelWidth)
                 .overlay {

@@ -31,6 +31,6 @@ struct GoalDescriptionCard: View {
             }
         }
         .padding(20)
-        .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
+        .background(Color.secondaryBackground, in: .rect)
     }
 }

@@ -367,7 +367,7 @@ private struct SideBarButton: View {
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
             .background {
-                RoundedRectangle(cornerRadius: 12)
+                RoundedRectangle(cornerRadius: CornerRadius.control)
                     .fill(isSelected ? Color.tintFill : .clear)
             }
             .contentShape(.rect)

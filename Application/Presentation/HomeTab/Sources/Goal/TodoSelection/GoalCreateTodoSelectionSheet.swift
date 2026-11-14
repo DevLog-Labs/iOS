@@ -27,7 +27,7 @@ struct GoalCreateTodoSelectionSheet: View {
                 .font(.title3)
                 .padding()
                 .background {
-                    RoundedRectangle(cornerRadius: 16)
+                    RoundedRectangle(cornerRadius: CornerRadius.control)
                         .fill(Color.secondaryBackground)
                         .strokeBorder(Color.separator, lineWidth: 1)
                 }

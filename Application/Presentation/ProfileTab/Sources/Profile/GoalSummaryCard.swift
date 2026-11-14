@@ -68,7 +68,7 @@ struct GoalSummaryCard: View {
             }
         }
         .padding(16)
-        .groupBackground(in: RoundedRectangle(cornerRadius: 16))
+        .groupBackground(in: RoundedRectangle(cornerRadius: CornerRadius.group))
     }
 
     private var statusGrid: some View {
@@ -113,6 +113,6 @@ struct GoalSummaryCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
-        .background(color.opacity(0.07), in: RoundedRectangle(cornerRadius: 12))
+        .background(color.opacity(0.07), in: Rectangle())
     }
 }

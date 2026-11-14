@@ -160,7 +160,7 @@ private struct TodoListContent: View {
                         }
                     }
                     .background(Color.secondaryBackground)
-                    .clipShape(.rect(cornerRadius: 16))
+                    .clipShape(.rect)
                     .padding(.horizontal, 16)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
@@ -376,7 +376,7 @@ private struct TodoListSearchBar: View {
             }
             .frame(maxWidth: .infinity)
             .adaptiveButtonStyle(
-                shape: Capsule(),
+                shape: RoundedRectangle(cornerRadius: CornerRadius.control),
                 color: .secondaryBackground,
                 glassEffect: .enabled
             )
