@@ -58,7 +58,7 @@ public struct RecordEditorView: View {
                 dismiss()
             }
         }
-        .interactiveDismissDisabled(store.isLoading)
+        .sheetDismissDisabled(store.isLoading)
     }
 
     private var topBar: some View {

@@ -103,7 +103,7 @@ public struct HomeView: View {
             store.send(.view(.todoEditorCreated))
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .sheet(
+        .prominentSheet(
             item: $store.scope(state: \.sheet, action: \.sheet)
                 .activePresentation(when: isSelected),
             content: sheetContent

@@ -115,6 +115,5 @@ struct GoalCreateTodoSelectionSheet: View {
         .scrollDismissesKeyboard(.interactively)
         .background(Color.background.ignoresSafeArea())
         .onAppear { store.send(.view(.fetch)) }
-        .presentationDragIndicator(.visible)
     }
 }

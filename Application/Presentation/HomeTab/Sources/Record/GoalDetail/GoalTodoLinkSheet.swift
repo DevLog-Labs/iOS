@@ -39,8 +39,7 @@ struct GoalTodoLinkSheet: View {
             }
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .presentationDragIndicator(.visible)
-        .interactiveDismissDisabled(store.isUpdating)
+        .sheetDismissDisabled(store.isUpdating)
     }
 
     private var topBar: some View {
