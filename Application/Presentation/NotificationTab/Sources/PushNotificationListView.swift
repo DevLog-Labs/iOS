@@ -245,7 +245,7 @@ private struct PushNotificationListContent: View {
 
     private func presentDeleteNotificationToast(_ notificationId: String) {
         ToastPresenter.present(
-            message: String(localized: "common_undo", bundle: PresentationResources.bundle),
+            message: String(localized: "push_notifications_delete_toast_message", bundle: PresentationResources.bundle),
             systemImage: "arrow.uturn.backward",
             duration: 5,
             action: {

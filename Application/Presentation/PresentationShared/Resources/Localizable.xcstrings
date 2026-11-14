@@ -3201,6 +3201,23 @@
         }
       }
     },
+    "push_notifications_delete_toast_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification deleted."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림을 삭제했어요."
+          }
+        }
+      }
+    },
     "push_notifications_empty" : {
       "extractionState" : "manual",
       "localizations" : {
