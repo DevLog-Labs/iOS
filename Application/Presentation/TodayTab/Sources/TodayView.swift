@@ -311,45 +311,37 @@ private struct TodayEmptyContent: View {
     let store: StoreOf<TodayFeature>
 
     var body: some View {
-        VStack(spacing: 8) {
-            Text(emptyStateContent.title)
-                .font(.headline)
-            Text(emptyStateContent.message)
-                .font(.callout)
-                .foregroundStyle(Color.secondaryLabel)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 32)
-        .padding(.horizontal, 20)
-        .background {
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.secondaryBackground)
-        }
+        let content = emptyStateContent
+
+        EmptyStateView(content.title, systemImage: content.systemImage, message: content.message)
     }
 
     private var emptyStateContent: EmptyStateContent {
         if store.todos.isEmpty, store.completedTodayTodos.isEmpty {
             return EmptyStateContent(
                 title: String(localized: "today_empty_all_title", bundle: PresentationResources.bundle),
-                message: String(localized: "today_empty_all_message", bundle: PresentationResources.bundle)
+                message: String(localized: "today_empty_all_message", bundle: PresentationResources.bundle),
+                systemImage: "checklist"
             )
         }
         if store.hasActiveFilters {
             return EmptyStateContent(
                 title: String(localized: "today_empty_filtered_title", bundle: PresentationResources.bundle),
-                message: String(localized: "today_empty_filtered_message", bundle: PresentationResources.bundle)
+                message: String(localized: "today_empty_filtered_message", bundle: PresentationResources.bundle),
+                systemImage: "line.3.horizontal.decrease"
             )
         }
         return EmptyStateContent(
             title: String(localized: "today_empty_all_title", bundle: PresentationResources.bundle),
-            message: String(localized: "today_empty_all_message", bundle: PresentationResources.bundle)
+            message: String(localized: "today_empty_all_message", bundle: PresentationResources.bundle),
+            systemImage: "checklist"
         )
     }
 
     private struct EmptyStateContent {
         let title: String
         let message: String
+        let systemImage: String
     }
 }
 
