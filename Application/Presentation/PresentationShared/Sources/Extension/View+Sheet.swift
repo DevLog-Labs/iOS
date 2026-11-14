@@ -102,7 +102,7 @@ private struct ProminentSheet<Content: View>: View {
                         bottomSheet(in: proxy)
                             .transition(.move(edge: .bottom))
 
-                        // 내용의 목록·내비게이션 막대가 옆 안전 영역(Duo 레일)까지 넓어져 탭을 가로채므로
+                        // 내용의 목록·내비게이션 막대가 옆 안전 영역(Duo 레일)까지 넓어져 탭을 가로챔
                         // 그 위에 닫기 영역을 올림
                         HStack(spacing: 0) {
                             dismissArea
