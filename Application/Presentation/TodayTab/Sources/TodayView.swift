@@ -196,7 +196,7 @@ private struct TodayAchievementCard: View {
                     .foregroundStyle(Color.tintLabel)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 6)
-                    .background(Color.tintFill, in: .capsule)
+                    .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
 
                 Spacer(minLength: 8)
 
@@ -206,7 +206,7 @@ private struct TodayAchievementCard: View {
             ProgressView(value: store.todayAchievement?.progress ?? 0)
         }
         .padding(20)
-        .groupBackground(in: .rect(cornerRadius: 16))
+        .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
 
     @ViewBuilder

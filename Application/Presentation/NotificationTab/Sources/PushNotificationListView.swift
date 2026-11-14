@@ -131,7 +131,7 @@ private struct PushNotificationListContent: View {
                                                     .font(.headline)
                                                     .foregroundStyle(Color.white)
                                                     .frame(width: iconSize, height: iconSize)
-                                                    .background(category.color, in: .rect(cornerRadius: 10))
+                                                    .background(category.color, in: .rect(cornerRadius: CornerRadius.control))
 
                                                 VStack(alignment: .leading, spacing: 6) {
                                                     HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -167,8 +167,8 @@ private struct PushNotificationListContent: View {
                                             }
                                             .padding(16)
                                             .frame(maxWidth: .infinity, alignment: .leading)
-                                            .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
-                                            .contentShape(.rect(cornerRadius: 16))
+                                            .background(Color.secondaryBackground, in: .rect)
+                                            .contentShape(.rect)
                                             .onTapGesture {
                                                 store.send(.view(.selectNotification(item.id)))
                                             }
@@ -192,7 +192,7 @@ private struct PushNotificationListContent: View {
                                                     presentDeleteNotificationToast(item.id)
                                                 }
                                             }
-                                            .clipShape(.rect(cornerRadius: 16))
+                                            .clipShape(.rect)
                                             .onAppear {
                                                 if item.id == notifications.last?.id, store.nextCursor != nil {
                                                     store.send(.view(.loadNextPage))

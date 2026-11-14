@@ -51,11 +51,11 @@ struct TodoSection: View {
                 }
             }
             .background {
-                RoundedRectangle(cornerRadius: 16)
+                Rectangle()
                     .fill(Color.secondaryBackground)
             }
-            // 선택한 행 배경이 카드 모서리를 넘지 않도록 자름
-            .clipShape(.rect(cornerRadius: 16))
+            // 선택한 행 배경이 목록 영역을 넘지 않도록 자름
+            .clipShape(.rect)
         }
     }
 }
