@@ -10,6 +10,7 @@ import PresentationShared
 import Core
 import Domain
 import Foundation
+import SwiftUI
 import UserNotifications
 
 @Reducer
@@ -21,6 +22,8 @@ struct MainFeature {
         var isObservingUnreadPushCount = false
         var isWide = false
         var windowControlsInset = CGFloat.zero
+        // Duo 세로 칸 자리의 양옆 안전 영역
+        var verticalBarInsets = EdgeInsets()
         var readableContentWidth = CGFloat.infinity
         var navigationHistories: [MainTab: NavigationHistoryState] = [:]
         var navigationSteps: [MainTab: NavigationStep] = [:]
