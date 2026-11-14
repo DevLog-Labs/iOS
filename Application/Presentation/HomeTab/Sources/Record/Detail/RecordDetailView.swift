@@ -161,10 +161,11 @@ public struct RecordDetailView: View {
     private func contentCard(markdownContent: String) -> some View {
         VStack(alignment: .leading, spacing: 16) {
             if markdownContent.isEmpty {
-                ContentUnavailableView(
+                EmptyStateView(
                     RecordPresentation.text("development_record_content_empty_title"),
                     systemImage: "doc.text"
                 )
+                .padding(.bottom, 72)
             } else {
                 MarkdownContentView(content: markdownContent)
                     .frame(minHeight: 420)

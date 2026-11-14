@@ -100,12 +100,10 @@ private struct PushNotificationListContent: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
                 if notifications.isEmpty {
-                    Text(String(localized: "push_notifications_empty", bundle: PresentationResources.bundle))
-                        .font(.callout)
-                        .foregroundStyle(Color.secondaryLabel)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 32)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
+                    EmptyStateView(
+                        String(localized: "push_notifications_empty", bundle: PresentationResources.bundle),
+                        systemImage: "bell"
+                    )
                 } else {
                     ForEach(sections.indices, id: \.self) { index in
                         let items = sections[index]

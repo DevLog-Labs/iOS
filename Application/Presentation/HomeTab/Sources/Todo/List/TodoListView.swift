@@ -99,15 +99,10 @@ private struct TodoListContent: View {
         ZStack {
             ScrollView {
                 if visibleTodos.isEmpty, !store.state.isLoading {
-                    Text(String(localized: "todo_list_empty", bundle: PresentationResources.bundle))
-                        .font(.callout)
-                        .foregroundStyle(Color.secondaryLabel)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 32)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: 16))
-                        .padding(.horizontal, 16)
-                        .frame(maxWidth: readableContentWidth)
-                        .frame(maxWidth: .infinity)
+                    EmptyStateView(
+                        String(localized: "todo_list_empty", bundle: PresentationResources.bundle),
+                        systemImage: "checklist"
+                    )
                 } else {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(

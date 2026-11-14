@@ -232,9 +232,9 @@ private struct SearchResults: View {
                 } else if store.isLoading && todos.isEmpty {
                     ProgressView()
                 } else if todos.isEmpty {
-                    Text(String(
-                        localized: "todo_list_search_empty",
-                        bundle: PresentationResources.bundle)
+                    EmptyStateView(
+                        String(localized: "todo_list_search_empty", bundle: PresentationResources.bundle),
+                        systemImage: "magnifyingglass"
                     )
                 } else {
                     LazyVStack(spacing: 0) {
