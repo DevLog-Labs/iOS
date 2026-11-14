@@ -9,12 +9,13 @@ import SwiftUI
 
 // iPhone·Duo·iPad는 지금 크기 그대로, Mac은 Orca 데스크톱 크기로 보이는 글자와 화면 요소 크기
 public enum AdaptiveSize {
-    // Mac이 iPad 화면을 Mac 창에 맞출 때 화면 전체에 곱하는 77% 배율
-    // Mac 디자인 보드 크기를 이 배율로 나눠 화면에서 보드 크기로 표시
-    private static let macScale: CGFloat = 0.77
+    // 디자인 보드 크기에 곱해 앱 크기로 바꾸는 배율
+    // Mac은 iPad 화면을 Mac 창에 맞출 때 시스템이 곱하는 77% 배율을 되돌리는 1 / 0.77
+    // iPhone·Duo·iPad는 보드 크기 그대로 써서 1
+    public static let boardScale: CGFloat = ProcessInfo.processInfo.isiOSAppOnMac ? 1 / 0.77 : 1
 
     // Mac 텍스트 스타일 글자 크기
-    // 디자인 보드 글자 크기를 macScale로 나눈 값
+    // 디자인 보드 글자 크기에 boardScale을 곱한 값
     // iPhone·Duo·iPad는 시스템 텍스트 스타일을 그대로 써서 nil
     public static func macFontSize(_ style: Font.TextStyle) -> CGFloat? {
         guard ProcessInfo.processInfo.isiOSAppOnMac else { return nil }
@@ -31,7 +32,7 @@ public enum AdaptiveSize {
         case .caption2: size = 10.5
         @unknown default: return nil
         }
-        return size / macScale
+        return size * boardScale
     }
 }
 
