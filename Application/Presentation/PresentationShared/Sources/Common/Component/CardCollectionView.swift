@@ -208,7 +208,7 @@ public final class CardCollectionView<
                     var background = UIBackgroundConfiguration.clear()
                     if state.cellDragState != .none {
                         background.backgroundColor = secondaryBackground
-                        background.cornerRadius = 12
+                        background.cornerRadius = CornerRadius.group
                     }
                     cell.backgroundConfiguration = background
                 }
@@ -288,7 +288,7 @@ private final class CardBackgroundView: UICollectionReusableView {
         super.init(frame: frame)
         backgroundColor = UIColor(named: "SecondaryBackground", in: PresentationResources.bundle, compatibleWith: nil)
             ?? .secondarySystemGroupedBackground
-        layer.cornerRadius = 16
+        layer.cornerRadius = CornerRadius.group
         layer.cornerCurve = .continuous
     }
 

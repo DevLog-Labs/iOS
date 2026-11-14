@@ -82,7 +82,7 @@ public struct Tag: View {
             }
         }
         .background {
-            Capsule()
+            RoundedRectangle(cornerRadius: CornerRadius.badge)
                 .fill(Color.accent.opacity(0.2))
         }
     }

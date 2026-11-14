@@ -63,7 +63,7 @@ struct TodoDetailContentView: View {
                     }
                 }
                 .padding(.vertical, 16)
-                .background(Color.secondaryBackground, in: .rect(cornerRadius: 24))
+                .background(Color.secondaryBackground, in: .rect)
             }
             .padding()
             .frame(maxWidth: readableContentWidth)
