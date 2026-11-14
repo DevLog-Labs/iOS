@@ -329,15 +329,16 @@ private struct PushNotificationFilterBar: View {
                 .adaptiveButtonStyle(color: condition ? .primaryContainer : .controlBackground)
             }
 
-            Menu {
-                Picker(selection: $store.query.timeFilter) {
-                    ForEach(PushNotificationQuery.TimeFilter.availableOptions, id: \.self) { option in
-                        Text(option.title).tag(option)
+            DropdownMenu(sections: [
+                DropdownMenuSection(
+                    String(localized: "push_period", bundle: PresentationResources.bundle),
+                    items: PushNotificationQuery.TimeFilter.availableOptions.map { option in
+                        DropdownMenuItem(option.title, isChecked: store.query.timeFilter == option) {
+                            store.send(.binding(.set(\.query.timeFilter, option)))
+                        }
                     }
-                } label: {
-                    Text(String(localized: "push_period", bundle: PresentationResources.bundle))
-                }
-            } label: {
+                )
+            ]) {
                 let condition = store.query.timeFilter == .none
                 HStack {
                     Text(String(localized: "push_period", bundle: PresentationResources.bundle))
