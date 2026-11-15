@@ -35,6 +35,9 @@ struct MainFeature {
         var sideBarLocations: [MainTab: SideBarLocation] = [:]
         var sideBarRequests: [MainTab: SideBarRequest] = [:]
         var sideBarContent = SideBarContent()
+        var isDetailSideBarPresented = false
+        // 탭마다 지금 고른 세부 정보 사이드바 대상
+        var detailSideBarTargets: [MainTab: DetailSideBarTarget] = [:]
     }
 
     enum SideBarGroup: Hashable {
@@ -56,6 +59,7 @@ struct MainFeature {
             case tapSideBarGroup(SideBarGroup)
             case tapSideBarItem(MainTab, SideBarRequest.Action)
             case sideBarResized(CGFloat)
+            case detailSideBarTargetChanged(MainTab, DetailSideBarTarget?)
         }
 
         enum StoreAction: Equatable {
@@ -116,6 +120,8 @@ struct MainFeature {
                 return .run { [updateSideBarWidthUseCase] _ in
                     updateSideBarWidthUseCase.execute(Double(width))
                 }
+            case .view(.detailSideBarTargetChanged(let tab, let target)):
+                state.detailSideBarTargets[tab] = target
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)
