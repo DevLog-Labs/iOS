@@ -10,7 +10,8 @@ import SwiftUI
 // Mac 세부 정보 사이드바에 속성을 표시할 대상
 public enum DetailSideBarTarget: Hashable {
     // 고칠 수 없는 활동 기록 Todo는 읽기 전용
-    case todo(id: String, isEditable: Bool)
+    // 다른 곳에서 바꾼 Todo를 다시 조회하도록 목록이 올리는 revision
+    case todo(id: String, isEditable: Bool, revision: Int = 0)
     // 칸 화면이 사이드바 내용을 직접 그리는 대상
     case hosted
 }
@@ -75,7 +76,7 @@ public struct DetailSideBarTargetContent: View {
 
     public var body: some View {
         switch target {
-        case .todo(let id, let isEditable):
+        case .todo(let id, let isEditable, _):
             TodoDetailSideBarView(todoId: id, isEditable: isEditable, windowEvent: windowEvent)
                 .id(target)
         case .hosted, nil:
