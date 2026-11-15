@@ -17,6 +17,8 @@ final class UserPreferencesRepositoryImpl: UserPreferencesRepository {
         static let pushSortOrder = "PushNotification.sortOption"
         static let pushTimeFilter = "PushNotification.timeFilter"
         static let pushUnreadOnly = "PushNotification.showUnreadOnly"
+        // 로그아웃하면 AuthSessionRepositoryImpl이 지우는 Session. 접두어 키
+        static let sideBarWidth = "Session.SideBar.width"
     }
 
     private let store: UserDefaultsStore
@@ -105,5 +107,13 @@ final class UserPreferencesRepositoryImpl: UserPreferencesRepository {
     func setTodayDisplayOptions(_ options: TodayDisplayOptions) {
         widgetSnapshotPreferenceStore.setTodayDisplayOptions(options)
         widgetSyncEventBus.publish(.refreshRequested)
+    }
+
+    func sideBarWidth() -> Double? {
+        store.value(forKey: Key.sideBarWidth)
+    }
+
+    func setSideBarWidth(_ width: Double) {
+        store.setValue(width, forKey: Key.sideBarWidth)
     }
 }

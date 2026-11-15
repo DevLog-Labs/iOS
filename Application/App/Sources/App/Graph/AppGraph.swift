@@ -49,6 +49,7 @@ final class AppGraph {
             userServiceGraph: infraGraphSet.userServiceGraph,
             todoCategoryServiceGraph: infraGraphSet.todoCategoryServiceGraph,
             memoryCacheStoreGraph: persistenceGraphSet.memoryCacheStoreGraph,
+            userDefaultsStoreGraph: persistenceGraphSet.userDefaultsStoreGraph,
             widgetSnapshotUpdaterGraph: widgetGraphSet.widgetSnapshotUpdaterGraph,
             authSessionStateProviderGraph: widgetGraphSet.authSessionStateProviderGraph
         )
