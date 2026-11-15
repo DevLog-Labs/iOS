@@ -228,6 +228,7 @@ private struct TodoListTopBar: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.sideBarRequest) private var sideBarRequest
     @Namespace private var searchTransition
     let store: StoreOf<TodoListFeature>
 
@@ -283,6 +284,11 @@ private struct TodoListTopBar: View {
             }
         }
         .background(Color.background, ignoresSafeAreaEdges: .top)
+        // 사이드바 Todo 메뉴의 작성은 이 목록의 작성 버튼과 같은 방식으로 작성
+        .onChange(of: sideBarRequest) { _, request in
+            guard request?.action == .createTodo else { return }
+            openTodoEditor()
+        }
     }
 
     @ViewBuilder
