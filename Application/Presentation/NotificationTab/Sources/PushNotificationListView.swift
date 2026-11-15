@@ -166,6 +166,7 @@ private struct PushNotificationListContent: View {
                                             }
                                             .padding(16)
                                             .frame(maxWidth: .infinity, alignment: .leading)
+                                            .hoverHighlight()
                                             .background(Color.secondaryBackground, in: .rect)
                                             .contentShape(.rect)
                                             .onTapGesture {
