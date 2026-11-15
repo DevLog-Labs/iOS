@@ -25,16 +25,10 @@ struct LoginView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14 * AdaptiveSize.boardScale) {
-            RoundedRectangle(cornerRadius: 12 * AdaptiveSize.boardScale)
-                .fill(Color.accent)
+            Image("Primary", bundle: PresentationResources.bundle)
+                .resizable()
+                .scaledToFit()
                 .frame(width: 56 * AdaptiveSize.boardScale, height: 56 * AdaptiveSize.boardScale)
-                .overlay {
-                    Image(systemName: "doc.text")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30 * AdaptiveSize.boardScale, height: 30 * AdaptiveSize.boardScale)
-                        .foregroundStyle(.white)
-                }
 
             Text(String(localized: "login_intro_title", bundle: PresentationResources.bundle))
                 .font(.adaptive(.title))
