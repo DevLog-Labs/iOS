@@ -214,6 +214,14 @@ struct MainView: View {
         } action: { isWide in
             store.send(.binding(.set(\.isWide, isWide)))
         }
+        // iPad는 사이드바를 펴면 화면 영역이 넓은 창 기준 폭보다 좁아지는 창에서 사이드바를 접고 시작
+        // 세로 화면처럼 목록 칸과 상세 칸이 함께 들어가지 않는 창에서 상세 칸이 잘리지 않게 함
+        .onGeometryChange(for: Bool.self) { proxy in
+            sideBarMinimumWidth + sideBarIdealWidth <= proxy.size.width
+        } action: { fitsSideBar in
+            guard !isiOSAppOnMac else { return }
+            store.send(.binding(.set(\.isSideBarCollapsed, !fitsSideBar)))
+        }
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.windowControlsInset
         } action: { inset in
