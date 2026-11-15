@@ -8,7 +8,7 @@
 import SwiftUI
 
 public extension View {
-    // 입력칸 바탕과 테두리, 여러 줄 입력칸은 더 둥글게
+    // 입력칸 바탕과 테두리, 여러 줄 입력칸은 더 큰 모서리 반경
     func inputBackground(
         isMultiline: Bool = false,
         isFocused: Bool = false,
