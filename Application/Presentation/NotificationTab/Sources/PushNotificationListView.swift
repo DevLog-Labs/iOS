@@ -380,6 +380,14 @@ private struct PushNotificationPaneMenus: View {
     let store: StoreOf<PushNotificationListFeature>
 
     var body: some View {
+        let clear = DropdownMenuItem(
+            String(localized: "push_clear_all_filters", bundle: PresentationResources.bundle),
+            systemImage: "xmark",
+            role: .destructive
+        ) {
+            store.send(.view(.resetFilters))
+        }
+
         PaneMenuButton(
             systemImage: "line.3.horizontal.decrease",
             badgeCount: store.appliedFilterCount,
@@ -402,15 +410,7 @@ private struct PushNotificationPaneMenus: View {
                     }
                 ),
                 // 걸린 필터가 있을 때만 마지막 항목으로 표시
-                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [
-                    DropdownMenuItem(
-                        String(localized: "push_clear_all_filters", bundle: PresentationResources.bundle),
-                        systemImage: "xmark",
-                        role: .destructive
-                    ) {
-                        store.send(.view(.resetFilters))
-                    }
-                ] : [])
+                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [clear] : [])
             ]
         )
 

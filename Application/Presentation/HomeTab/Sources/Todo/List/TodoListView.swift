@@ -511,6 +511,14 @@ private struct TodoListPaneMenus: View {
     let store: StoreOf<TodoListFeature>
 
     var body: some View {
+        let clear = DropdownMenuItem(
+            String(localized: "todo_list_clear_filters", bundle: PresentationResources.bundle),
+            systemImage: "xmark",
+            role: .destructive
+        ) {
+            store.send(.view(.resetFilters))
+        }
+
         PaneMenuButton(
             systemImage: "line.3.horizontal.decrease",
             badgeCount: store.appliedFilterCount,
@@ -533,15 +541,7 @@ private struct TodoListPaneMenus: View {
                     }
                 ),
                 // 걸린 필터가 있을 때만 마지막 항목으로 표시
-                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [
-                    DropdownMenuItem(
-                        String(localized: "todo_list_clear_filters", bundle: PresentationResources.bundle),
-                        systemImage: "xmark",
-                        role: .destructive
-                    ) {
-                        store.send(.view(.resetFilters))
-                    }
-                ] : [])
+                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [clear] : [])
             ]
         )
 

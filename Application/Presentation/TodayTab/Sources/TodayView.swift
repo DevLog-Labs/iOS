@@ -326,6 +326,16 @@ private struct TodayFilterMenu: View {
 
     var body: some View {
         let category = store.selectedCategory
+        let clear = DropdownMenuItem(
+            String(localized: "todo_list_clear_filters", bundle: PresentationResources.bundle),
+            systemImage: "xmark",
+            role: .destructive
+        ) {
+            withAnimation(.easeInOut) {
+                _ = store.send(.setTodoScope(.remaining))
+                _ = store.send(.setCategory(nil))
+            }
+        }
 
         PaneMenuButton(
             systemImage: "line.3.horizontal.decrease",
@@ -370,18 +380,7 @@ private struct TodayFilterMenu: View {
                     )
                 ]),
                 // 걸린 필터가 있을 때만 마지막 항목으로 표시
-                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [
-                    DropdownMenuItem(
-                        String(localized: "todo_list_clear_filters", bundle: PresentationResources.bundle),
-                        systemImage: "xmark",
-                        role: .destructive
-                    ) {
-                        withAnimation(.easeInOut) {
-                            _ = store.send(.setTodoScope(.remaining))
-                            _ = store.send(.setCategory(nil))
-                        }
-                    }
-                ] : [])
+                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [clear] : [])
             ]
         )
     }
