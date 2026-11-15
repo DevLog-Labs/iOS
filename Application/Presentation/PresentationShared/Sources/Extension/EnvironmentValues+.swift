@@ -80,6 +80,12 @@ public extension EnvironmentValues {
         set { self[ShowsPaneTitleBarKey.self] = newValue }
     }
 
+    // 사이드바 옆에 화면을 두는 Mac 화면 구조, Mac과 사이드바를 표시하는 iPad에서 사용
+    var usesDesktopLayout: Bool {
+        get { self[UsesDesktopLayoutKey.self] }
+        set { self[UsesDesktopLayoutKey.self] = newValue }
+    }
+
     var deviceType: DeviceType {
         get { self[DeviceTypeKey.self] }
         set { self[DeviceTypeKey.self] = newValue }
@@ -151,6 +157,12 @@ public extension EnvironmentValues {
 
     private struct ShowsPaneTitleBarKey: EnvironmentKey {
         static let defaultValue = false
+    }
+
+    private struct UsesDesktopLayoutKey: EnvironmentKey {
+        static var defaultValue: Bool {
+            ProcessInfo.processInfo.isiOSAppOnMac
+        }
     }
 
     private struct DeviceTypeKey: EnvironmentKey {
