@@ -13,9 +13,13 @@ import PresentationShared
 struct HomeFeature {
     @ObservableState
     struct State: Equatable {
-        @Presents var alert: AlertState<Never>?
+        @Presents var alert: AlertState<Action.Alert>?
         @Presents var sheet: SheetState?
         @Presents var fullScreenCover: FullScreenCoverState?
+        // 작성 중인 새 개발 목표를 버릴지 묻는 동안 미뤄 둔 동작
+        var actionAfterGoalDiscard: Action?
+        // 새 개발 목표 칸을 닫은 뒤 다시 처리할 사이드바 요청
+        var sideBarRequestAfterGoalDiscard: SideBarRequest?
         var developmentGoalItems = [DevelopmentGoalItem]()
         var hasDevelopmentGoalsLoaded = false
         var hasDevelopmentGoalsLoadFailure = false
@@ -48,13 +52,17 @@ struct HomeFeature {
     }
 
     enum Action: BindableAction, Equatable {
-        case alert(PresentationAction<Never>)
+        case alert(PresentationAction<Alert>)
         case sheet(PresentationAction<Sheet>)
         case fullScreenCover(PresentationAction<FullScreenCover>)
         case binding(BindingAction<State>)
         case view(ViewAction)
         case store(StoreAction)
         case loading(LoadingFeature.Action)
+
+        enum Alert: Equatable {
+            case discardGoalDraft
+        }
 
         enum ViewAction: Equatable {
             case startObserving
@@ -65,6 +73,7 @@ struct HomeFeature {
             case tapManageTodoCategory
             case tapTodoCategoryExpansionButton
             case tapTodoCategory(TodoCategory)
+            case closeGoalCreateForSideBarRequest(SideBarRequest)
         }
 
         enum StoreAction: Equatable {
@@ -185,24 +194,39 @@ struct HomeFeature {
         }
         BindingReducer()
         Reduce { state, action in
-            // 새 개발 목표를 저장하는 동안 시트 자리를 바꾸면 저장이 취소되어 막음
-            if state.sheet?.goalCreateState?.isSaving == true {
+            // 새 개발 목표 칸이 열린 동안 시트 자리를 바꾸는 동작
+            if let goal = state.sheet?.goalCreateState {
                 switch action {
                 case .view(.tapCreateDevelopmentGoal),
                      .view(.tapDevelopmentGoal),
                      .view(.tapManageTodoCategory),
                      .view(.tapTodoCategory),
+                     .view(.closeGoalCreateForSideBarRequest),
                      .store(.setSheet),
-                     .store(.setPresentation(.contentPicker, _)):
-                    return .none
+                     .store(.setPresentation(.contentPicker, true)):
+                    // 저장하는 동안 시트 자리를 바꾸면 저장이 취소되어 막음
+                    if goal.isSaving {
+                        return .none
+                    }
+                    // 작성 중인 내용이 있으면 버릴지 물은 뒤 고른 동작 실행
+                    if goal.hasDraft {
+                        state.actionAfterGoalDiscard = action
+                        state.alert = Self.discardGoalDraftAlertState
+                        return .none
+                    }
                 default:
                     break
                 }
             }
 
             switch action {
-            case .alert:
-                break
+            case .alert(.presented(.discardGoalDraft)):
+                guard let action = state.actionAfterGoalDiscard else { break }
+                state.actionAfterGoalDiscard = nil
+                state.sheet = nil
+                return .send(action)
+            case .alert(.dismiss):
+                state.actionAfterGoalDiscard = nil
             case .fullScreenCover(.presented(.todoEditor(.delegate(.created)))):
                 return .send(.view(.todoEditorCreated))
             case .fullScreenCover(.dismiss):
@@ -301,6 +325,9 @@ private extension HomeFeature {
             state.selectedTodoCategory = category
             state.sheet = nil
             return delayedTodoEditorEffect()
+        case .closeGoalCreateForSideBarRequest(let request):
+            state.sheet = nil
+            state.sideBarRequestAfterGoalDiscard = request
         }
 
         return .none

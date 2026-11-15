@@ -27,6 +27,13 @@ struct GoalCreateFeature {
         var isReadyToSave: Bool {
             !isSaving && !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
+
+        // 버리기 전에 확인할 입력 내용이 있는지 여부
+        var hasDraft: Bool {
+            !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || !markdownContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || !selectedTodoIDs.isEmpty
+        }
     }
 
     enum EditorTab: Equatable {

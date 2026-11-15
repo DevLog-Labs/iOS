@@ -685,6 +685,57 @@
         }
       }
     },
+    "development_goal_create_discard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버리기"
+          }
+        }
+      }
+    },
+    "development_goal_create_discard_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you entered won't be saved."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입력한 내용은 저장되지 않아요."
+          }
+        }
+      }
+    },
+    "development_goal_create_discard_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard this development goal?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작성 중인 개발 목표를 버릴까요?"
+          }
+        }
+      }
+    },
     "development_goal_create_error_message" : {
       "extractionState" : "manual",
       "localizations" : {

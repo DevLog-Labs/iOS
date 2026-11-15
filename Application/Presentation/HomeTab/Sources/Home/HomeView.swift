@@ -99,40 +99,11 @@ public struct HomeView: View {
         )
         // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
         .onChange(of: sideBarRequest, initial: true) { _, request in
-            // 사이드바로 다른 곳을 열면 칸으로 표시하던 화면은 닫음
-            if showsSheetAsPane, case .open = request?.action {
-                store.send(.store(.setSheet(nil)))
-            }
-            switch request?.action {
-            case .open(.home):
-                router.path = []
-            case .open(.todoCategory(let id)):
-                guard let item = store.preferences.first(where: { $0.id == id }) else { break }
-                router.replace(with: .category(item))
-            case .open(.developmentGoal(let goalID)):
-                store.send(.view(.tapDevelopmentGoal(goalID)))
-            case .createTodo:
-                // 카테고리 목록이 보이면 그 목록의 작성 버튼과 같은 창으로 작성
-                if case .category(let item)? = router.root {
-                    openWindow(
-                        id: TodoEditorWindowValue.sceneId,
-                        value: TodoEditorWindowValue(todoCategory: item.todoCategory, source: .list)
-                    )
-                } else if store.isNetworkConnected {
-                    // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
-                    store.send(.store(.setPresentation(.contentPicker, true)))
-                }
-            case .manageTodoCategory:
-                // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
-                guard !store.preferences.isEmpty else { break }
-                // Mac은 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
-                if isiOSAppOnMac {
-                    router.path = []
-                }
-                store.send(.view(.tapManageTodoCategory))
-            case .open, nil:
-                break
-            }
+            handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
+        }
+        // 작성 중인 새 개발 목표를 버린 뒤 미뤄 둔 사이드바 요청 처리
+        .onChange(of: store.sideBarRequestAfterGoalDiscard) { _, request in
+            handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
         }
         .onAppear {
             store.send(.view(.startObserving))
@@ -170,6 +141,50 @@ public struct HomeView: View {
                 .activePresentation(when: isSelected),
             content: coverContent
         )
+    }
+
+    private func handleSideBarRequest(_ request: SideBarRequest?, showsSheetAsPane: Bool) {
+        // 작성 중인 새 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음
+        if let request,
+           request.action != .createTodo,
+           store.sheet?.goalCreateState?.hasDraft == true {
+            store.send(.view(.closeGoalCreateForSideBarRequest(request)))
+            return
+        }
+        // 사이드바로 다른 곳을 열면 칸으로 표시하던 화면은 닫음
+        if showsSheetAsPane, case .open = request?.action {
+            store.send(.store(.setSheet(nil)))
+        }
+        switch request?.action {
+        case .open(.home):
+            router.path = []
+        case .open(.todoCategory(let id)):
+            guard let item = store.preferences.first(where: { $0.id == id }) else { break }
+            router.replace(with: .category(item))
+        case .open(.developmentGoal(let goalID)):
+            store.send(.view(.tapDevelopmentGoal(goalID)))
+        case .createTodo:
+            // 카테고리 목록이 보이면 그 목록의 작성 버튼과 같은 창으로 작성
+            if case .category(let item)? = router.root {
+                openWindow(
+                    id: TodoEditorWindowValue.sceneId,
+                    value: TodoEditorWindowValue(todoCategory: item.todoCategory, source: .list)
+                )
+            } else if store.isNetworkConnected {
+                // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
+                store.send(.store(.setPresentation(.contentPicker, true)))
+            }
+        case .manageTodoCategory:
+            // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
+            guard !store.preferences.isEmpty else { break }
+            // Mac은 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
+            if isiOSAppOnMac {
+                router.path = []
+            }
+            store.send(.view(.tapManageTodoCategory))
+        case .open, nil:
+            break
+        }
     }
 
     private var homeContent: some View {

@@ -158,8 +158,23 @@ extension HomeFeature {
         state.alert = alertState()
     }
 
-    static func alertState() -> AlertState<Never> {
-        return AlertState<Never> {
+    static var discardGoalDraftAlertState: AlertState<Action.Alert> {
+        AlertState {
+            TextState(String(localized: "development_goal_create_discard_title", bundle: PresentationResources.bundle))
+        } actions: {
+            ButtonState(role: .destructive, action: .discardGoalDraft) {
+                TextState(String(localized: "development_goal_create_discard", bundle: PresentationResources.bundle))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: "common_cancel", bundle: PresentationResources.bundle))
+            }
+        } message: {
+            TextState(String(localized: "development_goal_create_discard_message", bundle: PresentationResources.bundle))
+        }
+    }
+
+    static func alertState() -> AlertState<Action.Alert> {
+        return AlertState<Action.Alert> {
             TextState(String(localized: "common_error_title", bundle: PresentationResources.bundle))
         } actions: {
             ButtonState(role: .cancel) {
