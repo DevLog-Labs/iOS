@@ -116,7 +116,6 @@ public struct TodayView: View {
                 destination: { destination($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
             )
         }
-        .navigationHistory(router)
         .inspector(
             isPresented: isiOSAppOnMac || horizontalSizeClass == .regular
                 ? $store.isTodoInspectorPresented : .constant(false)

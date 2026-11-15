@@ -34,11 +34,6 @@ public extension EnvironmentValues {
         set { self[ReadableContentWidthKey.self] = newValue }
     }
 
-    var navigationStep: NavigationStep? {
-        get { self[NavigationStepKey.self] }
-        set { self[NavigationStepKey.self] = newValue }
-    }
-
     var sideBarRequest: SideBarRequest? {
         get { self[SideBarRequestKey.self] }
         set { self[SideBarRequestKey.self] = newValue }
@@ -100,10 +95,6 @@ public extension EnvironmentValues {
 
     private struct ReadableContentWidthKey: EnvironmentKey {
         static let defaultValue = CGFloat.infinity
-    }
-
-    private struct NavigationStepKey: EnvironmentKey {
-        static let defaultValue: NavigationStep? = nil
     }
 
     private struct SideBarRequestKey: EnvironmentKey {
