@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct LoginButton: View {
-    @ScaledMetric(relativeTo: .body) private var height = CGFloat(22)
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     private var logo: Image?
     private var text = ""
     private let showsProgressView: Bool
@@ -34,26 +34,26 @@ struct LoginButton: View {
                 if showsProgressView {
                     ProgressView()
                 } else {
-                    Text(text)
-                        .foregroundStyle(Color.secondaryLabel)
+                    HStack(spacing: 10 * AdaptiveSize.boardScale) {
+                        if let logo {
+                            logo
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 22 * AdaptiveSize.boardScale, height: 22 * AdaptiveSize.boardScale)
+                        }
+                        Text(text)
+                            .font(isiOSAppOnMac ? .system(size: 13 * AdaptiveSize.boardScale) : .subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Color.label)
+                    }
                 }
             }
-            .font(.adaptive(.body))
+            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 40 * AdaptiveSize.boardScale : 52)
             .contentShape(.rect(cornerRadius: CornerRadius.control))
-            .frame(width: 300, height: height + 24)
             .background {
                 RoundedRectangle(cornerRadius: CornerRadius.control)
-                    .stroke(Color.separator, lineWidth: 1)
                     .fill(Color.secondaryBackground)
-            }
-            .overlay(alignment: .leading) {
-                if let logo, !showsProgressView {
-                    logo
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: height, height: height)
-                        .padding(.leading)
-                }
+                    .stroke(Color.separator, lineWidth: 1)
             }
         }
     }

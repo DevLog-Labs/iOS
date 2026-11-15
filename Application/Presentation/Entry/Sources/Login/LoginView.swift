@@ -12,7 +12,7 @@ import Domain
 
 struct LoginView: View {
     @Environment(\.colorScheme) var colorScheme
-    @Environment(\.sceneWidth) var sceneWidth
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State private var store: StoreOf<LoginFeature>
 
     init() {
@@ -24,28 +24,24 @@ struct LoginView: View {
     }
 
     var body: some View {
-        VStack {
-            Spacer()
-            Spacer()
+        VStack(alignment: .leading, spacing: 14 * AdaptiveSize.boardScale) {
             Image("Primary", bundle: PresentationResources.bundle)
                 .resizable()
                 .scaledToFit()
-                .frame(width: sceneWidth / 4)
-            Spacer()
+                .frame(width: 56 * AdaptiveSize.boardScale, height: 56 * AdaptiveSize.boardScale)
 
-            VStack(spacing: 24) {
-                Text(String(localized: "login_intro_title", bundle: PresentationResources.bundle))
-                    .font(.adaptive(.title))
-                    .fontWeight(.heavy)
-                    .multilineTextAlignment(.center)
-                Text(String(localized: "login_intro_description", bundle: PresentationResources.bundle))
-                    .padding(.horizontal)
-                    .foregroundStyle(Color.tertiaryLabel)
-                    .multilineTextAlignment(.center)
-            }
-            Spacer()
+            Text(String(localized: "login_intro_title", bundle: PresentationResources.bundle))
+                .font(.adaptive(.title))
+                .fontWeight(.heavy)
+                .foregroundStyle(Color.label)
+                .padding(.top, 8 * AdaptiveSize.boardScale)
 
-            VStack(spacing: 20) {
+            Text(String(localized: "login_intro_description", bundle: PresentationResources.bundle))
+                .font(isiOSAppOnMac ? .system(size: 13 * AdaptiveSize.boardScale) : .subheadline)
+                .foregroundStyle(Color.secondaryLabel)
+                .lineSpacing(6 * AdaptiveSize.boardScale)
+
+            VStack(spacing: 10 * AdaptiveSize.boardScale) {
                 signInButton(
                     provider: .google,
                     logo: Image("Google", bundle: PresentationResources.bundle),
@@ -64,13 +60,18 @@ struct LoginView: View {
                     text: String(localized: "login_apple_sign_in", bundle: PresentationResources.bundle)
                 )
             }
-            .padding(.bottom, 30)
+            .padding(.top, 28 * AdaptiveSize.boardScale)
+
             Text(String(localized: "login_terms_notice", bundle: PresentationResources.bundle))
-                .font(.adaptive(.caption2))
+                .font(.adaptive(.footnote))
                 .foregroundStyle(Color.secondaryLabel)
                 .multilineTextAlignment(.center)
-                .padding(.vertical)
+                .frame(maxWidth: .infinity)
+                .padding(.top, 8 * AdaptiveSize.boardScale)
         }
+        .frame(maxWidth: 360 * AdaptiveSize.boardScale)
+        .padding(32 * AdaptiveSize.boardScale)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .prominentAlert(store, state: \.alert, action: \.alert)
         .background {
             WindowSceneIdentifierReader {
