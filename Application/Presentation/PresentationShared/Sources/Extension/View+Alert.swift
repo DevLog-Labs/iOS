@@ -86,19 +86,19 @@ where State: ObservableState {
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(state.title)
-                .font(isiOSAppOnMac ? .system(size: 14, weight: .bold) : .headline.weight(.bold))
+                .font(isiOSAppOnMac ? .system(size: 14 * AdaptiveSize.boardScale, weight: .bold) : .headline.weight(.bold))
                 .foregroundStyle(Color.label)
                 .fixedSize(horizontal: false, vertical: true)
 
             if let message = state.message {
                 Text(message)
-                    .font(isiOSAppOnMac ? .system(size: 13) : .subheadline)
+                    .font(isiOSAppOnMac ? .system(size: 13 * AdaptiveSize.boardScale) : .subheadline)
                     .foregroundStyle(Color.secondaryLabel)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 8)
+                    .padding(.top, 8 * AdaptiveSize.boardScale)
             }
 
-            HStack(spacing: 8) {
+            HStack(spacing: 8 * AdaptiveSize.boardScale) {
                 ForEach(state.buttons) { button in
                     let usesDefaultAction = state.usesDefaultAction(for: button)
 
@@ -106,8 +106,8 @@ where State: ObservableState {
                         onSelect(button)
                     } label: {
                         Text(button.label)
-                            .font(isiOSAppOnMac ? .system(size: 13, weight: .semibold) : .subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 32 : 44)
+                            .font(isiOSAppOnMac ? .system(size: 13 * AdaptiveSize.boardScale, weight: .semibold) : .subheadline.weight(.semibold))
+                            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
                             .background(
                                 usesDefaultAction ? Color.clear : .tertiaryBackground,
                                 in: .rect(cornerRadius: CornerRadius.control)
@@ -129,10 +129,10 @@ where State: ObservableState {
                     )
                 }
             }
-            .padding(.top, 20)
+            .padding(.top, 20 * AdaptiveSize.boardScale)
         }
-        .padding(20)
-        .frame(maxWidth: isiOSAppOnMac || horizontalSizeClass == .compact ? 300 : 320, alignment: .leading)
+        .padding(20 * AdaptiveSize.boardScale)
+        .frame(maxWidth: (isiOSAppOnMac || horizontalSizeClass == .compact ? 300 : 320) * AdaptiveSize.boardScale, alignment: .leading)
         .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.dialog))
         .overlay {
             RoundedRectangle(cornerRadius: CornerRadius.dialog)

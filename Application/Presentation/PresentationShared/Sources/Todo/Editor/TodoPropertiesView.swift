@@ -74,16 +74,16 @@ public struct TodoPropertiesView: View {
                 }
             }
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var content: some View {
         ScrollView {
-            LazyVStack(spacing: 24 * AdaptiveSize.scale) {
+            LazyVStack(spacing: 24) {
                 VStack(spacing: 0) {
-                    HStack(spacing: 12 * AdaptiveSize.scale) {
+                    HStack(spacing: 12) {
                         optionIcon("tag.fill", color: Color.accent)
                         Text(String(localized: "todo_category", bundle: PresentationResources.bundle))
                         Spacer()
@@ -99,55 +99,55 @@ public struct TodoPropertiesView: View {
                         .pickerStyle(.menu)
                         .tint(Color.accent)
                     }
-                    .padding(.vertical, 12 * AdaptiveSize.scale)
+                    .padding(.vertical, 12)
 
                     Divider().overlay(Color.separator)
 
                     Toggle(isOn: $store.isCompleted) {
-                        HStack(spacing: 12 * AdaptiveSize.scale) {
+                        HStack(spacing: 12) {
                             optionIcon("circle", color: Color.secondaryLabel)
                             Text(String(localized: "todo_completed", bundle: PresentationResources.bundle))
                         }
                     }
                     .toggleStyle(.pill)
-                    .padding(.vertical, 12 * AdaptiveSize.scale)
+                    .padding(.vertical, 12)
 
                     Divider().overlay(Color.separator)
 
                     Toggle(isOn: $store.isPinned) {
-                        HStack(spacing: 12 * AdaptiveSize.scale) {
+                        HStack(spacing: 12) {
                             optionIcon("star.fill", color: Color.warning)
                             Text(String(localized: "todo_pinned", bundle: PresentationResources.bundle))
                         }
                     }
                     .toggleStyle(.pill)
-                    .padding(.vertical, 12 * AdaptiveSize.scale)
+                    .padding(.vertical, 12)
 
                     Divider().overlay(Color.separator)
 
                     dueDateControl
-                        .padding(.vertical, 12 * AdaptiveSize.scale)
+                        .padding(.vertical, 12)
                 }
-                .padding(.horizontal, 16 * AdaptiveSize.scale)
-                .padding(.vertical, 8 * AdaptiveSize.scale)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
                 .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
 
-                VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 12) {
                     Text(String(localized: "todo_tags", bundle: PresentationResources.bundle))
                         .font(.adaptive(.headline))
-                        .padding(.horizontal, 16 * AdaptiveSize.scale)
-                    VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
-                        HStack(spacing: 12 * AdaptiveSize.scale) {
+                        .padding(.horizontal, 16)
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack(spacing: 12) {
                             TextField(
                                 String(localized: "todo_add", bundle: PresentationResources.bundle),
                                 text: $store.tagText
                             )
-                            .frame(height: UIFont.preferredFont(forTextStyle: .title2).lineHeight * AdaptiveSize.scale)
+                            .frame(height: UIFont.preferredFont(forTextStyle: .title2).lineHeight)
                             .textInputAutocapitalization(.never)
                             .focused($isTagFieldFocused)
                             .onSubmit { submitTag() }
-                            .padding(.vertical, 8 * AdaptiveSize.scale)
-                            .padding(.horizontal, 12 * AdaptiveSize.scale)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 12)
                             .background(Color.fill, in: .rect(cornerRadius: CornerRadius.control))
                             .tint(Color.accent)
 
@@ -157,7 +157,7 @@ public struct TodoPropertiesView: View {
                                 Image(systemName: "plus")
                                     .font(.adaptive(.title2).weight(.semibold))
                                     .foregroundStyle(canSubmitTag ? Color.secondaryBackground : Color.secondaryLabel)
-                                    .padding(12 * AdaptiveSize.scale)
+                                    .padding(12)
                                     .background(
                                         canSubmitTag ? Color.accent : Color.fill,
                                         in: Circle()
@@ -170,7 +170,7 @@ public struct TodoPropertiesView: View {
                         if store.tags.isEmpty {
                             Text(String(localized: "todo_no_tags", bundle: PresentationResources.bundle))
                                 .foregroundStyle(Color.secondaryLabel)
-                                .padding(.vertical, 4 * AdaptiveSize.scale)
+                                .padding(.vertical, 4)
                         } else {
                             TagList(
                                 store.tags,
@@ -183,28 +183,28 @@ public struct TodoPropertiesView: View {
                             bundle: PresentationResources.bundle
                         ))
                     }
-                    .padding(16 * AdaptiveSize.scale)
+                    .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
                 }
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
-            .padding(.bottom, 16 * AdaptiveSize.scale)
+            .padding(.horizontal, 16)
+            .padding(.bottom, 16)
         }
-        .contentMargins(.top, 16 * AdaptiveSize.scale, for: .scrollContent)
+        .contentMargins(.top, 16, for: .scrollContent)
     }
 
     private func optionIcon(_ name: String, color: Color) -> some View {
         Image(systemName: name)
             .font(.adaptive(.title3))
             .foregroundStyle(color)
-            .frame(width: 44 * AdaptiveSize.scale, height: 44 * AdaptiveSize.scale)
+            .frame(width: 44, height: 44)
             .background(color.opacity(0.08), in: Circle())
     }
 
     private var dueDateControl: some View {
         DueDatePicker(selection: $store.selectedDueDate) {
-            HStack(spacing: 12 * AdaptiveSize.scale) {
+            HStack(spacing: 12) {
                 optionIcon("calendar", color: Color.secondaryLabel)
                 Text(String(localized: "todo_due_date", bundle: PresentationResources.bundle))
                     .foregroundStyle(Color.label)
@@ -213,7 +213,7 @@ public struct TodoPropertiesView: View {
                     Tag(dueDateText(for: dueDate), isEditing: true) {
                         store.send(.binding(.set(\.dueDate, nil)))
                     }
-                    .padding(.vertical, -4 * AdaptiveSize.scale)
+                    .padding(.vertical, -4)
                 } else {
                     Text(String(localized: "todo_none", bundle: PresentationResources.bundle))
                         .foregroundStyle(Color.secondaryLabel)

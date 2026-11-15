@@ -43,7 +43,7 @@ struct GoalSummaryCard: View {
     let onRetry: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 16) {
             Text("development_goal_title", bundle: PresentationResources.bundle)
                 .font(.adaptive(.title3).bold())
 
@@ -51,11 +51,11 @@ struct GoalSummaryCard: View {
                 statusGrid
             } else if isLoading || !hasLoadFailure {
                 ProgressView()
-                    .frame(maxWidth: .infinity, minHeight: 80 * AdaptiveSize.scale)
+                    .frame(maxWidth: .infinity, minHeight: 80)
             }
 
             if hasLoadFailure {
-                HStack(spacing: 12 * AdaptiveSize.scale) {
+                HStack(spacing: 12) {
                     Text("common_error_message", bundle: PresentationResources.bundle)
                         .font(.adaptive(.caption))
                         .foregroundStyle(Color.secondaryLabel)
@@ -67,15 +67,15 @@ struct GoalSummaryCard: View {
                 }
             }
         }
-        .padding(16 * AdaptiveSize.scale)
+        .padding(16)
         .groupBackground(in: RoundedRectangle(cornerRadius: CornerRadius.group))
     }
 
     private var statusGrid: some View {
         let counts = GoalCounts(goals: goals)
         let layout = dynamicTypeSize.isAccessibilitySize
-            ? AnyLayout(VStackLayout(spacing: 8 * AdaptiveSize.scale))
-            : AnyLayout(HStackLayout(spacing: 8 * AdaptiveSize.scale))
+            ? AnyLayout(VStackLayout(spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 8))
         return layout {
             statusTile(
                 title: DevelopmentGoal.Status.inProgress.title,
@@ -99,10 +99,10 @@ struct GoalSummaryCard: View {
     }
 
     private func statusTile(title: String, symbol: String, color: Color, count: Int) -> some View {
-        VStack(spacing: 8 * AdaptiveSize.scale) {
+        VStack(spacing: 8) {
             Image(systemName: symbol)
                 .font(.adaptive(.subheadline).weight(.semibold))
-                .frame(width: 36 * AdaptiveSize.scale, height: 36 * AdaptiveSize.scale)
+                .frame(width: 36, height: 36)
                 .iconStyle(color: color, in: Circle())
             Text(title)
                 .font(.adaptive(.caption))
@@ -112,7 +112,7 @@ struct GoalSummaryCard: View {
                 .foregroundStyle(color)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.vertical, 12)
         .background(color.opacity(0.07), in: Rectangle())
     }
 }

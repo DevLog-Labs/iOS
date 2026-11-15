@@ -19,16 +19,16 @@ struct SearchView: View {
     var body: some View {
         NavigationStack(path: $router.path) {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+                LazyVStack(alignment: .leading, spacing: 16) {
                     SearchResults(
                         store: store,
                         onSelectTodo: { router.push(.todo($0)) }
                     )
                     RecentSearchQuries(store: store)
-                        .padding(.bottom, 8 * AdaptiveSize.scale)
+                        .padding(.bottom, 8)
                     instruction
                 }
-                .padding(.horizontal, 16 * AdaptiveSize.scale)
+                .padding(.horizontal)
                 .frame(maxWidth: readableContentWidth)
                 .frame(maxWidth: .infinity)
             }
@@ -36,9 +36,9 @@ struct SearchView: View {
                 VStack(spacing: 0) {
                     topBar
                     tipCard
-                        .padding(.horizontal, 16 * AdaptiveSize.scale)
+                        .padding(.horizontal)
                         .frame(maxWidth: readableContentWidth)
-                        .padding(.bottom, 8 * AdaptiveSize.scale)
+                        .padding(.bottom, 8)
                 }
                 .background(Color.background)
             }
@@ -79,10 +79,10 @@ struct SearchView: View {
             SearchField(store: store)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
+        .padding(.horizontal)
         .frame(maxWidth: readableContentWidth)
         .padding(.top, windowControlsInset)
-        .padding(.bottom, 8 * AdaptiveSize.scale)
+        .padding(.bottom, 8)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
@@ -106,7 +106,7 @@ struct SearchView: View {
             Spacer()
         }
         .foregroundStyle(Color.tintLabel)
-        .padding(16 * AdaptiveSize.scale)
+        .padding()
         .background {
             Rectangle()
                 .fill(Color.background)
@@ -171,7 +171,7 @@ private struct SearchField: View {
             }
         }
         .font(.adaptive(.title3))
-        .padding(16 * AdaptiveSize.scale)
+        .padding()
         .background {
             RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(Color.secondaryBackground)
@@ -190,8 +190,8 @@ private struct SearchResults: View {
         if !store.searchQuery.isEmpty {
             let todos = store.visibleTodos
 
-            VStack(spacing: 8 * AdaptiveSize.scale) {
-                HStack(spacing: 12 * AdaptiveSize.scale) {
+            VStack(spacing: 8) {
+                HStack(spacing: 12) {
                     Text(String(
                         localized: "search_results_title",
                         bundle: PresentationResources.bundle
@@ -208,12 +208,12 @@ private struct SearchResults: View {
                     ))
                     .font(.adaptive(.callout).bold())
                     .foregroundStyle(Color.tintLabel)
-                    .padding(.horizontal, 12 * AdaptiveSize.scale)
-                    .padding(.vertical, 6 * AdaptiveSize.scale)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
                     .background(Color.tintFill, in: .capsule)
                 }
                 if store.isHashOnlyQuery {
-                    VStack(spacing: 8 * AdaptiveSize.scale) {
+                    VStack(spacing: 8) {
                         Text(String(
                             localized: "search_hash_guide_title",
                             bundle: PresentationResources.bundle)
@@ -228,7 +228,7 @@ private struct SearchResults: View {
                         .multilineTextAlignment(.center)
                     }
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 32 * AdaptiveSize.scale)
+                    .padding(.vertical, 32)
                 } else if store.isLoading && todos.isEmpty {
                     ProgressView()
                 } else if todos.isEmpty {
@@ -269,19 +269,19 @@ private struct SearchResults: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.bottom, 8 * AdaptiveSize.scale)
+            .padding(.bottom, 8)
         }
     }
 }
 
 private struct SearchResultRow: View {
-    @ScaledMetric(relativeTo: .title2) private var iconSize = 48 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .title2) private var iconSize = CGFloat(48)
     let item: SearchTodoItem
 
     var body: some View {
         let category = TodoCategoryItem(from: item.category)
 
-        HStack(spacing: 12 * AdaptiveSize.scale) {
+        HStack(spacing: 12) {
             RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(category.color.opacity(0.2))
                 .frame(width: iconSize, height: iconSize)
@@ -290,11 +290,11 @@ private struct SearchResultRow: View {
                         .font(.adaptive(.title3).bold())
                         .foregroundStyle(category.color)
                 }
-            VStack(alignment: .leading, spacing: 4 * AdaptiveSize.scale) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(item.title)
                     .font(.adaptive(.headline))
                     .lineLimit(1)
-                HStack(spacing: 4 * AdaptiveSize.scale) {
+                HStack(spacing: 4) {
                     Text("#\(item.number)")
                         .foregroundStyle(Color.accent)
                     Text("·")
@@ -304,7 +304,7 @@ private struct SearchResultRow: View {
                 .foregroundStyle(Color.secondaryLabel)
                 .lineLimit(1)
             }
-            Spacer(minLength: 8 * AdaptiveSize.scale)
+            Spacer(minLength: 8)
             Image(systemName: item.isPinned ? "star.fill" : "star")
                 .font(.adaptive(.title3))
                 .foregroundStyle(item.isPinned ? Color.orange : .tertiaryLabel)
@@ -312,7 +312,7 @@ private struct SearchResultRow: View {
                 .font(.adaptive(.callout).bold())
                 .foregroundStyle(Color.secondaryLabel)
         }
-        .padding(16 * AdaptiveSize.scale)
+        .padding()
     }
 }
 
@@ -320,7 +320,7 @@ private struct RecentSearchQuries: View {
     let store: StoreOf<SearchFeature>
 
     var body: some View {
-        VStack(spacing: 8 * AdaptiveSize.scale) {
+        VStack(spacing: 8) {
             HStack {
                 Text(String(localized: "search_recent", bundle: PresentationResources.bundle))
                     .font(.adaptive(.title3))
@@ -337,7 +337,7 @@ private struct RecentSearchQuries: View {
                         )
                 }
                 .disabled(store.recentQueries.isEmpty)
-                .padding(.trailing, 16 * AdaptiveSize.scale)
+                .padding(.trailing)
             }
             LazyVStack(spacing: 0) {
                 ForEach(Array(zip(
@@ -364,7 +364,7 @@ private struct RecentSearchQuries: View {
                                     .foregroundStyle(Color.secondaryLabel)
                             }
                         }
-                        .padding(16 * AdaptiveSize.scale)
+                        .padding()
                         if idx < store.recentQueries.count - 1 { Divider().overlay(Color.secondarySeparator) }
                     }
                 }

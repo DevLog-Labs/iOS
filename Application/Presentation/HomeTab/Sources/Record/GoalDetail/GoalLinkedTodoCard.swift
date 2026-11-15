@@ -23,15 +23,15 @@ struct GoalLinkedTodoCard: View {
             header
             content
         }
-        .padding([.horizontal, .top], 16 * AdaptiveSize.scale)
+        .padding([.horizontal, .top])
         .background(Color.secondaryBackground, in: .rect)
     }
 
     private var header: some View {
-        HStack(spacing: 10 * AdaptiveSize.scale) {
+        HStack(spacing: 10) {
             Text(RecordPresentation.text("development_goal_linked_todos"))
                 .font(.adaptive(.title3).bold())
-            Spacer(minLength: 12 * AdaptiveSize.scale)
+            Spacer(minLength: 12)
             if allowsManagement {
                 Button(
                     RecordPresentation.text("development_goal_todo_manage"),
@@ -39,8 +39,8 @@ struct GoalLinkedTodoCard: View {
                 )
                 .font(.adaptive(.callout).weight(.semibold))
                 .foregroundStyle(Color.accent)
-                .padding(.horizontal, 16 * AdaptiveSize.scale)
-                .padding(.vertical, 9 * AdaptiveSize.scale)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 9)
                 .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.control))
                 .disabled(isLoading)
             }
@@ -52,7 +52,7 @@ struct GoalLinkedTodoCard: View {
         if isLoading, todos.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 20 * AdaptiveSize.scale)
+                .padding(.vertical, 20)
         } else if hasLoadFailure, todos.isEmpty {
             ContentUnavailableView {
                 Label(
@@ -97,7 +97,7 @@ private struct GoalLinkedTodoRow: View {
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 14 * AdaptiveSize.scale) {
+            HStack(spacing: 14) {
                 Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
                     .font(.adaptive(.title2))
                     .foregroundStyle(todo.isCompleted ? Color.accent : Color.separator)
@@ -111,7 +111,7 @@ private struct GoalLinkedTodoRow: View {
                     .font(.adaptive(.callout).weight(.semibold))
                     .foregroundStyle(Color.separator)
             }
-            .padding(.vertical, 12 * AdaptiveSize.scale)
+            .padding(.vertical, 12)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)

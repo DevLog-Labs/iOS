@@ -33,19 +33,19 @@ struct LoginView: View {
                 .frame(width: sceneWidth / 4)
             Spacer()
 
-            VStack(spacing: 24 * AdaptiveSize.scale) {
+            VStack(spacing: 24) {
                 Text(String(localized: "login_intro_title", bundle: PresentationResources.bundle))
                     .font(.adaptive(.title))
                     .fontWeight(.heavy)
                     .multilineTextAlignment(.center)
                 Text(String(localized: "login_intro_description", bundle: PresentationResources.bundle))
-                    .padding(.horizontal, 16 * AdaptiveSize.scale)
+                    .padding(.horizontal)
                     .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
             }
             Spacer()
 
-            VStack(spacing: 20 * AdaptiveSize.scale) {
+            VStack(spacing: 20) {
                 signInButton(
                     provider: .google,
                     logo: Image("Google", bundle: PresentationResources.bundle),
@@ -64,12 +64,12 @@ struct LoginView: View {
                     text: String(localized: "login_apple_sign_in", bundle: PresentationResources.bundle)
                 )
             }
-            .padding(.bottom, 30 * AdaptiveSize.scale)
+            .padding(.bottom, 30)
             Text(String(localized: "login_terms_notice", bundle: PresentationResources.bundle))
                 .font(.adaptive(.caption2))
                 .foregroundStyle(Color.secondaryLabel)
                 .multilineTextAlignment(.center)
-                .padding(.vertical, 16 * AdaptiveSize.scale)
+                .padding(.vertical)
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .background {

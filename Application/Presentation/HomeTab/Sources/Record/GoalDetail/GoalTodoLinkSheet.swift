@@ -13,12 +13,12 @@ struct GoalTodoLinkSheet: View {
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title2,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
-    ).lineHeight * AdaptiveSize.scale
+    ).lineHeight
     @Bindable var store: StoreOf<GoalTodoLinkFeature>
 
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 20 * AdaptiveSize.scale) {
+            LazyVStack(spacing: 20) {
                 searchField
                 sheetContent
                 Text(RecordPresentation.text("development_goal_todo_optional_footer"))
@@ -26,9 +26,9 @@ struct GoalTodoLinkSheet: View {
                     .foregroundStyle(Color.tertiaryLabel)
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12 * AdaptiveSize.scale)
+                    .padding(.vertical, 12)
             }
-            .padding(16 * AdaptiveSize.scale)
+            .padding(16)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .scrollDismissesKeyboard(.interactively)
@@ -59,7 +59,7 @@ struct GoalTodoLinkSheet: View {
                 .topBarButtonStyle()
                 .disabled(store.isUpdating)
                 Spacer()
-                HStack(spacing: 8 * AdaptiveSize.scale) {
+                HStack(spacing: 8) {
                     if #available(iOS 26.0, *) {
                         Image(systemName: "ellipsis")
                             .prominentMenu(
@@ -96,13 +96,13 @@ struct GoalTodoLinkSheet: View {
                 }
             }
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var searchField: some View {
-        HStack(spacing: 10 * AdaptiveSize.scale) {
+        HStack(spacing: 10) {
             Image(systemName: "magnifyingglass")
                 .foregroundStyle(Color.tertiaryLabel)
             TextField(
@@ -113,7 +113,7 @@ struct GoalTodoLinkSheet: View {
             .autocorrectionDisabled()
         }
         .font(.adaptive(.title3))
-        .padding(16 * AdaptiveSize.scale)
+        .padding()
         .background {
             RoundedRectangle(cornerRadius: CornerRadius.control)
                 .fill(Color.secondaryBackground)
@@ -136,7 +136,7 @@ struct GoalTodoLinkSheet: View {
         if store.isLoading, store.todos.isEmpty {
             ProgressView()
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 40 * AdaptiveSize.scale)
+                .padding(.vertical, 40)
         } else if store.hasLoadFailure, store.todos.isEmpty {
             ContentUnavailableView {
                 Label(

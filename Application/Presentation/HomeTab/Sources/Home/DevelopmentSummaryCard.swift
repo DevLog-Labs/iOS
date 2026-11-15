@@ -16,25 +16,25 @@ struct DevelopmentSummaryCard: View {
     let hasLoadFailure: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("home_development_summary_eyebrow", bundle: PresentationResources.bundle)
                         .font(.adaptive(.subheadline))
                         .foregroundStyle(Color.tertiaryLabel)
                     summaryTitle
                 }
-                Spacer(minLength: 16 * AdaptiveSize.scale)
+                Spacer(minLength: 16)
                 Image(systemName: "flag.checkered")
                     .font(.adaptive(.title2).weight(.semibold))
                     .foregroundStyle(Color.accent)
-                    .frame(width: 64 * AdaptiveSize.scale, height: 64 * AdaptiveSize.scale)
+                    .frame(width: 64, height: 64)
                     .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.control))
             }
 
             summaryContent
         }
-        .padding(20 * AdaptiveSize.scale)
+        .padding(20)
         .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
 
@@ -67,7 +67,7 @@ struct DevelopmentSummaryCard: View {
         if !hasLoaded && isLoading {
             ProgressView()
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 12 * AdaptiveSize.scale)
+                .padding(.vertical, 12)
         } else if !hasLoaded && hasLoadFailure {
             Text("common_error_message", bundle: PresentationResources.bundle)
                 .font(.adaptive(.subheadline))
@@ -77,20 +77,20 @@ struct DevelopmentSummaryCard: View {
                 .font(.adaptive(.subheadline))
                 .foregroundStyle(Color.secondaryLabel)
         } else {
-            VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
+            VStack(alignment: .leading, spacing: 8) {
                 DevelopmentTodoProgressView(progress: todoProgress)
 
                 if let recentRecord {
-                    VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("home_development_summary_recent_record", bundle: PresentationResources.bundle)
                             .font(.adaptive(.caption).weight(.medium))
                             .foregroundStyle(Color.tertiaryLabel)
-                        HStack(spacing: 12 * AdaptiveSize.scale) {
+                        HStack(spacing: 12) {
                             Text(recentRecord.title)
                                 .font(.adaptive(.subheadline).weight(.medium))
                                 .foregroundStyle(Color.label)
                                 .lineLimit(1)
-                            Spacer(minLength: 12 * AdaptiveSize.scale)
+                            Spacer(minLength: 12)
                             Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
                                 .font(.adaptive(.caption))
                                 .foregroundStyle(Color.tertiaryLabel)

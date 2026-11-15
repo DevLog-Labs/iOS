@@ -10,7 +10,7 @@ import PresentationShared
 
 struct GoalDetailRecordActionBar: View {
     @Environment(\.deviceType) private var deviceType
-    @ScaledMetric(relativeTo: .headline) private var buttonLabelHeight = 40 * AdaptiveSize.scale
+    @ScaledMetric(relativeTo: .headline) private var buttonLabelHeight = CGFloat(40)
     let hasDraft: Bool
     let isDisabled: Bool
     let onAddRecord: () -> Void
@@ -20,11 +20,11 @@ struct GoalDetailRecordActionBar: View {
         Group {
             if hasDraft {
                 ViewThatFits(in: .horizontal) {
-                    HStack(spacing: 12 * AdaptiveSize.scale) {
+                    HStack(spacing: 12) {
                         secondaryAddRecordButton
                         continueRecordButton
                     }
-                    VStack(alignment: .trailing, spacing: 8 * AdaptiveSize.scale) {
+                    VStack(alignment: .trailing, spacing: 8) {
                         secondaryAddRecordButton
                         continueRecordButton
                     }
@@ -36,8 +36,8 @@ struct GoalDetailRecordActionBar: View {
                 )
             }
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal)
+        .padding(.vertical, 12)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 

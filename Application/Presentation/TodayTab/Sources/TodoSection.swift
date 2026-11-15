@@ -17,16 +17,16 @@ struct TodoSection: View {
     let onInspect: (TodayTodoItem) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
-            HStack(spacing: 8 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 8) {
                 Text(section.title)
                     .font(.adaptive(.title3).bold())
                     .foregroundStyle(section.category.accentColor)
                 Text("\(section.items.count)")
                     .font(.adaptive(.callout).bold())
                     .foregroundStyle(section.category.accentColor)
-                    .padding(.horizontal, 10 * AdaptiveSize.scale)
-                    .padding(.vertical, 5 * AdaptiveSize.scale)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
                     .background(section.category.accentColor.opacity(0.1), in: .capsule)
                 Spacer()
                 if section.category == .today {
@@ -74,7 +74,7 @@ private struct TodoRow: View {
             onSelect()
         } label: {
             HStack {
-                VStack(alignment: .leading, spacing: 6 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text(item.title)
                         .font(.adaptive(.headline))
                         .strikethrough(item.isCompleted)
@@ -102,15 +102,15 @@ private struct TodoRow: View {
             }
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 14 * AdaptiveSize.scale)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 14)
         .background(isSelected ? Color.tintFill : .clear)
     }
 
     @ViewBuilder
     private var todoMetadata: some View {
         let category = TodoCategoryItem(from: item.category)
-        HStack(spacing: 10 * AdaptiveSize.scale) {
+        HStack(spacing: 10) {
             Text("#\(item.number)")
                 .foregroundStyle(Color.accent)
 
@@ -118,7 +118,7 @@ private struct TodoRow: View {
                 .foregroundStyle(category.color)
 
             if let dueDate = item.dueDate {
-                HStack(spacing: 4 * AdaptiveSize.scale) {
+                HStack(spacing: 4) {
                     Image(systemName: "clock")
                     Text(dueDateText(dueDate))
                 }

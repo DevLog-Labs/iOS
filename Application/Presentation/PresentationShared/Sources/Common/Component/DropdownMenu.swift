@@ -120,7 +120,7 @@ private struct DropdownMenuPanel: View {
     let dismiss: () -> Void
 
     var body: some View {
-        let width = CGFloat(isiOSAppOnMac ? 200 : 250)
+        let width = isiOSAppOnMac ? 200 * AdaptiveSize.boardScale : 250
         let radius = CornerRadius.menu
         let spacing = CGFloat(6)
         let margin = CGFloat(16)
@@ -145,7 +145,7 @@ private struct DropdownMenuPanel: View {
 
                 ScrollView {
                     content
-                        .padding(4)
+                        .padding(4 * AdaptiveSize.boardScale)
                         .onGeometryChange(for: CGFloat.self) { proxy in
                             proxy.size.height
                         } action: { value in
@@ -226,11 +226,11 @@ private struct DropdownMenuSectionTitle: View {
 
     var body: some View {
         Text(title)
-            .font(.system(size: isiOSAppOnMac ? 11.5 : 13, weight: .semibold))
+            .font(.system(size: isiOSAppOnMac ? 11.5 * AdaptiveSize.boardScale : 13, weight: .semibold))
             .foregroundStyle(Color.secondaryLabel)
             .lineLimit(1)
-            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 24 : 30, alignment: .leading)
-            .padding(.horizontal, isiOSAppOnMac ? 10 : 14)
+            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 24 * AdaptiveSize.boardScale : 30, alignment: .leading)
+            .padding(.horizontal, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 14)
     }
 }
 
@@ -239,8 +239,8 @@ private struct DropdownMenuDivider: View {
         Rectangle()
             .fill(Color.separator)
             .frame(height: 1)
-            .padding(.vertical, 4)
-            .padding(.horizontal, -4)
+            .padding(.vertical, 4 * AdaptiveSize.boardScale)
+            .padding(.horizontal, -4 * AdaptiveSize.boardScale)
     }
 }
 
@@ -284,12 +284,12 @@ private struct DropdownMenuRow: View {
     }
 
     var body: some View {
-        let iconSize = CGFloat(isiOSAppOnMac ? 14 : 18)
+        let iconSize = isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 18
 
         Button {
             action()
         } label: {
-            HStack(spacing: isiOSAppOnMac ? 8 : 10) {
+            HStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10) {
                 if let systemImage {
                     Image(systemName: systemImage)
                         .font(.system(size: iconSize * 0.8))
@@ -312,13 +312,13 @@ private struct DropdownMenuRow: View {
                         .foregroundStyle(Color.secondaryLabel)
                 }
             }
-            .font(.system(size: isiOSAppOnMac ? 13 : 15))
+            .font(.system(size: isiOSAppOnMac ? 13 * AdaptiveSize.boardScale : 15))
             .foregroundStyle(isDestructive ? Color.danger : .primary)
-            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 28 : 44)
-            .padding(.horizontal, isiOSAppOnMac ? 10 : 14)
+            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 28 * AdaptiveSize.boardScale : 44)
+            .padding(.horizontal, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 14)
             .contentShape(.rect)
         }
-        .buttonStyle(DropdownMenuRowStyle(radius: isiOSAppOnMac ? 8 : 10))
+        .buttonStyle(DropdownMenuRowStyle(radius: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10))
     }
 }
 

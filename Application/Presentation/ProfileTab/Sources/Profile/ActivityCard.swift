@@ -16,7 +16,7 @@ struct ActivityCard: View {
     let onSelectTodoID: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text(String(localized: "profile_quarterly_activity", bundle: PresentationResources.bundle))
                     .font(.adaptive(.headline))
@@ -66,7 +66,7 @@ struct ActivityCard: View {
                 Button {
                     store.send(.openQuarterPicker)
                 } label: {
-                    HStack(spacing: 4 * AdaptiveSize.scale) {
+                    HStack(spacing: 4) {
                         Text(store.quarterTitle)
                             .font(.adaptive(.subheadline))
                         Image(systemName: "chevron.up.chevron.down")
@@ -97,7 +97,7 @@ struct ActivityCard: View {
                 }
             }
         }
-        .padding(16 * AdaptiveSize.scale)
+        .padding(16)
         .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
     }
 
@@ -105,7 +105,7 @@ struct ActivityCard: View {
     private func selectedDayDetailSection(for day: HeatmapDay) -> some View {
         let activities = store.selectedDayActivities
 
-        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(day.date.formatted(.dateTime.year().month(.wide).day()))
                 .font(.adaptive(.subheadline))
                 .bold()
@@ -115,7 +115,7 @@ struct ActivityCard: View {
                     .font(.adaptive(.caption))
                     .foregroundStyle(Color.secondaryLabel)
                     .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.vertical, 8 * AdaptiveSize.scale)
+                    .padding(.vertical, 8)
             } else {
                 ForEach(activities) { activity in
                     Button {
@@ -123,10 +123,10 @@ struct ActivityCard: View {
                     } label: {
                         let item = TodoCategoryItem(from: activity.category)
                         let rowColor = activity.isDeleted ? Color.secondaryLabel : .label
-                        HStack(spacing: 8 * AdaptiveSize.scale) {
+                        HStack(spacing: 8) {
                             Image(systemName: item.symbolName)
                                 .foregroundStyle(item.color)
-                                .frame(width: 20 * AdaptiveSize.scale)
+                                .frame(width: 20)
                             Text(activity.title)
                                 .font(.adaptive(.caption))
                                 .lineLimit(1)
@@ -138,8 +138,8 @@ struct ActivityCard: View {
                                 Text(item.title)
                                     .font(.adaptive(.caption2))
                                     .foregroundStyle(item.badgeColor)
-                                    .padding(.horizontal, 6 * AdaptiveSize.scale)
-                                    .padding(.vertical, 2 * AdaptiveSize.scale)
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
                                     .background(
                                         RoundedRectangle(cornerRadius: CornerRadius.badge)
                                             .fill(item.badgeColor.opacity(0.14))
@@ -159,18 +159,18 @@ struct ActivityCard: View {
                             if store.selectedTodoRoute == .activity(activity.todoId) {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .fill(Color.tintFill)
-                                    .padding(.horizontal, -8 * AdaptiveSize.scale)
-                                    .padding(.vertical, -2 * AdaptiveSize.scale)
+                                    .padding(.horizontal, -8)
+                                    .padding(.vertical, -2)
                             }
                         }
                     }
                     .buttonStyle(.plain)
                     .disabled(activity.isDeleted)
-                    .padding(.vertical, 2 * AdaptiveSize.scale)
+                    .padding(.vertical, 2)
                 }
             }
         }
-        .padding(.top, 4 * AdaptiveSize.scale)
+        .padding(.top, 4)
     }
 
     private func selectActivity(_ activity: HeatmapActivityItem) {
@@ -184,7 +184,7 @@ struct QuarterPickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            VStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
+            VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Text(String(localized: "profile_year", bundle: PresentationResources.bundle))
                         .font(.adaptive(.subheadline))
@@ -203,7 +203,7 @@ struct QuarterPickerSheet: View {
                     .labelsHidden()
                 }
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12 * AdaptiveSize.scale), count: 4), spacing: 12 * AdaptiveSize.scale) {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4), spacing: 12) {
                     ForEach(1...4, id: \.self) { quarter in
                         quarterSelectionButton(for: quarter)
                     }
@@ -211,7 +211,7 @@ struct QuarterPickerSheet: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(20 * AdaptiveSize.scale)
+            .padding(20)
             .navigationTitle(String(localized: "profile_select_quarter", bundle: PresentationResources.bundle))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -241,7 +241,7 @@ struct QuarterPickerSheet: View {
             )
             .font(.adaptive(.subheadline).weight(.semibold))
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 12 * AdaptiveSize.scale)
+            .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.control)
                     .fill(isSelected ? Color.accent : Color.tertiaryBackground)

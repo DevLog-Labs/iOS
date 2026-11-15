@@ -34,7 +34,7 @@ public struct RecordDetailView: View {
 
     public var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
+            LazyVStack(alignment: .leading, spacing: 20) {
                 switch store.contentState {
                 case .draft(let draft):
                     recordContent(
@@ -61,7 +61,7 @@ public struct RecordDetailView: View {
                     Color.clear.frame(height: 1)
                 }
             }
-            .padding(16 * AdaptiveSize.scale)
+            .padding()
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background.ignoresSafeArea())
@@ -100,8 +100,8 @@ public struct RecordDetailView: View {
                 .disabled(store.isRestoring)
             Spacer()
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal)
+        .padding(.vertical, 12)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
@@ -119,7 +119,7 @@ public struct RecordDetailView: View {
         title: String,
         version: DevelopmentRecord.Version?
     ) -> some View {
-        VStack(alignment: .leading, spacing: 14 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 14) {
             ScrollView(.horizontal) {
                 Text(title)
                     .font(.adaptive(.title).bold())
@@ -127,7 +127,7 @@ public struct RecordDetailView: View {
             }
             .scrollIndicators(.hidden)
 
-            HStack(spacing: 10 * AdaptiveSize.scale) {
+            HStack(spacing: 10) {
                 Text(
                     version == nil
                         ? RecordPresentation.text("development_record_draft")
@@ -135,8 +135,8 @@ public struct RecordDetailView: View {
                 )
                     .font(.adaptive(.callout).weight(.semibold))
                     .foregroundStyle(version == nil ? Color.warning : Color.white)
-                    .padding(.horizontal, 12 * AdaptiveSize.scale)
-                    .padding(.vertical, 7 * AdaptiveSize.scale)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
                     .background(
                         version == nil ? Color.warning.opacity(0.12) : Color.accent,
                         in: .rect(cornerRadius: CornerRadius.badge)
@@ -146,8 +146,8 @@ public struct RecordDetailView: View {
                     Text(RecordPresentation.versionLabel(version.number))
                         .font(.adaptive(.callout).weight(.semibold))
                         .foregroundStyle(Color.accent)
-                        .padding(.horizontal, 12 * AdaptiveSize.scale)
-                        .padding(.vertical, 7 * AdaptiveSize.scale)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 7)
                         .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
 
                     Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
@@ -159,19 +159,19 @@ public struct RecordDetailView: View {
     }
 
     private func contentCard(markdownContent: String) -> some View {
-        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 16) {
             if markdownContent.isEmpty {
                 EmptyStateView(
                     RecordPresentation.text("development_record_content_empty_title"),
                     systemImage: "doc.text"
                 )
-                .padding(.bottom, 72 * AdaptiveSize.scale)
+                .padding(.bottom, 72)
             } else {
                 MarkdownContentView(content: markdownContent)
-                    .frame(minHeight: 420 * AdaptiveSize.scale)
+                    .frame(minHeight: 420)
             }
         }
-        .padding(.vertical, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 16)
         .background {
             Rectangle()
                 .fill(Color.secondaryBackground)
@@ -179,7 +179,7 @@ public struct RecordDetailView: View {
     }
 
     private var failureContent: some View {
-        VStack(spacing: 20 * AdaptiveSize.scale) {
+        VStack(spacing: 20) {
             ContentUnavailableView(
                 RecordPresentation.text("common_error_title"),
                 systemImage: "exclamationmark.triangle",
@@ -194,18 +194,18 @@ public struct RecordDetailView: View {
             .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity)
-        .padding(24 * AdaptiveSize.scale)
+        .padding(24)
         .background(Color.secondaryBackground, in: .rect)
     }
 
     private var actionSection: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 12 * AdaptiveSize.scale) {
+            HStack(spacing: 12) {
                 correctionButton
                 historyButton
             }
 
-            VStack(spacing: 12 * AdaptiveSize.scale) {
+            VStack(spacing: 12) {
                 correctionButton
                 historyButton
             }
@@ -223,7 +223,7 @@ public struct RecordDetailView: View {
             .font(.adaptive(.headline))
             .foregroundStyle(Color.white)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10 * AdaptiveSize.scale)
+            .padding(.vertical, 10)
         }
         .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
     }
@@ -239,7 +239,7 @@ public struct RecordDetailView: View {
             .font(.adaptive(.headline))
             .foregroundStyle(Color.tintLabel)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 10 * AdaptiveSize.scale)
+            .padding(.vertical, 10)
         }
         .adaptiveButtonStyle(
             shape: RoundedRectangle(cornerRadius: CornerRadius.control),

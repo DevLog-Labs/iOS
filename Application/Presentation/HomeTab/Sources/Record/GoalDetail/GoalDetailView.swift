@@ -34,7 +34,7 @@ public struct GoalDetailView: View {
 
     private var mainContent: some View {
         ScrollView {
-            LazyVStack(spacing: 12 * AdaptiveSize.scale) {
+            LazyVStack(spacing: 12) {
                 titleBar
                 GoalDescriptionCard(
                     description: store.goal?.description ?? "",
@@ -51,7 +51,7 @@ public struct GoalDetailView: View {
                     onSelect: { store.send(.view(.selectTodo($0))) }
                 )
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
+            .padding(.horizontal)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .safeAreaInset(edge: .bottom, spacing: 0) { recordActionBar }
@@ -133,7 +133,7 @@ public struct GoalDetailView: View {
                 } else {
                     Image(systemName: "ellipsis")
                         .font(.adaptive(.title3).weight(.semibold))
-                        .frame(width: 28 * AdaptiveSize.scale, height: 28 * AdaptiveSize.scale)
+                        .frame(width: 28, height: 28)
                         .prominentMenu(
                             items: statusMenuItems(status),
                             isEnabled: !store.isLoading && !store.isTransitioning
@@ -148,13 +148,13 @@ public struct GoalDetailView: View {
                 }
             }
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal)
+        .padding(.vertical, 12)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleBar: some View {
-        VStack(alignment: .leading, spacing: 8 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 8) {
             Text(RecordPresentation.text("development_goal_title"))
                 .font(.adaptive(.largeTitle).bold())
 
@@ -166,22 +166,22 @@ public struct GoalDetailView: View {
                         .lineLimit(1)
                 }
                 .scrollIndicators(.hidden)
-                .contentMargins(.horizontal, 16 * AdaptiveSize.scale, for: .scrollContent)
-                .padding(.horizontal, -16 * AdaptiveSize.scale)
+                .contentMargins(.horizontal, 16, for: .scrollContent)
+                .padding(.horizontal, -16)
             }
 
             if let status = store.goalStatus {
                 GoalStatusBadge(status: status)
             }
         }
-        .padding(.bottom, 8 * AdaptiveSize.scale)
+        .padding(.bottom, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color.background)
     }
 
     @ViewBuilder
     private var timelineCard: some View {
-        VStack(spacing: 18 * AdaptiveSize.scale) {
+        VStack(spacing: 18) {
             if !store.hasLoaded, store.hasLoadFailure {
                 ContentUnavailableView {
                     Label(
@@ -201,7 +201,7 @@ public struct GoalDetailView: View {
             } else if !store.hasLoaded || store.isLoading, store.items.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 32 * AdaptiveSize.scale)
+                    .padding(.vertical, 32)
             } else if store.items.isEmpty {
                 ContentUnavailableView(
                     RecordPresentation.text("development_record_empty_title"),
@@ -221,7 +221,7 @@ public struct GoalDetailView: View {
                 }
             }
         }
-        .padding([.horizontal, .top], 16 * AdaptiveSize.scale)   // TimelineView 자체의 하단 패딩과 겹치기 때문에 .bottom은 제외
+        .padding([.horizontal, .top])   // TimelineView 자체의 하단 패딩과 겹치기 때문에 .bottom은 제외
         .background {
             Rectangle()
                 .fill(Color.secondaryBackground)

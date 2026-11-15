@@ -18,13 +18,13 @@ struct RecordVersionDetailView: View {
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20 * AdaptiveSize.scale) {
+            LazyVStack(alignment: .leading, spacing: 20) {
                 titleSection
                 contentCard
                 currentVersionCard
             }
-            .padding(.horizontal, 16 * AdaptiveSize.scale)
-            .padding(.bottom, 20 * AdaptiveSize.scale)
+            .padding(.horizontal)
+            .padding(.bottom, 20)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -56,13 +56,13 @@ struct RecordVersionDetailView: View {
                 .disabled(store.isRestoring)
             Spacer()
         }
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.bottom, 12 * AdaptiveSize.scale)
+        .padding(.horizontal)
+        .padding(.bottom, 12)
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleSection: some View {
-        VStack(alignment: .leading, spacing: 12 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 12) {
             Text(RecordPresentation.text("development_record_previous_version_title"))
                 .font(.adaptive(.largeTitle).bold())
 
@@ -71,7 +71,7 @@ struct RecordVersionDetailView: View {
                 .foregroundStyle(Color.secondaryLabel)
                 .lineLimit(2)
 
-            HStack(spacing: 8 * AdaptiveSize.scale) {
+            HStack(spacing: 8) {
                 RecordVersionBadge(number: version.number, isCurrent: false)
                 kindBadge
                 Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
@@ -88,13 +88,13 @@ struct RecordVersionDetailView: View {
                     RecordPresentation.text("development_record_content_empty_title"),
                     systemImage: "doc.text"
                 )
-                .padding(.bottom, 72 * AdaptiveSize.scale)
+                .padding(.bottom, 72)
             } else {
                 MarkdownContentView(content: version.markdownContent)
-                    .frame(minHeight: 420 * AdaptiveSize.scale)
+                    .frame(minHeight: 420)
             }
         }
-        .padding(.vertical, 16 * AdaptiveSize.scale)
+        .padding(.vertical, 16)
         .background(Color.secondaryBackground, in: .rect)
     }
 
@@ -119,7 +119,7 @@ struct RecordVersionDetailView: View {
         .font(.adaptive(.subheadline))
         .foregroundStyle(Color.secondaryLabel)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(18 * AdaptiveSize.scale)
+        .padding(18)
         .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.group))
     }
 
@@ -141,12 +141,12 @@ struct RecordVersionDetailView: View {
                 .font(.adaptive(.headline))
                 .foregroundStyle(Color.white)
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 10 * AdaptiveSize.scale)
+                .padding(.vertical, 10)
         }
         .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
         .disabled(store.isRestoring || store.record.draft != nil)
-        .padding(.horizontal, 16 * AdaptiveSize.scale)
-        .padding(.vertical, 12 * AdaptiveSize.scale)
+        .padding(.horizontal)
+        .padding(.vertical, 12)
         .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 
@@ -182,8 +182,8 @@ struct RecordVersionDetailView: View {
         Text(title)
             .font(.adaptive(.caption).weight(.semibold))
             .foregroundStyle(foreground)
-            .padding(.horizontal, 9 * AdaptiveSize.scale)
-            .padding(.vertical, 5 * AdaptiveSize.scale)
+            .padding(.horizontal, 9)
+            .padding(.vertical, 5)
             .background(background, in: .rect(cornerRadius: CornerRadius.badge))
     }
 }

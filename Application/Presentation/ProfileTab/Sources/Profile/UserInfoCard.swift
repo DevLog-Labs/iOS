@@ -14,8 +14,8 @@ struct UserInfoCard: View {
     let isSelected: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16 * AdaptiveSize.scale) {
-            HStack(spacing: 16 * AdaptiveSize.scale) {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 16) {
                 Group {
                     if let data = store.avatarImageData?.data,
                        let uiImage = UIImage(data: data) {
@@ -30,11 +30,11 @@ struct UserInfoCard: View {
                             .foregroundStyle(Color.tintLabel, Color.tintFill)
                     }
                 }
-                .frame(width: 64 * AdaptiveSize.scale, height: 64 * AdaptiveSize.scale)
+                .frame(width: 64, height: 64)
                 .clipShape(.circle)
                 .transaction { $0.animation = nil }
 
-                VStack(alignment: .leading, spacing: 4 * AdaptiveSize.scale) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(store.name)
                         .font(.adaptive(.title2))
                         .bold()
@@ -57,7 +57,7 @@ struct UserInfoCard: View {
                     }
                     .foregroundStyle(Color.secondaryLabel)
                     .tint(Color.accent)
-                    .frame(height: UIFont.preferredFont(forTextStyle: .body).lineHeight * AdaptiveSize.scale)
+                    .frame(height: UIFont.preferredFont(forTextStyle: .body).lineHeight)
                     .focused($focused)
                     .disabled(!store.isNetworkConnected)
 
@@ -72,7 +72,7 @@ struct UserInfoCard: View {
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
                 }
-                .padding(8 * AdaptiveSize.scale)
+                .padding(8)
                 .background(
                     RoundedRectangle(cornerRadius: CornerRadius.control)
                         .fill(Color.tertiaryBackground)
@@ -90,7 +90,7 @@ struct UserInfoCard: View {
             }
             .opacity(store.isNetworkConnected ? 1 : 0.7)
         }
-        .padding(16 * AdaptiveSize.scale)
+        .padding(16)
         .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if !isSelected {
