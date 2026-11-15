@@ -137,6 +137,46 @@ struct HomeFeatureTests {
         #expect(adapter.sheet == .goalDetail("goal"))
     }
 
+    @Test("새 개발 목표를 저장하는 동안 시트를 바꾸지 않는다")
+    func 새_개발_목표를_저장하는_동안_시트를_바꾸지_않는다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.setGoalCreateSaving()
+        await adapter.tapDevelopmentGoal("goal")
+        await adapter.setSheet(nil)
+
+        #expect(adapter.sheet?.goalCreateState?.isSaving == true)
+    }
+
+    @Test("카테고리 관리가 열려 있으면 다시 열어도 바로 저장 상태를 유지한다")
+    func 카테고리_관리가_열려_있으면_다시_열어도_바로_저장_상태를_유지한다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapManageTodoCategory()
+        await adapter.setCategoryManageSavesImmediately()
+        await adapter.tapManageTodoCategory()
+
+        #expect(adapter.sheet?.categoryManageState?.savesImmediately == true)
+    }
+
+    @Test("카테고리 관리에서 바로 저장한 변경은 마지막 값만 저장한다")
+    func 카테고리_관리에서_바로_저장한_변경은_마지막_값만_저장한다() async {
+        let updateSpy = UpdateTodoCategoryPreferencesUseCaseSpy()
+        let adapter = StoreTestAdapter(updatePreferencesUseCase: updateSpy)
+        let issue = TodoCategoryItem(from: .system(.issue))
+        let feature = TodoCategoryItem(from: .system(.feature))
+
+        await adapter.tapManageTodoCategory()
+        await adapter.changeCategoryPreferences([issue, feature])
+        await adapter.changeCategoryPreferences([feature, issue])
+        await adapter.advanceClock(by: .seconds(1))
+        await waitUntil { !updateSpy.updates.isEmpty }
+
+        #expect(updateSpy.updates == [[feature.preference, issue.preference]])
+        #expect(adapter.preferences == [feature, issue])
+    }
+
     @Test("TodoEditor 생성 delegate는 editor를 닫고 홈 데이터를 다시 조회한다")
     func TodoEditor_생성_delegate는_editor를_닫고_홈_데이터를_다시_조회한다() async throws {
         let context = makeHomeFetchDataContext()

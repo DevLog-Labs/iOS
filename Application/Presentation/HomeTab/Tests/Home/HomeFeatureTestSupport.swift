@@ -97,6 +97,27 @@ struct StoreTestAdapter {
         await store.send(.view(.tapDevelopmentGoal(goalID)))
     }
 
+    func setSheet(_ sheet: HomeFeature.SheetState?) async {
+        await store.send(.store(.setSheet(sheet)))
+    }
+
+    func setCategoryManageSavesImmediately() async {
+        await store.send(.sheet(.presented(.categoryManage(.setSavesImmediately))))
+    }
+
+    func changeCategoryPreferences(_ items: [TodoCategoryItem]) async {
+        await store.send(.sheet(.presented(.categoryManage(.delegate(.changed(items))))))
+    }
+
+    func setGoalCreateSaving() async {
+        await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.isSaving, true))))))
+    }
+
+    func advanceClock(by duration: Duration) async {
+        await clock.advance(by: duration)
+        await settle()
+    }
+
     func dismissSheet() async {
         await store.send(.sheet(.dismiss))
         await drainReceivedActions()
