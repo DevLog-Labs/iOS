@@ -32,6 +32,8 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                             idealWidth: 400,
                             maximumWidth: proxy.size.width
                         )
+                        // 세부 정보 사이드바 여는 버튼은 오른쪽 칸 제목 줄에만 표시
+                        .environment(\.showDetailSideBar, nil)
                     // 상세 칸이 기본 폭보다 좁으면 내용을 줄이지 않고 잘라서 표시
                     Color.clear
                         .overlay(alignment: .leading) {

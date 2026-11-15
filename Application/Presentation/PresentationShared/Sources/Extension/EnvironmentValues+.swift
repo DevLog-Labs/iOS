@@ -45,6 +45,30 @@ public extension EnvironmentValues {
         set { self[ExpandSideBarKey.self] = newValue }
     }
 
+    // 고른 대상을 세부 정보 사이드바에 알리는 동작, Mac 창 안에서만 있음
+    var selectDetailSideBarTarget: ((DetailSideBarTarget?) -> Void)? {
+        get { self[SelectDetailSideBarTargetKey.self] }
+        set { self[SelectDetailSideBarTargetKey.self] = newValue }
+    }
+
+    // 세부 정보 사이드바가 열려 있는지 여부
+    var isDetailSideBarPresented: Bool {
+        get { self[IsDetailSideBarPresentedKey.self] }
+        set { self[IsDetailSideBarPresentedKey.self] = newValue }
+    }
+
+    // 세부 정보 사이드바를 열고 닫는 동작, Mac 창 안에서만 있음
+    var setDetailSideBarPresented: ((Bool) -> Void)? {
+        get { self[SetDetailSideBarPresentedKey.self] }
+        set { self[SetDetailSideBarPresentedKey.self] = newValue }
+    }
+
+    // 닫힌 세부 정보 사이드바를 칸 제목 줄 버튼으로 여는 동작, 창 오른쪽 끝 칸에서 사이드바를 닫았을 때만 있음
+    var showDetailSideBar: (() -> Void)? {
+        get { self[ShowDetailSideBarKey.self] }
+        set { self[ShowDetailSideBarKey.self] = newValue }
+    }
+
     // 폭을 바꿀 수 있는 칸의 지금 폭, 그런 칸 안에서만 있음
     var paneWidth: CGFloat? {
         get { self[PaneWidthKey.self] }
@@ -102,6 +126,22 @@ public extension EnvironmentValues {
     }
 
     private struct ExpandSideBarKey: EnvironmentKey {
+        static let defaultValue: (() -> Void)? = nil
+    }
+
+    private struct SelectDetailSideBarTargetKey: EnvironmentKey {
+        static let defaultValue: ((DetailSideBarTarget?) -> Void)? = nil
+    }
+
+    private struct IsDetailSideBarPresentedKey: EnvironmentKey {
+        static let defaultValue = false
+    }
+
+    private struct SetDetailSideBarPresentedKey: EnvironmentKey {
+        static let defaultValue: ((Bool) -> Void)? = nil
+    }
+
+    private struct ShowDetailSideBarKey: EnvironmentKey {
         static let defaultValue: (() -> Void)? = nil
     }
 

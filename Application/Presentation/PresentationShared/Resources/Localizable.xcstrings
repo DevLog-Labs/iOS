@@ -447,6 +447,23 @@
         }
       }
     },
+    "detail_sidebar_empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select an item to see its details."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "항목을 선택하면 세부 정보가 표시돼요."
+          }
+        }
+      }
+    },
     "development_goal_archive" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5885,6 +5902,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "수정"
+          }
+        }
+      }
+    },
+    "todo_tag_add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Tag"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "태그 추가"
           }
         }
       }
