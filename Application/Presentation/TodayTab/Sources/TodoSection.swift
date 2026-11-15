@@ -61,7 +61,7 @@ struct TodoSection: View {
 }
 
 private struct TodoRow: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     let item: TodayTodoItem
     let isNavigationEnabled: Bool
     let isSelected: Bool
@@ -94,8 +94,8 @@ private struct TodoRow: View {
                 Image(systemName: "chevron.right")
                     .font(.adaptive(.callout).bold())
                     .foregroundStyle(Color.tertiaryLabel)
-                    // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
-                    .opacity(isNavigationEnabled && !isiOSAppOnMac ? 1 : 0)
+                    // 사이드바가 있으면 옆 칸에 상세를 열어 화면 이동 표시 생략
+                    .opacity(isNavigationEnabled && !usesDesktopLayout ? 1 : 0)
             }
             .overlay {
                 TodoInspectorInteractionView(action: onInspect)

@@ -16,13 +16,13 @@ public extension View {
 }
 
 private struct PreviewModifier: ViewModifier {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     let todoId: String
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        // Mac 우클릭 메뉴는 미리보기를 표시하지 않아 행의 우클릭 메뉴를 가리지 않도록 제외
-        if isiOSAppOnMac {
+        // 사이드바가 있으면 행의 우클릭과 길게 누르기 메뉴를 가리지 않도록 미리보기 제외
+        if usesDesktopLayout {
             content
         } else {
             content.overlay {

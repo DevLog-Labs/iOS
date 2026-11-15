@@ -13,6 +13,7 @@ import PresentationShared
 public struct HomeView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
@@ -86,7 +87,7 @@ public struct HomeView: View {
                     case .todo: true
                     }
                 },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
+                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
             )
         }
         .preference(key: SideBarLocationPreferenceKey.self, value: sideBarLocation)
@@ -107,8 +108,8 @@ public struct HomeView: View {
         }
         .onAppear {
             store.send(.view(.startObserving))
-            // Mac은 홈이 아닌 탭으로 켜져도 사이드바 하위 항목을 채우도록 한 번 불러옴
-            if isiOSAppOnMac && !isSelected {
+            // 사이드바가 있으면 홈이 아닌 탭으로 켜져도 사이드바 하위 항목을 채우도록 한 번 불러옴
+            if usesDesktopLayout && !isSelected {
                 store.send(.view(.fetchData))
             }
         }
@@ -198,8 +199,8 @@ public struct HomeView: View {
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
-        // Mac 제목 줄 구분선과 첫 카드 사이 여백
-        .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
+        // 칸 제목 줄 구분선과 첫 카드 사이 여백
+        .contentMargins(.top, usesDesktopLayout ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background)
         .duoToolbarVisibility()
@@ -228,7 +229,7 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var topBar: some View {
-        if isiOSAppOnMac {
+        if usesDesktopLayout {
             PaneTitleBar(Text("nav_home", bundle: PresentationResources.bundle)) {
                 searchButton
                 HomeCreateButton(store: store)

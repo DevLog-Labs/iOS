@@ -15,6 +15,7 @@ public struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
@@ -54,7 +55,7 @@ public struct TodayView: View {
                                     isNavigationEnabled: !store.isTodoInspectorPresented,
                                     selectedTodoId: store.selectedTodoId,
                                     onSelect: { item in
-                                        if isiOSAppOnMac {
+                                        if usesDesktopLayout {
                                             store.send(.binding(.set(\.selectedTodoId, item.id)))
                                         } else {
                                             router.push(.todo(TodoIdItem(id: item.id)))
@@ -76,8 +77,8 @@ public struct TodayView: View {
                         }
                     }
                     .padding(.horizontal)
-                    // Mac은 필터 줄 없이 제목 줄 바로 아래에서 시작
-                    .padding(.top, isiOSAppOnMac ? 4 * AdaptiveSize.boardScale : 0)
+                    // 사이드바가 있으면 필터 줄 없이 제목 줄 바로 아래에서 시작
+                    .padding(.top, usesDesktopLayout ? 4 * AdaptiveSize.boardScale : 0)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -85,7 +86,7 @@ public struct TodayView: View {
                     let title = Text(String(localized: "nav_today", bundle: PresentationResources.bundle))
 
                     VStack(spacing: 0) {
-                        if isiOSAppOnMac {
+                        if usesDesktopLayout {
                             PaneTitleBar(title) {
                                 TodayFilterMenu(store: store)
                             }
@@ -130,7 +131,7 @@ public struct TodayView: View {
             .navigationDestination(
                 for: TodayRoute.self,
                 interactivePop: { _ in true },
-                destination: { destination($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
+                destination: { destination($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
             )
         }
         // Mac은 창 오른쪽 세부 정보 사이드바 사용
@@ -335,7 +336,7 @@ private struct TodayFilterBar: View {
     }
 }
 
-// Mac 제목 줄의 필터 버튼
+// 칸 제목 줄의 필터 버튼
 private struct TodayFilterMenu: View {
     let store: StoreOf<TodayFeature>
 

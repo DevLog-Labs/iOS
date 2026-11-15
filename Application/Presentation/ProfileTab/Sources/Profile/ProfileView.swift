@@ -13,7 +13,7 @@ import PresentationShared
 public struct ProfileView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
     @State private var settingsStore: StoreOf<SettingsFeature>
@@ -57,8 +57,8 @@ public struct ProfileView: View {
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
-                // Mac 제목 줄 구분선과 첫 카드 사이 여백
-                .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
+                // 칸 제목 줄 구분선과 첫 카드 사이 여백
+                .contentMargins(.top, usesDesktopLayout ? 12 : 0, for: .scrollContent)
                 .safeAreaInset(edge: .top, spacing: 0) { titleBar }
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
@@ -108,7 +108,7 @@ public struct ProfileView: View {
                     default: false
                     }
                 },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
+                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
             )
         }
         // 설정 아래 화면도 사이드바에서는 설정으로 표시
@@ -156,7 +156,7 @@ public struct ProfileView: View {
         }
         .topBarButtonStyle()
 
-        if isiOSAppOnMac {
+        if usesDesktopLayout {
             PaneTitleBar(Text("nav_profile", bundle: PresentationResources.bundle)) {
                 settingsButton
             }
@@ -180,9 +180,9 @@ public struct ProfileView: View {
         }
     }
 
-    // Mac은 옆 칸에 상세를 열고 나머지 기기는 화면 이동
+    // 사이드바가 있으면 옆 칸에 상세를 열고 나머지는 화면 이동
     private func showTodo(_ route: ProfileRoute) {
-        if isiOSAppOnMac {
+        if usesDesktopLayout {
             store.send(.binding(.set(\.selectedTodoRoute, route)))
         } else {
             router.push(route)

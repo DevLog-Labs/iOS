@@ -15,7 +15,7 @@ public extension View {
 }
 
 public struct ItemActionButton: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
 
     private let title: String
     private let color: Color
@@ -35,8 +35,8 @@ public struct ItemActionButton: View {
     }
 
     public var body: some View {
-        if isiOSAppOnMac {
-            // Mac 우클릭 메뉴 항목은 아이콘과 제목 함께 표시
+        if usesDesktopLayout {
+            // 우클릭과 길게 누르기 메뉴 항목은 아이콘과 제목 함께 표시
             Button(action: action) {
                 Label {
                     Text(title)
@@ -54,7 +54,7 @@ public struct ItemActionButton: View {
 }
 
 private struct ItemActionsModifier<Actions: View>: ViewModifier {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var store = Store(initialState: ItemActionsFeature.State()) {
         ItemActionsFeature()
     }
@@ -62,7 +62,7 @@ private struct ItemActionsModifier<Actions: View>: ViewModifier {
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        if isiOSAppOnMac {
+        if usesDesktopLayout {
             content.contextMenu {
                 actions
             }

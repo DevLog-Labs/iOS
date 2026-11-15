@@ -13,7 +13,7 @@ import PresentationShared
 
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onSelectTodo: (String) -> Void
@@ -31,7 +31,7 @@ struct TodoListView: View {
     var body: some View {
         PaneSplitView {
             TodoListContent(store: store) { todoId in
-                if isiOSAppOnMac {
+                if usesDesktopLayout {
                     store.send(.binding(.set(\.selectedTodoId, todoId)))
                 } else {
                     onSelectTodo(todoId)
@@ -242,7 +242,7 @@ private struct TodoListTopBar: View {
                 }
             }
 
-            // Mac 제목 줄은 필터와 정렬을 버튼으로 옮겨 검색 중일 때만 아래 줄 표시
+            // 칸 제목 줄은 필터와 정렬을 버튼으로 옮겨 검색 중일 때만 아래 줄 표시
             if !showsPaneTitleBar || store.isSearching {
                 VStack(spacing: 8) {
                     if !showsPaneTitleBar {
@@ -509,7 +509,7 @@ private struct TodoListFilterHeader: View {
     }
 }
 
-// Mac 제목 줄의 필터와 정렬 버튼
+// 칸 제목 줄의 필터와 정렬 버튼
 private struct TodoListPaneMenus: View {
     let store: StoreOf<TodoListFeature>
 

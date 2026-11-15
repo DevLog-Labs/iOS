@@ -50,7 +50,7 @@ struct RecentActivityCard: View {
 }
 
 private struct RecentTodoCard: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @ScaledMetric(relativeTo: .title3) private var iconSize = CGFloat(44)
     let todo: RecentTodoItem
     let isSelected: Bool
@@ -102,8 +102,8 @@ private struct RecentTodoCard: View {
             }
 
             Spacer(minLength: 0)
-            // Mac은 옆 칸에 상세를 열어 화면 이동 표시 생략
-            if !isiOSAppOnMac {
+            // 사이드바가 있으면 옆 칸에 상세를 열어 화면 이동 표시 생략
+            if !usesDesktopLayout {
                 Image(systemName: "chevron.right")
                     .font(.adaptive(.callout).bold())
                     .foregroundStyle(Color.tertiaryLabel)

@@ -7,9 +7,9 @@
 
 import SwiftUI
 
-// Mac 창에서 목록 칸 오른쪽에 상세 칸을 나란히 두는 화면
+// 사이드바가 있는 창에서 목록 칸 오른쪽에 상세 칸을 나란히 두는 화면
 public struct PaneSplitView<Primary: View, Detail: View>: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     private let primary: Primary
     private let detail: Detail
 
@@ -22,7 +22,7 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     }
 
     public var body: some View {
-        if isiOSAppOnMac {
+        if usesDesktopLayout {
             GeometryReader { proxy in
                 // 경계선은 사이드바 경계선부터 창 오른쪽 끝까지 이동
                 HStack(spacing: 0) {
