@@ -120,16 +120,17 @@ public extension View {
 
 private struct DetailSideBarTargetModifier: ViewModifier {
     @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
+    @State private var owner = UUID()
     let target: DetailSideBarTarget?
 
     func body(content: Content) -> some View {
         content
-            .onAppear { selectDetailSideBarTarget?(target) }
+            .onAppear { selectDetailSideBarTarget?(target, owner) }
             .onChange(of: target) { _, target in
-                selectDetailSideBarTarget?(target)
+                selectDetailSideBarTarget?(target, owner)
             }
             // 화면을 벗어나면 고른 대상 해제
-            .onDisappear { selectDetailSideBarTarget?(nil) }
+            .onDisappear { selectDetailSideBarTarget?(nil, owner) }
     }
 }
 
@@ -137,6 +138,7 @@ private struct HostedDetailSideBarModifier<SideBarContent: View>: ViewModifier {
     @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
     @Environment(\.isDetailSideBarPresented) private var isDetailSideBarPresented
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
+    @State private var owner = UUID()
     let isActive: Bool
     let sideBarContent: SideBarContent
 
@@ -155,13 +157,13 @@ private struct HostedDetailSideBarModifier<SideBarContent: View>: ViewModifier {
         }
         // 창이 그리는 사이드바 대신 이 화면의 사이드바 표시
         .onAppear {
-            if isActive { selectDetailSideBarTarget?(.hosted) }
+            if isActive { selectDetailSideBarTarget?(.hosted, owner) }
         }
         .onChange(of: isActive) { _, isActive in
-            selectDetailSideBarTarget?(isActive ? .hosted : nil)
+            selectDetailSideBarTarget?(isActive ? .hosted : nil, owner)
         }
         .onDisappear {
-            if isActive { selectDetailSideBarTarget?(nil) }
+            if isActive { selectDetailSideBarTarget?(nil, owner) }
         }
     }
 }

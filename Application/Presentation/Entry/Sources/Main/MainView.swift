@@ -329,7 +329,7 @@ private struct MainTabContent: View {
             .environment(\.sideBarRequest, store.sideBarRequests[tab])
             .environment(
                 \.selectDetailSideBarTarget,
-                isiOSAppOnMac ? { store.send(.view(.detailSideBarTargetChanged(tab, $0))) } : nil
+                isiOSAppOnMac ? { store.send(.view(.detailSideBarTargetChanged(tab, $0, owner: $1))) } : nil
             )
             .onPreferenceChange(SideBarLocationPreferenceKey.self) { location in
                 guard let location else { return }

@@ -38,6 +38,8 @@ struct MainFeature {
         var isDetailSideBarPresented = false
         // 탭마다 지금 고른 세부 정보 사이드바 대상
         var detailSideBarTargets: [MainTab: DetailSideBarTarget] = [:]
+        // 탭마다 지금 대상을 고른 화면
+        var detailSideBarOwners: [MainTab: UUID] = [:]
     }
 
     enum SideBarGroup: Hashable {
@@ -59,7 +61,7 @@ struct MainFeature {
             case tapSideBarGroup(SideBarGroup)
             case tapSideBarItem(MainTab, SideBarRequest.Action)
             case sideBarResized(CGFloat)
-            case detailSideBarTargetChanged(MainTab, DetailSideBarTarget?)
+            case detailSideBarTargetChanged(MainTab, DetailSideBarTarget?, owner: UUID)
         }
 
         enum StoreAction: Equatable {
@@ -120,8 +122,11 @@ struct MainFeature {
                 return .run { [updateSideBarWidthUseCase] _ in
                     updateSideBarWidthUseCase.execute(Double(width))
                 }
-            case .view(.detailSideBarTargetChanged(let tab, let target)):
+            case .view(.detailSideBarTargetChanged(let tab, let target, let owner)):
+                // 화면이 바뀔 때 먼저 나타난 화면이 고른 대상을 사라지는 화면이 지우지 않음
+                if target == nil && state.detailSideBarOwners[tab] != owner { break }
                 state.detailSideBarTargets[tab] = target
+                state.detailSideBarOwners[tab] = target == nil ? nil : owner
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)

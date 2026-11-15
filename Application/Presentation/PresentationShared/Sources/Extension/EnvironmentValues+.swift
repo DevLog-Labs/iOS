@@ -45,8 +45,8 @@ public extension EnvironmentValues {
         set { self[ExpandSideBarKey.self] = newValue }
     }
 
-    // 고른 대상을 세부 정보 사이드바에 알리는 동작, Mac 창 안에서만 있음
-    var selectDetailSideBarTarget: ((DetailSideBarTarget?) -> Void)? {
+    // 고른 대상과 고른 화면을 세부 정보 사이드바에 알리는 동작, Mac 창 안에서만 있음
+    var selectDetailSideBarTarget: ((DetailSideBarTarget?, UUID) -> Void)? {
         get { self[SelectDetailSideBarTargetKey.self] }
         set { self[SelectDetailSideBarTargetKey.self] = newValue }
     }
@@ -130,7 +130,7 @@ public extension EnvironmentValues {
     }
 
     private struct SelectDetailSideBarTargetKey: EnvironmentKey {
-        static let defaultValue: ((DetailSideBarTarget?) -> Void)? = nil
+        static let defaultValue: ((DetailSideBarTarget?, UUID) -> Void)? = nil
     }
 
     private struct IsDetailSideBarPresentedKey: EnvironmentKey {
