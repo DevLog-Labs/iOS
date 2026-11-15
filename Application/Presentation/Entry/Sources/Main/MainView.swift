@@ -367,6 +367,7 @@ private struct MainTabRail: View {
 }
 
 private struct SideBar: View {
+    @Environment(\.paneWidth) private var paneWidth
     @Binding var selectedTab: MainTab
     let unreadPushCount: Int
 
@@ -392,6 +393,8 @@ private struct SideBar: View {
             Color.secondaryBackground
                 .ignoresSafeArea(.container, edges: .vertical)
         }
+        // 칸이 기본 폭보다 좁아도 알림 개수가 잘리지 않도록 지금 폭에 맞춰 배치
+        .frame(width: paneWidth)
     }
 }
 
@@ -608,6 +611,7 @@ private struct SideBarRow: View {
             .padding(.leading, (isChild && !isCompact ? 22 : 4) * AdaptiveSize.boardScale)
             .padding(.trailing, 8 * AdaptiveSize.boardScale)
             .padding(.vertical, 6 * AdaptiveSize.boardScale)
+            .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
             .background {
                 RoundedRectangle(cornerRadius: CornerRadius.control)
                     .fill(isSelected ? Color.tintFill : .clear)

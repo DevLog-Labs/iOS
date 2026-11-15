@@ -63,7 +63,10 @@ private struct ProminentMenu<Label: View, Action: Hashable>: View {
                     }
                 }
             } label: {
+                // 바깥에서 정한 버튼 크기 전체를 누를 수 있게 함
                 label
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .contentShape(.rect)
             }
             .disabled(!isEnabled)
         } else {

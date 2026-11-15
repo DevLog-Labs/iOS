@@ -217,11 +217,13 @@ private struct TopBarButtonStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         if isiOSAppOnMac {
             // Mac에서는 리퀴드 글래스 없이 제목 줄에 맞는 작은 아이콘만 표시
+            // 아이콘 둘레 여백까지 버튼이 채워 마우스 반응 채움 전체를 누를 수 있게 함
             content
                 .font(.body.weight(.medium))
                 .foregroundStyle(tint ?? Color.label)
-                .frame(width: macIconSize, height: macIconSize)
-                .padding(6)
+                .buttonStyle(FillButtonStyle())
+                .frame(width: macIconSize + 12, height: macIconSize + 12)
+                .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: isInteractive)
                 .contentShape(.rect)
         } else if let tint {
             content
@@ -241,5 +243,17 @@ private struct TopBarButtonStyleModifier: ViewModifier {
                 .padding(9)
                 .glassEffect(.regular.interactive(isInteractive), in: .circle)
         }
+    }
+}
+
+// 버튼의 누르는 영역을 바깥에서 정한 크기 전체로 넓힘
+private struct FillButtonStyle: PrimitiveButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        Button(action: configuration.trigger) {
+            configuration.label
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
     }
 }

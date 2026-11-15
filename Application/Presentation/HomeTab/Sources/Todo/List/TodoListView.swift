@@ -112,6 +112,7 @@ private struct TodoListContent: View {
                             let isLast = index == visibleTodos.count - 1
 
                             TodoItemRow(todo)
+                                .hoverHighlight(isEnabled: todo.id != store.selectedTodoId)
                                 .background(todo.id == store.selectedTodoId ? Color.tintFill : .secondaryBackground)
                                 .contentShape(.rect)
                                 .todoDetailPreview(todoId: todo.id)
