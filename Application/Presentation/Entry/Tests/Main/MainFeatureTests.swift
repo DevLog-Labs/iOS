@@ -133,6 +133,7 @@ struct MainFeatureTests {
         await store.send(.view(.tapSideBarGroup(.todo))) {
             $0.expandedSideBarGroups = []
         }
+        #expect(store.state.sideBarLocations[.home] == .todoCategory("issue"))
         await store.send(.view(.sideBarLocationChanged(.home, .developmentGoal("goal")))) {
             $0.sideBarLocations[.home] = .developmentGoal("goal")
             $0.expandedSideBarGroups = [.developmentGoal]
