@@ -4612,6 +4612,23 @@
         }
       }
     },
+    "today_filter_view" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보기"
+          }
+        }
+      }
+    },
     "today_pinned_first" : {
       "extractionState" : "manual",
       "localizations" : {
