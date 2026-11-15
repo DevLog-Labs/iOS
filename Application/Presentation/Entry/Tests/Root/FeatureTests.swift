@@ -187,11 +187,10 @@ struct FeatureTests {
         await verifyWidgetRouteOpensWhenSignedIn(adapter: adapter)
     }
 
-    @Test("RootFeature는 시작 전 들어온 위젯 Todo 경로를 현재 탭의 시트로 연다")
-    func RootFeature는_시작_전_들어온_위젯_Todo_경로를_현재_탭의_시트로_연다() async {
+    @Test("RootFeature는 로그인 확인 전 들어온 위젯 Todo 경로를 로그인 확인 뒤 현재 탭의 시트로 연다")
+    func RootFeature는_로그인_확인_전_들어온_위젯_Todo_경로를_로그인_확인_뒤_현재_탭의_시트로_연다() async {
         let adapter = RootStoreTestAdapter()
 
-        await adapter.didLogined(false)
         await adapter.openWidgetRoute(.todayTodo("todo-1"))
         #expect(adapter.widgetRoute == .todayTodo("todo-1"))
 
@@ -199,6 +198,19 @@ struct FeatureTests {
         #expect(adapter.snapshot.selectedMainTab == .home)
         #expect(adapter.widgetRoute == .todayTodo("todo-1"))
         #expect(adapter.sheetTodoId == "todo-1")
+    }
+
+    @Test("RootFeature는 로그아웃 상태에서 들어온 위젯 경로를 로그인한 뒤에도 적용하지 않는다")
+    func RootFeature는_로그아웃_상태에서_들어온_위젯_경로를_로그인한_뒤에도_적용하지_않는다() async {
+        let adapter = RootStoreTestAdapter()
+
+        await adapter.didLogined(false)
+        await adapter.openWidgetRoute(.todayTodo("todo-1"))
+        #expect(adapter.widgetRoute == nil)
+
+        await adapter.didLogined(true)
+        #expect(adapter.snapshot.selectedMainTab == .home)
+        #expect(adapter.sheetTodoId == nil)
     }
 
     @Test("로그아웃하면 적용된 위젯 경로를 지운다")

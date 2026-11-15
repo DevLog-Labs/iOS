@@ -89,7 +89,13 @@ private extension AppGraph {
             &dependencies,
             observeUnreadPushCountUseCase: pushNotificationGraphSet
                 .pushNotificationUseCaseGraph
-                .observeUnreadPushCountUseCase
+                .observeUnreadPushCountUseCase,
+            fetchSideBarWidthUseCase: userPreferencesGraphSet
+                .userPreferencesUseCaseGraph
+                .fetchSideBarWidthUseCase,
+            updateSideBarWidthUseCase: userPreferencesGraphSet
+                .userPreferencesUseCaseGraph
+                .updateSideBarWidthUseCase
         )
     }
 

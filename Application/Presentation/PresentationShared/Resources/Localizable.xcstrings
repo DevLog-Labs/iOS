@@ -4289,6 +4289,23 @@
         }
       }
     },
+    "sidebar_new_todo" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Todo"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 Todo"
+          }
+        }
+      }
+    },
     "system_theme_automatic" : {
       "extractionState" : "manual",
       "localizations" : {

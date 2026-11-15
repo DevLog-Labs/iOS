@@ -15,6 +15,7 @@ public struct ProfileView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.sideBarRequest) private var sideBarRequest
     @State private var settingsStore: StoreOf<SettingsFeature>
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
@@ -109,7 +110,22 @@ public struct ProfileView: View {
                 destination: { destinationView($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
             )
         }
-        .navigationHistory(router)
+        // 설정 아래 화면도 사이드바에서는 설정으로 표시
+        .preference(
+            key: SideBarLocationPreferenceKey.self,
+            value: router.root == .settings ? .settings : .profile
+        )
+        // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
+        .onChange(of: sideBarRequest, initial: true) { _, request in
+            switch request?.action {
+            case .open(.profile):
+                router.path = []
+            case .open(.settings):
+                router.replace(with: .settings)
+            default:
+                break
+            }
+        }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.fetchData)

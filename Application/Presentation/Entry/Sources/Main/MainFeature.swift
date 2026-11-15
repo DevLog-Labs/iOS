@@ -27,9 +27,19 @@ struct MainFeature {
         // 화면 키보드가 떠 있는 동안 직접 그린 하단 탭 바를 숨김
         var isKeyboardVisible = false
         var readableContentWidth = CGFloat.infinity
-        var navigationHistories: [MainTab: NavigationHistoryState] = [:]
-        var navigationSteps: [MainTab: NavigationStep] = [:]
         var openedTabs: Set<MainTab> = []
+        var isSideBarCollapsed = false
+        // 사용자가 끌어서 정한 Mac 사이드바 폭, 정하지 않았으면 기본 폭
+        var sideBarWidth: CGFloat?
+        var expandedSideBarGroups: Set<SideBarGroup> = []
+        var sideBarLocations: [MainTab: SideBarLocation] = [:]
+        var sideBarRequests: [MainTab: SideBarRequest] = [:]
+        var sideBarContent = SideBarContent()
+    }
+
+    enum SideBarGroup: Hashable {
+        case todo
+        case developmentGoal
     }
 
     enum Action: BindableAction, Equatable {
@@ -41,8 +51,11 @@ struct MainFeature {
         enum ViewAction: Equatable {
             case onAppear
             case selectedTabChanged(MainTab)
-            case navigationHistoryChanged(MainTab, NavigationHistoryState)
-            case tapNavigation(MainTab, NavigationStep.Direction)
+            case sideBarLocationChanged(MainTab, SideBarLocation)
+            case sideBarContentChanged(SideBarContent)
+            case tapSideBarGroup(SideBarGroup)
+            case tapSideBarItem(MainTab, SideBarRequest.Action)
+            case sideBarResized(CGFloat)
         }
 
         enum StoreAction: Equatable {
@@ -59,6 +72,7 @@ struct MainFeature {
     @Dependency(\.uuid) var uuid
     @Dependency(\.trackAnalyticsEventUseCase) var trackAnalyticsEventUseCase
     @Dependency(\.setApplicationBadgeCount) var setApplicationBadgeCount
+    @Dependency(\.updateSideBarWidthUseCase) var updateSideBarWidthUseCase
 
     var body: some ReducerOf<Self> {
         BindingReducer()
@@ -76,10 +90,32 @@ struct MainFeature {
                 state.openedTabs.insert(tab)
                 guard let screenName = tab.analyticsScreenName else { break }
                 return trackScreenViewEffect(screenName)
-            case .view(.navigationHistoryChanged(let tab, let history)):
-                state.navigationHistories[tab] = history
-            case .view(.tapNavigation(let tab, let direction)):
-                state.navigationSteps[tab] = NavigationStep(id: uuid(), direction: direction)
+            case .view(.sideBarLocationChanged(let tab, let location)):
+                state.sideBarLocations[tab] = location
+                // 홈 카테고리 격자처럼 다른 경로로 하위 항목에 들어오면 그 묶음을 펼침
+                switch location {
+                case .todoCategory:
+                    state.expandedSideBarGroups.insert(.todo)
+                case .developmentGoal:
+                    state.expandedSideBarGroups.insert(.developmentGoal)
+                case .home, .today, .notification, .profile, .settings:
+                    break
+                }
+            case .view(.sideBarContentChanged(let content)):
+                state.sideBarContent = content
+            case .view(.tapSideBarGroup(let group)):
+                if state.expandedSideBarGroups.contains(group) {
+                    state.expandedSideBarGroups.remove(group)
+                } else {
+                    state.expandedSideBarGroups.insert(group)
+                }
+            case .view(.tapSideBarItem(let tab, let action)):
+                state.sideBarRequests[tab] = SideBarRequest(id: uuid(), action: action)
+            case .view(.sideBarResized(let width)):
+                state.sideBarWidth = width
+                return .run { [updateSideBarWidthUseCase] _ in
+                    updateSideBarWidthUseCase.execute(Double(width))
+                }
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)
@@ -102,6 +138,36 @@ extension DependencyValues {
     var setApplicationBadgeCount: @Sendable (Int) async throws -> Void {
         get { self[SetApplicationBadgeCountKey.self] }
         set { self[SetApplicationBadgeCountKey.self] = newValue }
+    }
+
+    var fetchSideBarWidthUseCase: FetchSideBarWidthUseCase {
+        get { self[FetchSideBarWidthUseCaseKey.self] }
+        set { self[FetchSideBarWidthUseCaseKey.self] = newValue }
+    }
+
+    var updateSideBarWidthUseCase: UpdateSideBarWidthUseCase {
+        get { self[UpdateSideBarWidthUseCaseKey.self] }
+        set { self[UpdateSideBarWidthUseCaseKey.self] = newValue }
+    }
+}
+
+private enum FetchSideBarWidthUseCaseKey: DependencyKey {
+    static var liveValue: FetchSideBarWidthUseCase {
+        preconditionFailure("FetchSideBarWidthUseCase must be provided.")
+    }
+
+    static var testValue: FetchSideBarWidthUseCase {
+        liveValue
+    }
+}
+
+private enum UpdateSideBarWidthUseCaseKey: DependencyKey {
+    static var liveValue: UpdateSideBarWidthUseCase {
+        preconditionFailure("UpdateSideBarWidthUseCase must be provided.")
+    }
+
+    static var testValue: UpdateSideBarWidthUseCase {
+        liveValue
     }
 }
 

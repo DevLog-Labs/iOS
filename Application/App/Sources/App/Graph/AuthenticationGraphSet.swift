@@ -31,6 +31,7 @@ final class AuthenticationGraphSet {
         userServiceGraph: UserServiceGraph,
         todoCategoryServiceGraph: TodoCategoryServiceGraph,
         memoryCacheStoreGraph: MemoryCacheStoreGraph,
+        userDefaultsStoreGraph: UserDefaultsStoreGraph,
         widgetSnapshotUpdaterGraph: WidgetSnapshotUpdaterGraph,
         authSessionStateProviderGraph: AuthSessionStateProviderGraph
     ) {
@@ -57,6 +58,7 @@ final class AuthenticationGraphSet {
                 authService: authServiceGraph.authService,
                 todoCategoryService: todoCategoryServiceGraph.todoCategoryService,
                 store: memoryCacheStoreGraph.memoryCacheStore,
+                userDefaultsStore: userDefaultsStoreGraph.userDefaultsStore,
                 provider: authSessionStateProviderGraph.authSessionStateProvider
             )
         )

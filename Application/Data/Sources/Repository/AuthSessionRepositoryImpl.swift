@@ -11,11 +11,14 @@ import Domain
 final class AuthSessionRepositoryImpl: AuthSessionRepository {
     private enum Key {
         static let preferences = "TodoCategory.preferences"
+        // 로그아웃하면 지우는 로그인 세션 동안의 설정 키 접두어
+        static let sessionPreferencesPrefix = "Session."
     }
 
     private let authService: AuthService
     private let todoCategoryService: TodoCategoryService
     private let store: MemoryCacheStore
+    private let userDefaultsStore: UserDefaultsStore
     private let provider: AuthSessionStateProvider
     private var cancellables = Set<AnyCancellable>()
 
@@ -23,11 +26,13 @@ final class AuthSessionRepositoryImpl: AuthSessionRepository {
         authService: AuthService,
         todoCategoryService: TodoCategoryService,
         store: MemoryCacheStore,
+        userDefaultsStore: UserDefaultsStore,
         provider: AuthSessionStateProvider
     ) {
         self.authService = authService
         self.todoCategoryService = todoCategoryService
         self.store = store
+        self.userDefaultsStore = userDefaultsStore
         self.provider = provider
 
         setupObservation()
@@ -71,5 +76,6 @@ private extension AuthSessionRepositoryImpl {
 
     func clearPreferencesCache() {
         store.setValue(Optional<[TodoCategoryPreferenceResponse]>.none, forKey: Key.preferences)
+        userDefaultsStore.removeValues(withPrefix: Key.sessionPreferencesPrefix)
     }
 }

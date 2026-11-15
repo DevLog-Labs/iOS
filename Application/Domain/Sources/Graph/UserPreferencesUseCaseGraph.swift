@@ -66,4 +66,14 @@ public final class UserPreferencesUseCaseGraph {
     private func makeUpdateTodayDisplayOptionsUseCase() -> UpdateTodayDisplayOptionsUseCase {
         UpdateTodayDisplayOptionsUseCaseImpl(input.repository)
     }
+
+    @Provide
+    private func makeFetchSideBarWidthUseCase() -> FetchSideBarWidthUseCase {
+        FetchSideBarWidthUseCaseImpl(input.repository)
+    }
+
+    @Provide
+    private func makeUpdateSideBarWidthUseCase() -> UpdateSideBarWidthUseCase {
+        UpdateSideBarWidthUseCaseImpl(input.repository)
+    }
 }

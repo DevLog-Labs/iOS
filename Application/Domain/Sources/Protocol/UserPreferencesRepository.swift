@@ -31,4 +31,8 @@ public protocol UserPreferencesRepository {
 
     func todayDisplayOptions() -> TodayDisplayOptions
     func setTodayDisplayOptions(_ options: TodayDisplayOptions)
+
+    // 로그아웃하면 지워지는 Mac 사이드바 폭
+    func sideBarWidth() -> Double?
+    func setSideBarWidth(_ width: Double)
 }

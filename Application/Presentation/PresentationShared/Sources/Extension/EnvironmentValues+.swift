@@ -34,9 +34,21 @@ public extension EnvironmentValues {
         set { self[ReadableContentWidthKey.self] = newValue }
     }
 
-    var navigationStep: NavigationStep? {
-        get { self[NavigationStepKey.self] }
-        set { self[NavigationStepKey.self] = newValue }
+    var sideBarRequest: SideBarRequest? {
+        get { self[SideBarRequestKey.self] }
+        set { self[SideBarRequestKey.self] = newValue }
+    }
+
+    // 접은 사이드바를 다시 펴는 동작, 사이드바를 접었을 때만 있음
+    var expandSideBar: (() -> Void)? {
+        get { self[ExpandSideBarKey.self] }
+        set { self[ExpandSideBarKey.self] = newValue }
+    }
+
+    // 폭을 바꿀 수 있는 칸의 지금 폭, 그런 칸 안에서만 있음
+    var paneWidth: CGFloat? {
+        get { self[PaneWidthKey.self] }
+        set { self[PaneWidthKey.self] = newValue }
     }
 
     var showsPaneTitleBar: Bool {
@@ -85,8 +97,16 @@ public extension EnvironmentValues {
         static let defaultValue = CGFloat.infinity
     }
 
-    private struct NavigationStepKey: EnvironmentKey {
-        static let defaultValue: NavigationStep? = nil
+    private struct SideBarRequestKey: EnvironmentKey {
+        static let defaultValue: SideBarRequest? = nil
+    }
+
+    private struct ExpandSideBarKey: EnvironmentKey {
+        static let defaultValue: (() -> Void)? = nil
+    }
+
+    private struct PaneWidthKey: EnvironmentKey {
+        static let defaultValue: CGFloat? = nil
     }
 
     private struct ShowsPaneTitleBarKey: EnvironmentKey {

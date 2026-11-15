@@ -35,9 +35,13 @@ public enum PresentationDependencyPreparation {
 
     public static func prepareMain(
         _ dependencies: inout DependencyValues,
-        observeUnreadPushCountUseCase: ObserveUnreadPushCountUseCase
+        observeUnreadPushCountUseCase: ObserveUnreadPushCountUseCase,
+        fetchSideBarWidthUseCase: FetchSideBarWidthUseCase,
+        updateSideBarWidthUseCase: UpdateSideBarWidthUseCase
     ) {
         dependencies.observeUnreadPushCountUseCase = observeUnreadPushCountUseCase
+        dependencies.fetchSideBarWidthUseCase = fetchSideBarWidthUseCase
+        dependencies.updateSideBarWidthUseCase = updateSideBarWidthUseCase
     }
 }
 
