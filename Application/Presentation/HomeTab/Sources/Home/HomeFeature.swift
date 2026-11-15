@@ -277,6 +277,8 @@ private extension HomeFeature {
         case .tapDevelopmentGoal(let goalID):
             state.sheet = .goalDetail(goalID)
         case .tapManageTodoCategory:
+            // 이미 연 Mac 카테고리 관리 칸은 바로 저장하는 상태를 그대로 유지
+            guard state.sheet?.categoryManageState == nil else { break }
             state.sheet = .reorderTodo(CategoryManageFeature.State(preferences: state.preferences))
         case .tapTodoCategoryExpansionButton:
             state.isTodoCategoryExpanded.toggle()
