@@ -39,4 +39,33 @@ public enum MainTab: Hashable, CaseIterable {
             "person.crop.circle.fill"
         }
     }
+
+    // 탭 화면이 위치를 알리기 전 사이드바에 표시하는 위치
+    var sideBarLocation: SideBarLocation {
+        switch self {
+        case .home:
+            .home
+        case .today:
+            .today
+        case .notification:
+            .notification
+        case .profile:
+            .profile
+        }
+    }
+}
+
+extension SideBarLocation {
+    var tab: MainTab {
+        switch self {
+        case .home, .todoCategory, .developmentGoal:
+            .home
+        case .today:
+            .today
+        case .notification:
+            .notification
+        case .profile, .settings:
+            .profile
+        }
+    }
 }

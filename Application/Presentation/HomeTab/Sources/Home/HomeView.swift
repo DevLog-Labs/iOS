@@ -16,6 +16,7 @@ public struct HomeView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.sideBarRequest) private var sideBarRequest
     @State private var router = NavigationRouter<HomeRoute>()
     @State private var searchStore: StoreOf<SearchFeature>
     @State private var store: StoreOf<HomeFeature>
@@ -42,6 +43,14 @@ public struct HomeView: View {
     }
 
     public var body: some View {
+        let sideBarLocation: SideBarLocation = if case .goalDetail(let goalID)? = store.sheet {
+            .developmentGoal(goalID)
+        } else if case .category(let item)? = router.root {
+            .todoCategory(item.id)
+        } else {
+            .home
+        }
+
         NavigationStack(path: $router.path) {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 16) {
@@ -90,7 +99,39 @@ public struct HomeView: View {
                 destination: { destinationView($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
             )
         }
-        .navigationHistory(router)
+        .preference(key: SideBarLocationPreferenceKey.self, value: sideBarLocation)
+        .preference(
+            key: SideBarContentPreferenceKey.self,
+            value: SideBarContent(
+                todoCategories: store.preferences.filter(\.isVisible),
+                developmentGoals: store.developmentGoalItems.map { SideBarGoal(id: $0.id, title: $0.goal.title) }
+            )
+        )
+        // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
+        .onChange(of: sideBarRequest, initial: true) { _, request in
+            switch request?.action {
+            case .open(.home):
+                router.path = []
+            case .open(.todoCategory(let id)):
+                guard let item = store.preferences.first(where: { $0.id == id }) else { break }
+                router.replace(with: .category(item))
+            case .open(.developmentGoal(let goalID)):
+                store.send(.view(.tapDevelopmentGoal(goalID)))
+            case .createTodo:
+                // 고른 카테고리가 있으면 그 카테고리로 바로 작성
+                if case .category(let item)? = router.root {
+                    openTodoEditor(for: item.todoCategory)
+                } else {
+                    store.send(.store(.setPresentation(.contentPicker, true)))
+                }
+            case .manageTodoCategory:
+                // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
+                guard !store.preferences.isEmpty else { break }
+                store.send(.view(.tapManageTodoCategory))
+            case .open, nil:
+                break
+            }
+        }
         .onAppear { store.send(.view(.startObserving)) }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {

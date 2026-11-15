@@ -122,6 +122,23 @@ struct MainFeatureTests {
         }
     }
 
+    @Test("MainFeature는 다른 경로로 하위 항목에 들어오면 그 묶음을 펼치고 묶음을 접어도 위치를 유지한다")
+    func MainFeature는_다른_경로로_하위_항목에_들어오면_그_묶음을_펼치고_묶음을_접어도_위치를_유지한다() async {
+        let store = makeStore()
+
+        await store.send(.view(.sideBarLocationChanged(.home, .todoCategory("issue")))) {
+            $0.sideBarLocations[.home] = .todoCategory("issue")
+            $0.expandedSideBarGroups = [.todo]
+        }
+        await store.send(.view(.tapSideBarGroup(.todo))) {
+            $0.expandedSideBarGroups = []
+        }
+        await store.send(.view(.sideBarLocationChanged(.home, .developmentGoal("goal")))) {
+            $0.sideBarLocations[.home] = .developmentGoal("goal")
+            $0.expandedSideBarGroups = [.developmentGoal]
+        }
+    }
+
     @Test("MainFeature는 unread count 관찰 값을 기존 Main 상태관리의 setUnreadPushCount 상태 변화로 반영한다")
     func MainFeature는_unread_count_관찰_값을_기존_Main_상태관리의_setUnreadPushCount_상태_변화로_반영한다() async {
         let reference = MainStateManagementReference()
