@@ -63,6 +63,8 @@ struct MainView: View {
                     ) { width in
                         store.send(.view(.sideBarResized(width)))
                     }
+                    // 칸 자르기 밖이라 잘리지 않도록 바탕은 칸 바깥에서 아래쪽 안전 영역까지 채움
+                    .background(Color.secondaryBackground, ignoresSafeAreaEdges: .bottom)
             }
 
             ZStack {
@@ -541,10 +543,6 @@ private struct TreeSideBar: View {
                 .padding(.vertical, 10 * AdaptiveSize.boardScale)
             }
             .padding(.top, geometry.windowControlsInset)
-        }
-        .background {
-            Color.secondaryBackground
-                .ignoresSafeArea(.container, edges: .vertical)
         }
         // 칸이 기본 폭보다 좁아도 잘라 내지 않고 지금 폭에 맞춰 배치
         .frame(width: paneWidth)

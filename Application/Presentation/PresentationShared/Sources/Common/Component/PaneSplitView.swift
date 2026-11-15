@@ -46,6 +46,8 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                         .contentShape(.rect)
                 }
             }
+            // 잘라 낸 칸 바탕이 닿지 않는 아래쪽 안전 영역을 칸 바탕과 같은 색으로 채움
+            .background(Color.background, ignoresSafeAreaEdges: .bottom)
         } else {
             primary
         }
