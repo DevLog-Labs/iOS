@@ -46,8 +46,10 @@ public struct TodoDetailSideBarView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .onAppear { store.send(.onAppear) }
         .onReceive(windowSubmits) { submit in
+            // 이 사이드바가 저장해 보낸 Todo는 입력 중인 값을 덮지 않도록 다시 받지 않음
             guard case .update(let value, let todo) = submit,
-                  value.matchesEdit(todoId: store.todoId) else { return }
+                  value.matchesEdit(todoId: store.todoId),
+                  store.editor?.saveResult != .updated(todo) else { return }
             store.send(.setTodo(todo))
         }
     }
