@@ -11,9 +11,13 @@ import PresentationShared
 struct CategoryManageView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @Bindable var store: StoreOf<CategoryManageFeature>
 
     var body: some View {
+        let selectedID = store.categorySheet?.category.id
+
         CardCollectionView<TodoCategoryItem>
             .composable { view in
                 view.updateContent(
@@ -27,15 +31,40 @@ struct CategoryManageView: View {
                     }
                     .margins(.horizontal, 16)
                     .margins(.vertical, 8),
-                    footer: UIHostingConfiguration { EmptyView() }
-                        .margins(.vertical, 8),
+                    footer: UIHostingConfiguration {
+                        // Mac은 목록 바로 아래에 추가 버튼 표시
+                        if isiOSAppOnMac {
+                            Button {
+                                store.send(.tapAddUserCategory)
+                                setDetailSideBarPresented?(true)
+                            } label: {
+                                Label(
+                                    String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle),
+                                    systemImage: "plus"
+                                )
+                                .font(.adaptive(.headline))
+                                .foregroundStyle(Color.label)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 6 * AdaptiveSize.boardScale)
+                            }
+                            .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .fill)
+                        }
+                    }
+                    // 목록 카드 배경과 같은 좌우 여백
+                    .margins(.horizontal, 16)
+                    .margins(.vertical, 8),
                     row: { item in
                         UIHostingConfiguration {
                             CategoryManageRow(
                                 item: item,
+                                isSelected: isiOSAppOnMac && item.id == selectedID,
                                 onToggle: { store.send(.tapItem(item)) },
-                                onEdit: { store.send(.tapEditUserCategory(item)) },
-                                onDelete: { store.send(.tapDeleteUserCategory(item)) }
+                                onEdit: {
+                                    store.send(.tapEditUserCategory(item))
+                                    setDetailSideBarPresented?(true)
+                                },
+                                onDelete: { store.send(.tapDeleteUserCategory(item)) },
+                                onSelect: isiOSAppOnMac ? { store.send(.selectCategory(item)) } : nil
                             )
                         }
                         .margins(.horizontal, 0)
@@ -46,33 +75,61 @@ struct CategoryManageView: View {
                     }
                 )
             }
-            .safeAreaInset(edge: .top, spacing: 0) { toolBar }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
-                Button {
-                    store.send(.tapAddUserCategory)
-                } label: {
-                    Label(
-                        String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle),
-                        systemImage: "plus.circle.fill"
-                    )
-                    .font(.adaptive(.headline))
-                    .foregroundStyle(Color.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+            // Mac은 칸 가운데 보드 폭으로 표시
+            .frame(maxWidth: isiOSAppOnMac ? 600 * AdaptiveSize.boardScale : .infinity)
+            .frame(maxWidth: .infinity)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                if isiOSAppOnMac {
+                    PaneTitleBar(Text("todo_category_manage", bundle: PresentationResources.bundle))
+                } else {
+                    toolBar
                 }
-                .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
-                .padding(.horizontal)
-                .padding(.vertical, 12)
-                .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                if !isiOSAppOnMac {
+                    Button {
+                        store.send(.tapAddUserCategory)
+                    } label: {
+                        Label(
+                            String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle),
+                            systemImage: "plus.circle.fill"
+                        )
+                        .font(.adaptive(.headline))
+                        .foregroundStyle(Color.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                    }
+                    .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
+                    .padding(.horizontal)
+                    .padding(.vertical, 12)
+                    .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
+                }
             }
             .background(Color.background.ignoresSafeArea())
+            // Mac은 고른 카테고리를 시트 대신 세부 정보 사이드바에 표시
             .prominentSheet(
                 item: $store.scope(state: \.categorySheet, action: \.categorySheet)
-                    .activePresentation(when: isTabContentActive)
+                    .activePresentation(when: isTabContentActive && !isiOSAppOnMac)
             ) { sheetStore in
                 CategoryManageSheet(store: sheetStore)
             }
             .prominentAlert(store, state: \.alert, action: \.alert)
+            .detailSideBar(isActive: isiOSAppOnMac) {
+                if let sheetStore = store.scope(state: \.categorySheet, action: \.categorySheet.presented) {
+                    CategorySideBarContent(store: sheetStore) {
+                        if let item = store.preferences.first(where: { $0.id == sheetStore.category.id }) {
+                            store.send(.tapDeleteUserCategory(item))
+                        }
+                    }
+                } else {
+                    DetailSideBarPlaceholder()
+                }
+            }
+            .onAppear {
+                if isiOSAppOnMac {
+                    store.send(.setSavesImmediately)
+                }
+            }
     }
 
     private var toolBar: some View {
@@ -106,13 +163,16 @@ struct CategoryManageView: View {
 
 private struct CategoryManageRow: View {
     let item: TodoCategoryItem
+    let isSelected: Bool
     let onToggle: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
+    // Mac에서 행을 눌러 사이드바에 표시할 카테고리 선택
+    let onSelect: (() -> Void)?
 
     var body: some View {
         if item.isUserCategory {
-            CategoryManageRowContent(item: item, onToggle: onToggle)
+            content
                 .background(Color.secondaryBackground)
                 .itemActions {
                     ItemActionButton(
@@ -130,7 +190,21 @@ private struct CategoryManageRow: View {
                     )
                 }
         } else {
-            CategoryManageRowContent(item: item, onToggle: onToggle)
+            content
+        }
+    }
+
+    @ViewBuilder
+    private var content: some View {
+        let row = CategoryManageRowContent(item: item, onToggle: onToggle)
+            .background(isSelected ? Color.tintFill : .clear)
+
+        if let onSelect {
+            row
+                .contentShape(.rect)
+                .onTapGesture(perform: onSelect)
+        } else {
+            row
         }
     }
 }
@@ -346,6 +420,121 @@ private struct CategoryManageSheet: View {
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+        }
+    }
+}
+
+// Mac 세부 정보 사이드바의 카테고리 속성, 고친 값은 바로 저장
+private struct CategorySideBarContent: View {
+    @Bindable var store: Store<CategoryManageFeature.CategorySheetState, CategoryManageFeature.Action.CategorySheet>
+    @FocusState private var isNameFocused: Bool
+    let onDelete: () -> Void
+
+    var body: some View {
+        let item = store.todoCategoryItem
+
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: 6 * AdaptiveSize.boardScale) {
+                    Text(String(localized: "todo_manage_name_placeholder", bundle: PresentationResources.bundle))
+                        .font(.adaptive(.subheadline))
+                        .foregroundStyle(Color.secondaryLabel)
+                    HStack(spacing: 8 * AdaptiveSize.boardScale) {
+                        TextField(
+                            "",
+                            text: $store.category.name,
+                            prompt: Text(store.placeholder).foregroundStyle(Color.secondaryLabel)
+                        )
+                        .focused($isNameFocused)
+                        Text(store.categoryNameCountText)
+                            .font(.adaptive(.subheadline))
+                            .foregroundStyle(Color.secondaryLabel)
+                            .monospacedDigit()
+                    }
+                    .font(.adaptive(.body))
+                    .tint(Color.accent)
+                    .padding(.horizontal, 12 * AdaptiveSize.boardScale)
+                    .frame(height: 32 * AdaptiveSize.boardScale)
+                    .inputBackground(isFocused: isNameFocused, isInvalid: store.isDuplicatedName)
+                    if store.isDuplicatedName {
+                        Text(store.nameMessage)
+                            .font(.adaptive(.footnote))
+                            .foregroundStyle(Color.danger)
+                    }
+                }
+                .padding(.horizontal, 14 * AdaptiveSize.boardScale)
+                .padding(.vertical, 4 * AdaptiveSize.boardScale)
+
+                VStack(alignment: .leading, spacing: 8 * AdaptiveSize.boardScale) {
+                    HStack {
+                        Text(String(localized: "todo_manage_color", bundle: PresentationResources.bundle))
+                            .foregroundStyle(Color.secondaryLabel)
+                        Spacer()
+                        Button {
+                            store.send(.tapRandomColorButton)
+                        } label: {
+                            Text(String(localized: "todo_manage_random_color", bundle: PresentationResources.bundle))
+                                .foregroundStyle(Color.accent)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .font(.adaptive(.subheadline))
+                    LazyVGrid(
+                        columns: [GridItem(
+                            .adaptive(minimum: 30 * AdaptiveSize.boardScale, maximum: 30 * AdaptiveSize.boardScale),
+                            spacing: 10 * AdaptiveSize.boardScale
+                        )],
+                        alignment: .leading,
+                        spacing: 10 * AdaptiveSize.boardScale
+                    ) {
+                        ForEach(categoryColorHexValues, id: \.self) { colorHex in
+                            Button {
+                                store.send(.binding(.set(\.category.colorHex, colorHex)))
+                            } label: {
+                                Circle()
+                                    .fill(Color(hexString: colorHex) ?? .gray)
+                                    .frame(width: 30 * AdaptiveSize.boardScale, height: 30 * AdaptiveSize.boardScale)
+                                    .overlay {
+                                        if store.category.colorHex.caseInsensitiveCompare(colorHex) == .orderedSame {
+                                            Image(systemName: "checkmark")
+                                                .font(.adaptive(.callout).bold())
+                                                .foregroundStyle(Color.background)
+                                        }
+                                    }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
+                .padding(.horizontal, 14 * AdaptiveSize.boardScale)
+                .padding(.vertical, 8 * AdaptiveSize.boardScale)
+
+                VStack(alignment: .leading, spacing: 6 * AdaptiveSize.boardScale) {
+                    Text(String(localized: "todo_preview", bundle: PresentationResources.bundle))
+                        .font(.adaptive(.subheadline))
+                        .foregroundStyle(Color.secondaryLabel)
+                        .padding(.horizontal, 4 * AdaptiveSize.boardScale)
+                    CategoryManageRowContent(item: item, onToggle: {})
+                        .padding(.leading, 12 * AdaptiveSize.boardScale)
+                        .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+                        .allowsHitTesting(false)
+                    Text(String(localized: "todo_manage_preview_description", bundle: PresentationResources.bundle))
+                        .font(.adaptive(.caption))
+                        .foregroundStyle(Color.secondaryLabel)
+                        .padding(.horizontal, 4 * AdaptiveSize.boardScale)
+                }
+                .padding(.horizontal, 14 * AdaptiveSize.boardScale)
+                .padding(.vertical, 8 * AdaptiveSize.boardScale)
+
+                Button(action: onDelete) {
+                    Text(String(localized: "todo_manage_delete_category_title", bundle: PresentationResources.bundle))
+                        .font(.adaptive(.body).weight(.semibold))
+                        .foregroundStyle(Color.danger)
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 14 * AdaptiveSize.boardScale)
+                .padding(.vertical, 16 * AdaptiveSize.boardScale)
+            }
         }
     }
 }

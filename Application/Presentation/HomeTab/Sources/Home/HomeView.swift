@@ -50,42 +50,18 @@ public struct HomeView: View {
         } else {
             .home
         }
+        // Mac은 카테고리 관리를 시트 대신 칸으로 표시
+        let showsSheetAsPane = isiOSAppOnMac && store.sheet?.categoryManageState != nil
+        let sheetBinding = $store.scope(state: \.sheet, action: \.sheet)
+            .activePresentation(when: isSelected)
 
         NavigationStack(path: $router.path) {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    HomeDevelopmentSummary(store: store)
-                    HomeTodoSection(store: store)
-                    HomeDevelopmentGoals(store: store)
-                }
-                .padding(.horizontal, 16)
-                .frame(maxWidth: readableContentWidth)
-                .frame(maxWidth: .infinity)
-            }
-            // Mac 제목 줄 구분선과 첫 카드 사이 여백
-            .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
-            .safeAreaInset(edge: .top, spacing: 0) { topBar }
-            .background(Color.background)
-            .duoToolbarVisibility()
-            .toolbar {
-                if deviceType == .duo {
-                    ToolbarItemGroup(placement: .topBarTrailing) {
-                        // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
-                        Group {
-                            Button {
-                                store.send(.store(.setPresentation(.searchView, true)))
-                            } label: {
-                                Image(systemName: "magnifyingglass")
-                            }
-                            Button {
-                                store.send(.store(.setPresentation(.contentPicker, true)))
-                            } label: {
-                                Image(systemName: "plus")
-                            }
-                            .disabled(!store.isNetworkConnected)
-                        }
-                        .id(windowControlsInset)
-                    }
+            Group {
+                if isiOSAppOnMac,
+                   let manageStore = store.scope(state: \.sheet?.categoryManageState, action: \.sheet.presented.categoryManage) {
+                    CategoryManageView(store: manageStore)
+                } else {
+                    homeContent
                 }
             }
             .navigationDestination(
@@ -109,6 +85,10 @@ public struct HomeView: View {
         )
         // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
         .onChange(of: sideBarRequest, initial: true) { _, request in
+            // 사이드바로 다른 곳을 열면 칸으로 표시하던 화면은 닫음
+            if showsSheetAsPane, case .open = request?.action {
+                store.send(.store(.setSheet(nil)))
+            }
             switch request?.action {
             case .open(.home):
                 router.path = []
@@ -155,8 +135,14 @@ public struct HomeView: View {
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(
-            item: $store.scope(state: \.sheet, action: \.sheet)
-                .activePresentation(when: isSelected),
+            item: Binding(
+                get: { showsSheetAsPane ? nil : sheetBinding.wrappedValue },
+                // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸으로 연 화면을 지우지 않도록 지금 상태로 판단
+                set: { sheet in
+                    guard !isiOSAppOnMac || store.sheet?.categoryManageState == nil else { return }
+                    sheetBinding.wrappedValue = sheet
+                }
+            ),
             content: sheetContent
         )
         .fullScreenCover(
@@ -164,6 +150,45 @@ public struct HomeView: View {
                 .activePresentation(when: isSelected),
             content: coverContent
         )
+    }
+
+    private var homeContent: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 16) {
+                HomeDevelopmentSummary(store: store)
+                HomeTodoSection(store: store)
+                HomeDevelopmentGoals(store: store)
+            }
+            .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
+        }
+        // Mac 제목 줄 구분선과 첫 카드 사이 여백
+        .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
+        .safeAreaInset(edge: .top, spacing: 0) { topBar }
+        .background(Color.background)
+        .duoToolbarVisibility()
+        .toolbar {
+            if deviceType == .duo {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+                    Group {
+                        Button {
+                            store.send(.store(.setPresentation(.searchView, true)))
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                        }
+                        Button {
+                            store.send(.store(.setPresentation(.contentPicker, true)))
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                        .disabled(!store.isNetworkConnected)
+                    }
+                    .id(windowControlsInset)
+                }
+            }
+        }
     }
 
     @ViewBuilder

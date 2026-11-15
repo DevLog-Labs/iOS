@@ -15,6 +15,7 @@ extension HomeFeature {
     private enum CancelID: Hashable {
         case delayedTodoEditor
         case delayedDevelopmentGoalCreate
+        case delayedTodoCategoryPreferencesUpdate
         case networkConnectivity
     }
 
@@ -94,6 +95,19 @@ extension HomeFeature {
                 await send(.store(.setAlert(isPresented: true)))
             }
         }
+    }
+
+    // 이름을 입력하는 동안 글자마다 저장하지 않도록 마지막 변경만 저장
+    func delayedTodoCategoryPreferencesUpdateEffect(_ items: [TodoCategoryItem]) -> Effect<Action> {
+        .run { [clock, updatePreferencesUseCase] send in
+            try await clock.sleep(for: .seconds(0.3))
+            do {
+                try await updatePreferencesUseCase.execute(items.map(\.preference))
+            } catch {
+                await send(.store(.setAlert(isPresented: true)))
+            }
+        }
+        .cancellable(id: CancelID.delayedTodoCategoryPreferencesUpdate, cancelInFlight: true)
     }
 
     func delayedTodoEditorEffect() -> Effect<Action> {

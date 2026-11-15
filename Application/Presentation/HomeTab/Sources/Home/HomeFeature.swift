@@ -193,6 +193,10 @@ struct HomeFeature {
                 state.sheet = nil
             case .sheet(.presented(.categoryManage(.delegate(.done(let preferences))))):
                 return orderTodoCategory(preferences, state: &state)
+            case .sheet(.presented(.categoryManage(.delegate(.changed(let preferences))))):
+                // Mac 카테고리 관리 칸은 고친 값을 바로 저장
+                state.preferences = preferences
+                return delayedTodoCategoryPreferencesUpdateEffect(preferences)
             case .sheet:
                 break
             case .binding:

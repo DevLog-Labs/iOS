@@ -5685,6 +5685,23 @@
         }
       }
     },
+    "todo_manage_new_category_name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Category"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 카테고리"
+          }
+        }
+      }
+    },
     "todo_manage_preview_description" : {
       "extractionState" : "manual",
       "localizations" : {
