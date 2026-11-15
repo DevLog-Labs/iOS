@@ -149,6 +149,8 @@ private struct HostedDetailSideBarModifier<SideBarContent: View>: ViewModifier {
                 } content: {
                     sideBarContent
                 }
+                // 왼쪽 사이드바를 펴는 버튼은 창 오른쪽 사이드바 제목 줄에 두지 않음
+                .environment(\.expandSideBar, nil)
             }
         }
         // 창이 그리는 사이드바 대신 이 화면의 사이드바 표시
