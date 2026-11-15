@@ -39,6 +39,11 @@ public extension EnvironmentValues {
         set { self[NavigationStepKey.self] = newValue }
     }
 
+    var sideBarRequest: SideBarRequest? {
+        get { self[SideBarRequestKey.self] }
+        set { self[SideBarRequestKey.self] = newValue }
+    }
+
     var showsPaneTitleBar: Bool {
         get { self[ShowsPaneTitleBarKey.self] }
         set { self[ShowsPaneTitleBarKey.self] = newValue }
@@ -87,6 +92,10 @@ public extension EnvironmentValues {
 
     private struct NavigationStepKey: EnvironmentKey {
         static let defaultValue: NavigationStep? = nil
+    }
+
+    private struct SideBarRequestKey: EnvironmentKey {
+        static let defaultValue: SideBarRequest? = nil
     }
 
     private struct ShowsPaneTitleBarKey: EnvironmentKey {
