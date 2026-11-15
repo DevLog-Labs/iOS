@@ -116,6 +116,9 @@ struct Feature {
             case .presentTodoDetail(let todoId):
                 state.sheet = .init(todoId: todoId)
             case .openWidgetRoute(let route):
+                // 로그아웃 상태면 로그인 화면만 보이고 위젯 경로는 버림
+                guard state.signIn != false else { break }
+                // 로그인 여부를 확인하기 전이면 경로를 보관했다가 로그인 확인 뒤 적용
                 state.widgetRoute = route
                 guard state.signIn == true else { break }
                 Self.applyWidgetRoute(route, to: &state)
@@ -137,9 +140,7 @@ struct Feature {
                         state.selectedMainTab = .home
                     }
                 } else {
-                    if wasSignedIn {
-                        state.widgetRoute = nil
-                    }
+                    state.widgetRoute = nil
                     return .merge(
                         trackLoginScreenEffect(),
                         clearApplicationBadgeCountEffect()
