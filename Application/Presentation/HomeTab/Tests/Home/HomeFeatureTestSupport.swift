@@ -30,6 +30,8 @@ struct StoreTestAdapter {
     }
     var showTodoEditor: Bool { store.state.showTodoEditor }
     var sheet: HomeFeature.SheetState? { store.state.sheet }
+    var alert: AlertState<HomeFeature.Action.Alert>? { store.state.alert }
+    var sideBarRequestAfterGoalDiscard: SideBarRequest? { store.state.sideBarRequestAfterGoalDiscard }
 
     init(
         fetchPreferencesUseCase: FetchTodoCategoryPreferencesUseCase = FetchTodoCategoryPreferencesUseCaseSpy(),
@@ -111,6 +113,23 @@ struct StoreTestAdapter {
 
     func setGoalCreateSaving() async {
         await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.isSaving, true))))))
+    }
+
+    func setGoalCreateTitle(_ title: String) async {
+        await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.title, title))))))
+    }
+
+    func closeGoalCreateForSideBarRequest(_ request: SideBarRequest) async {
+        await store.send(.view(.closeGoalCreateForSideBarRequest(request)))
+    }
+
+    func discardGoalDraft() async {
+        await store.send(.alert(.presented(.discardGoalDraft)))
+        await drainReceivedActions()
+    }
+
+    func cancelGoalDraftDiscard() async {
+        await store.send(.alert(.dismiss))
     }
 
     func goalCreateSaved(_ goal: DevelopmentGoal) async {

@@ -6,6 +6,7 @@
 //
 
 import Testing
+import Foundation
 import Core
 import Domain
 import PresentationShared
@@ -134,6 +135,63 @@ struct HomeFeatureTests {
 
         await adapter.tapDevelopmentGoal("goal")
 
+        #expect(adapter.sheet == .goalDetail("goal"))
+    }
+
+    @Test("작성 중인 새 개발 목표가 있으면 버릴지 물은 뒤 버리면 고른 목표를 연다")
+    func 작성_중인_새_개발_목표가_있으면_버릴지_물은_뒤_버리면_고른_목표를_연다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.setGoalCreateTitle("목표")
+        await adapter.tapDevelopmentGoal("goal")
+
+        #expect(adapter.alert == HomeFeature.discardGoalDraftAlertState)
+        #expect(adapter.sheet?.goalCreateState?.title == "목표")
+
+        await adapter.discardGoalDraft()
+
+        #expect(adapter.sheet == .goalDetail("goal"))
+    }
+
+    @Test("작성 중인 새 개발 목표를 버리지 않으면 칸을 유지한다")
+    func 작성_중인_새_개발_목표를_버리지_않으면_칸을_유지한다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.setGoalCreateTitle("목표")
+        await adapter.tapDevelopmentGoal("goal")
+        await adapter.cancelGoalDraftDiscard()
+
+        #expect(adapter.alert == nil)
+        #expect(adapter.sheet?.goalCreateState?.title == "목표")
+    }
+
+    @Test("작성 중인 새 개발 목표를 버리면 미뤄 둔 사이드바 요청을 다시 처리한다")
+    func 작성_중인_새_개발_목표를_버리면_미뤄_둔_사이드바_요청을_다시_처리한다() async {
+        let adapter = StoreTestAdapter()
+        let request = SideBarRequest(id: UUID(), action: .open(.home))
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.setGoalCreateTitle("목표")
+        await adapter.closeGoalCreateForSideBarRequest(request)
+
+        #expect(adapter.sideBarRequestAfterGoalDiscard == nil)
+
+        await adapter.discardGoalDraft()
+
+        #expect(adapter.sheet == nil)
+        #expect(adapter.sideBarRequestAfterGoalDiscard == request)
+    }
+
+    @Test("입력하지 않은 새 개발 목표는 묻지 않고 고른 목표를 연다")
+    func 입력하지_않은_새_개발_목표는_묻지_않고_고른_목표를_연다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.tapDevelopmentGoal("goal")
+
+        #expect(adapter.alert == nil)
         #expect(adapter.sheet == .goalDetail("goal"))
     }
 
