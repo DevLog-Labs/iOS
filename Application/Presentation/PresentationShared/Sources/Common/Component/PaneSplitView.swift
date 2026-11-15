@@ -67,6 +67,35 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     }
 }
 
+public extension View {
+    // 사이드바 구조로 바뀌면 좁은 창에서 쌓아 연 상세 화면을 내리는 동작
+    // 상세 화면이 편집 화면을 띄운 동안에는 닫힌 뒤 실행
+    func closesPushedDetail(_ action: @escaping () -> Void) -> some View {
+        modifier(PushedDetailCloser(action: action))
+    }
+}
+
+private struct PushedDetailCloser: ViewModifier {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @State private var isDetailPresenting = false
+    let action: () -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .onPreferenceChange(PaneDetailPresentingPreferenceKey.self) { isPresenting in
+                isDetailPresenting = isPresenting
+                if usesDesktopLayout && !isPresenting {
+                    action()
+                }
+            }
+            .onChange(of: usesDesktopLayout) { _, isDesktop in
+                if isDesktop && !isDetailPresenting {
+                    action()
+                }
+            }
+    }
+}
+
 // 상세 칸이 편집 화면처럼 화면을 덮는 표시를 띄웠는지 전달
 struct PaneDetailPresentingPreferenceKey: PreferenceKey {
     static let defaultValue = false

@@ -53,7 +53,8 @@ public struct TodayView: View {
                                 TodoSection(
                                     section: section,
                                     isNavigationEnabled: !store.isTodoInspectorPresented,
-                                    selectedTodoId: store.selectedTodoId,
+                                    // 좁은 창은 상세 칸이 없어 선택 표시 생략
+                                    selectedTodoId: usesDesktopLayout ? store.selectedTodoId : nil,
                                     onSelect: { item in
                                         if usesDesktopLayout {
                                             store.send(.binding(.set(\.selectedTodoId, item.id)))
@@ -133,6 +134,12 @@ public struct TodayView: View {
                 interactivePop: { _ in true },
                 destination: { destination($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
             )
+        }
+        // 사이드바 구조로 바뀌면 쌓아 연 상세 화면은 내리고 같은 Todo를 옆 칸에 표시
+        .closesPushedDetail {
+            guard case .todo(let item)? = router.path.last else { return }
+            store.send(.binding(.set(\.selectedTodoId, item.id)))
+            router.path = []
         }
         // Mac은 창 오른쪽 세부 정보 사이드바 사용
         .inspector(

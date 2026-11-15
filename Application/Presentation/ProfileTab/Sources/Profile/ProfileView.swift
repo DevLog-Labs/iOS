@@ -111,6 +111,16 @@ public struct ProfileView: View {
                 destination: { destinationView($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
             )
         }
+        // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 같은 Todo를 옆 칸에 표시
+        .closesPushedDetail {
+            switch router.path.last {
+            case .activity?, .recentTodo?:
+                let route = router.path.removeLast()
+                store.send(.binding(.set(\.selectedTodoRoute, route)))
+            default:
+                break
+            }
+        }
         // 설정 아래 화면도 사이드바에서는 설정으로 표시
         .preference(
             key: SideBarLocationPreferenceKey.self,

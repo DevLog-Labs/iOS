@@ -90,6 +90,13 @@ public struct HomeView: View {
                 destination: { destinationView($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
             )
         }
+        // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 카테고리 목록 옆 칸에 표시
+        .closesPushedDetail {
+            router.path.removeAll {
+                if case .todo = $0 { return true }
+                return false
+            }
+        }
         .preference(key: SideBarLocationPreferenceKey.self, value: sideBarLocation)
         .preference(
             key: SideBarContentPreferenceKey.self,

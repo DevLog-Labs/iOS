@@ -156,7 +156,7 @@ struct ActivityCard: View {
                         .contentShape(.rect)
                         // 행 배치를 바꾸지 않고 선택한 행 배경만 바깥으로 넓힘
                         .background {
-                            if store.selectedTodoRoute == .activity(activity.todoId) {
+                            if usesDesktopLayout && store.selectedTodoRoute == .activity(activity.todoId) {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .fill(Color.tintFill)
                                     .padding(.horizontal, -8)

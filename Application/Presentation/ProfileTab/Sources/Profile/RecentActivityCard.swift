@@ -10,6 +10,7 @@ import PresentationShared
 
 // 최근 활동 카드
 struct RecentActivityCard: View {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Bindable var store: StoreOf<ProfileFeature>
     let onSelectTodo: (String) -> Void
 
@@ -37,7 +38,7 @@ struct RecentActivityCard: View {
                         } label: {
                             RecentTodoCard(
                                 todo: todo,
-                                isSelected: store.selectedTodoRoute == .recentTodo(todo.id)
+                                isSelected: usesDesktopLayout && store.selectedTodoRoute == .recentTodo(todo.id)
                             )
                             .todoDetailPreview(todoId: todo.id)
                         }

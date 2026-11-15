@@ -31,9 +31,9 @@ struct TodoListView: View {
     var body: some View {
         PaneSplitView {
             TodoListContent(store: store) { todoId in
-                if usesDesktopLayout {
-                    store.send(.binding(.set(\.selectedTodoId, todoId)))
-                } else {
+                // 사이드바 구조로 바뀌면 같은 Todo를 옆 칸에 표시하도록 좁은 창에서도 선택 기억
+                store.send(.binding(.set(\.selectedTodoId, todoId)))
+                if !usesDesktopLayout {
                     onSelectTodo(todoId)
                 }
             }
@@ -90,6 +90,7 @@ struct TodoListView: View {
 }
 
 private struct TodoListContent: View {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
@@ -113,10 +114,12 @@ private struct TodoListContent: View {
                             id: \.1.id
                         ) { index, todo in
                             let isLast = index == visibleTodos.count - 1
+                            // 좁은 창은 상세 칸이 없어 선택 표시 생략
+                            let isSelected = usesDesktopLayout && todo.id == store.selectedTodoId
 
                             TodoItemRow(todo)
-                                .hoverHighlight(isEnabled: todo.id != store.selectedTodoId)
-                                .background(todo.id == store.selectedTodoId ? Color.tintFill : .secondaryBackground)
+                                .hoverHighlight(isEnabled: !isSelected)
+                                .background(isSelected ? Color.tintFill : .secondaryBackground)
                                 .contentShape(.rect)
                                 .todoDetailPreview(todoId: todo.id)
                                 .onTapGesture {
