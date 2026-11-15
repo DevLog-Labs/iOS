@@ -149,6 +149,21 @@ struct HomeFeatureTests {
         #expect(adapter.sheet?.goalCreateState?.isSaving == true)
     }
 
+    @Test("새 개발 목표를 저장하면 시트를 닫고 홈 데이터를 다시 조회한다")
+    func 새_개발_목표를_저장하면_시트를_닫고_홈_데이터를_다시_조회한다() async throws {
+        let goal = try makeDevelopmentGoal(id: "goal", createdAt: 1)
+        let goalsSpy = FetchDevelopmentGoalsUseCaseSpy()
+        goalsSpy.result = .success([goal])
+        let adapter = StoreTestAdapter(fetchDevelopmentGoalsUseCase: goalsSpy)
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.goalCreateSaved(goal)
+        await waitUntil { adapter.hasDevelopmentGoalsLoaded }
+
+        #expect(adapter.sheet == nil)
+        #expect(adapter.developmentGoalItems.map(\.id) == [goal.id])
+    }
+
     @Test("카테고리 관리가 열려 있으면 다시 열어도 바로 저장 상태를 유지한다")
     func 카테고리_관리가_열려_있으면_다시_열어도_바로_저장_상태를_유지한다() async {
         let adapter = StoreTestAdapter()

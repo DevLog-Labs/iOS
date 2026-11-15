@@ -140,6 +140,23 @@ struct MainFeatureTests {
         }
     }
 
+    @Test("MainFeature는 사라지는 화면이 다른 화면이 고른 세부 정보 사이드바 대상을 지우지 않게 한다")
+    func MainFeature는_사라지는_화면이_다른_화면이_고른_세부_정보_사이드바_대상을_지우지_않게_한다() async {
+        let store = makeStore()
+        let goal = UUID()
+        let category = UUID()
+
+        await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: goal)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: category)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: goal)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .hosted)
+
+        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: category)))
+
+        #expect(store.state.detailSideBarTargets[.home] == nil)
+    }
+
     @Test("MainFeature는 unread count 관찰 값을 기존 Main 상태관리의 setUnreadPushCount 상태 변화로 반영한다")
     func MainFeature는_unread_count_관찰_값을_기존_Main_상태관리의_setUnreadPushCount_상태_변화로_반영한다() async {
         let reference = MainStateManagementReference()

@@ -113,6 +113,11 @@ struct StoreTestAdapter {
         await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.isSaving, true))))))
     }
 
+    func goalCreateSaved(_ goal: DevelopmentGoal) async {
+        await store.send(.sheet(.presented(.goalCreate(.delegate(.saved(goal))))))
+        await drainReceivedActions()
+    }
+
     func advanceClock(by duration: Duration) async {
         await clock.advance(by: duration)
         await settle()
