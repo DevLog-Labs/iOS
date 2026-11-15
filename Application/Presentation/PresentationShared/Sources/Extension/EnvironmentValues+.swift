@@ -50,6 +50,12 @@ public extension EnvironmentValues {
         set { self[ExpandSideBarKey.self] = newValue }
     }
 
+    // 폭을 바꿀 수 있는 칸의 지금 폭, 그런 칸 안에서만 있음
+    var paneWidth: CGFloat? {
+        get { self[PaneWidthKey.self] }
+        set { self[PaneWidthKey.self] = newValue }
+    }
+
     var showsPaneTitleBar: Bool {
         get { self[ShowsPaneTitleBarKey.self] }
         set { self[ShowsPaneTitleBarKey.self] = newValue }
@@ -106,6 +112,10 @@ public extension EnvironmentValues {
 
     private struct ExpandSideBarKey: EnvironmentKey {
         static let defaultValue: (() -> Void)? = nil
+    }
+
+    private struct PaneWidthKey: EnvironmentKey {
+        static let defaultValue: CGFloat? = nil
     }
 
     private struct ShowsPaneTitleBarKey: EnvironmentKey {

@@ -91,6 +91,7 @@ private struct ResizablePaneModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
+            .environment(\.paneWidth, paneWidth)
             // 칸이 기본 폭보다 좁으면 내용을 줄이지 않고 기본 폭 그대로 두고 잘라서 표시
             .frame(width: max(paneWidth, idealWidth), alignment: .leading)
             .frame(width: paneWidth, alignment: .leading)
