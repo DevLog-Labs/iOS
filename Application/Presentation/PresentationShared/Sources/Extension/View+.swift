@@ -202,6 +202,7 @@ private struct LegacyTopBarButtonStyleModifier: ViewModifier {
 @available(iOS 26.0, *)
 private struct TopBarButtonStyleModifier: ViewModifier {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title2,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
@@ -210,19 +211,26 @@ private struct TopBarButtonStyleModifier: ViewModifier {
         forTextStyle: .body,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
     ).lineHeight
+    @ScaledMetric(relativeTo: .title3) private var padIconSize = UIFont.preferredFont(
+        forTextStyle: .title3,
+        compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
+    ).lineHeight
     let tint: Color?
     let isInteractive: Bool
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        if isiOSAppOnMac {
-            // Mac에서는 리퀴드 글래스 없이 제목 줄에 맞는 작은 아이콘만 표시
+        if usesDesktopLayout {
+            // 사이드바가 있으면 리퀴드 글래스 없이 제목 줄에 맞는 아이콘만 표시
+            // Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
             // 아이콘 둘레 여백까지 버튼이 채워 마우스 반응 채움 전체를 누를 수 있게 함
+            let size = isiOSAppOnMac ? macIconSize + 12 : padIconSize + 16
+
             content
-                .font(.body.weight(.medium))
+                .font(isiOSAppOnMac ? .body.weight(.medium) : .title3.weight(.medium))
                 .foregroundStyle(tint ?? Color.label)
                 .buttonStyle(FillButtonStyle())
-                .frame(width: macIconSize + 12, height: macIconSize + 12)
+                .frame(width: size, height: size)
                 .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: isInteractive)
                 .contentShape(.rect)
         } else if let tint {

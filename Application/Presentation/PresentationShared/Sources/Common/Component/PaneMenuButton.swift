@@ -7,8 +7,9 @@
 
 import SwiftUI
 
-// Mac 칸 제목 줄 오른쪽 끝에 두는 글자 없는 메뉴 버튼
+// 칸 제목 줄 오른쪽 끝에 두는 글자 없는 메뉴 버튼
 public struct PaneMenuButton: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     private let systemImage: String
     private let badgeCount: Int
     private let sections: [DropdownMenuSection]
@@ -32,14 +33,17 @@ public struct PaneMenuButton: View {
                 .overlay(alignment: .topTrailing) {
                     if 0 < badgeCount {
                         Text(verbatim: badgeCount.formatted())
-                            .font(.system(size: 9 * AdaptiveSize.boardScale, weight: .semibold))
+                            .font(.system(size: isiOSAppOnMac ? 9 * AdaptiveSize.boardScale : 11, weight: .semibold))
                             .monospacedDigit()
                             .foregroundStyle(Color.white)
-                            .padding(.horizontal, 3 * AdaptiveSize.boardScale)
-                            .frame(minWidth: 14 * AdaptiveSize.boardScale, minHeight: 14 * AdaptiveSize.boardScale)
+                            .padding(.horizontal, isiOSAppOnMac ? 3 * AdaptiveSize.boardScale : 4)
+                            .frame(
+                                minWidth: isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16,
+                                minHeight: isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16
+                            )
                             .background(Color.accent, in: .capsule)
                             .fixedSize()
-                            .padding([.top, .trailing], AdaptiveSize.boardScale)
+                            .padding([.top, .trailing], isiOSAppOnMac ? AdaptiveSize.boardScale : 2)
                     }
                 }
         }
