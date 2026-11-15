@@ -608,6 +608,7 @@ private struct SideBarRow: View {
             .padding(.leading, (isChild && !isCompact ? 22 : 4) * AdaptiveSize.boardScale)
             .padding(.trailing, 8 * AdaptiveSize.boardScale)
             .padding(.vertical, 6 * AdaptiveSize.boardScale)
+            .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
             .background {
                 RoundedRectangle(cornerRadius: CornerRadius.control)
                     .fill(isSelected ? Color.tintFill : .clear)
