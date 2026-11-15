@@ -136,7 +136,8 @@ private struct ResizablePaneModifier: ViewModifier {
                             .fill(Color.separator)
                             .frame(width: 2)
                     }
-                    .ignoresSafeArea(.container, edges: .vertical)
+                    // 위쪽은 상태 표시줄 영역 구분선까지만 연결
+                    .ignoresSafeArea(.container, edges: .bottom)
             }
             // 저장한 폭을 불러오거나 기본 폭으로 되돌리면 칸 폭도 맞춤
             .onChange(of: storedWidth) { _, value in

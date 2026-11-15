@@ -185,6 +185,18 @@ struct MainView: View {
             }
         }
         .environment(\.usesDesktopLayout, showsSideBar)
+        // iPad 상태 표시줄 영역, Mac 창 제목 줄과 사이드바, 화면 영역을 나누는 구분선
+        // iPad는 상태 표시줄 영역 맨 아래에 두어 상태 표시줄이 없는 창에서는 창 밖에 위치
+        // Mac은 화면 영역 맨 위가 제목 줄 바로 아래라서 그 자리에 배치
+        .overlay(alignment: .top) {
+            if showsSideBar {
+                Rectangle()
+                    .fill(Color.separator)
+                    .frame(height: 1)
+                    .offset(y: isiOSAppOnMac ? 0 : -1)
+                    .allowsHitTesting(false)
+            }
+        }
         .overlay {
             if 0 < verticalBarWidth {
                 MainTabRail(
