@@ -6,6 +6,7 @@
 //
 
 import Testing
+import Foundation
 import Core
 import Domain
 import PresentationShared
@@ -126,7 +127,7 @@ struct HomeFeatureTests {
 
         await adapter.tapCreateDevelopmentGoal()
 
-        #expect(adapter.sheet == .goalCreate)
+        #expect(adapter.sheet == .goalCreate(GoalCreateFeature.State()))
 
         await adapter.dismissSheet()
 
@@ -135,6 +136,118 @@ struct HomeFeatureTests {
         await adapter.tapDevelopmentGoal("goal")
 
         #expect(adapter.sheet == .goalDetail("goal"))
+    }
+
+    @Test("작성 중인 새 개발 목표가 있으면 버릴지 물은 뒤 버리면 고른 목표를 연다")
+    func 작성_중인_새_개발_목표가_있으면_버릴지_물은_뒤_버리면_고른_목표를_연다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.setGoalCreateTitle("목표")
+        await adapter.tapDevelopmentGoal("goal")
+
+        #expect(adapter.alert == HomeFeature.discardGoalDraftAlertState)
+        #expect(adapter.sheet?.goalCreateState?.title == "목표")
+
+        await adapter.discardGoalDraft()
+
+        #expect(adapter.sheet == .goalDetail("goal"))
+    }
+
+    @Test("작성 중인 새 개발 목표를 버리지 않으면 칸을 유지한다")
+    func 작성_중인_새_개발_목표를_버리지_않으면_칸을_유지한다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.setGoalCreateTitle("목표")
+        await adapter.tapDevelopmentGoal("goal")
+        await adapter.cancelGoalDraftDiscard()
+
+        #expect(adapter.alert == nil)
+        #expect(adapter.sheet?.goalCreateState?.title == "목표")
+    }
+
+    @Test("작성 중인 새 개발 목표를 버리면 미뤄 둔 사이드바 요청을 다시 처리한다")
+    func 작성_중인_새_개발_목표를_버리면_미뤄_둔_사이드바_요청을_다시_처리한다() async {
+        let adapter = StoreTestAdapter()
+        let request = SideBarRequest(id: UUID(), action: .open(.home))
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.setGoalCreateTitle("목표")
+        await adapter.closeGoalCreateForSideBarRequest(request)
+
+        #expect(adapter.sideBarRequestAfterGoalDiscard == nil)
+
+        await adapter.discardGoalDraft()
+
+        #expect(adapter.sheet == nil)
+        #expect(adapter.sideBarRequestAfterGoalDiscard == request)
+    }
+
+    @Test("입력하지 않은 새 개발 목표는 묻지 않고 고른 목표를 연다")
+    func 입력하지_않은_새_개발_목표는_묻지_않고_고른_목표를_연다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.tapDevelopmentGoal("goal")
+
+        #expect(adapter.alert == nil)
+        #expect(adapter.sheet == .goalDetail("goal"))
+    }
+
+    @Test("새 개발 목표를 저장하는 동안 시트를 바꾸지 않는다")
+    func 새_개발_목표를_저장하는_동안_시트를_바꾸지_않는다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.setGoalCreateSaving()
+        await adapter.tapDevelopmentGoal("goal")
+        await adapter.setSheet(nil)
+
+        #expect(adapter.sheet?.goalCreateState?.isSaving == true)
+    }
+
+    @Test("새 개발 목표를 저장하면 시트를 닫고 홈 데이터를 다시 조회한다")
+    func 새_개발_목표를_저장하면_시트를_닫고_홈_데이터를_다시_조회한다() async throws {
+        let goal = try makeDevelopmentGoal(id: "goal", createdAt: 1)
+        let goalsSpy = FetchDevelopmentGoalsUseCaseSpy()
+        goalsSpy.result = .success([goal])
+        let adapter = StoreTestAdapter(fetchDevelopmentGoalsUseCase: goalsSpy)
+
+        await adapter.tapCreateDevelopmentGoal()
+        await adapter.goalCreateSaved(goal)
+        await waitUntil { adapter.hasDevelopmentGoalsLoaded }
+
+        #expect(adapter.sheet == nil)
+        #expect(adapter.developmentGoalItems.map(\.id) == [goal.id])
+    }
+
+    @Test("카테고리 관리가 열려 있으면 다시 열어도 바로 저장 상태를 유지한다")
+    func 카테고리_관리가_열려_있으면_다시_열어도_바로_저장_상태를_유지한다() async {
+        let adapter = StoreTestAdapter()
+
+        await adapter.tapManageTodoCategory()
+        await adapter.setCategoryManageSavesImmediately()
+        await adapter.tapManageTodoCategory()
+
+        #expect(adapter.sheet?.categoryManageState?.savesImmediately == true)
+    }
+
+    @Test("카테고리 관리에서 바로 저장한 변경은 마지막 값만 저장한다")
+    func 카테고리_관리에서_바로_저장한_변경은_마지막_값만_저장한다() async {
+        let updateSpy = UpdateTodoCategoryPreferencesUseCaseSpy()
+        let adapter = StoreTestAdapter(updatePreferencesUseCase: updateSpy)
+        let issue = TodoCategoryItem(from: .system(.issue))
+        let feature = TodoCategoryItem(from: .system(.feature))
+
+        await adapter.tapManageTodoCategory()
+        await adapter.changeCategoryPreferences([issue, feature])
+        await adapter.changeCategoryPreferences([feature, issue])
+        await adapter.advanceClock(by: .seconds(1))
+        await waitUntil { !updateSpy.updates.isEmpty }
+
+        #expect(updateSpy.updates == [[feature.preference, issue.preference]])
+        #expect(adapter.preferences == [feature, issue])
     }
 
     @Test("TodoEditor 생성 delegate는 editor를 닫고 홈 데이터를 다시 조회한다")

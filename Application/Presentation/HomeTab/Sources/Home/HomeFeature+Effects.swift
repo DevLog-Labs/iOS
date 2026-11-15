@@ -15,6 +15,7 @@ extension HomeFeature {
     private enum CancelID: Hashable {
         case delayedTodoEditor
         case delayedDevelopmentGoalCreate
+        case delayedTodoCategoryPreferencesUpdate
         case networkConnectivity
     }
 
@@ -96,6 +97,19 @@ extension HomeFeature {
         }
     }
 
+    // 이름을 입력하는 동안 글자마다 저장하지 않도록 마지막 변경만 저장
+    func delayedTodoCategoryPreferencesUpdateEffect(_ items: [TodoCategoryItem]) -> Effect<Action> {
+        .run { [clock, updatePreferencesUseCase] send in
+            try await clock.sleep(for: .seconds(0.3))
+            do {
+                try await updatePreferencesUseCase.execute(items.map(\.preference))
+            } catch {
+                await send(.store(.setAlert(isPresented: true)))
+            }
+        }
+        .cancellable(id: CancelID.delayedTodoCategoryPreferencesUpdate, cancelInFlight: true)
+    }
+
     func delayedTodoEditorEffect() -> Effect<Action> {
         .run { [clock] send in
             // iOS 17에서 시트 dismiss 직후 fullScreenCover를 바로 올리지 않도록 하기 위해서 0.1초 딜레이
@@ -144,8 +158,23 @@ extension HomeFeature {
         state.alert = alertState()
     }
 
-    static func alertState() -> AlertState<Never> {
-        return AlertState<Never> {
+    static var discardGoalDraftAlertState: AlertState<Action.Alert> {
+        AlertState {
+            TextState(String(localized: "development_goal_create_discard_title", bundle: PresentationResources.bundle))
+        } actions: {
+            ButtonState(role: .destructive, action: .discardGoalDraft) {
+                TextState(String(localized: "development_goal_create_discard", bundle: PresentationResources.bundle))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: "common_cancel", bundle: PresentationResources.bundle))
+            }
+        } message: {
+            TextState(String(localized: "development_goal_create_discard_message", bundle: PresentationResources.bundle))
+        }
+    }
+
+    static func alertState() -> AlertState<Action.Alert> {
+        return AlertState<Action.Alert> {
             TextState(String(localized: "common_error_title", bundle: PresentationResources.bundle))
         } actions: {
             ButtonState(role: .cancel) {

@@ -447,6 +447,23 @@
         }
       }
     },
+    "detail_sidebar_empty" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select an item to see its details."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "항목을 선택하면 세부 정보가 표시돼요."
+          }
+        }
+      }
+    },
     "development_goal_archive" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -664,6 +681,57 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "설명"
+          }
+        }
+      }
+    },
+    "development_goal_create_discard" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "버리기"
+          }
+        }
+      }
+    },
+    "development_goal_create_discard_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What you entered won't be saved."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "입력한 내용은 저장되지 않아요."
+          }
+        }
+      }
+    },
+    "development_goal_create_discard_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Discard this development goal?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "작성 중인 개발 목표를 버릴까요?"
           }
         }
       }
@@ -5668,6 +5736,23 @@
         }
       }
     },
+    "todo_manage_new_category_name" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New Category"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 카테고리"
+          }
+        }
+      }
+    },
     "todo_manage_preview_description" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5885,6 +5970,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "수정"
+          }
+        }
+      }
+    },
+    "todo_tag_add" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add Tag"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "태그 추가"
           }
         }
       }

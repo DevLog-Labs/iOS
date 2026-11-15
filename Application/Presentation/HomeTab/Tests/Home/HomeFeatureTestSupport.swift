@@ -30,6 +30,8 @@ struct StoreTestAdapter {
     }
     var showTodoEditor: Bool { store.state.showTodoEditor }
     var sheet: HomeFeature.SheetState? { store.state.sheet }
+    var alert: AlertState<HomeFeature.Action.Alert>? { store.state.alert }
+    var sideBarRequestAfterGoalDiscard: SideBarRequest? { store.state.sideBarRequestAfterGoalDiscard }
 
     init(
         fetchPreferencesUseCase: FetchTodoCategoryPreferencesUseCase = FetchTodoCategoryPreferencesUseCaseSpy(),
@@ -95,6 +97,49 @@ struct StoreTestAdapter {
 
     func tapDevelopmentGoal(_ goalID: String) async {
         await store.send(.view(.tapDevelopmentGoal(goalID)))
+    }
+
+    func setSheet(_ sheet: HomeFeature.SheetState?) async {
+        await store.send(.store(.setSheet(sheet)))
+    }
+
+    func setCategoryManageSavesImmediately() async {
+        await store.send(.sheet(.presented(.categoryManage(.setSavesImmediately))))
+    }
+
+    func changeCategoryPreferences(_ items: [TodoCategoryItem]) async {
+        await store.send(.sheet(.presented(.categoryManage(.delegate(.changed(items))))))
+    }
+
+    func setGoalCreateSaving() async {
+        await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.isSaving, true))))))
+    }
+
+    func setGoalCreateTitle(_ title: String) async {
+        await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.title, title))))))
+    }
+
+    func closeGoalCreateForSideBarRequest(_ request: SideBarRequest) async {
+        await store.send(.view(.closeGoalCreateForSideBarRequest(request)))
+    }
+
+    func discardGoalDraft() async {
+        await store.send(.alert(.presented(.discardGoalDraft)))
+        await drainReceivedActions()
+    }
+
+    func cancelGoalDraftDiscard() async {
+        await store.send(.alert(.dismiss))
+    }
+
+    func goalCreateSaved(_ goal: DevelopmentGoal) async {
+        await store.send(.sheet(.presented(.goalCreate(.delegate(.saved(goal))))))
+        await drainReceivedActions()
+    }
+
+    func advanceClock(by duration: Duration) async {
+        await clock.advance(by: duration)
+        await settle()
     }
 
     func dismissSheet() async {

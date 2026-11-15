@@ -250,6 +250,41 @@ struct CategoryManageFeatureTests {
         #expect(driver.categorySheet == nil)
     }
 
+    @Test("바로 저장 상태에서 카테고리를 추가하면 번호를 붙인 새 이름으로 목록에 추가하고 고른다")
+    func 바로_저장_상태에서_카테고리를_추가하면_번호를_붙인_새_이름으로_목록에_추가하고_고른다() {
+        let name = String(localized: "todo_manage_new_category_name", bundle: PresentationResources.bundle)
+        let category = UserTodoCategory(id: "custom", name: name, colorHex: "#111111")
+        let driver = CategoryManageTestDriver(preferences: [TodoCategoryItem(from: .user(category))])
+
+        driver.setSavesImmediately()
+        driver.tapAddUserCategory()
+
+        #expect(driver.preferences.count == 2)
+        #expect(driver.userCategory(at: 1)?.name == "\(name) 2")
+        #expect(driver.categorySheet?.category.id == driver.userCategory(at: 1)?.id)
+    }
+
+    @Test("바로 저장 상태에서 이름을 바꾸면 목록에 반영하고 빈 이름과 중복 이름은 반영하지 않는다")
+    func 바로_저장_상태에서_이름을_바꾸면_목록에_반영하고_빈_이름과_중복_이름은_반영하지_않는다() {
+        let category = UserTodoCategory(id: "custom", name: "Custom", colorHex: "#111111")
+        let item = TodoCategoryItem(from: .user(category))
+        let driver = CategoryManageTestDriver(preferences: [TodoCategoryItem(from: .system(.issue)), item])
+
+        driver.setSavesImmediately()
+        driver.selectCategory(item)
+        driver.setCategoryName("  Renamed  ")
+
+        #expect(driver.userCategory(at: 1)?.name == "Renamed")
+
+        driver.setCategoryName("  ")
+
+        #expect(driver.userCategory(at: 1)?.name == "Renamed")
+
+        driver.setCategoryName("ISSUE")
+
+        #expect(driver.userCategory(at: 1)?.name == "Renamed")
+    }
+
     @Test("완료 버튼을 누르면 현재 preferences를 delegate로 전달한다")
     func 완료_버튼을_누르면_현재_preferences를_delegate로_전달한다() async {
         let item = TodoCategoryItem(from: .system(.issue))
@@ -286,6 +321,14 @@ private struct CategoryManageTestDriver {
         ) {
             CategoryManageFeature()
         }
+    }
+
+    func setSavesImmediately() {
+        feature.send(.setSavesImmediately)
+    }
+
+    func selectCategory(_ item: TodoCategoryItem) {
+        feature.send(.selectCategory(item))
     }
 
     func tapItem(_ item: TodoCategoryItem) {

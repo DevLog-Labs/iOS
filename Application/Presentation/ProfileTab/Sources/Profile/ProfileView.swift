@@ -99,6 +99,7 @@ public struct ProfileView: View {
                     )
                 }
             }
+            .detailSideBarTarget(store.selectedTodoRoute?.detailSideBarTarget)
             .navigationDestination(
                 for: ProfileRoute.self,
                 interactivePop: {
@@ -242,4 +243,15 @@ enum ProfileRoute: Hashable {
     case theme
     case pushNotification
     case account
+}
+
+private extension ProfileRoute {
+    // 활동 기록 Todo는 고칠 수 없어 읽기 전용으로 표시
+    var detailSideBarTarget: DetailSideBarTarget? {
+        switch self {
+        case .activity(let todoId): .todo(id: todoId, isEditable: false)
+        case .recentTodo(let todoId): .todo(id: todoId, isEditable: true)
+        default: nil
+        }
+    }
 }

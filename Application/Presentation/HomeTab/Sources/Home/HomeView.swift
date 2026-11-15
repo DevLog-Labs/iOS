@@ -50,42 +50,32 @@ public struct HomeView: View {
         } else {
             .home
         }
+        // Mac은 카테고리 관리와 새 개발 목표를 시트 대신 칸으로 표시
+        let showsSheetAsPane = isiOSAppOnMac
+            && (store.sheet?.categoryManageState != nil || store.sheet?.goalCreateState != nil)
+        let sheetBinding = $store.scope(state: \.sheet, action: \.sheet)
+            .activePresentation(when: isSelected)
 
         NavigationStack(path: $router.path) {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    HomeDevelopmentSummary(store: store)
-                    HomeTodoSection(store: store)
-                    HomeDevelopmentGoals(store: store)
-                }
-                .padding(.horizontal, 16)
-                .frame(maxWidth: readableContentWidth)
-                .frame(maxWidth: .infinity)
-            }
-            // Mac 제목 줄 구분선과 첫 카드 사이 여백
-            .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
-            .safeAreaInset(edge: .top, spacing: 0) { topBar }
-            .background(Color.background)
-            .duoToolbarVisibility()
-            .toolbar {
-                if deviceType == .duo {
-                    ToolbarItemGroup(placement: .topBarTrailing) {
-                        // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
-                        Group {
-                            Button {
-                                store.send(.store(.setPresentation(.searchView, true)))
-                            } label: {
-                                Image(systemName: "magnifyingglass")
-                            }
-                            Button {
-                                store.send(.store(.setPresentation(.contentPicker, true)))
-                            } label: {
-                                Image(systemName: "plus")
-                            }
-                            .disabled(!store.isNetworkConnected)
+            Group {
+                if isiOSAppOnMac,
+                   let manageStore = store.scope(state: \.sheet?.categoryManageState, action: \.sheet.presented.categoryManage) {
+                    CategoryManageView(store: manageStore)
+                } else if isiOSAppOnMac,
+                          let goalStore = store.scope(state: \.sheet?.goalCreateState, action: \.sheet.presented.goalCreate) {
+                    // 홈 오른쪽 칸에서 쓰고 연결된 Todo는 세부 정보 사이드바에 표시
+                    PaneSplitView {
+                        homeContent
+                    } detail: {
+                        GoalCreateView(store: goalStore) {
+                            store.send(.sheet(.dismiss))
                         }
-                        .id(windowControlsInset)
                     }
+                    .detailSideBar {
+                        GoalCreateSideBarContent(store: goalStore)
+                    }
+                } else {
+                    homeContent
                 }
             }
             .navigationDestination(
@@ -109,32 +99,11 @@ public struct HomeView: View {
         )
         // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
         .onChange(of: sideBarRequest, initial: true) { _, request in
-            switch request?.action {
-            case .open(.home):
-                router.path = []
-            case .open(.todoCategory(let id)):
-                guard let item = store.preferences.first(where: { $0.id == id }) else { break }
-                router.replace(with: .category(item))
-            case .open(.developmentGoal(let goalID)):
-                store.send(.view(.tapDevelopmentGoal(goalID)))
-            case .createTodo:
-                // 카테고리 목록이 보이면 그 목록의 작성 버튼과 같은 창으로 작성
-                if case .category(let item)? = router.root {
-                    openWindow(
-                        id: TodoEditorWindowValue.sceneId,
-                        value: TodoEditorWindowValue(todoCategory: item.todoCategory, source: .list)
-                    )
-                } else if store.isNetworkConnected {
-                    // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
-                    store.send(.store(.setPresentation(.contentPicker, true)))
-                }
-            case .manageTodoCategory:
-                // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
-                guard !store.preferences.isEmpty else { break }
-                store.send(.view(.tapManageTodoCategory))
-            case .open, nil:
-                break
-            }
+            handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
+        }
+        // 작성 중인 새 개발 목표를 버린 뒤 미뤄 둔 사이드바 요청 처리
+        .onChange(of: store.sideBarRequestAfterGoalDiscard) { _, request in
+            handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
         }
         .onAppear {
             store.send(.view(.startObserving))
@@ -155,8 +124,16 @@ public struct HomeView: View {
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(
-            item: $store.scope(state: \.sheet, action: \.sheet)
-                .activePresentation(when: isSelected),
+            item: Binding(
+                get: { showsSheetAsPane ? nil : sheetBinding.wrappedValue },
+                // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸으로 연 화면을 지우지 않도록 지금 상태로 판단
+                set: { sheet in
+                    guard !isiOSAppOnMac
+                        || store.sheet?.categoryManageState == nil && store.sheet?.goalCreateState == nil
+                    else { return }
+                    sheetBinding.wrappedValue = sheet
+                }
+            ),
             content: sheetContent
         )
         .fullScreenCover(
@@ -164,6 +141,89 @@ public struct HomeView: View {
                 .activePresentation(when: isSelected),
             content: coverContent
         )
+    }
+
+    private func handleSideBarRequest(_ request: SideBarRequest?, showsSheetAsPane: Bool) {
+        // 작성 중인 새 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음
+        if let request,
+           request.action != .createTodo,
+           store.sheet?.goalCreateState?.hasDraft == true {
+            store.send(.view(.closeGoalCreateForSideBarRequest(request)))
+            return
+        }
+        // 사이드바로 다른 곳을 열면 칸으로 표시하던 화면은 닫음
+        if showsSheetAsPane, case .open = request?.action {
+            store.send(.store(.setSheet(nil)))
+        }
+        switch request?.action {
+        case .open(.home):
+            router.path = []
+        case .open(.todoCategory(let id)):
+            guard let item = store.preferences.first(where: { $0.id == id }) else { break }
+            router.replace(with: .category(item))
+        case .open(.developmentGoal(let goalID)):
+            store.send(.view(.tapDevelopmentGoal(goalID)))
+        case .createTodo:
+            // 카테고리 목록이 보이면 그 목록의 작성 버튼과 같은 창으로 작성
+            if case .category(let item)? = router.root {
+                openWindow(
+                    id: TodoEditorWindowValue.sceneId,
+                    value: TodoEditorWindowValue(todoCategory: item.todoCategory, source: .list)
+                )
+            } else if store.isNetworkConnected {
+                // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
+                store.send(.store(.setPresentation(.contentPicker, true)))
+            }
+        case .manageTodoCategory:
+            // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
+            guard !store.preferences.isEmpty else { break }
+            // Mac은 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
+            if isiOSAppOnMac {
+                router.path = []
+            }
+            store.send(.view(.tapManageTodoCategory))
+        case .open, nil:
+            break
+        }
+    }
+
+    private var homeContent: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 16) {
+                HomeDevelopmentSummary(store: store)
+                HomeTodoSection(store: store)
+                HomeDevelopmentGoals(store: store)
+            }
+            .padding(.horizontal, 16)
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
+        }
+        // Mac 제목 줄 구분선과 첫 카드 사이 여백
+        .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
+        .safeAreaInset(edge: .top, spacing: 0) { topBar }
+        .background(Color.background)
+        .duoToolbarVisibility()
+        .toolbar {
+            if deviceType == .duo {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+                    Group {
+                        Button {
+                            store.send(.store(.setPresentation(.searchView, true)))
+                        } label: {
+                            Image(systemName: "magnifyingglass")
+                        }
+                        Button {
+                            store.send(.store(.setPresentation(.contentPicker, true)))
+                        } label: {
+                            Image(systemName: "plus")
+                        }
+                        .disabled(!store.isNetworkConnected)
+                    }
+                    .id(windowControlsInset)
+                }
+            }
+        }
     }
 
     @ViewBuilder
@@ -227,7 +287,11 @@ public struct HomeView: View {
                 CategoryManageView(store: store)
             }
         case .goalCreate:
-            GoalCreateView()
+            if let goalStore = sheetStore.scope(state: \.goalCreateState, action: \.goalCreate) {
+                GoalCreateView(store: goalStore) {
+                    store.send(.sheet(.dismiss))
+                }
+            }
         case .goalDetail(let goalID):
             GoalDetailView(goalId: goalID)
                 .environment(\.windowControlsInset, 0)

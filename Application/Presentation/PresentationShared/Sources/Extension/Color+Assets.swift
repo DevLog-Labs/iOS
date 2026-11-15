@@ -14,10 +14,13 @@ public extension Color {
     static let fill = Color("Fill", bundle: PresentationResources.bundle)
     static let fillLabel = Color("FillLabel", bundle: PresentationResources.bundle)
     static let info = Color("Info", bundle: PresentationResources.bundle)
+    static let inputBorder = Color("InputBorder", bundle: PresentationResources.bundle)
+    static let inputFill = Color("InputFill", bundle: PresentationResources.bundle)
     static let label = Color(
         ProcessInfo.processInfo.isiOSAppOnMac ? "LabelMac" : "Label",
         bundle: PresentationResources.bundle
     )
+    static let multilineInputBorder = Color("MultilineInputBorder", bundle: PresentationResources.bundle)
     static let secondaryBackground = Color("SecondaryBackground", bundle: PresentationResources.bundle)
     static let secondaryLabel = Color("SecondaryLabel", bundle: PresentationResources.bundle)
     static let secondarySeparator = Color("SecondarySeparator", bundle: PresentationResources.bundle)

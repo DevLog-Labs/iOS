@@ -13,9 +13,11 @@ import SwiftUI
 struct CategoryManageFeature {
     @ObservableState
     struct State: Equatable {
-        var preferences: [TodoCategoryItem]
         @Presents var categorySheet: CategorySheetState?
         @Presents var alert: AlertState<Action.Alert>?
+        var preferences: [TodoCategoryItem]
+        // Mac 칸은 완료 버튼 없이 고친 값을 바로 저장하고 고른 카테고리를 시트 대신 사이드바에 표시
+        var savesImmediately = false
     }
 
     @ObservableState
@@ -116,6 +118,8 @@ struct CategoryManageFeature {
         case tapDeleteUserCategory(TodoCategoryItem)
         case tapDoneButton
         case setCategorySheet(CategorySheetState?)
+        case setSavesImmediately
+        case selectCategory(TodoCategoryItem)
 
         enum Alert: Equatable {
             case confirmDeleteUserCategory(TodoCategoryItem)
@@ -123,6 +127,7 @@ struct CategoryManageFeature {
 
         enum Delegate: Equatable {
             case done([TodoCategoryItem])
+            case changed([TodoCategoryItem])
         }
 
         enum CategorySheet: BindableAction, Equatable {
@@ -140,6 +145,10 @@ struct CategoryManageFeature {
                 if let index = state.preferences.firstIndex(where: { $0.id == item.id }) {
                     state.preferences.remove(at: index)
                 }
+                if state.categorySheet?.category.id == item.id {
+                    state.categorySheet = nil
+                }
+                return state.savesImmediately ? .send(.delegate(.changed(state.preferences))) : .none
             case .alert:
                 break
             case .delegate:
@@ -159,10 +168,34 @@ struct CategoryManageFeature {
 
                     state.categorySheet = nil
                 }
+            case .categorySheet(.presented(.binding)),
+                 .categorySheet(.presented(.tapRandomColorButton)):
+                guard state.savesImmediately, let sheet = state.categorySheet else { break }
+                let name = sheet.category.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                // 비었거나 겹치는 이름은 저장하지 않고 입력 칸에만 둠
+                guard !name.isEmpty, !sheet.isDuplicatedName,
+                      let index = state.preferences.firstIndex(where: { $0.id == sheet.category.id }) else { break }
+                var item = sheet.todoCategoryItem
+                item.isVisible = state.preferences[index].isVisible
+                guard state.preferences[index] != item else { break }
+                state.preferences[index] = item
+                let preferences = state.preferences
+                state.categorySheet?.preferences = preferences
+                return .send(.delegate(.changed(state.preferences)))
             case .categorySheet:
                 break
             case .tapAddUserCategory:
-                if let randomHexValue = Color.randomValue.hexValue {
+                if state.savesImmediately, let randomHexValue = Color.randomValue.hexValue {
+                    // 목록에 새 카테고리를 바로 만들고 고른 채로 사이드바에 표시
+                    let category = UserTodoCategory(
+                        id: UUID().uuidString.lowercased(),
+                        name: Self.newCategoryName(in: state.preferences),
+                        colorHex: randomHexValue
+                    )
+                    state.preferences.append(TodoCategoryItem(from: .user(category)))
+                    state.categorySheet = CategorySheetState(category: category, preferences: state.preferences)
+                    return .send(.delegate(.changed(state.preferences)))
+                } else if let randomHexValue = Color.randomValue.hexValue {
                     state.categorySheet = CategorySheetState(
                         category: UserTodoCategory(
                             id: UUID().uuidString.lowercased(),
@@ -174,10 +207,16 @@ struct CategoryManageFeature {
                 }
             case .moveItem(let from, let target):
                 state.preferences.move(fromOffsets: from, toOffset: target)
+                let preferences = state.preferences
+                state.categorySheet?.preferences = preferences
+                return state.savesImmediately ? .send(.delegate(.changed(state.preferences))) : .none
             case .tapItem(let item):
                 if let index = state.preferences.firstIndex(where: { $0.id == item.id }) {
                     state.preferences[index].isVisible.toggle()
                 }
+                let preferences = state.preferences
+                state.categorySheet?.preferences = preferences
+                return state.savesImmediately ? .send(.delegate(.changed(state.preferences))) : .none
             case .tapEditUserCategory(let item):
                 if item.isUserCategory, case .user(let category) = item.category {
                     state.categorySheet = CategorySheetState(
@@ -193,6 +232,15 @@ struct CategoryManageFeature {
                 return .send(.delegate(.done(state.preferences)))
             case .setCategorySheet(let sheet):
                 state.categorySheet = sheet
+            case .setSavesImmediately:
+                state.savesImmediately = true
+            case .selectCategory(let item):
+                // 직접 만든 카테고리만 이름과 색을 고칠 수 있음
+                if case .user(let category) = item.category {
+                    state.categorySheet = CategorySheetState(category: category, preferences: state.preferences)
+                } else {
+                    state.categorySheet = nil
+                }
             }
             return .none
         }
@@ -228,6 +276,19 @@ private struct CategoryManageSheetFeature: Reducer {
 }
 
 private extension CategoryManageFeature {
+    // 기본 이름이 이미 있으면 뒤에 번호를 붙인 이름
+    static func newCategoryName(in preferences: [TodoCategoryItem]) -> String {
+        let name = String(localized: "todo_manage_new_category_name", bundle: PresentationResources.bundle)
+        let names = Set(preferences.map { $0.localizedName.lowercased() })
+        var candidate = name
+        var number = 2
+        while names.contains(candidate.lowercased()) {
+            candidate = "\(name) \(number)"
+            number += 1
+        }
+        return candidate
+    }
+
     static func deleteAlertState(for item: TodoCategoryItem) -> AlertState<Action.Alert> {
         AlertState {
             TextState(String(localized: "todo_manage_delete_category_title", bundle: PresentationResources.bundle))

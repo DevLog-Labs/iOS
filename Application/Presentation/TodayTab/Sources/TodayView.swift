@@ -17,6 +17,7 @@ public struct TodayView: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var router = NavigationRouter<TodayRoute>()
     @State private var store: StoreOf<TodayFeature>
     private let isSelected: Bool
@@ -59,7 +60,15 @@ public struct TodayView: View {
                                             router.push(.todo(TodoIdItem(id: item.id)))
                                         }
                                     },
-                                    onInspect: { store.send(.showTodoInspector($0)) }
+                                    onInspect: { item in
+                                        // Mac은 고른 Todo를 창 오른쪽 세부 정보 사이드바에 표시
+                                        if isiOSAppOnMac {
+                                            store.send(.binding(.set(\.selectedTodoId, item.id)))
+                                            setDetailSideBarPresented?(true)
+                                        } else {
+                                            store.send(.showTodoInspector(item))
+                                        }
+                                    }
                                 )
                                 .padding(.bottom, section.id == sections.last?.id ? 0 : 8)
                             }
@@ -113,14 +122,20 @@ public struct TodayView: View {
                 // 인스펙터 등에서 목록 행이 바뀌면 상세 칸도 다시 조회
                 .id(item?.updatedAt)
             }
+            .detailSideBarTarget(
+                sections.flatMap(\.items)
+                    .first { $0.id == store.selectedTodoId }
+                    .map { .todo(id: $0.id, isEditable: true) }
+            )
             .navigationDestination(
                 for: TodayRoute.self,
                 interactivePop: { _ in true },
                 destination: { destination($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
             )
         }
+        // Mac은 창 오른쪽 세부 정보 사이드바 사용
         .inspector(
-            isPresented: isiOSAppOnMac || horizontalSizeClass == .regular
+            isPresented: !isiOSAppOnMac && horizontalSizeClass == .regular
                 ? $store.isTodoInspectorPresented : .constant(false)
         ) {
             TodayTodoInspector(store: store)

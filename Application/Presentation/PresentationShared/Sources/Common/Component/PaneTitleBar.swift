@@ -10,6 +10,7 @@ import SwiftUI
 // Mac 창에서 화면 칸 맨 위에 두는 제목 줄
 public struct PaneTitleBar<Title: View, Actions: View>: View {
     @Environment(\.expandSideBar) private var expandSideBar
+    @Environment(\.showDetailSideBar) private var showDetailSideBar
     @State private var windowControlsWidth = CGFloat.zero
     private let background: Color
     private let title: Title
@@ -44,6 +45,13 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
                     .lineLimit(1)
                 Spacer(minLength: 8)
                 actions
+                // 열린 세부 정보 사이드바의 닫는 버튼과 같은 자리
+                if let showDetailSideBar {
+                    Button(action: showDetailSideBar) {
+                        Image(systemName: "sidebar.right")
+                    }
+                    .topBarButtonStyle()
+                }
             }
         }
         // 사이드바를 접어 창 왼쪽 위에 놓인 제목 줄은 창 버튼 자리만큼 비움

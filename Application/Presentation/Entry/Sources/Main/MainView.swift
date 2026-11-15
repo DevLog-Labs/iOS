@@ -46,6 +46,9 @@ struct MainView: View {
             ? max(store.verticalBarInsets.leading, store.verticalBarInsets.trailing) : 0
         // 시스템 탭 바처럼 키보드가 올라오면 키보드 뒤로 사라짐
         let showsTabBar = !showsSideBar && usesCustomTabBar && verticalBarWidth == 0 && !store.isKeyboardVisible
+        // Mac 창 오른쪽 세부 정보 사이드바, 설정 화면에서는 표시하지 않음
+        let showsDetailSideBar = isiOSAppOnMac
+            && (store.sideBarLocations[selectedTab] ?? selectedTab.sideBarLocation) != .settings
 
         HStack(spacing: 0) {
             if showsSideBar && !store.isSideBarCollapsed {
@@ -165,6 +168,29 @@ struct MainView: View {
                 \.expandSideBar,
                 store.isSideBarCollapsed ? { store.send(.binding(.set(\.isSideBarCollapsed, false))) } : nil
             )
+            // 닫힌 세부 정보 사이드바는 화면 칸 제목 줄의 버튼으로 엶
+            .environment(
+                \.showDetailSideBar,
+                showsDetailSideBar && !store.isDetailSideBarPresented
+                    ? { store.send(.binding(.set(\.isDetailSideBarPresented, true))) } : nil
+            )
+            .environment(\.isDetailSideBarPresented, showsDetailSideBar && store.isDetailSideBarPresented)
+            .environment(
+                \.setDetailSideBarPresented,
+                showsDetailSideBar ? { store.send(.binding(.set(\.isDetailSideBarPresented, $0))) } : nil
+            )
+
+            // 칸 화면이 사이드바를 직접 그리면 창 사이드바는 표시하지 않음
+            if showsDetailSideBar
+                && store.isDetailSideBarPresented
+                && store.detailSideBarTargets[selectedTab] != .hosted {
+                DetailSideBar(
+                    target: store.detailSideBarTargets[selectedTab],
+                    windowEvent: windowEvent
+                ) {
+                    store.send(.binding(.set(\.isDetailSideBarPresented, false)))
+                }
+            }
         }
         .overlay {
             if 0 < verticalBarWidth {
@@ -286,6 +312,7 @@ struct ReadableContentWidthReader: UIViewRepresentable {
 }
 
 private struct MainTabContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<MainFeature>
     let tab: MainTab
     let isSelected: Bool
@@ -300,6 +327,10 @@ private struct MainTabContent: View {
             .environment(\.windowControlsInset, windowControlsInset)
             .environment(\.readableContentWidth, readableContentWidth)
             .environment(\.sideBarRequest, store.sideBarRequests[tab])
+            .environment(
+                \.selectDetailSideBarTarget,
+                isiOSAppOnMac ? { store.send(.view(.detailSideBarTargetChanged(tab, $0, owner: $1))) } : nil
+            )
             .onPreferenceChange(SideBarLocationPreferenceKey.self) { location in
                 guard let location else { return }
                 store.send(.view(.sideBarLocationChanged(tab, location)))
