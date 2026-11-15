@@ -20,7 +20,6 @@ struct MainFeature {
         @Presents var alert: AlertState<Never>?
         var unreadPushCount = 0
         var isObservingUnreadPushCount = false
-        var isWide = false
         var windowControlsInset = CGFloat.zero
         // Duo 세로 칸 자리의 양옆 안전 영역
         var verticalBarInsets = EdgeInsets()

@@ -19,7 +19,8 @@ struct MainView: View {
     @Binding var selectedTab: MainTab
     @State private var store: StoreOf<MainFeature>
     private let windowEvent: TodoEditorWindowEvent
-    private let sideBarMinimumWidth = CGFloat(800)
+    // 목록 칸과 상세 칸이 함께 들어가는 화면 영역 폭
+    private let splitMinimumWidth = CGFloat(800)
 
     init(
         windowEvent: TodoEditorWindowEvent,
@@ -36,7 +37,7 @@ struct MainView: View {
     }
 
     var body: some View {
-        let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular && store.isWide
+        let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
         let readableContentWidth = showsSideBar ? store.readableContentWidth : .infinity
         // iPhone, Duo, 좁은 iPad 창은 시스템 탭 바 대신 직접 그린 탭 사용
@@ -68,7 +69,9 @@ struct MainView: View {
             }
 
             ZStack {
-                if isiOSAppOnMac {
+                // iPad는 시스템 탭 바를 쓰지 않아 Mac과 같이 구성
+                // 넓은 창과 좁은 창을 오가도 탭 화면을 다시 만들지 않음
+                if isiOSAppOnMac || deviceType == .ipad {
                     // 탭 전환 애니메이션 없이 한 번 연 탭을 유지하고 선택한 탭만 표시
                     // 사이드바 하위 항목은 홈 화면이 알려 주므로 홈은 처음부터 생성
                     ForEach(MainTab.allCases, id: \.self) { tab in
@@ -211,15 +214,10 @@ struct MainView: View {
         }
         // Mac 창에서 상태 표시줄 자리로 비워 두는 상단 여백 제거
         .statusBarHidden(isiOSAppOnMac)
+        // iPad는 사이드바를 펴면 목록 칸과 상세 칸이 함께 들어가지 않는 창에서 사이드바를 접고 시작
+        // 세로 화면처럼 좁은 창에서 상세 칸이 잘리지 않게 함
         .onGeometryChange(for: Bool.self) { proxy in
-            sideBarMinimumWidth <= proxy.size.width
-        } action: { isWide in
-            store.send(.binding(.set(\.isWide, isWide)))
-        }
-        // iPad는 사이드바를 펴면 화면 영역이 넓은 창 기준 폭보다 좁아지는 창에서 사이드바를 접고 시작
-        // 세로 화면처럼 목록 칸과 상세 칸이 함께 들어가지 않는 창에서 상세 칸이 잘리지 않게 함
-        .onGeometryChange(for: Bool.self) { proxy in
-            sideBarMinimumWidth + sideBarIdealWidth <= proxy.size.width
+            splitMinimumWidth + sideBarIdealWidth <= proxy.size.width
         } action: { fitsSideBar in
             guard !isiOSAppOnMac else { return }
             store.send(.binding(.set(\.isSideBarCollapsed, !fitsSideBar)))

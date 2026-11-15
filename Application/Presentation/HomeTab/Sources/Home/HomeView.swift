@@ -115,7 +115,9 @@ public struct HomeView: View {
         }
         .onAppear {
             store.send(.view(.startObserving))
-            // 사이드바가 있으면 홈이 아닌 탭으로 켜져도 사이드바 하위 항목을 채우도록 한 번 불러옴
+        }
+        // 사이드바가 있으면 홈이 아닌 탭으로 켜지거나 좁은 창에서 넓어져도 사이드바 하위 항목을 채우도록 불러옴
+        .onChange(of: usesDesktopLayout, initial: true) { _, usesDesktopLayout in
             if usesDesktopLayout && !isSelected {
                 store.send(.view(.fetchData))
             }
