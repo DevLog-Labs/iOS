@@ -29,6 +29,8 @@ struct MainFeature {
         var readableContentWidth = CGFloat.infinity
         var openedTabs: Set<MainTab> = []
         var isSideBarCollapsed = false
+        // 사용자가 끌어서 정한 Mac 사이드바 폭, 정하지 않았으면 기본 폭
+        var sideBarWidth: CGFloat?
         var expandedSideBarGroups: Set<SideBarGroup> = []
         var sideBarLocations: [MainTab: SideBarLocation] = [:]
         var sideBarRequests: [MainTab: SideBarRequest] = [:]
@@ -53,6 +55,7 @@ struct MainFeature {
             case sideBarContentChanged(SideBarContent)
             case tapSideBarGroup(SideBarGroup)
             case tapSideBarItem(MainTab, SideBarRequest.Action)
+            case sideBarResized(CGFloat)
         }
 
         enum StoreAction: Equatable {
@@ -69,6 +72,7 @@ struct MainFeature {
     @Dependency(\.uuid) var uuid
     @Dependency(\.trackAnalyticsEventUseCase) var trackAnalyticsEventUseCase
     @Dependency(\.setApplicationBadgeCount) var setApplicationBadgeCount
+    @Dependency(\.updateSideBarWidthUseCase) var updateSideBarWidthUseCase
 
     var body: some ReducerOf<Self> {
         BindingReducer()
@@ -107,6 +111,11 @@ struct MainFeature {
                 }
             case .view(.tapSideBarItem(let tab, let action)):
                 state.sideBarRequests[tab] = SideBarRequest(id: uuid(), action: action)
+            case .view(.sideBarResized(let width)):
+                state.sideBarWidth = width
+                return .run { [updateSideBarWidthUseCase] _ in
+                    updateSideBarWidthUseCase.execute(Double(width))
+                }
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)
@@ -129,6 +138,36 @@ extension DependencyValues {
     var setApplicationBadgeCount: @Sendable (Int) async throws -> Void {
         get { self[SetApplicationBadgeCountKey.self] }
         set { self[SetApplicationBadgeCountKey.self] = newValue }
+    }
+
+    var fetchSideBarWidthUseCase: FetchSideBarWidthUseCase {
+        get { self[FetchSideBarWidthUseCaseKey.self] }
+        set { self[FetchSideBarWidthUseCaseKey.self] = newValue }
+    }
+
+    var updateSideBarWidthUseCase: UpdateSideBarWidthUseCase {
+        get { self[UpdateSideBarWidthUseCaseKey.self] }
+        set { self[UpdateSideBarWidthUseCaseKey.self] = newValue }
+    }
+}
+
+private enum FetchSideBarWidthUseCaseKey: DependencyKey {
+    static var liveValue: FetchSideBarWidthUseCase {
+        preconditionFailure("FetchSideBarWidthUseCase must be provided.")
+    }
+
+    static var testValue: FetchSideBarWidthUseCase {
+        liveValue
+    }
+}
+
+private enum UpdateSideBarWidthUseCaseKey: DependencyKey {
+    static var liveValue: UpdateSideBarWidthUseCase {
+        preconditionFailure("UpdateSideBarWidthUseCase must be provided.")
+    }
+
+    static var testValue: UpdateSideBarWidthUseCase {
+        liveValue
     }
 }
 

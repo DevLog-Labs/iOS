@@ -25,7 +25,10 @@ struct MainView: View {
         windowEvent: TodoEditorWindowEvent,
         selectedTab: Binding<MainTab>
     ) {
-        self._store = State(initialValue: Store(initialState: MainFeature.State()) {
+        @Dependency(\.fetchSideBarWidthUseCase) var fetchSideBarWidthUseCase
+        var state = MainFeature.State()
+        state.sideBarWidth = fetchSideBarWidthUseCase.execute().map { CGFloat($0) }
+        self._store = State(initialValue: Store(initialState: state) {
             MainFeature()
         })
         self._selectedTab = selectedTab
@@ -50,10 +53,13 @@ struct MainView: View {
                     // 최소는 화살표와 아이콘만 보이는 폭, 최대는 Orca 사이드바와 같은 폭
                     TreeSideBar(selectedTab: $selectedTab, store: store)
                         .resizablePane(
+                            width: store.sideBarWidth,
                             minimumWidth: 72 * AdaptiveSize.boardScale,
                             idealWidth: 220 * AdaptiveSize.boardScale,
                             maximumWidth: 500 * AdaptiveSize.boardScale
-                        )
+                        ) { width in
+                            store.send(.view(.sideBarResized(width)))
+                        }
                 } else {
                     SideBar(selectedTab: $selectedTab, unreadPushCount: store.unreadPushCount)
                         .resizablePane(
