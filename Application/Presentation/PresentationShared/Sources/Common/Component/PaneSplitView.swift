@@ -58,9 +58,28 @@ public extension View {
         maximumWidth: CGFloat
     ) -> some View {
         modifier(ResizablePaneModifier(
+            width: nil,
             minimumWidth: minimumWidth,
             idealWidth: idealWidth,
-            maximumWidth: maximumWidth
+            maximumWidth: maximumWidth,
+            onResize: nil
+        ))
+    }
+
+    // 폭을 바깥 상태에 두어 칸을 다시 만들어도 같은 폭으로 표시하고, 끌기를 마치면 바뀐 폭 전달
+    func resizablePane(
+        width: CGFloat?,
+        minimumWidth: CGFloat,
+        idealWidth: CGFloat,
+        maximumWidth: CGFloat,
+        onResize: @escaping (CGFloat) -> Void
+    ) -> some View {
+        modifier(ResizablePaneModifier(
+            width: width,
+            minimumWidth: minimumWidth,
+            idealWidth: idealWidth,
+            maximumWidth: maximumWidth,
+            onResize: onResize
         ))
     }
 }
@@ -69,19 +88,26 @@ private struct ResizablePaneModifier: ViewModifier {
     @Environment(\.layoutDirection) private var layoutDirection
     @State private var width: CGFloat
     @State private var dragStartWidth: CGFloat?
+    // 바깥에서 정한 폭, 없으면 기본 폭
+    private let storedWidth: CGFloat?
     private let minimumWidth: CGFloat
     private let idealWidth: CGFloat
     private let maximumWidth: CGFloat
+    private let onResize: ((CGFloat) -> Void)?
 
     init(
+        width: CGFloat?,
         minimumWidth: CGFloat,
         idealWidth: CGFloat,
-        maximumWidth: CGFloat
+        maximumWidth: CGFloat,
+        onResize: ((CGFloat) -> Void)?
     ) {
+        self.storedWidth = width
         self.minimumWidth = minimumWidth
         self.idealWidth = idealWidth
         self.maximumWidth = maximumWidth
-        self._width = State(initialValue: max(idealWidth, minimumWidth))
+        self.onResize = onResize
+        self._width = State(initialValue: max(width ?? idealWidth, minimumWidth))
     }
 
     // 창 폭이 바뀌어 최대 폭이 줄어도 범위 안에 두는 실제 칸 폭
@@ -110,6 +136,10 @@ private struct ResizablePaneModifier: ViewModifier {
                     }
                     .ignoresSafeArea(.container, edges: .vertical)
             }
+            // 저장한 폭을 불러오거나 기본 폭으로 되돌리면 칸 폭도 맞춤
+            .onChange(of: storedWidth) { _, value in
+                width = max(value ?? idealWidth, minimumWidth)
+            }
     }
 
     private var resizeGesture: some Gesture {
@@ -126,6 +156,7 @@ private struct ResizablePaneModifier: ViewModifier {
             }
             .onEnded { _ in
                 dragStartWidth = nil
+                onResize?(width)
             }
     }
 }
