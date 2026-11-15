@@ -80,6 +80,8 @@ public struct TodoDetailView: View {
             }
         }
         .onAppear { store.send(.onAppear) }
+        // 좁은 창으로 바뀌어도 편집 화면이 닫히지 않도록 상세 칸을 남겨 두게 알림
+        .preference(key: PaneDetailPresentingPreferenceKey.self, value: store.fullScreenCover != nil)
         .onReceive(windowSubmits) { submit in
             guard case .update(let value, let todo) = submit,
                   value.matchesEdit(todoId: store.todoId) else { return }

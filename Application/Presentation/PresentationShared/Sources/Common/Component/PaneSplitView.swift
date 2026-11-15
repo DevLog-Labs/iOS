@@ -10,6 +10,9 @@ import SwiftUI
 // 사이드바가 있는 창에서 목록 칸 오른쪽에 상세 칸을 나란히 두는 화면
 public struct PaneSplitView<Primary: View, Detail: View>: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @State private var width = CGFloat.infinity
+    // 상세 칸이 편집 화면처럼 화면을 덮는 표시를 띄운 동안
+    @State private var isDetailPresenting = false
     private let primary: Primary
     private let detail: Detail
 
@@ -22,35 +25,54 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     }
 
     public var body: some View {
-        if usesDesktopLayout {
-            GeometryReader { proxy in
+        HStack(spacing: 0) {
+            if usesDesktopLayout {
                 // 경계선은 사이드바 경계선부터 창 오른쪽 끝까지 이동
-                HStack(spacing: 0) {
-                    primary
-                        .resizablePane(
-                            minimumWidth: 0,
-                            idealWidth: 400,
-                            maximumWidth: proxy.size.width
-                        )
-                        // 세부 정보 사이드바 여는 버튼은 오른쪽 칸 제목 줄에만 표시
-                        .environment(\.showDetailSideBar, nil)
-                    // 상세 칸이 기본 폭보다 좁으면 내용을 줄이지 않고 잘라서 표시
-                    Color.clear
-                        .overlay(alignment: .leading) {
-                            detail
-                                .frame(minWidth: 400, maxWidth: .infinity)
-                                // 사이드바 펴기 버튼은 왼쪽 칸 제목 줄에만 표시
-                                .environment(\.expandSideBar, nil)
-                        }
-                        .clipped()
-                        .contentShape(.rect)
-                }
+                primary
+                    .resizablePane(
+                        minimumWidth: 0,
+                        idealWidth: 400,
+                        maximumWidth: width
+                    )
+                    // 세부 정보 사이드바 여는 버튼은 오른쪽 칸 제목 줄에만 표시
+                    .environment(\.showDetailSideBar, nil)
+            } else {
+                primary
             }
-            // 잘라 낸 칸 바탕이 닿지 않는 아래쪽 안전 영역을 칸 바탕과 같은 색으로 채움
-            .background(Color.background, ignoresSafeAreaEdges: .bottom)
-        } else {
-            primary
+            // 좁은 창으로 바뀌어도 상세 칸이 띄운 편집 화면이 닫히지 않도록 폭 0으로 남겨 두고 닫히면 해제
+            if usesDesktopLayout || isDetailPresenting {
+                // 상세 칸이 기본 폭보다 좁으면 내용을 줄이지 않고 잘라서 표시
+                Color.clear
+                    .overlay(alignment: .leading) {
+                        detail
+                            .frame(minWidth: 400, maxWidth: .infinity)
+                            // 사이드바 펴기 버튼은 왼쪽 칸 제목 줄에만 표시
+                            .environment(\.expandSideBar, nil)
+                            .onPreferenceChange(PaneDetailPresentingPreferenceKey.self) { isPresenting in
+                                isDetailPresenting = isPresenting
+                            }
+                    }
+                    .frame(maxWidth: usesDesktopLayout ? .infinity : 0)
+                    .clipped()
+                    .contentShape(.rect)
+            }
         }
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            proxy.size.width
+        } action: { width in
+            self.width = width
+        }
+        // 잘라 낸 칸 바탕이 닿지 않는 아래쪽 안전 영역을 칸 바탕과 같은 색으로 채움
+        .background(usesDesktopLayout ? Color.background : .clear, ignoresSafeAreaEdges: .bottom)
+    }
+}
+
+// 상세 칸이 편집 화면처럼 화면을 덮는 표시를 띄웠는지 전달
+struct PaneDetailPresentingPreferenceKey: PreferenceKey {
+    static let defaultValue = false
+
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
     }
 }
 
