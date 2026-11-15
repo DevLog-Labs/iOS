@@ -118,10 +118,14 @@ public struct HomeView: View {
             case .open(.developmentGoal(let goalID)):
                 store.send(.view(.tapDevelopmentGoal(goalID)))
             case .createTodo:
-                // 고른 카테고리가 있으면 그 카테고리로 바로 작성
+                // 카테고리 목록이 보이면 그 목록의 작성 버튼과 같은 창으로 작성
                 if case .category(let item)? = router.root {
-                    openTodoEditor(for: item.todoCategory)
-                } else {
+                    openWindow(
+                        id: TodoEditorWindowValue.sceneId,
+                        value: TodoEditorWindowValue(todoCategory: item.todoCategory, source: .list)
+                    )
+                } else if store.isNetworkConnected {
+                    // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
                     store.send(.store(.setPresentation(.contentPicker, true)))
                 }
             case .manageTodoCategory:
