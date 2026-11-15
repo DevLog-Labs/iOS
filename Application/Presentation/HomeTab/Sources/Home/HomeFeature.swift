@@ -185,6 +185,21 @@ struct HomeFeature {
         }
         BindingReducer()
         Reduce { state, action in
+            // 새 개발 목표를 저장하는 동안 시트 자리를 바꾸면 저장이 취소되어 막음
+            if state.sheet?.goalCreateState?.isSaving == true {
+                switch action {
+                case .view(.tapCreateDevelopmentGoal),
+                     .view(.tapDevelopmentGoal),
+                     .view(.tapManageTodoCategory),
+                     .view(.tapTodoCategory),
+                     .store(.setSheet),
+                     .store(.setPresentation(.contentPicker, _)):
+                    return .none
+                default:
+                    break
+                }
+            }
+
             switch action {
             case .alert:
                 break
