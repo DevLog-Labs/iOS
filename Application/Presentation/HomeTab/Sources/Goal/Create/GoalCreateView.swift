@@ -9,59 +9,78 @@ import SwiftUI
 import Domain
 import PresentationShared
 
-public struct GoalCreateView: View {
-    @Environment(\.dismiss) private var dismiss
-    @State private var store: StoreOf<GoalCreateFeature>
+struct GoalCreateView: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Bindable var store: StoreOf<GoalCreateFeature>
     @FocusState private var focusedField: GoalCreateField?
-    private let onCompletion: (DevelopmentGoal) -> Void
+    let onClose: () -> Void
 
-    public init(onCompletion: @escaping (DevelopmentGoal) -> Void = { _ in }) {
-        self._store = State(initialValue: Store(
-            initialState: GoalCreateFeature.State()
-        ) {
-            GoalCreateFeature()
-        })
-        self.onCompletion = onCompletion
+    var body: some View {
+        // Mac은 홈 내비게이션 안의 칸이라 시트용 내비게이션을 겹치지 않음
+        if isiOSAppOnMac {
+            content
+        } else {
+            NavigationStack {
+                content
+            }
+            .sheetDismissDisabled(store.isSaving)
+        }
     }
 
-    public var body: some View {
-        NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 24) {
-                    GoalCreateTitleField(store: store, focusedField: $focusedField)
-                    GoalCreateDescriptionEditor(store: store, focusedField: $focusedField)
+    private var content: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 24) {
+                GoalCreateTitleField(store: store, focusedField: $focusedField)
+                GoalCreateDescriptionEditor(store: store, focusedField: $focusedField)
+                // Mac은 연결된 Todo를 세부 정보 사이드바에 표시
+                if !isiOSAppOnMac {
                     GoalCreateStatusField()
                     GoalCreateTodoField(store: store)
                 }
-                .padding(.horizontal)
-                .padding(.bottom, 20)
             }
-            .safeAreaInset(edge: .top, spacing: 0) {
+            .padding(.horizontal)
+            .padding(.top, isiOSAppOnMac ? 12 : 0)
+            .padding(.bottom, 20)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if isiOSAppOnMac {
+                PaneTitleBar(Text(RecordPresentation.text("development_goal_create_title"))) {
+                    Button(action: save) {
+                        Text(RecordPresentation.text("todo_manage_save"))
+                            .font(.adaptive(.body).weight(.semibold))
+                            .foregroundStyle(Color.accent)
+                    }
+                    .buttonStyle(.plain)
+                    .disabled(!store.isReadyToSave)
+                    .opacity(store.isReadyToSave ? 1 : 0.4)
+                    Button(action: onClose) {
+                        Image(systemName: "xmark")
+                    }
+                    .topBarButtonStyle()
+                    .disabled(store.isSaving)
+                }
+            } else {
                 GoalCreateTopBar(
                     isSaving: store.isSaving,
-                    onClose: { dismiss() }
+                    onClose: onClose
                 )
             }
-            .safeAreaInset(edge: .bottom, spacing: 0) {
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !isiOSAppOnMac {
                 GoalCreateSaveBar(
                     isSaving: store.isSaving,
                     isSaveEnabled: store.isReadyToSave,
                     onSave: save
                 )
             }
-            .background(Color.background.ignoresSafeArea())
-            .toolbarVisibility(.hidden, for: .navigationBar)
-            .prominentAlert(store, state: \.alert, action: \.alert)
-            .prominentSheet(item: $store.scope(state: \.todoSelection, action: \.todoSelection)) {
-                GoalCreateTodoSelectionSheet(store: $0)
-            }
-            .onChange(of: store.result) { _, result in
-                guard let result else { return }
-                onCompletion(result)
-                dismiss()
-            }
         }
-        .sheetDismissDisabled(store.isSaving)
+        .background(Color.background.ignoresSafeArea())
+        .toolbarVisibility(.hidden, for: .navigationBar)
+        .prominentAlert(store, state: \.alert, action: \.alert)
+        .prominentSheet(item: $store.scope(state: \.todoSelection, action: \.todoSelection)) {
+            GoalCreateTodoSelectionSheet(store: $0)
+        }
     }
 
     private func save() {
@@ -115,7 +134,7 @@ private struct GoalCreateTitleField: View {
             .focused(focusedField, equals: .title)
             .font(.adaptive(.body))
             .padding()
-            .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+            .inputBackground(isFocused: focusedField.wrappedValue == .title)
         }
         .disabled(store.isSaving)
     }
@@ -160,7 +179,7 @@ private struct GoalCreateDescriptionEditor: View {
                                 )
                                 .focused(focusedField, equals: .content)
                                 .padding(12)
-                                .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                                .inputBackground(isMultiline: true, isFocused: focusedField.wrappedValue == .content)
                         }
                         .contentShape(.rect)
                         .onTapGesture { focusedField.wrappedValue = .content }
@@ -177,7 +196,7 @@ private struct GoalCreateDescriptionEditor: View {
                                 .multilineTextAlignment(.center)
                                 .padding(12)
                                 .frame(maxWidth: .infinity, minHeight: 120, alignment: .center)
-                                .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                                .inputBackground(isMultiline: true)
                             } else {
                                 MarkdownContentView(
                                     content: store.markdownContent,
@@ -187,7 +206,7 @@ private struct GoalCreateDescriptionEditor: View {
                                     .padding(.horizontal, -16)
                                     .padding(12)
                                     .frame(minHeight: 120, alignment: .topLeading)
-                                    .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                                    .inputBackground(isMultiline: true)
                             }
                         }
                     }
@@ -286,7 +305,7 @@ private struct GoalCreateTodoField: View {
                 Button {
                     store.send(.view(.selectTodos))
                 } label: {
-                    Text(todoButtonTitle)
+                    Text(store.todoSelectionTitle)
                         .font(.adaptive(.callout).weight(.semibold))
                         .foregroundStyle(Color.accent)
                         .padding(.horizontal, 16)
@@ -300,14 +319,57 @@ private struct GoalCreateTodoField: View {
         }
         .disabled(store.isSaving)
     }
+}
 
-    private var todoButtonTitle: String {
-        guard !store.selectedTodoIDs.isEmpty else {
+// Mac 세부 정보 사이드바의 새 개발 목표 속성, 목표를 저장할 때 함께 저장
+struct GoalCreateSideBarContent: View {
+    let store: StoreOf<GoalCreateFeature>
+
+    var body: some View {
+        ScrollView {
+            Button {
+                store.send(.view(.selectTodos))
+            } label: {
+                HStack(spacing: 10 * AdaptiveSize.boardScale) {
+                    VStack(alignment: .leading, spacing: 2 * AdaptiveSize.boardScale) {
+                        Text(RecordPresentation.text("development_goal_create_todo_label"))
+                            .font(.adaptive(.body))
+                            .foregroundStyle(Color.label)
+                        Text(RecordPresentation.text("development_goal_create_todo_hint"))
+                            .font(.adaptive(.subheadline))
+                            .foregroundStyle(Color.secondaryLabel)
+                    }
+                    Spacer(minLength: 0)
+                    Text(store.todoSelectionTitle)
+                        .font(.adaptive(.body))
+                        .foregroundStyle(Color.secondaryLabel)
+                        .lineLimit(1)
+                    Image(systemName: "chevron.right")
+                        .font(.adaptive(.caption).weight(.semibold))
+                        .foregroundStyle(Color.secondaryLabel)
+                }
+                .padding(.horizontal, 12 * AdaptiveSize.boardScale)
+                .padding(.vertical, 6 * AdaptiveSize.boardScale)
+                .frame(minHeight: 38 * AdaptiveSize.boardScale)
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .disabled(store.isSaving)
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+            .padding(.horizontal, 14 * AdaptiveSize.boardScale)
+            .padding(.vertical, 8 * AdaptiveSize.boardScale)
+        }
+    }
+}
+
+private extension GoalCreateFeature.State {
+    var todoSelectionTitle: String {
+        guard !selectedTodoIDs.isEmpty else {
             return RecordPresentation.text("development_goal_create_todo_select")
         }
         return String.localizedStringWithFormat(
             RecordPresentation.text("development_goal_create_todo_selected_format"),
-            store.selectedTodoIDs.count
+            selectedTodoIDs.count
         )
     }
 }

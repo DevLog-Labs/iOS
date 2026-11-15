@@ -83,7 +83,7 @@ struct HomeFeature {
     enum SheetState: Equatable {
         case reorderTodo(CategoryManageFeature.State)
         case contentPicker
-        case goalCreate
+        case goalCreate(GoalCreateFeature.State)
         case goalDetail(String)
 
         var categoryManageState: CategoryManageFeature.State? {
@@ -94,6 +94,17 @@ struct HomeFeature {
             set {
                 guard let newValue else { return }
                 self = .reorderTodo(newValue)
+            }
+        }
+
+        var goalCreateState: GoalCreateFeature.State? {
+            get {
+                guard case .goalCreate(let state) = self else { return nil }
+                return state
+            }
+            set {
+                guard let newValue else { return }
+                self = .goalCreate(newValue)
             }
         }
 
@@ -111,6 +122,7 @@ struct HomeFeature {
     enum Sheet: Equatable {
         case tapCloseButton
         case categoryManage(CategoryManageFeature.Action)
+        case goalCreate(GoalCreateFeature.Action)
     }
 
     @ObservableState
@@ -197,6 +209,9 @@ struct HomeFeature {
                 // Mac 카테고리 관리 칸은 고친 값을 바로 저장
                 state.preferences = preferences
                 return delayedTodoCategoryPreferencesUpdateEffect(preferences)
+            case .sheet(.presented(.goalCreate(.delegate(.saved)))):
+                state.sheet = nil
+                return .send(.view(.fetchData))
             case .sheet:
                 break
             case .binding:
@@ -258,7 +273,7 @@ private extension HomeFeature {
                 state.sheet = nil
                 return delayedDevelopmentGoalCreateEffect()
             }
-            state.sheet = .goalCreate
+            state.sheet = .goalCreate(GoalCreateFeature.State())
         case .tapDevelopmentGoal(let goalID):
             state.sheet = .goalDetail(goalID)
         case .tapManageTodoCategory:
@@ -318,6 +333,9 @@ private struct SheetFeature: Reducer {
         EmptyReducer()
         .ifCaseLet(\.reorderTodo, action: \.categoryManage) {
             CategoryManageFeature()
+        }
+        .ifCaseLet(\.goalCreate, action: \.goalCreate) {
+            GoalCreateFeature()
         }
     }
 }

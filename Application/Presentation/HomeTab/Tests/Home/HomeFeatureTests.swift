@@ -126,7 +126,7 @@ struct HomeFeatureTests {
 
         await adapter.tapCreateDevelopmentGoal()
 
-        #expect(adapter.sheet == .goalCreate)
+        #expect(adapter.sheet == .goalCreate(GoalCreateFeature.State()))
 
         await adapter.dismissSheet()
 
