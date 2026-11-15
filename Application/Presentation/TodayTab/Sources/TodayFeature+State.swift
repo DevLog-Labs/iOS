@@ -72,6 +72,13 @@ extension TodayFeature {
             selectedTodoScope == .important || selectedCategoryID != nil
         }
 
+        var appliedFilterCount: Int {
+            var count = 0
+            if selectedTodoScope == .important { count += 1 }
+            if selectedCategoryID != nil { count += 1 }
+            return count
+        }
+
         var todayTodos: [TodayTodoItem] {
             guard isTodayDataLoaded else { return [] }
             return TodayFeature.todayTodos(

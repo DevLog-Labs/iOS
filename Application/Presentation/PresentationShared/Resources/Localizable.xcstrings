@@ -3575,6 +3575,23 @@
         }
       }
     },
+    "push_unread_only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unread Only"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "읽지 않은 알림만"
+          }
+        }
+      }
+    },
     "relative_time_days_ago_format" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4612,6 +4629,23 @@
         }
       }
     },
+    "today_filter_view" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "보기"
+          }
+        }
+      }
+    },
     "today_pinned_first" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5409,6 +5443,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld개 필터가 적용됨"
+          }
+        }
+      }
+    },
+    "todo_list_pinned_only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinned Only"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "중요 표시만"
           }
         }
       }

@@ -206,6 +206,8 @@ private struct PushNotificationListContent: View {
                 }
             }
             .padding(.horizontal, 16)
+            // Mac은 필터 줄 없이 제목 줄 바로 아래에서 시작
+            .padding(.top, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 0)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -214,28 +216,29 @@ private struct PushNotificationListContent: View {
 
             VStack(spacing: 0) {
                 if isiOSAppOnMac {
-                    PaneTitleBar(title)
-                }
-                VStack(alignment: .leading, spacing: 12) {
-                    if !isiOSAppOnMac {
+                    PaneTitleBar(title) {
+                        PushNotificationPaneMenus(store: store)
+                    }
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
                         title
                             .font(.adaptive(.largeTitle).bold())
                             .padding(.bottom, 8)
-                    }
 
-                    ScrollView(.horizontal) {
-                        PushNotificationFilterBar(store: store)
+                        ScrollView(.horizontal) {
+                            PushNotificationFilterBar(store: store)
+                        }
+                        .scrollIndicators(.hidden)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .padding(.horizontal, -16)
+                        .contentMargins(.horizontal, 16, for: .scrollContent)
                     }
-                    .scrollIndicators(.hidden)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.horizontal, -16)
-                    .contentMargins(.horizontal, 16, for: .scrollContent)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 16)
+                    .frame(maxWidth: readableContentWidth)
+                    .padding(.top, windowControlsInset)
+                    .padding(.bottom, 8)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.horizontal, 16)
-                .frame(maxWidth: readableContentWidth)
-                .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
-                .padding(.bottom, 8)
             }
             .background(Color.background)
             .toolbarBackground(Color.background)
@@ -369,5 +372,63 @@ private struct PushNotificationFilterBar: View {
             .minimumScaleFactor(0.6)
             .frame(width: 20, height: 20)
             .background(Circle().fill(Color.accent.opacity(0.1)))
+    }
+}
+
+// Mac 제목 줄의 필터와 정렬 버튼
+private struct PushNotificationPaneMenus: View {
+    let store: StoreOf<PushNotificationListFeature>
+
+    var body: some View {
+        let clear = DropdownMenuItem(
+            String(localized: "push_clear_all_filters", bundle: PresentationResources.bundle),
+            systemImage: "xmark",
+            role: .destructive
+        ) {
+            store.send(.view(.resetFilters))
+        }
+
+        PaneMenuButton(
+            systemImage: "line.3.horizontal.decrease",
+            badgeCount: store.appliedFilterCount,
+            sections: [
+                DropdownMenuSection(items: [
+                    DropdownMenuItem(
+                        String(localized: "push_unread_only", bundle: PresentationResources.bundle),
+                        systemImage: "bell",
+                        isChecked: store.query.unreadOnly
+                    ) {
+                        store.send(.view(.toggleUnreadOnly))
+                    }
+                ]),
+                DropdownMenuSection(
+                    String(localized: "push_period", bundle: PresentationResources.bundle),
+                    items: PushNotificationQuery.TimeFilter.availableOptions.map { option in
+                        DropdownMenuItem(option.title, isChecked: store.query.timeFilter == option) {
+                            store.send(.binding(.set(\.query.timeFilter, option)))
+                        }
+                    }
+                ),
+                // 걸린 필터가 있을 때만 마지막 항목으로 표시
+                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [clear] : [])
+            ]
+        )
+
+        PaneMenuButton(
+            systemImage: "arrow.up.arrow.down",
+            sections: [
+                DropdownMenuSection(
+                    String(localized: "todo_list_sort_order", bundle: PresentationResources.bundle),
+                    items: [PushNotificationQuery.SortOrder.latest, .oldest].map { option in
+                        DropdownMenuItem(option.title, isChecked: store.query.sortOrder == option) {
+                            // 정렬 순서는 둘 중 하나라 다른 순서를 고를 때만 전환
+                            if store.query.sortOrder != option {
+                                store.send(.view(.toggleSortOption))
+                            }
+                        }
+                    }
+                )
+            ]
+        )
     }
 }

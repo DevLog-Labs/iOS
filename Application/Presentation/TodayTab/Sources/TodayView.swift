@@ -67,6 +67,8 @@ public struct TodayView: View {
                         }
                     }
                     .padding(.horizontal)
+                    // Mac은 필터 줄 없이 제목 줄 바로 아래에서 시작
+                    .padding(.top, isiOSAppOnMac ? 4 * AdaptiveSize.boardScale : 0)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -75,22 +77,23 @@ public struct TodayView: View {
 
                     VStack(spacing: 0) {
                         if isiOSAppOnMac {
-                            PaneTitleBar(title)
-                        }
-                        VStack(alignment: .leading) {
-                            if !isiOSAppOnMac {
+                            PaneTitleBar(title) {
+                                TodayFilterMenu(store: store)
+                            }
+                        } else {
+                            VStack(alignment: .leading) {
                                 title
                                     .font(.adaptive(.largeTitle).bold())
                                     .padding(.bottom, 8)
+                                TodayFilterBar(store: store)
+                                    .fixedSize(horizontal: false, vertical: true)
                             }
-                            TodayFilterBar(store: store)
-                                .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.horizontal)
+                            .frame(maxWidth: readableContentWidth)
+                            .padding(.top, windowControlsInset)
+                            .padding(.bottom, 8)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                        .frame(maxWidth: readableContentWidth)
-                        .padding(.top, isiOSAppOnMac ? 12 : windowControlsInset)
-                        .padding(.bottom, 8)
                     }
                     .background(Color.background)
                     .toolbarBackground(Color.background)
@@ -314,6 +317,72 @@ private struct TodayFilterBar: View {
         .scrollIndicators(.hidden)
         .padding(.horizontal, -16)
         .contentMargins(.horizontal, 16, for: .scrollContent)
+    }
+}
+
+// Mac 제목 줄의 필터 버튼
+private struct TodayFilterMenu: View {
+    let store: StoreOf<TodayFeature>
+
+    var body: some View {
+        let category = store.selectedCategory
+        let clear = DropdownMenuItem(
+            String(localized: "todo_list_clear_filters", bundle: PresentationResources.bundle),
+            systemImage: "xmark",
+            role: .destructive
+        ) {
+            withAnimation(.easeInOut) {
+                _ = store.send(.setTodoScope(.remaining))
+                _ = store.send(.setCategory(nil))
+            }
+        }
+
+        PaneMenuButton(
+            systemImage: "line.3.horizontal.decrease",
+            badgeCount: store.appliedFilterCount,
+            sections: [
+                DropdownMenuSection(
+                    String(localized: "today_filter_view", bundle: PresentationResources.bundle),
+                    items: TodayFeature.TodoScope.allCases.map { scope in
+                        DropdownMenuItem(scope.title, isChecked: store.selectedTodoScope == scope) {
+                            withAnimation(.easeInOut) {
+                                _ = store.send(.setTodoScope(scope))
+                            }
+                        }
+                    }
+                ),
+                DropdownMenuSection(items: [
+                    DropdownMenuItem(
+                        String(localized: "todo_category", bundle: PresentationResources.bundle),
+                        systemImage: category?.symbolName ?? "tray",
+                        imageColor: category?.color,
+                        submenu: [
+                            DropdownMenuSection(items: [
+                                DropdownMenuItem(
+                                    String(localized: "today_filter_all_categories", bundle: PresentationResources.bundle),
+                                    systemImage: "tray.2",
+                                    isChecked: store.selectedCategoryID == nil
+                                ) {
+                                    store.send(.setCategory(nil))
+                                }
+                            ]),
+                            DropdownMenuSection(items: store.visibleCategories.map { category in
+                                DropdownMenuItem(
+                                    category.localizedName,
+                                    systemImage: category.symbolName,
+                                    imageColor: category.color,
+                                    isChecked: store.selectedCategoryID == category.id
+                                ) {
+                                    store.send(.setCategory(category.id))
+                                }
+                            })
+                        ]
+                    )
+                ]),
+                // 걸린 필터가 있을 때만 마지막 항목으로 표시
+                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [clear] : [])
+            ]
+        )
     }
 }
 
