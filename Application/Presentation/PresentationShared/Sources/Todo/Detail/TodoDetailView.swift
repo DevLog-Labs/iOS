@@ -19,6 +19,7 @@ public struct TodoDetailView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.deviceType) private var deviceType
     @State var store: StoreOf<TodoDetailFeature>
     private let windowEvent: TodoEditorWindowEvent?
@@ -199,7 +200,14 @@ public struct TodoDetailView: View {
         switch coverStore.destination {
         case .editor:
             if let todoEditorStore = coverStore.scope(state: \.todoEditor, action: \.todoEditor) {
-                TodoEditorView(store: todoEditorStore)
+                TodoEditorView(
+                    store: todoEditorStore,
+                    onUpdateSuccess: { todo in
+                        // 사이드바가 있으면 Mac 편집 창과 같은 경로로 옆 목록에도 편집 결과 전달
+                        guard usesDesktopLayout else { return }
+                        windowEvent?.submitUpdate(value: TodoEditorWindowValue(todo: todo), todo: todo)
+                    }
+                )
             }
         }
     }
