@@ -233,43 +233,51 @@ private struct TodoListTopBar: View {
 
         VStack(spacing: 0) {
             if showsPaneTitleBar {
-                PaneTitleBar(title) { actions }
+                PaneTitleBar(title) {
+                    TodoListPaneMenus(store: store)
+                    actions
+                }
             }
 
-            VStack(spacing: 8) {
-                if !showsPaneTitleBar {
-                    ZStack {
-                        title
-                            .font(.adaptive(.headline))
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.8)
+            // Mac 제목 줄은 필터와 정렬을 버튼으로 옮겨 검색 중일 때만 아래 줄 표시
+            if !showsPaneTitleBar || store.isSearching {
+                VStack(spacing: 8) {
+                    if !showsPaneTitleBar {
+                        ZStack {
+                            title
+                                .font(.adaptive(.headline))
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.8)
 
-                        if deviceType != .duo {
-                            HStack(spacing: 12) {
-                                NavigationBackButton {
-                                    dismiss()
+                            if deviceType != .duo {
+                                HStack(spacing: 12) {
+                                    NavigationBackButton {
+                                        dismiss()
+                                    }
+
+                                    Spacer()
+
+                                    actions
                                 }
-
-                                Spacer()
-
-                                actions
                             }
                         }
-                    }
-                    .padding(.horizontal, 16)
-                }
-
-                if store.isSearching {
-                    TodoListSearchBar(store: store, searchTransition: searchTransition)
                         .padding(.horizontal, 16)
-                }
+                    }
 
-                TodoListFilterHeader(store: store)
+                    if store.isSearching {
+                        TodoListSearchBar(store: store, searchTransition: searchTransition)
+                            .padding(.horizontal, 16)
+                    }
+
+                    if !showsPaneTitleBar {
+                        TodoListFilterHeader(store: store)
+                    }
+                }
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
+                .padding(.top, showsPaneTitleBar ? 12 : windowControlsInset)
+                .padding(.bottom, 12)
             }
-            .frame(maxWidth: readableContentWidth)
-            .frame(maxWidth: .infinity)
-            .padding(.top, showsPaneTitleBar ? 12 : windowControlsInset)
-            .padding(.bottom, 12)
         }
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
@@ -495,5 +503,68 @@ private struct TodoListFilterHeader: View {
         .fixedSize(horizontal: false, vertical: true)
         .contentMargins(.horizontal, 16, for: .scrollContent)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// Mac 제목 줄의 필터와 정렬 버튼
+private struct TodoListPaneMenus: View {
+    let store: StoreOf<TodoListFeature>
+
+    var body: some View {
+        PaneMenuButton(
+            systemImage: "line.3.horizontal.decrease",
+            badgeCount: store.appliedFilterCount,
+            sections: [
+                DropdownMenuSection(items: [
+                    DropdownMenuItem(
+                        String(localized: "todo_list_pinned_only", bundle: PresentationResources.bundle),
+                        systemImage: "star",
+                        isChecked: store.query.isPinned
+                    ) {
+                        store.send(.binding(.set(\.query.isPinned, !store.query.isPinned)))
+                    }
+                ]),
+                DropdownMenuSection(
+                    String(localized: "todo_list_completion_status", bundle: PresentationResources.bundle),
+                    items: [TodoQuery.CompletionFilter.all, .incomplete, .completed].map { option in
+                        DropdownMenuItem(option.title, isChecked: store.query.completionFilter == option) {
+                            store.send(.binding(.set(\.query.completionFilter, option)))
+                        }
+                    }
+                ),
+                // 걸린 필터가 있을 때만 마지막 항목으로 표시
+                DropdownMenuSection(items: 0 < store.appliedFilterCount ? [
+                    DropdownMenuItem(
+                        String(localized: "todo_list_clear_filters", bundle: PresentationResources.bundle),
+                        systemImage: "xmark",
+                        role: .destructive
+                    ) {
+                        store.send(.view(.resetFilters))
+                    }
+                ] : [])
+            ]
+        )
+
+        PaneMenuButton(
+            systemImage: "arrow.up.arrow.down",
+            sections: [
+                DropdownMenuSection(
+                    String(localized: "todo_list_sort_by", bundle: PresentationResources.bundle),
+                    items: [TodoQuery.SortTarget.createdAt, .updatedAt].map { option in
+                        DropdownMenuItem(option.title, isChecked: store.query.sortTarget == option) {
+                            store.send(.binding(.set(\.query.sortTarget, option)))
+                        }
+                    }
+                ),
+                DropdownMenuSection(
+                    String(localized: "todo_list_sort_order", bundle: PresentationResources.bundle),
+                    items: [TodoQuery.SortOrder.latest, .oldest].map { option in
+                        DropdownMenuItem(option.title, isChecked: store.query.sortOrder == option) {
+                            store.send(.binding(.set(\.query.sortOrder, option)))
+                        }
+                    }
+                )
+            ]
+        )
     }
 }

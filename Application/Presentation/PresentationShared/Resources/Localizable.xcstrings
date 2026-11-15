@@ -5413,6 +5413,23 @@
         }
       }
     },
+    "todo_list_pinned_only" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pinned Only"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "중요 표시만"
+          }
+        }
+      }
+    },
     "todo_list_search_empty" : {
       "extractionState" : "manual",
       "localizations" : {
