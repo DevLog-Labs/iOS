@@ -354,7 +354,7 @@ private struct TodayFilterMenu: View {
                 DropdownMenuSection(items: [
                     DropdownMenuItem(
                         String(localized: "todo_category", bundle: PresentationResources.bundle),
-                        systemImage: category?.symbolName ?? "tray.2",
+                        systemImage: category?.symbolName ?? "tray",
                         imageColor: category?.color,
                         submenu: [
                             DropdownMenuSection(items: [
