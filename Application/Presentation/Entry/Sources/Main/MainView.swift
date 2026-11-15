@@ -38,7 +38,7 @@ struct MainView: View {
     var body: some View {
         let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular && store.isWide
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
-        let readableContentWidth = isiOSAppOnMac ? store.readableContentWidth : .infinity
+        let readableContentWidth = showsSideBar ? store.readableContentWidth : .infinity
         // iPhone, Duo, 좁은 iPad 창은 시스템 탭 바 대신 직접 그린 탭 사용
         let usesCustomTabBar = deviceType != .ipad || horizontalSizeClass == .compact
         let isSystemTabBarHidden = showsSideBar || usesCustomTabBar
@@ -49,28 +49,20 @@ struct MainView: View {
         // Mac 창 오른쪽 세부 정보 사이드바, 설정 화면에서는 표시하지 않음
         let showsDetailSideBar = isiOSAppOnMac
             && (store.sideBarLocations[selectedTab] ?? selectedTab.sideBarLocation) != .settings
+        let sideBarIdealWidth = isiOSAppOnMac ? 220 * AdaptiveSize.boardScale : 250
 
         HStack(spacing: 0) {
             if showsSideBar && !store.isSideBarCollapsed {
-                if isiOSAppOnMac {
-                    // 최소는 화살표와 아이콘만 보이는 폭, 최대는 Orca 사이드바와 같은 폭
-                    TreeSideBar(selectedTab: $selectedTab, store: store)
-                        .resizablePane(
-                            width: store.sideBarWidth,
-                            minimumWidth: 72 * AdaptiveSize.boardScale,
-                            idealWidth: 220 * AdaptiveSize.boardScale,
-                            maximumWidth: 500 * AdaptiveSize.boardScale
-                        ) { width in
-                            store.send(.view(.sideBarResized(width)))
-                        }
-                } else {
-                    SideBar(selectedTab: $selectedTab, unreadPushCount: store.unreadPushCount)
-                        .resizablePane(
-                            minimumWidth: 220,
-                            idealWidth: 260,
-                            maximumWidth: 320
-                        )
-                }
+                // 최소는 화살표와 아이콘만 보이는 폭, Mac 최대는 Orca 사이드바와 같은 폭
+                TreeSideBar(selectedTab: $selectedTab, store: store)
+                    .resizablePane(
+                        width: store.sideBarWidth,
+                        minimumWidth: isiOSAppOnMac ? 72 * AdaptiveSize.boardScale : 84,
+                        idealWidth: sideBarIdealWidth,
+                        maximumWidth: isiOSAppOnMac ? 500 * AdaptiveSize.boardScale : 320
+                    ) { width in
+                        store.send(.view(.sideBarResized(width)))
+                    }
             }
 
             ZStack {
@@ -192,6 +184,7 @@ struct MainView: View {
                 }
             }
         }
+        .environment(\.usesDesktopLayout, showsSideBar)
         .overlay {
             if 0 < verticalBarWidth {
                 MainTabRail(
@@ -397,40 +390,9 @@ private struct MainTabRail: View {
     }
 }
 
-private struct SideBar: View {
-    @Environment(\.paneWidth) private var paneWidth
-    @Binding var selectedTab: MainTab
-    let unreadPushCount: Int
-
-    var body: some View {
-        GeometryReader { geometry in
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(MainTab.allCases, id: \.self) { tab in
-                    if tab == .profile { Spacer() }
-                    SideBarButton(
-                        tab: tab,
-                        isSelected: selectedTab == tab,
-                        unreadPushCount: unreadPushCount
-                    ) {
-                        selectedTab = tab
-                    }
-                }
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 16)
-            .padding(.top, geometry.windowControlsInset)
-        }
-        .background {
-            Color.secondaryBackground
-                .ignoresSafeArea(.container, edges: .vertical)
-        }
-        // 칸이 기본 폭보다 좁아도 알림 개수가 잘리지 않도록 지금 폭에 맞춰 배치
-        .frame(width: paneWidth)
-    }
-}
-
-// Mac에서 Finder처럼 위치를 고르는 트리 사이드바
+// Mac과 넓은 iPad 창에서 Finder처럼 위치를 고르는 트리 사이드바
 private struct TreeSideBar: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.paneWidth) private var paneWidth
     @Binding var selectedTab: MainTab
     let store: StoreOf<MainFeature>
@@ -460,12 +422,12 @@ private struct TreeSideBar: View {
                 .overlay(alignment: .leading) {
                     if isCompact {
                         collapseButton
-                            .frame(width: 18 * AdaptiveSize.boardScale)
-                            .padding(.leading, (8 + 4 + 14 + 6) * AdaptiveSize.boardScale)
+                            .frame(width: isiOSAppOnMac ? 18 * AdaptiveSize.boardScale : 20)
+                            .padding(.leading, isiOSAppOnMac ? (8 + 4 + 14 + 6) * AdaptiveSize.boardScale : 8 + 6 + 16 + 8)
                     }
                 }
                 ScrollView {
-                    VStack(spacing: AdaptiveSize.boardScale) {
+                    VStack(spacing: isiOSAppOnMac ? AdaptiveSize.boardScale : 2) {
                         ForEach([MainTab.home, .today, .notification], id: \.self) { tab in
                             SideBarRow(
                                 title: Text(tab.title),
@@ -539,7 +501,7 @@ private struct TreeSideBar: View {
                     .padding(.horizontal, 8 * AdaptiveSize.boardScale)
                     .padding(.vertical, 10 * AdaptiveSize.boardScale)
                 }
-                VStack(spacing: AdaptiveSize.boardScale) {
+                VStack(spacing: isiOSAppOnMac ? AdaptiveSize.boardScale : 2) {
                     SideBarRow(
                         title: Text(MainTab.profile.title),
                         symbolName: MainTab.profile.symbolName,
@@ -580,10 +542,13 @@ private struct TreeSideBar: View {
     }
 }
 
+// Mac과 iPad가 같은 모양으로 쓰는 트리 사이드바 항목
+// Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
 private struct SideBarRow: View {
     // 이름이 들어갈 자리가 없어 아이콘만 표시하는 폭
-    static let compactWidth = 104 * AdaptiveSize.boardScale
+    static let compactWidth = ProcessInfo.processInfo.isiOSAppOnMac ? 104 * AdaptiveSize.boardScale : 120
 
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.paneWidth) private var paneWidth
     let title: Text
     let symbolName: String
@@ -599,17 +564,17 @@ private struct SideBarRow: View {
         let isCompact = (paneWidth ?? .infinity) < Self.compactWidth
 
         Button(action: action) {
-            HStack(spacing: 6 * AdaptiveSize.boardScale) {
+            HStack(spacing: isiOSAppOnMac ? 6 * AdaptiveSize.boardScale : 8) {
                 Image(systemName: "chevron.right")
                     .font(.adaptive(.caption2).weight(.bold))
                     .foregroundStyle(Color.secondaryLabel)
                     .rotationEffect(.degrees(isExpanded == true ? 90 : 0))
                     .opacity(isExpanded == nil ? 0 : 1)
-                    .frame(width: 14 * AdaptiveSize.boardScale)
+                    .frame(width: isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
                 Image(systemName: symbolName)
                     .font(.adaptive(.body))
                     .foregroundStyle(isSelected ? Color.tintLabel : symbolColor ?? .secondaryLabel)
-                    .frame(width: 18 * AdaptiveSize.boardScale)
+                    .frame(width: isiOSAppOnMac ? 18 * AdaptiveSize.boardScale : 20)
                     // 아이콘만 보일 때 읽지 않은 알림은 아이콘 오른쪽 위 점으로 표시
                     .overlay(alignment: .topTrailing) {
                         if isCompact && 0 < badgeCount {
@@ -620,7 +585,7 @@ private struct SideBarRow: View {
                         }
                     }
                 title
-                    .font(.adaptive(.body).weight(isChild ? .medium : .semibold))
+                    .font(.adaptive(isiOSAppOnMac ? .body : .subheadline).weight(isChild ? .medium : .semibold))
                     .lineLimit(1)
                     // 아이콘만 보일 때도 이름 줄 높이는 유지
                     .frame(maxWidth: isCompact ? 0 : nil)
@@ -632,57 +597,17 @@ private struct SideBarRow: View {
                         .monospacedDigit()
                         .foregroundStyle(Color.white)
                         .padding(.horizontal, 4 * AdaptiveSize.boardScale)
-                        .frame(minWidth: 15 * AdaptiveSize.boardScale, minHeight: 15 * AdaptiveSize.boardScale)
+                        .frame(minWidth: 18 * AdaptiveSize.boardScale, minHeight: 18 * AdaptiveSize.boardScale)
                         .background(Color.accent, in: .capsule)
                         .fixedSize()
                 }
             }
             .foregroundStyle(isSelected ? Color.tintLabel : .label)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, (isChild && !isCompact ? 22 : 4) * AdaptiveSize.boardScale)
-            .padding(.trailing, 8 * AdaptiveSize.boardScale)
-            .padding(.vertical, 6 * AdaptiveSize.boardScale)
+            .padding(.leading, isiOSAppOnMac ? (isChild && !isCompact ? 22 : 4) * AdaptiveSize.boardScale : (isChild && !isCompact ? 34 : 6))
+            .padding(.trailing, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
+            .frame(minHeight: isiOSAppOnMac ? 28 * AdaptiveSize.boardScale : 44)
             .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
-            .background {
-                RoundedRectangle(cornerRadius: CornerRadius.control)
-                    .fill(isSelected ? Color.tintFill : .clear)
-            }
-            .contentShape(.rect)
-        }
-        .buttonStyle(.plain)
-    }
-}
-
-private struct SideBarButton: View {
-    let tab: MainTab
-    let isSelected: Bool
-    let unreadPushCount: Int
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: tab.symbolName)
-                    .font(.title3)
-                    .frame(width: 24)
-                Text(tab.title)
-                    .font(.body.weight(.semibold))
-                    .lineLimit(1)
-                Spacer(minLength: 8)
-                if tab == .notification, 0 < unreadPushCount {
-                    Text(verbatim: unreadPushCount.formatted())
-                        .font(.caption.bold())
-                        .monospacedDigit()
-                        .foregroundStyle(Color.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.accent, in: .capsule)
-                }
-            }
-            .foregroundStyle(isSelected ? Color.tintLabel : .label)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
             .background {
                 RoundedRectangle(cornerRadius: CornerRadius.control)
                     .fill(isSelected ? Color.tintFill : .clear)
