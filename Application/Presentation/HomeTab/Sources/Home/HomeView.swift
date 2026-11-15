@@ -125,6 +125,10 @@ public struct HomeView: View {
             case .manageTodoCategory:
                 // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
                 guard !store.preferences.isEmpty else { break }
+                // Mac은 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
+                if isiOSAppOnMac {
+                    router.path = []
+                }
                 store.send(.view(.tapManageTodoCategory))
             case .open, nil:
                 break
