@@ -9,6 +9,8 @@ import SwiftUI
 
 // Mac 창에서 화면 칸 맨 위에 두는 제목 줄
 public struct PaneTitleBar<Title: View, Actions: View>: View {
+    @Environment(\.expandSideBar) private var expandSideBar
+    @State private var windowControlsWidth = CGFloat.zero
     private let background: Color
     private let title: Title
     private let actions: Actions
@@ -25,12 +27,18 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
 
     public var body: some View {
         ZStack(alignment: .leading) {
-            // 버튼이 없는 제목 줄도 사이드바 ← → 줄과 같은 높이 유지
+            // 버튼이 없는 제목 줄도 사이드바 맨 위 줄과 같은 높이 유지
             Image(systemName: "circle")
                 .topBarButtonStyle()
                 .hidden()
 
             HStack(spacing: 4) {
+                if let expandSideBar {
+                    Button(action: expandSideBar) {
+                        Image(systemName: "sidebar.left")
+                    }
+                    .topBarButtonStyle()
+                }
                 title
                     .font(.adaptive(.headline))
                     .lineLimit(1)
@@ -38,6 +46,8 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
                 actions
             }
         }
+        // 사이드바를 접어 창 왼쪽 위에 놓인 제목 줄은 창 버튼 자리만큼 비움
+        .padding(.leading, windowControlsWidth)
         .padding(.horizontal, 16)
         .padding(.vertical, 6)
         .background(background, ignoresSafeAreaEdges: .top)
@@ -45,6 +55,12 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
             Rectangle()
                 .fill(Color.separator)
                 .frame(height: 1)
+        }
+        .onGeometryChange(for: CGFloat.self) { proxy in
+            guard #available(iOS 26.0, *) else { return 0 }
+            return proxy.containerCornerInsets.topLeading.width
+        } action: { width in
+            windowControlsWidth = width
         }
     }
 }

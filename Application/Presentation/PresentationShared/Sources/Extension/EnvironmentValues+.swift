@@ -44,6 +44,12 @@ public extension EnvironmentValues {
         set { self[SideBarRequestKey.self] = newValue }
     }
 
+    // 접은 사이드바를 다시 펴는 동작, 사이드바를 접었을 때만 있음
+    var expandSideBar: (() -> Void)? {
+        get { self[ExpandSideBarKey.self] }
+        set { self[ExpandSideBarKey.self] = newValue }
+    }
+
     var showsPaneTitleBar: Bool {
         get { self[ShowsPaneTitleBarKey.self] }
         set { self[ShowsPaneTitleBarKey.self] = newValue }
@@ -96,6 +102,10 @@ public extension EnvironmentValues {
 
     private struct SideBarRequestKey: EnvironmentKey {
         static let defaultValue: SideBarRequest? = nil
+    }
+
+    private struct ExpandSideBarKey: EnvironmentKey {
+        static let defaultValue: (() -> Void)? = nil
     }
 
     private struct ShowsPaneTitleBarKey: EnvironmentKey {

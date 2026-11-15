@@ -37,6 +37,8 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                         .overlay(alignment: .leading) {
                             detail
                                 .frame(minWidth: 400, maxWidth: .infinity)
+                                // 사이드바 펴기 버튼은 왼쪽 칸 제목 줄에만 표시
+                                .environment(\.expandSideBar, nil)
                         }
                         .clipped()
                         .contentShape(.rect)
