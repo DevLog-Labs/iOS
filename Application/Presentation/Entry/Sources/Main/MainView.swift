@@ -73,8 +73,9 @@ struct MainView: View {
             ZStack {
                 if isiOSAppOnMac {
                     // 탭 전환 애니메이션 없이 한 번 연 탭을 유지하고 선택한 탭만 표시
+                    // 사이드바 하위 항목은 홈 화면이 알려 주므로 홈은 처음부터 생성
                     ForEach(MainTab.allCases, id: \.self) { tab in
-                        if store.openedTabs.contains(tab) || selectedTab == tab {
+                        if store.openedTabs.contains(tab) || selectedTab == tab || tab == .home {
                             MainTabContent(
                                 store: store,
                                 tab: tab,

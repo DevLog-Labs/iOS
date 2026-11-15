@@ -136,7 +136,13 @@ public struct HomeView: View {
                 break
             }
         }
-        .onAppear { store.send(.view(.startObserving)) }
+        .onAppear {
+            store.send(.view(.startObserving))
+            // Mac은 홈이 아닌 탭으로 켜져도 사이드바 하위 항목을 채우도록 한 번 불러옴
+            if isiOSAppOnMac && !isSelected {
+                store.send(.view(.fetchData))
+            }
+        }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.view(.fetchData))
