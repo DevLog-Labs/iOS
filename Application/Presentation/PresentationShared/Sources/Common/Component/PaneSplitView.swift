@@ -25,13 +25,16 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     }
 
     public var body: some View {
+        // 두 칸이 기본 폭으로 함께 들어가지 않는 창은 반씩 나눠 처음부터 상세 칸이 잘리지 않게 함
+        let paneWidth = min(400, width / 2)
+
         HStack(spacing: 0) {
             if usesDesktopLayout {
                 // 경계선은 사이드바 경계선부터 창 오른쪽 끝까지 이동
                 primary
                     .resizablePane(
                         minimumWidth: 0,
-                        idealWidth: 400,
+                        idealWidth: paneWidth,
                         maximumWidth: width
                     )
                     // 세부 정보 사이드바 여는 버튼은 오른쪽 칸 제목 줄에만 표시
@@ -45,7 +48,7 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                 Color.clear
                     .overlay(alignment: .leading) {
                         detail
-                            .frame(minWidth: 400, maxWidth: .infinity)
+                            .frame(minWidth: paneWidth, maxWidth: .infinity)
                             // 사이드바 펴기 버튼은 왼쪽 칸 제목 줄에만 표시
                             .environment(\.expandSideBar, nil)
                             .onPreferenceChange(PaneDetailPresentingPreferenceKey.self) { isPresenting in
@@ -141,7 +144,8 @@ public extension View {
 
 private struct ResizablePaneModifier: ViewModifier {
     @Environment(\.layoutDirection) private var layoutDirection
-    @State private var width: CGFloat
+    // 끌거나 바깥에서 정한 폭, 없으면 기본 폭을 따름
+    @State private var width: CGFloat?
     @State private var dragStartWidth: CGFloat?
     // 바깥에서 정한 폭, 없으면 기본 폭
     private let storedWidth: CGFloat?
@@ -162,12 +166,12 @@ private struct ResizablePaneModifier: ViewModifier {
         self.idealWidth = idealWidth
         self.maximumWidth = maximumWidth
         self.onResize = onResize
-        self._width = State(initialValue: max(width ?? idealWidth, minimumWidth))
+        self._width = State(initialValue: width)
     }
 
     // 창 폭이 바뀌어 최대 폭이 줄어도 범위 안에 두는 실제 칸 폭
     private var paneWidth: CGFloat {
-        min(max(width, minimumWidth), maximumWidth)
+        min(max(width ?? idealWidth, minimumWidth), maximumWidth)
     }
 
     func body(content: Content) -> some View {
@@ -194,7 +198,7 @@ private struct ResizablePaneModifier: ViewModifier {
             }
             // 저장한 폭을 불러오거나 기본 폭으로 되돌리면 칸 폭도 맞춤
             .onChange(of: storedWidth) { _, value in
-                width = max(value ?? idealWidth, minimumWidth)
+                width = value
             }
     }
 
@@ -212,7 +216,7 @@ private struct ResizablePaneModifier: ViewModifier {
             }
             .onEnded { _ in
                 dragStartWidth = nil
-                onResize?(width)
+                onResize?(paneWidth)
             }
     }
 }
