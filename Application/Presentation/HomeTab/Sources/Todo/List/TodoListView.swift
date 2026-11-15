@@ -46,6 +46,7 @@ struct TodoListView: View {
             )
             .id(store.detailRevision)
         }
+        .detailSideBarTarget(store.selectedTodoId.map { .todo(id: $0, isEditable: true) })
         .prominentAlert(store, state: \.alert, action: \.alert)
         .onReceive(windowSubmits) { submit in
             switch submit {
