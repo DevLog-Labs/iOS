@@ -24,7 +24,8 @@ public struct PaneMenuButton: View {
     }
 
     public var body: some View {
-        DropdownMenu(sections: sections) {
+        // 제목 줄 오른쪽 끝 버튼이라 메뉴 오른쪽 끝을 버튼 오른쪽 끝에 맞춤
+        DropdownMenu(alignment: .trailing, sections: sections) {
             Image(systemName: systemImage)
                 .topBarButtonStyle()
                 // 걸린 필터 개수는 아이콘 오른쪽 위 강조색 배지로 표시

@@ -66,15 +66,19 @@ public struct DropdownMenu<Label: View>: View {
     @State private var isLocalPresented = false
     @State private var anchor = CGRect.zero
     private let isPresented: Binding<Bool>?
+    private let alignment: HorizontalAlignment
     private let sections: [DropdownMenuSection]
     private let label: Label
 
+    // alignment는 메뉴 끝을 맞출 버튼 쪽 끝
     public init(
         isPresented: Binding<Bool>? = nil,
+        alignment: HorizontalAlignment = .leading,
         sections: [DropdownMenuSection],
         @ViewBuilder label: () -> Label
     ) {
         self.isPresented = isPresented
+        self.alignment = alignment
         self.sections = sections
         self.label = label()
     }
@@ -94,7 +98,7 @@ public struct DropdownMenu<Label: View>: View {
             anchor = frame
         }
         .fullScreenCover(isPresented: presented) {
-            DropdownMenuPanel(anchor: $anchor, sections: sections) {
+            DropdownMenuPanel(anchor: $anchor, alignment: alignment, sections: sections) {
                 setPresented(false, binding: presented)
             }
             .presentationBackground(.clear)
@@ -116,6 +120,7 @@ private struct DropdownMenuPanel: View {
     @State private var height = CGFloat.zero
     @State private var submenu: DropdownMenuItem?
     @Binding var anchor: CGRect
+    let alignment: HorizontalAlignment
     let sections: [DropdownMenuSection]
     let dismiss: () -> Void
 
@@ -139,7 +144,8 @@ private struct DropdownMenuPanel: View {
                 let above = anchor.minY - frame.minY - spacing - margin
                 let opensBelow = height <= below || above <= below
                 let visibleHeight = min(height, max(opensBelow ? below : above, 0))
-                let leading = min(max(anchor.minX - frame.minX, margin), frame.width - width - margin)
+                let edge = alignment == .trailing ? anchor.maxX - width : anchor.minX
+                let leading = min(max(edge - frame.minX, margin), frame.width - width - margin)
                 let top = opensBelow
                     ? anchor.maxY - frame.minY + spacing : anchor.minY - frame.minY - spacing - visibleHeight
 
