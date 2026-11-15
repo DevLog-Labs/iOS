@@ -222,6 +222,7 @@ private struct TopBarButtonStyleModifier: ViewModifier {
                 .foregroundStyle(tint ?? Color.label)
                 .frame(width: macIconSize, height: macIconSize)
                 .padding(6)
+                .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: isInteractive)
                 .contentShape(.rect)
         } else if let tint {
             content
