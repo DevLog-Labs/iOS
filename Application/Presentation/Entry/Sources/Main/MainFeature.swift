@@ -37,6 +37,8 @@ struct MainFeature {
         var sideBarRequests: [MainTab: SideBarRequest] = [:]
         var sideBarContent = SideBarContent()
         var isDetailSideBarPresented = false
+        // 앱 화면과 분리해 창 전체에 표시하는 Mac 설정 화면
+        var isSettingsPresented = false
         // 탭마다 지금 고른 세부 정보 사이드바 대상
         var detailSideBarTargets: [MainTab: DetailSideBarTarget] = [:]
         // 탭마다 지금 대상을 고른 화면

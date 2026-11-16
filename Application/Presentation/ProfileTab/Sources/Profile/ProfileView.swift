@@ -18,6 +18,7 @@ public struct ProfileView: View {
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
+    @Environment(\.presentSettings) private var presentSettings
     @State private var settingsStore: StoreOf<SettingsFeature>
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
@@ -172,7 +173,12 @@ public struct ProfileView: View {
     @ViewBuilder
     private var titleBar: some View {
         let settingsButton = Button {
-            router.push(.settings)
+            // Mac은 앱 화면과 분리한 설정 화면 표시
+            if let presentSettings {
+                presentSettings()
+            } else {
+                router.push(.settings)
+            }
         } label: {
             Image(systemName: "gearshape")
         }
