@@ -20,18 +20,19 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     // 사이드바가 있는 창은 따로 정한 화면만 두 칸으로 나눔
     private let splitsOnDesktop: Bool
     private let primary: Primary
-    private let detail: Detail
+    // 상세 칸을 그릴 때만 만들어 칸이 없는 화면에서 상세 내용을 만들지 않음
+    private let detail: () -> Detail
 
     public init(
         duoWidth: PanePrimaryWidth = .narrow,
         splitsOnDesktop: Bool = true,
         @ViewBuilder primary: () -> Primary,
-        @ViewBuilder detail: () -> Detail
+        @ViewBuilder detail: @escaping () -> Detail
     ) {
         self.duoWidth = duoWidth
         self.splitsOnDesktop = splitsOnDesktop
         self.primary = primary()
-        self.detail = detail()
+        self.detail = detail
     }
 
     public var body: some View {
@@ -76,7 +77,7 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                 // 상세 칸이 기본 폭보다 좁으면 내용을 줄이지 않고 잘라서 표시
                 Color.clear
                     .overlay(alignment: .leading) {
-                        detail
+                        detail()
                             .frame(minWidth: splitsDesktop ? paneWidth : 0, maxWidth: .infinity)
                             // 사이드바 펴기 버튼은 왼쪽 칸 제목 줄에만 표시
                             .environment(\.expandSideBar, nil)
