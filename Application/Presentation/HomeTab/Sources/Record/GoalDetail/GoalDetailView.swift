@@ -12,15 +12,7 @@ import PresentationShared
 public struct GoalDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @State private var store: StoreOf<GoalDetailFeature>
-
-    public init(goalId: String) {
-        self._store = State(initialValue: Store(
-            initialState: GoalDetailFeature.State(goalId: goalId)
-        ) {
-            GoalDetailFeature()
-        })
-    }
+    @Bindable var store: StoreOf<GoalDetailFeature>
 
     public var body: some View {
         // 사이드바가 있으면 홈 내비게이션 안의 칸이라 시트용 내비게이션을 겹치지 않음
@@ -78,11 +70,9 @@ public struct GoalDetailView: View {
         PaneSplitView(splitsOnDesktop: store.recordEditor != nil) {
             mainContent
         } detail: {
-            if let destination = store.recordEditor {
+            if let editorStore = store.scope(state: \.recordEditor, action: \.recordEditor.presented) {
                 RecordEditorView(
-                    goalId: store.goalId,
-                    goalTitle: store.goalTitle,
-                    record: destination.record,
+                    store: editorStore,
                     onCompletion: {
                         store.send(.view(.refresh))
                     },
@@ -90,17 +80,14 @@ public struct GoalDetailView: View {
                         store.send(.recordEditor(.dismiss))
                     }
                 )
-                .id(destination.id)
             }
         }
         .prominentSheet(
             item: $store.scope(state: \.recordEditor, action: \.recordEditor)
                 .hiddenInPane(usesDesktopLayout)
-        ) { destination in
+        ) { editorStore in
             RecordEditorView(
-                goalId: store.goalId,
-                goalTitle: store.goalTitle,
-                record: destination.record,
+                store: editorStore,
                 onCompletion: {
                     store.send(.view(.refresh))
                 }

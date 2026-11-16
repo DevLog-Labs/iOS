@@ -29,13 +29,23 @@ struct GoalDetailDestinationTests {
         }
 
         await store.send(.view(.addRecord)) {
-            $0.recordEditor = RecordEditorDestination(id: UUID(0), record: nil)
+            $0.recordEditor = RecordEditorFeature.State(
+                goalId: goal.id,
+                goalTitle: goal.title,
+                recordId: UUID(0).uuidString,
+                versionId: UUID(1).uuidString
+            )
         }
         await store.send(.recordEditor(.dismiss)) {
             $0.recordEditor = nil
         }
         await store.send(.view(.continueRecord)) {
-            $0.recordEditor = RecordEditorDestination(id: UUID(1), record: draft)
+            $0.recordEditor = RecordEditorFeature.State(
+                goalId: goal.id,
+                goalTitle: goal.title,
+                record: draft,
+                versionId: UUID(2).uuidString
+            )
         }
     }
 

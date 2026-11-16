@@ -27,7 +27,8 @@ struct GoalDetailFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Action.Alert>?
-        @Presents var recordEditor: RecordEditorDestination?
+        // 넓은 창의 칸과 시트가 같은 상태를 그려 창 폭이 바뀌어도 작성 중인 기록 유지
+        @Presents var recordEditor: RecordEditorFeature.State?
         @Presents var recordDetail: RecordDetailDestination?
         @Presents var todoDetail: TodoDetailDestination?
         @Presents var todoLinkSheet: GoalTodoLinkFeature.State?
@@ -68,7 +69,7 @@ struct GoalDetailFeature {
 
     enum Action: BindableAction, Equatable {
         case alert(PresentationAction<Alert>)
-        case recordEditor(PresentationAction<Never>)
+        case recordEditor(PresentationAction<RecordEditorFeature.Action>)
         case recordDetail(PresentationAction<Never>)
         case todoDetail(PresentationAction<Never>)
         case todoLinkSheet(PresentationAction<GoalTodoLinkFeature.Action>)
@@ -149,7 +150,12 @@ struct GoalDetailFeature {
                       !state.isLoading,
                       !state.isTransitioning,
                       state.recordEditor == nil else { break }
-                state.recordEditor = RecordEditorDestination(id: uuid(), record: nil)
+                state.recordEditor = RecordEditorFeature.State(
+                    goalId: state.goalId,
+                    goalTitle: state.goalTitle,
+                    recordId: uuid().uuidString,
+                    versionId: uuid().uuidString
+                )
             case .view(.continueRecord):
                 guard state.hasLoaded,
                       state.allowsRecordMutation,
@@ -157,7 +163,12 @@ struct GoalDetailFeature {
                       !state.isTransitioning,
                       state.recordEditor == nil,
                       let record = state.items.first(where: \.hasDraft)?.record else { break }
-                state.recordEditor = RecordEditorDestination(id: uuid(), record: record)
+                state.recordEditor = RecordEditorFeature.State(
+                    goalId: state.goalId,
+                    goalTitle: state.goalTitle,
+                    record: record,
+                    versionId: uuid().uuidString
+                )
             case .view(.fetch):
                 guard !state.hasLoaded, !state.isLoading else { break }
                 state.isLoading = true
@@ -196,7 +207,12 @@ struct GoalDetailFeature {
                 guard state.recordEditor == nil,
                       state.recordDetail == nil else { break }
                 if item.hasDraft, state.allowsRecordMutation {
-                    state.recordEditor = RecordEditorDestination(id: uuid(), record: item.record)
+                    state.recordEditor = RecordEditorFeature.State(
+                        goalId: state.goalId,
+                        goalTitle: state.goalTitle,
+                        record: item.record,
+                        versionId: uuid().uuidString
+                    )
                 } else {
                     state.recordDetail = RecordDetailDestination(record: item.record)
                 }
@@ -246,6 +262,9 @@ struct GoalDetailFeature {
             return .none
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$recordEditor, action: \.recordEditor) {
+            RecordEditorFeature()
+        }
         .ifLet(\.$todoLinkSheet, action: \.todoLinkSheet) {
             GoalTodoLinkFeature()
         }
@@ -331,12 +350,6 @@ extension GoalDetailFeature {
         }
     }
 
-}
-
-@ObservableState
-struct RecordEditorDestination: Equatable, Identifiable {
-    let id: UUID
-    let record: DevelopmentRecord?
 }
 
 @ObservableState

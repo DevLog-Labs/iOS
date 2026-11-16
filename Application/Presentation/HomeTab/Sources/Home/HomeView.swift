@@ -45,7 +45,7 @@ public struct HomeView: View {
     }
 
     public var body: some View {
-        let goalDetailID: String? = if case .goalDetail(let goalID)? = store.sheet { goalID } else { nil }
+        let goalDetailID = store.sheet?.goalDetailState?.goalId
         let sideBarLocation: SideBarLocation = if let goalDetailID {
             .developmentGoal(goalDetailID)
         } else if case .category(let item)? = router.root {
@@ -79,9 +79,10 @@ public struct HomeView: View {
                     .detailSideBar {
                         GoalCreateSideBarContent(store: goalStore)
                     }
-                } else if usesDesktopLayout, let goalDetailID {
+                } else if usesDesktopLayout,
+                          let goalStore = store.scope(state: \.sheet?.goalDetailState, action: \.sheet.presented.goalDetail) {
                     // 홈 자리에 개발 목표를 표시하고 기록 작성은 오른쪽 칸에 표시
-                    GoalDetailView(goalId: goalDetailID)
+                    GoalDetailView(store: goalStore)
                         .id(goalDetailID)
                 } else if usesPaneLayout,
                           let editorStore = store.scope(
@@ -157,11 +158,10 @@ public struct HomeView: View {
                 get: { showsSheetAsPane || showsPickerAsPopover ? nil : sheetBinding.wrappedValue },
                 // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸이나 팝오버로 연 화면을 지우지 않도록 지금 상태로 판단
                 set: { sheet in
-                    let isGoalDetail = if case .goalDetail? = store.sheet { true } else { false }
                     guard !usesDesktopLayout
                         || store.sheet?.categoryManageState == nil
                         && store.sheet?.goalCreateState == nil
-                        && !isGoalDetail
+                        && store.sheet?.goalDetailState == nil
                     else { return }
                     guard !(usesPaneLayout && store.showContentPicker) else { return }
                     sheetBinding.wrappedValue = sheet
@@ -351,9 +351,11 @@ public struct HomeView: View {
                     store.send(.sheet(.dismiss))
                 }
             }
-        case .goalDetail(let goalID):
-            GoalDetailView(goalId: goalID)
-                .environment(\.windowControlsInset, 0)
+        case .goalDetail:
+            if let goalStore = sheetStore.scope(state: \.goalDetailState, action: \.goalDetail) {
+                GoalDetailView(store: goalStore)
+                    .environment(\.windowControlsInset, 0)
+            }
         }
     }
 

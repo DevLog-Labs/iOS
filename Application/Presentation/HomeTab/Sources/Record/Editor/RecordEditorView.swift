@@ -41,6 +41,17 @@ public struct RecordEditorView: View {
         self.onClose = onClose
     }
 
+    // 개발 목표가 가진 작성 상태를 칸과 시트에 같이 그림
+    init(
+        store: StoreOf<RecordEditorFeature>,
+        onCompletion: @escaping () -> Void,
+        onClose: (() -> Void)? = nil
+    ) {
+        self._store = State(initialValue: store)
+        self.onCompletion = onCompletion
+        self.onClose = onClose
+    }
+
     public var body: some View {
         // 개발 목표 오른쪽 칸에 그리면 개발 목표 화면의 내비게이션을 겹치지 않음
         if usesPaneLayout {
