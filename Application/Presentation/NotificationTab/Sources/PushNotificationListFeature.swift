@@ -71,6 +71,7 @@ struct PushNotificationListFeature {
             case resetFilters
             case selectNotification(String?)
             case syncSheetPresentation
+            case hideSheet
         }
 
         enum Sheet: Equatable {
@@ -243,6 +244,8 @@ private extension PushNotificationListFeature {
             } else {
                 state.sheet = nil
             }
+        case .hideSheet:
+            state.sheet = nil
         }
 
         return .none

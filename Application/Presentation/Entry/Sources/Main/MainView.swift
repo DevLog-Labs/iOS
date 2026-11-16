@@ -38,6 +38,8 @@ struct MainView: View {
 
     var body: some View {
         let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular
+        // Duo 펼침은 사이드바 없이 목록 | 상세 두 칸으로 표시
+        let usesPaneLayout = showsSideBar || deviceType == .duo && horizontalSizeClass == .regular
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
         let readableContentWidth = showsSideBar ? store.readableContentWidth : .infinity
         // iPhone, Duo, 좁은 iPad 창은 시스템 탭 바 대신 직접 그린 탭 사용
@@ -51,6 +53,7 @@ struct MainView: View {
         let showsDetailSideBar = showsSideBar
             && (store.sideBarLocations[selectedTab] ?? selectedTab.sideBarLocation) != .settings
         let sideBarIdealWidth = isiOSAppOnMac ? 220 * AdaptiveSize.boardScale : 250
+        let tabBarInset = showsTabBar ? store.tabBarHeight : 0
 
         HStack(spacing: 0) {
             if showsSideBar && !store.isSideBarCollapsed {
@@ -81,6 +84,8 @@ struct MainView: View {
                                 tab: tab,
                                 isSelected: selectedTab == tab,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                tabBarInset: tabBarInset,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -101,6 +106,8 @@ struct MainView: View {
                                 tab: .home,
                                 isSelected: selectedTab == .home,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                tabBarInset: tabBarInset,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -116,6 +123,8 @@ struct MainView: View {
                                 tab: .today,
                                 isSelected: selectedTab == .today,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                tabBarInset: tabBarInset,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -131,6 +140,8 @@ struct MainView: View {
                                 tab: .notification,
                                 isSelected: selectedTab == .notification,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                tabBarInset: tabBarInset,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -147,6 +158,8 @@ struct MainView: View {
                                 tab: .profile,
                                 isSelected: selectedTab == .profile,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                tabBarInset: tabBarInset,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -244,6 +257,11 @@ struct MainView: View {
                         .fill(Color.separator)
                         .frame(height: 1)
                 }
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.size.height
+                } action: { height in
+                    store.send(.binding(.set(\.tabBarHeight, height)))
+                }
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
@@ -271,8 +289,10 @@ struct MainView: View {
 }
 
 // toolbarVisibility 적용 전 첫 프레임의 탭 바 노출 방지
+// 바깥 SwiftUI 여백은 탭 안 UIKit 화면까지 전달되지 않아 직접 그린 탭 바 높이를 탭 컨트롤러 안전 영역에 더함
 private struct TabBarVisibility: UIViewControllerRepresentable {
     let isHidden: Bool
+    let bottomInset: CGFloat
 
     func makeUIViewController(context: Context) -> Controller {
         Controller()
@@ -280,15 +300,25 @@ private struct TabBarVisibility: UIViewControllerRepresentable {
 
     func updateUIViewController(_ controller: Controller, context: Context) {
         controller.isTabBarHidden = isHidden
-        controller.tabBarController?.isTabBarHidden = isHidden
+        controller.bottomInset = bottomInset
+        controller.apply()
     }
 
     final class Controller: UIViewController {
         var isTabBarHidden = false
+        var bottomInset = CGFloat.zero
 
         override func didMove(toParent parent: UIViewController?) {
             super.didMove(toParent: parent)
-            tabBarController?.isTabBarHidden = isTabBarHidden
+            apply()
+        }
+
+        func apply() {
+            guard let tabBarController else { return }
+            tabBarController.isTabBarHidden = isTabBarHidden
+            if tabBarController.additionalSafeAreaInsets.bottom != bottomInset {
+                tabBarController.additionalSafeAreaInsets.bottom = bottomInset
+            }
         }
     }
 }
@@ -329,6 +359,8 @@ private struct MainTabContent: View {
     let tab: MainTab
     let isSelected: Bool
     let isTabBarHidden: Bool
+    let tabBarInset: CGFloat
+    let usesPaneLayout: Bool
     let windowControlsInset: CGFloat
     let readableContentWidth: CGFloat
     let windowEvent: TodoEditorWindowEvent
@@ -336,6 +368,7 @@ private struct MainTabContent: View {
     var body: some View {
         content
             .environment(\.isTabContentActive, isSelected)
+            .environment(\.usesPaneLayout, usesPaneLayout)
             .environment(\.windowControlsInset, windowControlsInset)
             .environment(\.readableContentWidth, readableContentWidth)
             .environment(\.sideBarRequest, store.sideBarRequests[tab])
@@ -350,7 +383,7 @@ private struct MainTabContent: View {
                 store.send(.view(.sideBarContentChanged(content)))
             }
             .toolbarVisibility(isTabBarHidden ? .hidden : .visible, for: .tabBar)
-            .background { TabBarVisibility(isHidden: isTabBarHidden) }
+            .background { TabBarVisibility(isHidden: isTabBarHidden, bottomInset: tabBarInset) }
     }
 
     @ViewBuilder

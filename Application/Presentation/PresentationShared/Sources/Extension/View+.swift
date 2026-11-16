@@ -176,12 +176,16 @@ public extension View {
 
 private struct DuoToolbarVisibilityModifier: ViewModifier {
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
 
     func body(content: Content) -> some View {
+        // Duo 펼침은 시스템 막대 대신 칸 제목 줄 사용
+        let showsNavigationBar = deviceType == .duo && !usesPaneLayout
+
         content
-            .toolbarTitleDisplayMode(deviceType == .duo ? .inline : .automatic)
-            .toolbarBackgroundVisibility(deviceType == .duo ? .hidden : .automatic, for: .navigationBar)
-            .toolbarVisibility(deviceType == .duo ? .visible : .hidden, for: .navigationBar)
+            .toolbarTitleDisplayMode(showsNavigationBar ? .inline : .automatic)
+            .toolbarBackgroundVisibility(showsNavigationBar ? .hidden : .automatic, for: .navigationBar)
+            .toolbarVisibility(showsNavigationBar ? .visible : .hidden, for: .navigationBar)
     }
 }
 
@@ -203,6 +207,7 @@ private struct LegacyTopBarButtonStyleModifier: ViewModifier {
 private struct TopBarButtonStyleModifier: ViewModifier {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.isInPaneTitleBar) private var isInPaneTitleBar
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title2,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
@@ -232,6 +237,14 @@ private struct TopBarButtonStyleModifier: ViewModifier {
                 .buttonStyle(FillButtonStyle())
                 .frame(width: size, height: size)
                 .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: isInteractive)
+                .contentShape(.rect)
+        } else if isInPaneTitleBar && tint == nil {
+            // 칸 제목 줄에서는 리퀴드 글래스 없이 손가락으로 누르는 크기의 아이콘만 표시
+            content
+                .font(.title3.weight(.medium))
+                .foregroundStyle(Color.label)
+                .buttonStyle(FillButtonStyle())
+                .frame(width: iconSize + 12, height: iconSize + 12)
                 .contentShape(.rect)
         } else if let tint {
             content

@@ -14,6 +14,7 @@ public struct ProfileView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
     @State private var settingsStore: StoreOf<SettingsFeature>
@@ -40,7 +41,7 @@ public struct ProfileView: View {
 
     public var body: some View {
         NavigationStack(path: $router.path) {
-            PaneSplitView {
+            PaneSplitView(duoWidth: .medium) {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 16) {
                         UserInfoCard(store: store, isSelected: isSelected)
@@ -58,7 +59,7 @@ public struct ProfileView: View {
                     .frame(maxWidth: .infinity)
                 }
                 // 칸 제목 줄 구분선과 첫 카드 사이 여백
-                .contentMargins(.top, usesDesktopLayout ? 12 : 0, for: .scrollContent)
+                .contentMargins(.top, usesPaneLayout ? 12 : 0, for: .scrollContent)
                 .safeAreaInset(edge: .top, spacing: 0) { titleBar }
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
@@ -79,24 +80,15 @@ public struct ProfileView: View {
             } detail: {
                 switch store.selectedTodoRoute {
                 case .activity(let todoId):
-                    TodoDetailPane(
-                        todoId: todoId,
-                        showEditButton: false,
-                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle)
-                    )
+                    TodoDetailPane(todoId: todoId, showEditButton: false)
                 case .recentTodo(let todoId):
                     TodoDetailPane(
                         todoId: todoId,
                         showEditButton: true,
-                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle),
                         windowEvent: windowEvent
                     )
                 default:
-                    TodoDetailPane(
-                        todoId: nil,
-                        showEditButton: false,
-                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle)
-                    )
+                    TodoDetailPane(todoId: nil, showEditButton: false)
                 }
             }
             .detailSideBarTarget(store.selectedTodoRoute?.detailSideBarTarget)
@@ -108,7 +100,7 @@ public struct ProfileView: View {
                     default: false
                     }
                 },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
+                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
             )
         }
         // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 같은 Todo를 옆 칸에 표시
@@ -166,7 +158,7 @@ public struct ProfileView: View {
         }
         .topBarButtonStyle()
 
-        if usesDesktopLayout {
+        if usesPaneLayout {
             PaneTitleBar(Text("nav_profile", bundle: PresentationResources.bundle)) {
                 settingsButton
             }
@@ -190,9 +182,9 @@ public struct ProfileView: View {
         }
     }
 
-    // 사이드바가 있으면 옆 칸에 상세를 열고 나머지는 화면 이동
+    // 칸 화면은 옆 칸에 상세를 열고 나머지는 화면 이동
     private func showTodo(_ route: ProfileRoute) {
-        if usesDesktopLayout {
+        if usesPaneLayout {
             store.send(.binding(.set(\.selectedTodoRoute, route)))
         } else {
             router.push(route)
@@ -203,7 +195,20 @@ public struct ProfileView: View {
     private func destinationView(_ route: ProfileRoute) -> some View {
         switch route {
         case .settings:
-            SettingsView(store: settingsStore) { router.push($0) }
+            // 사이드바가 있는 창은 설정 아래 화면으로 이동하고 Duo 펼침은 옆 칸에 표시
+            let showsRoutePane = usesPaneLayout && !usesDesktopLayout
+
+            PaneSplitView(duoWidth: .medium, splitsOnDesktop: false) {
+                SettingsView(store: settingsStore) { route in
+                    if showsRoutePane {
+                        settingsStore.send(.binding(.set(\.selectedRoute, route)))
+                    } else {
+                        router.push(route)
+                    }
+                }
+            } detail: {
+                settingsPage(settingsStore.selectedRoute, isPaneDetail: true)
+            }
         case .activity(let todoId):
             TodoDetailView(store: Store(
                 initialState: TodoDetailFeature.State(todoId: todoId, showEditButton: false)
@@ -216,18 +221,29 @@ public struct ProfileView: View {
             ) {
                 TodoDetailFeature()
             }, windowEvent: windowEvent)
+        case .theme, .pushNotification, .account:
+            settingsPage(route, isPaneDetail: false)
+        }
+    }
+
+    // 설정에서 고르는 아래 화면
+    @ViewBuilder
+    private func settingsPage(_ route: ProfileRoute, isPaneDetail: Bool) -> some View {
+        switch route {
         case .theme:
-            ThemeView(theme: $settingsStore.theme)
+            ThemeView(theme: $settingsStore.theme, isPaneDetail: isPaneDetail)
         case .pushNotification:
             PushNotificationSettingsView(store: Store(
                 initialState: PushNotificationSettingsFeature.State()
             ) {
                 PushNotificationSettingsFeature()
-            })
+            }, isPaneDetail: isPaneDetail)
         case .account:
             AccountView(store: Store(initialState: AccountFeature.State()) {
                 AccountFeature()
-            })
+            }, isPaneDetail: isPaneDetail)
+        case .settings, .activity, .recentTodo:
+            EmptyView()
         }
     }
 }

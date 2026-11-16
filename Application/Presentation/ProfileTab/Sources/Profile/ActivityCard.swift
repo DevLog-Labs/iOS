@@ -11,7 +11,7 @@ import Domain
 import PresentationShared
 
 struct ActivityCard: View {
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Bindable var store: StoreOf<ProfileFeature>
     let onSelectTodoID: (String) -> Void
 
@@ -146,8 +146,8 @@ struct ActivityCard: View {
                                     )
                             }
                             Spacer()
-                            // 사이드바가 있으면 옆 칸에 상세를 열어 화면 이동 표시 생략
-                            if !activity.isDeleted, !usesDesktopLayout {
+                            // 칸 화면은 옆 칸에 상세를 열어 화면 이동 표시 생략
+                            if !activity.isDeleted, !usesPaneLayout {
                                 Image(systemName: "chevron.right")
                                     .font(.adaptive(.caption).weight(.semibold))
                                     .foregroundStyle(Color.tertiaryLabel)
@@ -156,7 +156,7 @@ struct ActivityCard: View {
                         .contentShape(.rect)
                         // 행 배치를 바꾸지 않고 선택한 행 배경만 바깥으로 넓힘
                         .background {
-                            if usesDesktopLayout && store.selectedTodoRoute == .activity(activity.todoId) {
+                            if usesPaneLayout && store.selectedTodoRoute == .activity(activity.todoId) {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .fill(Color.tintFill)
                                     .padding(.horizontal, -8)
