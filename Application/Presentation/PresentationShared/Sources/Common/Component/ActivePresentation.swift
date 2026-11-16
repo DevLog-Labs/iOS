@@ -31,7 +31,33 @@ public extension Binding where Value == Bool {
     }
 }
 
+public extension Binding where Value == Bool {
+    // 칸에 그리는 동안은 띄우지 않고, 늦게 닫히며 보내는 닫힘이 칸에 그린 화면을 지우지 않음
+    func hiddenInPane(_ isInPane: Bool) -> Binding {
+        Binding(
+            get: { !isInPane && wrappedValue },
+            set: { isPresented in
+                if !isInPane {
+                    wrappedValue = isPresented
+                }
+            }
+        )
+    }
+}
+
 public extension Binding {
+    func hiddenInPane<Wrapped>(_ isInPane: Bool) -> Binding<Wrapped?>
+    where Value == Wrapped? {
+        Binding<Wrapped?>(
+            get: { isInPane ? nil : wrappedValue },
+            set: { value in
+                if !isInPane {
+                    wrappedValue = value
+                }
+            }
+        )
+    }
+
     func activePresentation<Wrapped>(when isActive: Bool) -> Binding<Wrapped?>
     where Value == Wrapped? {
         Binding<Wrapped?>(
