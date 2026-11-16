@@ -215,6 +215,7 @@ struct TodoDetailFeatureTests {
 
         #expect(adapter.fullScreenCover == nil)
         #expect(adapter.todo == updatedTodo)
+        #expect(adapter.savedTodo == updatedTodo)
         #expect(adapter.referenceItems.isEmpty)
 
         await waitUntil {
@@ -230,6 +231,7 @@ private protocol DetailTestAdapter {
     var todoId: String { get }
     var showEditButton: Bool { get }
     var todo: Todo? { get }
+    var savedTodo: Todo? { get }
     var referenceItems: [Int: TodoReferenceItem] { get }
     var isLoading: Bool { get }
     var alert: AlertState<Never>? { get }
@@ -255,6 +257,7 @@ private struct DetailStoreTestAdapter: DetailTestAdapter {
     var todoId: String { store.todoId }
     var showEditButton: Bool { store.showEditButton }
     var todo: Todo? { store.todo }
+    var savedTodo: Todo? { store.savedTodo }
     var referenceItems: [Int: TodoReferenceItem] { store.referenceItems }
     var isLoading: Bool { store.isLoading }
     var alert: AlertState<Never>? { store.alert }

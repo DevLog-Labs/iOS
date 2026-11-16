@@ -19,6 +19,8 @@ public struct TodoDetailFeature {
         public var todoId: String
         public var showEditButton: Bool
         public var todo: Todo?
+        // 편집 화면에서 저장한 Todo
+        public var savedTodo: Todo?
         public var referenceItems: [Int: TodoReferenceItem] = [:]
         public var loading = LoadingFeature.State()
 
@@ -124,6 +126,7 @@ public struct TodoDetailFeature {
             case .fullScreenCover(.presented(.todoEditor(.delegate(.updated(let todo))))):
                 state.fullScreenCover = nil
                 state.todo = todo
+                state.savedTodo = todo
                 state.referenceItems = [:]
                 return resolveMarkdownEffect(content: todo.content)
             case .fullScreenCover(.dismiss):
