@@ -12,6 +12,7 @@ import PresentationShared
 struct RecordVersionDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.isInDetailPanel) private var isInDetailPanel
 
     let store: StoreOf<RecordDetailFeature>
     let version: DevelopmentRecord.Version
@@ -50,15 +51,24 @@ struct RecordVersionDetailView: View {
         }
     }
 
+    @ViewBuilder
     private var topBar: some View {
-        HStack {
-            NavigationBackButton(action: { dismiss() })
-                .disabled(store.isRestoring)
-            Spacer()
+        if isInDetailPanel {
+            // 상세 판 위쪽 막대에 "버전 이력 / 버전" 경로 표시
+            DetailPanelBar(
+                location: Text(RecordPresentation.text("development_record_history_title")),
+                title: Text(RecordPresentation.versionLabel(version.number))
+            )
+        } else {
+            HStack {
+                NavigationBackButton(action: { dismiss() })
+                    .disabled(store.isRestoring)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.bottom, 12)
+            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
-        .padding(.horizontal)
-        .padding(.bottom, 12)
-        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
     private var titleSection: some View {
