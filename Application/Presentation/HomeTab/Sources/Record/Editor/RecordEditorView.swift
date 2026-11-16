@@ -56,6 +56,7 @@ public struct RecordEditorView: View {
         // 개발 목표 오른쪽 칸에 그리면 개발 목표 화면의 내비게이션을 겹치지 않음
         if usesPaneLayout {
             content
+                .preference(key: PaneDetailEditingPreferenceKey.self, value: true)
         } else {
             NavigationStack {
                 content

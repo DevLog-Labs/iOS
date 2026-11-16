@@ -379,6 +379,9 @@ private struct MainTabContent: View {
                 guard let location else { return }
                 store.send(.view(.sideBarLocationChanged(tab, location)))
             }
+            .onPreferenceChange(PaneDetailEditingPreferenceKey.self) { isEditing in
+                store.send(.view(.paneEditingChanged(tab, isEditing)))
+            }
             .onPreferenceChange(SideBarContentPreferenceKey.self) { content in
                 guard let content else { return }
                 store.send(.view(.sideBarContentChanged(content)))

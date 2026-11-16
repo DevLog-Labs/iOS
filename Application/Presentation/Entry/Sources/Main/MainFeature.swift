@@ -35,6 +35,8 @@ struct MainFeature {
         var expandedSideBarGroups: Set<SideBarGroup> = []
         var sideBarLocations: [MainTab: SideBarLocation] = [:]
         var sideBarRequests: [MainTab: SideBarRequest] = [:]
+        // 칸에 작성 화면을 그린 탭, 덮는 화면처럼 닫기·저장 버튼으로 닫기 전에는 사이드바로 이동하지 않음
+        var paneEditingTabs: Set<MainTab> = []
         var sideBarContent = SideBarContent()
         var isDetailSideBarPresented = false
         // 탭마다 세부 정보 사이드바 대상을 고르는 화면, 대상이 없어도 나타난 순서대로 위치
@@ -69,6 +71,7 @@ struct MainFeature {
             case sideBarContentChanged(SideBarContent)
             case tapSideBarGroup(SideBarGroup)
             case tapSideBarItem(MainTab, SideBarRequest.Action)
+            case paneEditingChanged(MainTab, Bool)
             case sideBarResized(CGFloat)
             case detailSideBarTargetChanged(MainTab, DetailSideBarTarget?, owner: UUID)
             case detailSideBarOwnerRemoved(MainTab, owner: UUID)
@@ -126,7 +129,14 @@ struct MainFeature {
                     state.expandedSideBarGroups.insert(group)
                 }
             case .view(.tapSideBarItem(let tab, let action)):
+                guard !state.paneEditingTabs.contains(tab) else { break }
                 state.sideBarRequests[tab] = SideBarRequest(id: uuid(), action: action)
+            case .view(.paneEditingChanged(let tab, let isEditing)):
+                if isEditing {
+                    state.paneEditingTabs.insert(tab)
+                } else {
+                    state.paneEditingTabs.remove(tab)
+                }
             case .view(.sideBarResized(let width)):
                 state.sideBarWidth = width
                 return .run { [updateSideBarWidthUseCase] _ in

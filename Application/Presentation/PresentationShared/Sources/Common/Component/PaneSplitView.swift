@@ -172,10 +172,10 @@ struct PaneDetailPresentingPreferenceKey: PreferenceKey {
 }
 
 // 상세 칸에 저장·닫기 버튼으로만 닫는 작성 화면을 그렸는지 전달
-struct PaneDetailEditingPreferenceKey: PreferenceKey {
-    static let defaultValue = false
+public struct PaneDetailEditingPreferenceKey: PreferenceKey {
+    public static let defaultValue = false
 
-    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+    public static func reduce(value: inout Bool, nextValue: () -> Bool) {
         value = value || nextValue()
     }
 }

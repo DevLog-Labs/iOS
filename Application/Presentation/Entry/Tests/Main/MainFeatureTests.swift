@@ -191,6 +191,26 @@ struct MainFeatureTests {
         #expect(store.state.detailSideBarTargets[.home] == .todo(id: "todo", isEditable: true))
     }
 
+    @Test("MainFeature는 칸에 작성 화면을 그린 탭의 사이드바 이동 요청을 무시한다")
+    func MainFeature는_칸에_작성_화면을_그린_탭의_사이드바_이동_요청을_무시한다() async {
+        let store = TestStore(initialState: MainFeature.State()) {
+            MainFeature()
+        } withDependencies: {
+            $0.uuid = .incrementing
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.view(.paneEditingChanged(.home, true)))
+        await store.send(.view(.tapSideBarItem(.home, .open(.home))))
+
+        #expect(store.state.sideBarRequests[.home] == nil)
+
+        await store.send(.view(.paneEditingChanged(.home, false)))
+        await store.send(.view(.tapSideBarItem(.home, .open(.home))))
+
+        #expect(store.state.sideBarRequests[.home]?.action == .open(.home))
+    }
+
     @Test("MainFeature는 unread count 관찰 값을 기존 Main 상태관리의 setUnreadPushCount 상태 변화로 반영한다")
     func MainFeature는_unread_count_관찰_값을_기존_Main_상태관리의_setUnreadPushCount_상태_변화로_반영한다() async {
         let reference = MainStateManagementReference()
