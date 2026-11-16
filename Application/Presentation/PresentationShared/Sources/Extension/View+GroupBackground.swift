@@ -22,7 +22,8 @@ private struct GroupBackgroundModifier<S: InsettableShape>: ViewModifier {
         if isiOSAppOnMac {
             content
                 .background(Color.secondaryBackground, in: shape)
-                .overlay { shape.strokeBorder(Color.separator) }
+                // 보드의 묶음 테두리는 칸 구분선보다 옅은 선
+                .overlay { shape.strokeBorder(Color.secondarySeparator) }
         } else {
             // 다크는 밝은 카드, 라이트는 바탕 없이 구분선만 표시
             content.background(colorScheme == .dark ? Color.tertiaryBackground : .clear, in: shape)
