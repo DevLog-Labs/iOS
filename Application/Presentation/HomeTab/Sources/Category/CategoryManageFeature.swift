@@ -170,17 +170,7 @@ struct CategoryManageFeature {
                 }
             case .categorySheet(.presented(.binding)),
                  .categorySheet(.presented(.tapRandomColorButton)):
-                guard state.savesImmediately, let sheet = state.categorySheet else { break }
-                let name = sheet.category.name.trimmingCharacters(in: .whitespacesAndNewlines)
-                // 비었거나 겹치는 이름은 저장하지 않고 입력 칸에만 둠
-                guard !name.isEmpty, !sheet.isDuplicatedName,
-                      let index = state.preferences.firstIndex(where: { $0.id == sheet.category.id }) else { break }
-                var item = sheet.todoCategoryItem
-                item.isVisible = state.preferences[index].isVisible
-                guard state.preferences[index] != item else { break }
-                state.preferences[index] = item
-                let preferences = state.preferences
-                state.categorySheet?.preferences = preferences
+                guard state.savesImmediately, Self.applyEditingCategory(state: &state) else { break }
                 return .send(.delegate(.changed(state.preferences)))
             case .categorySheet:
                 break
@@ -234,10 +224,13 @@ struct CategoryManageFeature {
                 state.categorySheet = sheet
             case .setSavesImmediately(let savesImmediately):
                 state.savesImmediately = savesImmediately
+                guard savesImmediately else { break }
                 // 아직 목록에 없는 새 카테고리 입력은 바로 저장하는 칸에서 이어 쓸 수 없어 닫음
-                if savesImmediately, state.categorySheet?.isEditing == false {
+                if state.categorySheet?.isEditing == false {
                     state.categorySheet = nil
                 }
+                // 고치던 이름과 색은 목록에 반영해 바로 저장하는 칸으로 바뀔 때 함께 저장
+                Self.applyEditingCategory(state: &state)
             case .selectCategory(let item):
                 // 직접 만든 카테고리만 이름과 색을 고칠 수 있음
                 if case .user(let category) = item.category {
@@ -280,6 +273,22 @@ private struct CategoryManageSheetFeature: Reducer {
 }
 
 private extension CategoryManageFeature {
+    // 고치는 카테고리의 이름과 색을 목록에 반영, 비었거나 겹치는 이름은 저장하지 않고 입력 칸에만 둠
+    @discardableResult
+    static func applyEditingCategory(state: inout State) -> Bool {
+        guard let sheet = state.categorySheet else { return false }
+        let name = sheet.category.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty, !sheet.isDuplicatedName,
+              let index = state.preferences.firstIndex(where: { $0.id == sheet.category.id }) else { return false }
+        var item = sheet.todoCategoryItem
+        item.isVisible = state.preferences[index].isVisible
+        guard state.preferences[index] != item else { return false }
+        state.preferences[index] = item
+        let preferences = state.preferences
+        state.categorySheet?.preferences = preferences
+        return true
+    }
+
     // 기본 이름이 이미 있으면 뒤에 번호를 붙인 이름
     static func newCategoryName(in preferences: [TodoCategoryItem]) -> String {
         let name = String(localized: "todo_manage_new_category_name", bundle: PresentationResources.bundle)
