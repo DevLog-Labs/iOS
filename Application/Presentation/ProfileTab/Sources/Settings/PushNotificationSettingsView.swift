@@ -15,30 +15,43 @@ struct PushNotificationSettingsView: View {
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
     @Environment(\.isTabContentActive) private var isTabContentActive
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State var store: StoreOf<PushNotificationSettingsFeature>
     // 설정 옆 칸에 넣은 화면은 뒤로 갈 곳이 없어 칸 제목 줄의 뒤로 버튼 생략
     var isPaneDetail = false
+    // 앱 화면과 분리한 Mac 설정 화면은 위쪽 줄을 직접 그려 화면 제목 줄 생략
+    var showsTopBar = true
 
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            LazyVStack(alignment: .leading, spacing: isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 24) {
                 EnableCard(store: store)
 
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("push_settings_time_section", bundle: PresentationResources.bundle)
-                        .font(.adaptive(.title3).weight(.semibold))
+                // Mac 설정 화면은 알림 시간 제목과 안내를 묶음 위아래에 표시
+                if isiOSAppOnMac {
                     TimeCard(store: store)
-                }
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("push_settings_time_section", bundle: PresentationResources.bundle)
+                            .font(.adaptive(.title3).weight(.semibold))
+                        TimeCard(store: store)
+                    }
 
-                CustomTimeTipCard()
+                    CustomTimeTipCard()
+                }
             }
-            .padding(.horizontal, 16)
-            .padding(.top, 20)
-            .padding(.bottom, 24)
+            // Mac 설정 화면은 묶음마다 보드의 위아래 8, 좌우 14 여백
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            .padding(.top, isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : 20)
+            .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 24)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
-        .safeAreaInset(edge: .top, spacing: 0) { topBar }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if showsTopBar {
+                topBar
+            }
+        }
         .background(Color.background)
         .duoToolbarVisibility()
         .onAppear { store.send(.fetchSettings) }
@@ -84,9 +97,26 @@ struct PushNotificationSettingsView: View {
 }
 
 private struct EnableCard: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<PushNotificationSettingsFeature>
 
     var body: some View {
+        if isiOSAppOnMac {
+            DesktopSettingsSection(footer: Text("push_settings_footer", bundle: PresentationResources.bundle)) {
+                DesktopSettingsRow(
+                    symbolName: "bell",
+                    symbolColor: .tintLabel,
+                    title: Text("push_settings_enable", bundle: PresentationResources.bundle)
+                ) {
+                    toggle
+                }
+            }
+        } else {
+            card
+        }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(spacing: 12) {
                 Image(systemName: "bell")
@@ -99,14 +129,7 @@ private struct EnableCard: View {
 
                 Spacer(minLength: 8)
 
-                if store.isLoading && store.activeLoadingRow == .enable {
-                    ProgressView()
-                } else {
-                    Toggle("", isOn: $store.pushNotificationEnable)
-                        .labelsHidden()
-                        .toggleStyle(.pill)
-                        .disabled(store.activeLoadingRow != nil)
-                }
+                toggle
             }
 
             Divider().overlay(Color.separator)
@@ -119,15 +142,48 @@ private struct EnableCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
+
+    @ViewBuilder
+    private var toggle: some View {
+        if store.isLoading && store.activeLoadingRow == .enable {
+            ProgressView()
+        } else {
+            Toggle("", isOn: $store.pushNotificationEnable)
+                .labelsHidden()
+                .toggleStyle(.pill)
+                .disabled(store.activeLoadingRow != nil)
+        }
+    }
 }
 
 private struct TimeCard: View {
     @Environment(\.locale) private var locale
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<PushNotificationSettingsFeature>
 
     private static let presetHours = [9, 15, 18, 21]
 
     var body: some View {
+        if isiOSAppOnMac {
+            DesktopSettingsSection(
+                header: Text("push_settings_time_section", bundle: PresentationResources.bundle),
+                footer: Text("push_settings_custom_hint", bundle: PresentationResources.bundle)
+            ) {
+                ForEach(Self.presetHours, id: \.self) { hour in
+                    if let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) {
+                        presetTimeButton(date, hour: hour)
+                    }
+                }
+                customTimeButton
+            }
+            .disabled(!store.pushNotificationEnable || store.activeLoadingRow != nil)
+            .opacity(store.pushNotificationEnable ? 1.0 : 0.7)
+        } else {
+            card
+        }
+    }
+
+    private var card: some View {
         VStack(spacing: 0) {
             ForEach(Self.presetHours, id: \.self) { hour in
                 if let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) {
@@ -151,20 +207,32 @@ private struct TimeCard: View {
         return Button {
             store.send(.selectPresetTime(date))
         } label: {
-            HStack {
-                Text(formattedTimeString(date))
-                    .foregroundStyle(Color.label)
-                Spacer()
+            let indicator = Group {
                 if let loadingRow,
                    store.isLoading && store.activeLoadingRow == loadingRow {
                     ProgressView()
+                } else if isiOSAppOnMac {
+                    SettingsCheck(isSelected: isSelected)
                 } else {
                     selectionIndicator(isSelected: isSelected)
                 }
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
+
+            if isiOSAppOnMac {
+                DesktopSettingsRow(title: Text(formattedTimeString(date))) {
+                    indicator
+                }
+            } else {
+                HStack {
+                    Text(formattedTimeString(date))
+                        .foregroundStyle(Color.label)
+                    Spacer()
+                    indicator
+                }
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
         }
         .buttonStyle(.plain)
     }
@@ -173,26 +241,46 @@ private struct TimeCard: View {
         Button {
             store.send(.tapCustomTime)
         } label: {
-            HStack(spacing: 8) {
-                Text("push_settings_custom", bundle: PresentationResources.bundle)
-                    .foregroundStyle(Color.label)
-                Spacer(minLength: 8)
-                if store.isLoading && store.activeLoadingRow == .customTime {
-                    ProgressView()
-                } else {
-                    selectionIndicator(isSelected: store.pushNotificationMinute != 0)
+            if isiOSAppOnMac {
+                // 사용자 설정 시간은 고른 경우에만 선택 원 표시
+                DesktopSettingsRow(title: Text("push_settings_custom", bundle: PresentationResources.bundle)) {
+                    if store.isLoading && store.activeLoadingRow == .customTime {
+                        ProgressView()
+                    } else if store.pushNotificationMinute != 0 {
+                        SettingsCheck(isSelected: true)
+                    }
+                    Text(formattedTimeString(store.viewPushNotificationTime))
+                        .foregroundStyle(Color.secondaryLabel)
+                    Image(systemName: "chevron.right")
+                        .font(.adaptive(.footnote).weight(.semibold))
+                        .foregroundStyle(Color.secondaryLabel)
                 }
-                Text(formattedTimeString(store.viewPushNotificationTime))
-                    .foregroundStyle(Color.secondaryLabel)
-                Image(systemName: "chevron.right")
-                    .font(.adaptive(.footnote).weight(.semibold))
-                    .foregroundStyle(Color.secondaryLabel)
+            } else {
+                customTimeLabel
             }
-            .padding(16)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+    }
+
+    private var customTimeLabel: some View {
+        HStack(spacing: 8) {
+            Text("push_settings_custom", bundle: PresentationResources.bundle)
+                .foregroundStyle(Color.label)
+            Spacer(minLength: 8)
+            if store.isLoading && store.activeLoadingRow == .customTime {
+                ProgressView()
+            } else {
+                selectionIndicator(isSelected: store.pushNotificationMinute != 0)
+            }
+            Text(formattedTimeString(store.viewPushNotificationTime))
+                .foregroundStyle(Color.secondaryLabel)
+            Image(systemName: "chevron.right")
+                .font(.adaptive(.footnote).weight(.semibold))
+                .foregroundStyle(Color.secondaryLabel)
+        }
+        .padding(16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .contentShape(Rectangle())
     }
 
     @ViewBuilder
