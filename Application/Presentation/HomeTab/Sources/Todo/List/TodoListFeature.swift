@@ -25,6 +25,8 @@ struct TodoListFeature {
         var loading = LoadingFeature.State()
         var searchQuery = ""
         var selectedTodoId: String?
+        // Mac에서 사이드바까지 덮는 상세 판에 연 Todo
+        var panelTodo: TodoIdItem?
         var detailRevision = 0
         var undoTodoId: String?
         var nextCursor: TodoCursor?

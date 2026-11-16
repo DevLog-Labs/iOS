@@ -13,6 +13,7 @@ import PresentationShared
 
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
@@ -29,8 +30,14 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        PaneSplitView {
+        // Mac은 목록을 창 전체 폭으로 두고 오른쪽 칸에서 연 Todo가 있을 때만 두 칸으로 나눔
+        PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoId != nil) {
             TodoListContent(store: store) { todoId in
+                // Mac은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
+                if isiOSAppOnMac && store.selectedTodoId == nil {
+                    store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todoId))))
+                    return
+                }
                 // 칸 화면으로 바뀌면 같은 Todo를 옆 칸에 표시하도록 칸으로 나누지 않은 화면에서도 선택 기억
                 store.send(.binding(.set(\.selectedTodoId, todoId)))
                 if !usesPaneLayout {
@@ -41,9 +48,28 @@ struct TodoListView: View {
             TodoDetailPane(
                 todoId: store.selectedTodoId,
                 showEditButton: true,
-                windowEvent: windowEvent
+                windowEvent: windowEvent,
+                onClose: isiOSAppOnMac ? { store.send(.binding(.set(\.selectedTodoId, nil))) } : nil
             )
             .id(store.detailRevision)
+        }
+        .detailPanel(item: $store.panelTodo.activePresentation(when: isTabContentActive)) { item in
+            TodoDetailPanel(
+                todoId: item.id,
+                location: Text(TodoCategoryItem(from: store.category).localizedName),
+                isEditable: true,
+                windowEvent: windowEvent,
+                onMoveToPane: {
+                    store.send(.binding(.set(\.panelTodo, nil)))
+                    store.send(.binding(.set(\.selectedTodoId, item.id)))
+                },
+                onDelete: {
+                    store.send(.binding(.set(\.panelTodo, nil)))
+                    guard let todo = store.todos.first(where: { $0.id == item.id }) else { return }
+                    store.send(.view(.swipeTodo(todo)))
+                    presentDeleteTodoToast(todo.id, store: store)
+                }
+            )
         }
         .detailSideBarTarget(
             store.selectedTodoId.map { .todo(id: $0, isEditable: true, revision: store.detailRevision) }
@@ -89,6 +115,7 @@ struct TodoListView: View {
 }
 
 private struct TodoListContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
@@ -114,7 +141,8 @@ private struct TodoListContent: View {
                         ) { index, todo in
                             let isLast = index == visibleTodos.count - 1
                             // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
-                            let isSelected = usesPaneLayout && todo.id == store.selectedTodoId
+                            let isSelected = usesPaneLayout
+                                && (todo.id == store.selectedTodoId || todo.id == store.panelTodo?.id)
 
                             TodoItemRow(todo)
                                 .hoverHighlight(isEnabled: !isSelected)
@@ -127,6 +155,29 @@ private struct TodoListContent: View {
                                     onSelectTodo(todo.id)
                                 }
                                 .itemActions {
+                                    // Mac 우클릭 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
+                                    if isiOSAppOnMac {
+                                        Button {
+                                            store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todo.id))))
+                                        } label: {
+                                            Label {
+                                                Text("detail_panel_open", bundle: PresentationResources.bundle)
+                                            } icon: {
+                                                Image(systemName: "doc.text")
+                                            }
+                                        }
+                                        Button {
+                                            store.send(.binding(.set(\.selectedTodoId, todo.id)))
+                                        } label: {
+                                            Label {
+                                                Text("detail_panel_open_in_pane", bundle: PresentationResources.bundle)
+                                            } icon: {
+                                                Image(systemName: "sidebar.left")
+                                            }
+                                        }
+                                        Divider()
+                                    }
+
                                     ItemActionButton(
                                         title: todo.isPinned
                                             ? String(localized: "todo_action_unpin", bundle: PresentationResources.bundle) : String(localized: "todo_action_pin", bundle: PresentationResources.bundle),
@@ -146,13 +197,17 @@ private struct TodoListContent: View {
                                         store.send(.view(.tapToggleCompleted(todo)))
                                     }
 
+                                    if isiOSAppOnMac {
+                                        Divider()
+                                    }
+
                                     ItemActionButton(
                                         title: String(localized: "common_delete", bundle: PresentationResources.bundle),
                                         color: Color.red,
                                         image: Image(systemName: "trash")
                                     ) {
                                         store.send(.view(.swipeTodo(todo)))
-                                        presentDeleteTodoToast(todo.id)
+                                        presentDeleteTodoToast(todo.id, store: store)
                                     }
                                 }
                                 .overlay(alignment: .bottom) {
@@ -208,20 +263,22 @@ private struct TodoListContent: View {
             }
         }
     }
+}
 
-    private func presentDeleteTodoToast(_ todoId: String) {
-        ToastPresenter.present(
-            message: String(localized: "todo_list_delete_toast_message", bundle: PresentationResources.bundle),
-            systemImage: "arrow.uturn.backward",
-            duration: 5,
-            action: {
-                store.send(.view(.undoDelete))
-            },
-            onDismiss: {
-                store.send(.view(.finishDeleteToast(todoId)))
-            }
-        )
-    }
+// 목록 행과 상세 판에서 지운 Todo를 되돌리는 토스트
+@MainActor
+private func presentDeleteTodoToast(_ todoId: String, store: StoreOf<TodoListFeature>) {
+    ToastPresenter.present(
+        message: String(localized: "todo_list_delete_toast_message", bundle: PresentationResources.bundle),
+        systemImage: "arrow.uturn.backward",
+        duration: 5,
+        action: {
+            store.send(.view(.undoDelete))
+        },
+        onDismiss: {
+            store.send(.view(.finishDeleteToast(todoId)))
+        }
+    )
 }
 
 private struct TodoListTopBar: View {
