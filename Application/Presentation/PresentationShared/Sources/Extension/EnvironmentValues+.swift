@@ -45,7 +45,7 @@ public extension EnvironmentValues {
         set { self[ExpandSideBarKey.self] = newValue }
     }
 
-    // 고른 대상과 고른 화면을 세부 정보 사이드바에 알리는 동작, Mac 창 안에서만 있음
+    // 고른 대상과 고른 화면을 세부 정보 사이드바에 알리는 동작, 메인 창 탭 화면 안에서만 있음
     var selectDetailSideBarTarget: ((DetailSideBarTarget?, UUID) -> Void)? {
         get { self[SelectDetailSideBarTargetKey.self] }
         set { self[SelectDetailSideBarTargetKey.self] = newValue }
@@ -57,7 +57,7 @@ public extension EnvironmentValues {
         set { self[IsDetailSideBarPresentedKey.self] = newValue }
     }
 
-    // 세부 정보 사이드바를 열고 닫는 동작, Mac 창 안에서만 있음
+    // 세부 정보 사이드바를 열고 닫는 동작, 세부 정보 사이드바가 있는 창 안에서만 있음
     var setDetailSideBarPresented: ((Bool) -> Void)? {
         get { self[SetDetailSideBarPresentedKey.self] }
         set { self[SetDetailSideBarPresentedKey.self] = newValue }

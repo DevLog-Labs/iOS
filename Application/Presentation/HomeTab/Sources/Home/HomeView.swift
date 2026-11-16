@@ -288,7 +288,9 @@ public struct HomeView: View {
             HomeContentPicker(store: store, onSelect: openTodoEditor)
         case .reorderTodo:
             if let store = sheetStore.scope(state: \.categoryManageState, action: \.categoryManage) {
+                // 넓은 창으로 바뀌어 닫히는 시트가 칸으로 연 화면의 세부 정보 사이드바를 가져가지 않음
                 CategoryManageView(store: store)
+                    .environment(\.selectDetailSideBarTarget, nil)
             }
         case .goalCreate:
             if let goalStore = sheetStore.scope(state: \.goalCreateState, action: \.goalCreate) {
