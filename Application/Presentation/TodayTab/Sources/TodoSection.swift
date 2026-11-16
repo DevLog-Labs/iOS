@@ -61,6 +61,7 @@ struct TodoSection: View {
 }
 
 private struct TodoRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     let item: TodayTodoItem
     let isNavigationEnabled: Bool
@@ -104,7 +105,11 @@ private struct TodoRow: View {
         .buttonStyle(.plain)
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(isSelected ? Color.tintFill : .clear)
+        // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
+        .background(
+            isSelected ? Color.fill : .clear,
+            in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+        )
     }
 
     @ViewBuilder

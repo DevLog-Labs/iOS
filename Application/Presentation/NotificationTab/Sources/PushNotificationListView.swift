@@ -209,9 +209,13 @@ private struct PushNotificationListContent: View {
                                             }
                                             .padding(16)
                                             .frame(maxWidth: .infinity, alignment: .leading)
-                                            .hoverHighlight(isEnabled: !isSelected)
+                                            // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
+                                            .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
                                             // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
-                                            .background(isSelected ? Color.tintFill : .clear, in: .rect)
+                                            .background(
+                                                isSelected ? Color.fill : .clear,
+                                                in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+                                            )
                                             .background(Color.secondaryBackground, in: .rect)
                                             .contentShape(.rect)
                                             .onTapGesture {
