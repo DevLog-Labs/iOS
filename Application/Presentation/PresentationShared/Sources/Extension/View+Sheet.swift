@@ -93,6 +93,8 @@ private struct ProminentSheet<Content: View>: View {
     @State private var isDismissDisabled = false
     @State private var isGrabberHidden = false
     @State private var dragOffset = CGFloat.zero
+    // 창 기준 옆 안전 영역, 시트 안 옆 안전 영역을 지운 뒤에도 Duo 세로 막대 여부를 알기 위해 보관
+    @State private var verticalBarWidth = CGFloat.zero
     let isShown: Bool
     let dismiss: () -> Void
     @ViewBuilder let content: Content
@@ -120,6 +122,11 @@ private struct ProminentSheet<Content: View>: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .background {
+            SheetSideSafeArea(isIgnored: !isDialog) { width in
+                verticalBarWidth = width
+            }
+        }
         .onPreferenceChange(SheetDetentKey.self) { detent = $0 }
         .onPreferenceChange(SheetDismissDisabledKey.self) { isDismissDisabled = $0 }
         .onPreferenceChange(SheetGrabberHiddenKey.self) { isGrabberHidden = $0 }
@@ -132,6 +139,7 @@ private struct ProminentSheet<Content: View>: View {
         return content
             // 시스템 시트처럼 내용은 좁은 화면 배치로 그림
             .environment(\.horizontalSizeClass, .compact)
+            .environment(\.usesPaneLayout, false)
             .frame(width: min(520, proxy.size.width - margin * 2), height: height(of: detent, in: maxHeight))
             .background(Color.secondaryBackground)
             .clipShape(.rect(cornerRadius: CornerRadius.dialog))
@@ -145,9 +153,9 @@ private struct ProminentSheet<Content: View>: View {
     private func bottomSheet(in proxy: GeometryProxy) -> some View {
         let shape = UnevenRoundedRectangle(topLeadingRadius: CornerRadius.sheet, topTrailingRadius: CornerRadius.sheet)
         let insets = proxy.safeAreaInsets
-        // 옆 안전 영역은 Duo 세로 막대 자리
         // 시트 내용의 deviceType 재정의와 상관없이 세로 막대 위쪽의 시각·카메라 표시 아래까지만 올림
-        let topMargin = 0 < max(insets.leading, insets.trailing) ? CGFloat(160) : 10
+        // 옆 안전 영역을 지우기 전 첫 화면에서도 세로 막대를 알도록 지금 안전 영역도 함께 확인
+        let topMargin = 0 < max(verticalBarWidth, insets.leading, insets.trailing) ? CGFloat(160) : 10
 
         return content
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -156,9 +164,6 @@ private struct ProminentSheet<Content: View>: View {
             .overlay(alignment: .top) {
                 grabber
             }
-            // 시스템 시트처럼 바탕은 옆 안전 영역(Duo 세로 칸)까지 덮고, 내용은 안전 영역 안에 둠
-            .padding(.leading, insets.leading)
-            .padding(.trailing, insets.trailing)
             .frame(height: height(of: detent, in: proxy.size.height - topMargin) + insets.bottom)
             .background(Color.secondaryBackground)
             .clipShape(shape)
@@ -168,8 +173,6 @@ private struct ProminentSheet<Content: View>: View {
                     .strokeBorder(Color.separator)
                     .padding([.horizontal, .bottom], -1)
             }
-            .padding(.leading, -insets.leading)
-            .padding(.trailing, -insets.trailing)
             .gesture(
                 SheetDragGesture(isEnabled: !isDismissDisabled) { translation in
                     guard !isDismissDisabled else { return }
@@ -216,6 +219,78 @@ private struct ProminentSheet<Content: View>: View {
             min(height, maxHeight)
         case .fraction(let fraction):
             maxHeight * fraction
+        }
+    }
+}
+
+// 옆 안전 영역은 Duo 세로 막대 자리
+// 아래 시트는 세로 막대 위쪽 표시 아래에서 시작하므로 시트 안 UIKit 화면까지 옆 안전 영역 없이 꽉 채움
+private struct SheetSideSafeArea: UIViewControllerRepresentable {
+    let isIgnored: Bool
+    let onVerticalBarWidthChange: (CGFloat) -> Void
+
+    func makeUIViewController(context: Context) -> Controller {
+        Controller()
+    }
+
+    func updateUIViewController(_ controller: Controller, context: Context) {
+        controller.isIgnored = isIgnored
+        controller.onVerticalBarWidthChange = onVerticalBarWidthChange
+        controller.apply()
+    }
+
+    final class Controller: UIViewController {
+        var isIgnored = false
+        var onVerticalBarWidthChange: ((CGFloat) -> Void)?
+        private var verticalBarWidth: CGFloat?
+        private var isOverridden = false
+        private var displayLink: CADisplayLink?
+
+        override func viewDidAppear(_ animated: Bool) {
+            super.viewDidAppear(animated)
+            // 시트 안에서 새로 밀어 넣은 화면도 반영하도록 시트가 떠 있는 동안 화면을 그릴 때마다 확인
+            displayLink?.invalidate()
+            displayLink = CADisplayLink(target: self, selector: #selector(apply))
+            displayLink?.add(to: .main, forMode: .common)
+        }
+
+        override func viewWillDisappear(_ animated: Bool) {
+            super.viewWillDisappear(animated)
+            displayLink?.invalidate()
+            displayLink = nil
+        }
+
+        @objc func apply() {
+            // 시트를 띄운 표시 컨트롤러는 이 컨트롤러의 가장 바깥 부모
+            guard let window = view.window,
+                  let host = sequence(first: self, next: \.parent).reduce(nil, { $1 }),
+                  host !== self else { return }
+            let insets = window.safeAreaInsets
+            let width = max(insets.left, insets.right)
+            if width != verticalBarWidth {
+                verticalBarWidth = width
+                // 레이아웃 중 상태 변경 방지
+                DispatchQueue.main.async { [onVerticalBarWidthChange] in
+                    onVerticalBarWidthChange?(width)
+                }
+            }
+            // 옆 안전 영역이 없고 지운 적도 없으면 확인할 것이 없음
+            guard isOverridden || 0 < width else { return }
+            // 시트 안 화면은 부모와 따로 창 기준 옆 안전 영역을 받으므로 컨트롤러마다 남은 만큼 지움
+            var controllers = [host]
+            while let controller = controllers.popLast() {
+                controllers += controller.children
+                guard let controllerView = controller.viewIfLoaded else { continue }
+                let safeArea = controllerView.safeAreaInsets
+                let additional = controller.additionalSafeAreaInsets
+                let left = isIgnored ? additional.left - safeArea.left : 0
+                let right = isIgnored ? additional.right - safeArea.right : 0
+                if additional.left != left || additional.right != right {
+                    controller.additionalSafeAreaInsets.left = left
+                    controller.additionalSafeAreaInsets.right = right
+                }
+            }
+            isOverridden = isIgnored
         }
     }
 }
