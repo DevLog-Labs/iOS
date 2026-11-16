@@ -12,6 +12,7 @@ import PresentationShared
 public struct RecordDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isInDetailPanel) private var isInDetailPanel
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     private let onUpdate: () -> Void
     @State private var store: StoreOf<RecordDetailFeature>
 
@@ -217,7 +218,7 @@ public struct RecordDetailView: View {
 
     private var actionSection: some View {
         ViewThatFits(in: .horizontal) {
-            HStack(spacing: 12) {
+            HStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12) {
                 correctionButton
                 historyButton
             }
@@ -239,8 +240,12 @@ public struct RecordDetailView: View {
             )
             .font(.adaptive(.headline))
             .foregroundStyle(Color.white)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            // Mac은 글자 폭만큼, iPhone·iPad는 칸 너비만큼 채움
+            // Mac 크기는 버튼 스타일이 사방에 더하는 8을 뺀 디자인 캔버스 값
+            .frame(maxWidth: isiOSAppOnMac ? nil : .infinity)
+            .padding(.horizontal, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale - 8 : 0)
+            .padding(.vertical, isiOSAppOnMac ? 0 : 10)
+            .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale - 16 : nil)
         }
         .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
     }
@@ -255,8 +260,10 @@ public struct RecordDetailView: View {
             )
             .font(.adaptive(.headline))
             .foregroundStyle(Color.tintLabel)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 10)
+            .frame(maxWidth: isiOSAppOnMac ? nil : .infinity)
+            .padding(.horizontal, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale - 8 : 0)
+            .padding(.vertical, isiOSAppOnMac ? 0 : 10)
+            .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale - 16 : nil)
         }
         .adaptiveButtonStyle(
             shape: RoundedRectangle(cornerRadius: CornerRadius.control),
