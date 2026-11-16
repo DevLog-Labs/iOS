@@ -14,6 +14,7 @@ public struct HomeView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
@@ -87,7 +88,7 @@ public struct HomeView: View {
                     case .todo: true
                     }
                 },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
+                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
             )
         }
         // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 카테고리 목록 옆 칸에 표시
@@ -203,7 +204,7 @@ public struct HomeView: View {
             .frame(maxWidth: .infinity)
         }
         // 칸 제목 줄 구분선과 첫 카드 사이 여백
-        .contentMargins(.top, usesDesktopLayout ? 12 : 0, for: .scrollContent)
+        .contentMargins(.top, usesPaneLayout ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background)
         .duoToolbarVisibility()
@@ -232,7 +233,7 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var topBar: some View {
-        if usesDesktopLayout {
+        if usesPaneLayout {
             PaneTitleBar(Text("nav_home", bundle: PresentationResources.bundle)) {
                 searchButton
                 HomeCreateButton(store: store)
@@ -314,7 +315,9 @@ public struct HomeView: View {
                 TodoEditorView(store: todoEditorStore)
             }
         case .search:
+            // 덮는 화면은 좁은 화면 배치로 그려 Duo를 펼쳐도 검색에서 연 상세의 위쪽 줄 유지
             SearchView(store: searchStore)
+                .environment(\.usesPaneLayout, false)
                 .environment(\.windowControlsInset, store.searchInset)
                 .onGeometryChange(for: CGFloat.self) { proxy in
                     proxy.windowControlsInset
