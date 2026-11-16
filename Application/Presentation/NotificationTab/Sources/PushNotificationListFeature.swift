@@ -22,6 +22,8 @@ struct PushNotificationListFeature {
         var query: PushNotificationQuery
         var selectedNotificationId: String?
         var selectedTodoId: TodoIdItem?
+        // Mac에서 목록 오른쪽 칸을 연 상태, 닫혀 있으면 고른 Todo를 상세 판으로 표시
+        var isDetailPanePresented = false
         var loading = LoadingFeature.State()
         var undoNotificationId: String?
 
