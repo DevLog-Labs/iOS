@@ -10,6 +10,7 @@ import Core
 import PresentationShared
 
 struct TodoSection: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let section: TodayFeature.SectionContent
     let isNavigationEnabled: Bool
     let selectedTodoId: String?
@@ -47,6 +48,8 @@ struct TodoSection: View {
                     )
                     if index < section.items.count - 1 {
                         Divider().overlay(Color.secondarySeparator)
+                            // Mac은 둥근 선택 표시와 맞닿는 구분선 숨김
+                            .opacity(isiOSAppOnMac && (item.id == selectedTodoId || section.items[index + 1].id == selectedTodoId) ? 0 : 1)
                     }
                 }
             }

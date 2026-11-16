@@ -134,26 +134,38 @@ private struct TodoListContent: View {
                         systemImage: "checklist"
                     )
                 } else {
+                    // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
+                    let highlightedTodoIds = (
+                        [store.hoveredTodoId] + (usesPaneLayout ? [store.selectedTodoId, store.panelTodo?.id] : [])
+                    ).compactMap { $0 }
+
                     LazyVStack(alignment: .leading, spacing: 0) {
                         ForEach(
                             Array(zip(visibleTodos.indices, visibleTodos)),
                             id: \.1.id
                         ) { index, todo in
                             let isLast = index == visibleTodos.count - 1
-                            // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
-                            let isSelected = usesPaneLayout
-                                && (todo.id == store.selectedTodoId || todo.id == store.panelTodo?.id)
+                            let isHighlighted = highlightedTodoIds.contains(todo.id)
+                            let isNextHighlighted = !isLast && highlightedTodoIds.contains(visibleTodos[index + 1].id)
 
                             TodoItemRow(todo)
-                                // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
-                                .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
+                                // 선택·마우스 표시는 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
                                 // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
                                 .background(
-                                    isSelected ? Color.fill : .clear,
+                                    isHighlighted ? Color.fill : .clear,
                                     in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
                                 )
                                 .background(Color.secondaryBackground)
                                 .contentShape(.rect)
+                                .onHover { isHovering in
+                                    guard isiOSAppOnMac else { return }
+                                    // 다른 행으로 옮겨 간 뒤에 온 벗어남은 무시
+                                    if isHovering {
+                                        store.send(.binding(.set(\.hoveredTodoId, todo.id)))
+                                    } else if store.hoveredTodoId == todo.id {
+                                        store.send(.binding(.set(\.hoveredTodoId, nil)))
+                                    }
+                                }
                                 .todoDetailPreview(todoId: todo.id)
                                 .onTapGesture {
                                     onSelectTodo(todo.id)
@@ -215,7 +227,8 @@ private struct TodoListContent: View {
                                     }
                                 }
                                 .overlay(alignment: .bottom) {
-                                    if !isLast {
+                                    // Mac은 둥근 선택·마우스 표시와 맞닿는 구분선 숨김
+                                    if !isLast && !(isiOSAppOnMac && (isHighlighted || isNextHighlighted)) {
                                         Divider().overlay(Color.secondarySeparator)
                                     }
                                 }
