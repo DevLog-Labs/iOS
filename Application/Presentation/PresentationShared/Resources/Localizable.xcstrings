@@ -2895,6 +2895,23 @@
         }
       }
     },
+    "pane_select_detail" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Select an item to see its details."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "항목을 선택하면 상세 내용이 표시돼요."
+          }
+        }
+      }
+    },
     "profile_activity_completed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3061,23 +3078,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "최근 활동"
-          }
-        }
-      }
-    },
-    "profile_select_detail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select an activity."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "활동을 선택해주세요."
           }
         }
       }
@@ -4812,23 +4812,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "다가오는 일정"
-          }
-        }
-      }
-    },
-    "today_select_detail" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select a todo."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Todo를 선택해주세요."
           }
         }
       }

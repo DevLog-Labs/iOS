@@ -79,24 +79,15 @@ public struct ProfileView: View {
             } detail: {
                 switch store.selectedTodoRoute {
                 case .activity(let todoId):
-                    TodoDetailPane(
-                        todoId: todoId,
-                        showEditButton: false,
-                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle)
-                    )
+                    TodoDetailPane(todoId: todoId, showEditButton: false)
                 case .recentTodo(let todoId):
                     TodoDetailPane(
                         todoId: todoId,
                         showEditButton: true,
-                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle),
                         windowEvent: windowEvent
                     )
                 default:
-                    TodoDetailPane(
-                        todoId: nil,
-                        showEditButton: false,
-                        placeholder: Text("profile_select_detail", bundle: PresentationResources.bundle)
-                    )
+                    TodoDetailPane(todoId: nil, showEditButton: false)
                 }
             }
             .detailSideBarTarget(store.selectedTodoRoute?.detailSideBarTarget)

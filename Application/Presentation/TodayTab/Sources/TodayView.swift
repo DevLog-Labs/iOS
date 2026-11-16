@@ -118,7 +118,6 @@ public struct TodayView: View {
                 TodoDetailPane(
                     todoId: item?.id,
                     showEditButton: true,
-                    placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
                     windowEvent: windowEvent
                 )
                 // 인스펙터 등에서 목록 행이 바뀌면 상세 칸도 다시 조회

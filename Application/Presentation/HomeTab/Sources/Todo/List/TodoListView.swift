@@ -41,7 +41,6 @@ struct TodoListView: View {
             TodoDetailPane(
                 todoId: store.selectedTodoId,
                 showEditButton: true,
-                placeholder: Text("today_select_detail", bundle: PresentationResources.bundle),
                 windowEvent: windowEvent
             )
             .id(store.detailRevision)
