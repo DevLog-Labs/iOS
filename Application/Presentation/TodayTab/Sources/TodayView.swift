@@ -155,6 +155,12 @@ public struct TodayView: View {
         ) {
             TodayTodoInspector(store: store, showsCloseButton: true)
         }
+        // 사이드바 구조로 바뀌면 가려진 세부 정보 시트 상태도 닫아 목록 탭을 막지 않음
+        .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
+            if usesDesktopLayout && store.isTodoInspectorPresented {
+                store.send(.dismissTodoInspector)
+            }
+        }
         // inspector 컨테이너의 상단 safe area 배경
         .background(Color.background)
         .onChange(of: isSelected, initial: true) { _, isSelected in
