@@ -11,6 +11,7 @@ import PresentationShared
 
 public struct RecordDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.isInDetailPanel) private var isInDetailPanel
     private let onUpdate: () -> Void
     @State private var store: StoreOf<RecordDetailFeature>
 
@@ -94,15 +95,31 @@ public struct RecordDetailView: View {
         }
     }
 
+    @ViewBuilder
     private var topBar: some View {
-        HStack {
-            NavigationBackButton(action: { dismiss() })
-                .disabled(store.isRestoring)
-            Spacer()
+        if isInDetailPanel {
+            // 상세 판 위쪽 막대에 "개발 목표 / 기록" 경로 표시
+            DetailPanelBar(location: Text(store.goalTitle), title: Text(panelTitle))
+        } else {
+            HStack {
+                NavigationBackButton(action: { dismiss() })
+                    .disabled(store.isRestoring)
+                Spacer()
+            }
+            .padding(.horizontal)
+            .padding(.vertical, 12)
+            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(Color.background, ignoresSafeAreaEdges: .top)
+    }
+
+    // 상세 판 경로에 표시하는 기록 제목, 작성 중인 기록은 작성 중인 제목
+    private var panelTitle: String {
+        switch store.contentState {
+        case .draft(let draft):
+            draft.title
+        default:
+            store.currentVersion?.title ?? ""
+        }
     }
 
     @ViewBuilder
