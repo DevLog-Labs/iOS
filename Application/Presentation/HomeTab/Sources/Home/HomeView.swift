@@ -187,7 +187,12 @@ public struct HomeView: View {
         }
         // 사이드바로 다른 곳을 열면 칸으로 표시하던 화면은 닫음
         if showsSheetAsPane, case .open = request?.action {
+            // 개발 목표 칸에서 바꾼 목표와 기록을 시트를 닫을 때처럼 홈과 사이드바 목록에 반영
+            let refreshesDevelopmentGoals = store.sheet?.isDevelopmentGoalPresentation == true
             store.send(.store(.setSheet(nil)))
+            if refreshesDevelopmentGoals {
+                store.send(.view(.fetchData))
+            }
         }
         switch request?.action {
         case .open(.home):
