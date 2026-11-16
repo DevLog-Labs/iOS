@@ -126,10 +126,9 @@ struct CategoryManageView: View {
                     DetailSideBarPlaceholder()
                 }
             }
-            .onAppear {
-                if usesDesktopLayout {
-                    store.send(.setSavesImmediately)
-                }
+            // 창 폭이 바뀌어 칸과 시트를 오가면 저장 방식도 맞춤
+            .onChange(of: usesDesktopLayout, initial: true) { _, usesDesktopLayout in
+                store.send(.setSavesImmediately(usesDesktopLayout))
             }
     }
 

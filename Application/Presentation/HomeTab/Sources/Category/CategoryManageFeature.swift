@@ -118,7 +118,7 @@ struct CategoryManageFeature {
         case tapDeleteUserCategory(TodoCategoryItem)
         case tapDoneButton
         case setCategorySheet(CategorySheetState?)
-        case setSavesImmediately
+        case setSavesImmediately(Bool)
         case selectCategory(TodoCategoryItem)
 
         enum Alert: Equatable {
@@ -232,8 +232,12 @@ struct CategoryManageFeature {
                 return .send(.delegate(.done(state.preferences)))
             case .setCategorySheet(let sheet):
                 state.categorySheet = sheet
-            case .setSavesImmediately:
-                state.savesImmediately = true
+            case .setSavesImmediately(let savesImmediately):
+                state.savesImmediately = savesImmediately
+                // 아직 목록에 없는 새 카테고리 입력은 바로 저장하는 칸에서 이어 쓸 수 없어 닫음
+                if savesImmediately, state.categorySheet?.isEditing == false {
+                    state.categorySheet = nil
+                }
             case .selectCategory(let item):
                 // 직접 만든 카테고리만 이름과 색을 고칠 수 있음
                 if case .user(let category) = item.category {

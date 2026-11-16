@@ -250,6 +250,27 @@ struct HomeFeatureTests {
         #expect(adapter.preferences == [feature, issue])
     }
 
+    @Test("시트에서 고친 카테고리 설정은 바로 저장하는 칸으로 바뀔 때 저장한다")
+    func 시트에서_고친_카테고리_설정은_바로_저장하는_칸으로_바뀔_때_저장한다() async {
+        let context = makeHomeFetchDataContext()
+        let updateSpy = UpdateTodoCategoryPreferencesUseCaseSpy()
+        let adapter = StoreTestAdapter(
+            fetchPreferencesUseCase: context.fetchPreferencesUseCaseSpy,
+            updatePreferencesUseCase: updateSpy
+        )
+        let feature = TodoCategoryItem(from: .system(.feature))
+
+        await adapter.fetchData()
+        await adapter.tapManageTodoCategory()
+        await adapter.tapCategoryManageItem(feature)
+        await adapter.setCategoryManageSavesImmediately()
+        await adapter.advanceClock(by: .seconds(1))
+        await waitUntil { !updateSpy.updates.isEmpty }
+
+        #expect(updateSpy.updates.first?.first { $0.category == .system(.feature) }?.isVisible == false)
+        #expect(adapter.preferences.first { $0.id == feature.id }?.isVisible == false)
+    }
+
     @Test("TodoEditor 생성 delegate는 editor를 닫고 홈 데이터를 다시 조회한다")
     func TodoEditor_생성_delegate는_editor를_닫고_홈_데이터를_다시_조회한다() async throws {
         let context = makeHomeFetchDataContext()

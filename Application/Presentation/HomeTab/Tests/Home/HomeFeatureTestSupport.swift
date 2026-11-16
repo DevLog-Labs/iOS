@@ -104,7 +104,11 @@ struct StoreTestAdapter {
     }
 
     func setCategoryManageSavesImmediately() async {
-        await store.send(.sheet(.presented(.categoryManage(.setSavesImmediately))))
+        await store.send(.sheet(.presented(.categoryManage(.setSavesImmediately(true)))))
+    }
+
+    func tapCategoryManageItem(_ item: TodoCategoryItem) async {
+        await store.send(.sheet(.presented(.categoryManage(.tapItem(item)))))
     }
 
     func changeCategoryPreferences(_ items: [TodoCategoryItem]) async {

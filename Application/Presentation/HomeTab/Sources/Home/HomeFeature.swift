@@ -248,6 +248,12 @@ struct HomeFeature {
                 // Mac 카테고리 관리 칸은 고친 값을 바로 저장
                 state.preferences = preferences
                 return delayedTodoCategoryPreferencesUpdateEffect(preferences)
+            case .sheet(.presented(.categoryManage(.setSavesImmediately(true)))):
+                // 시트에서 고친 값은 바로 저장하는 칸으로 바뀔 때 저장
+                guard let preferences = state.sheet?.categoryManageState?.preferences,
+                      preferences != state.preferences else { break }
+                state.preferences = preferences
+                return delayedTodoCategoryPreferencesUpdateEffect(preferences)
             case .sheet(.presented(.goalCreate(.delegate(.saved)))):
                 state.sheet = nil
                 return .send(.view(.fetchData))
