@@ -57,6 +57,7 @@ public struct TodoEditorView: View {
                 }
             }
             .background(Color.background.ignoresSafeArea())
+            .preference(key: PaneDetailEditingPreferenceKey.self, value: true)
             .onAppear { store.send(.onAppear) }
             .onChange(of: store.saveResult) { _, result in
                 handleSaveResult(result)

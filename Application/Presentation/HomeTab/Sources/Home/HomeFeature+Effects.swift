@@ -135,6 +135,8 @@ extension HomeFeature {
     ) {
         switch presentation {
         case .todoEditor:
+            // 칸에 그린 작성 화면은 계속 누를 수 있는 사이드바에서 다시 열어도 초안을 바꾸지 않음
+            if isPresented && state.fullScreenCover?.todoEditor != nil { break }
             state.fullScreenCover = isPresented ? state.selectedTodoCategory.map(FullScreenCoverState.todoEditor) : nil
             if !isPresented {
                 state.selectedTodoCategory = nil

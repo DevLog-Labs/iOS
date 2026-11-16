@@ -16,6 +16,8 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     @State private var primaryWidth: CGFloat?
     // 상세 칸이 편집 화면처럼 화면을 덮는 표시를 띄운 동안
     @State private var isDetailPresenting = false
+    // 상세 칸에 작성 화면을 그린 동안
+    @State private var isDetailEditing = false
     private let duoWidth: PanePrimaryWidth
     // 사이드바가 있는 창은 따로 정한 화면만 두 칸으로 나눔
     private let splitsOnDesktop: Bool
@@ -57,6 +59,8 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                     primaryWidth = width
                 }
                 .frame(width: isDuoPane ? duoWidth.duo : nil)
+                // 덮는 화면처럼 작성 화면이 닫히기 전에는 목록 칸을 누르지 못하게 해 초안을 지킴
+                .allowsHitTesting(!(showsDetail && isDetailEditing))
                 .overlay(alignment: .trailing) {
                     if isDuoPane {
                         Rectangle()
@@ -83,6 +87,9 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                             .environment(\.expandSideBar, nil)
                             .onPreferenceChange(PaneDetailPresentingPreferenceKey.self) { isPresenting in
                                 isDetailPresenting = isPresenting
+                            }
+                            .onPreferenceChange(PaneDetailEditingPreferenceKey.self) { isEditing in
+                                isDetailEditing = isEditing
                             }
                     }
                     .frame(maxWidth: showsDetail ? .infinity : 0)
@@ -157,6 +164,15 @@ private struct PushedDetailCloser: ViewModifier {
 
 // 상세 칸이 편집 화면처럼 화면을 덮는 표시를 띄웠는지 전달
 struct PaneDetailPresentingPreferenceKey: PreferenceKey {
+    static let defaultValue = false
+
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
+    }
+}
+
+// 상세 칸에 저장·닫기 버튼으로만 닫는 작성 화면을 그렸는지 전달
+struct PaneDetailEditingPreferenceKey: PreferenceKey {
     static let defaultValue = false
 
     static func reduce(value: inout Bool, nextValue: () -> Bool) {
