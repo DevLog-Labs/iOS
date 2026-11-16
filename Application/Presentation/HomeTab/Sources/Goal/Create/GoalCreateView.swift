@@ -322,7 +322,9 @@ private struct GoalCreateTodoField: View {
 }
 
 // 세부 정보 사이드바의 새 개발 목표 속성, 목표를 저장할 때 함께 저장
+// Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
 struct GoalCreateSideBarContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<GoalCreateFeature>
 
     var body: some View {
@@ -333,15 +335,15 @@ struct GoalCreateSideBarContent: View {
                 HStack(spacing: 10 * AdaptiveSize.boardScale) {
                     VStack(alignment: .leading, spacing: 2 * AdaptiveSize.boardScale) {
                         Text(RecordPresentation.text("development_goal_create_todo_label"))
-                            .font(.adaptive(.body))
+                            .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                             .foregroundStyle(Color.label)
                         Text(RecordPresentation.text("development_goal_create_todo_hint"))
-                            .font(.adaptive(.subheadline))
+                            .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                             .foregroundStyle(Color.secondaryLabel)
                     }
                     Spacer(minLength: 0)
                     Text(store.todoSelectionTitle)
-                        .font(.adaptive(.body))
+                        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                         .foregroundStyle(Color.secondaryLabel)
                         .lineLimit(1)
                     Image(systemName: "chevron.right")
@@ -350,7 +352,7 @@ struct GoalCreateSideBarContent: View {
                 }
                 .padding(.horizontal, 12 * AdaptiveSize.boardScale)
                 .padding(.vertical, 6 * AdaptiveSize.boardScale)
-                .frame(minHeight: 38 * AdaptiveSize.boardScale)
+                .frame(minHeight: isiOSAppOnMac ? 38 * AdaptiveSize.boardScale : 44)
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)

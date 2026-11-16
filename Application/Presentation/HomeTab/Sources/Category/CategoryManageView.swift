@@ -11,6 +11,7 @@ import PresentationShared
 struct CategoryManageView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @Bindable var store: StoreOf<CategoryManageFeature>
@@ -42,7 +43,7 @@ struct CategoryManageView: View {
                                     String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle),
                                     systemImage: "plus"
                                 )
-                                .font(.adaptive(.headline))
+                                .font(.adaptive(isiOSAppOnMac ? .headline : .subheadline).weight(.semibold))
                                 .foregroundStyle(Color.label)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 6 * AdaptiveSize.boardScale)
@@ -425,19 +426,22 @@ private struct CategoryManageSheet: View {
 }
 
 // 세부 정보 사이드바의 카테고리 속성, 고친 값은 바로 저장
+// Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
 private struct CategorySideBarContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: Store<CategoryManageFeature.CategorySheetState, CategoryManageFeature.Action.CategorySheet>
     @FocusState private var isNameFocused: Bool
     let onDelete: () -> Void
 
     var body: some View {
         let item = store.todoCategoryItem
+        let colorSize = isiOSAppOnMac ? 30 * AdaptiveSize.boardScale : 34
 
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 6 * AdaptiveSize.boardScale) {
                     Text(String(localized: "todo_manage_name_placeholder", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.subheadline))
+                        .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                         .foregroundStyle(Color.secondaryLabel)
                     HStack(spacing: 8 * AdaptiveSize.boardScale) {
                         TextField(
@@ -447,14 +451,14 @@ private struct CategorySideBarContent: View {
                         )
                         .focused($isNameFocused)
                         Text(store.categoryNameCountText)
-                            .font(.adaptive(.subheadline))
+                            .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                             .foregroundStyle(Color.secondaryLabel)
                             .monospacedDigit()
                     }
-                    .font(.adaptive(.body))
+                    .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                     .tint(Color.accent)
                     .padding(.horizontal, 12 * AdaptiveSize.boardScale)
-                    .frame(height: 32 * AdaptiveSize.boardScale)
+                    .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
                     .inputBackground(isFocused: isNameFocused, isInvalid: store.isDuplicatedName)
                     if store.isDuplicatedName {
                         Text(store.nameMessage)
@@ -478,10 +482,10 @@ private struct CategorySideBarContent: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .font(.adaptive(.subheadline))
+                    .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                     LazyVGrid(
                         columns: [GridItem(
-                            .adaptive(minimum: 30 * AdaptiveSize.boardScale, maximum: 30 * AdaptiveSize.boardScale),
+                            .adaptive(minimum: colorSize, maximum: colorSize),
                             spacing: 10 * AdaptiveSize.boardScale
                         )],
                         alignment: .leading,
@@ -493,7 +497,7 @@ private struct CategorySideBarContent: View {
                             } label: {
                                 Circle()
                                     .fill(Color(hexString: colorHex) ?? .gray)
-                                    .frame(width: 30 * AdaptiveSize.boardScale, height: 30 * AdaptiveSize.boardScale)
+                                    .frame(width: colorSize, height: colorSize)
                                     .overlay {
                                         if store.category.colorHex.caseInsensitiveCompare(colorHex) == .orderedSame {
                                             Image(systemName: "checkmark")
@@ -511,7 +515,7 @@ private struct CategorySideBarContent: View {
 
                 VStack(alignment: .leading, spacing: 6 * AdaptiveSize.boardScale) {
                     Text(String(localized: "todo_preview", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.subheadline))
+                        .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                         .foregroundStyle(Color.secondaryLabel)
                         .padding(.horizontal, 4 * AdaptiveSize.boardScale)
                     CategoryManageRowContent(item: item, onToggle: {})
@@ -528,7 +532,7 @@ private struct CategorySideBarContent: View {
 
                 Button(action: onDelete) {
                     Text(String(localized: "todo_manage_delete_category_title", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.body).weight(.semibold))
+                        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline).weight(.semibold))
                         .foregroundStyle(Color.danger)
                 }
                 .buttonStyle(.plain)
