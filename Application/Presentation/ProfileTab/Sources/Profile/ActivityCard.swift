@@ -11,6 +11,7 @@ import Domain
 import PresentationShared
 
 struct ActivityCard: View {
+    @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Bindable var store: StoreOf<ProfileFeature>
     let onSelectTodoID: (String) -> Void
@@ -75,6 +76,18 @@ struct ActivityCard: View {
                     .foregroundStyle(Color.secondaryLabel)
                 }
                 .buttonStyle(.plain)
+                // 칸으로 나눈 화면은 분기 선택을 시트 대신 버튼 옆 팝오버로 표시
+                .popover(
+                    isPresented: $store.showQuarterPicker
+                        .hiddenInPane(!usesPaneLayout)
+                        .activePresentation(when: isTabContentActive)
+                ) {
+                    QuarterPickerSheet(store: store)
+                        .frame(width: 360)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .presentationBackground(Color.secondaryBackground)
+                        .presentationCompactAdaptation(.popover)
+                }
                 Spacer()
                 Button {
                     store.send(.moveQuarter(1))
@@ -183,7 +196,18 @@ struct QuarterPickerSheet: View {
     @Bindable var store: StoreOf<ProfileFeature>
 
     var body: some View {
-        NavigationStack {
+        // 팝오버가 Duo 상태 표시 영역과 겹치면 시스템 제목 줄이 그만큼 내려가므로 제목 줄을 직접 그림
+        VStack(spacing: 0) {
+            ZStack {
+                Text(String(localized: "profile_select_quarter", bundle: PresentationResources.bundle))
+                    .font(.adaptive(.headline))
+                HStack {
+                    Spacer()
+                    confirmButton
+                }
+            }
+            .padding([.horizontal, .top], 16)
+
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Text(String(localized: "profile_year", bundle: PresentationResources.bundle))
@@ -212,15 +236,26 @@ struct QuarterPickerSheet: View {
                 Spacer(minLength: 0)
             }
             .padding(20)
-            .navigationTitle(String(localized: "profile_select_quarter", bundle: PresentationResources.bundle))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarTrailingButton {
-                    store.send(.setQuarterPickerPresented(false))
-                }
-            }
         }
         .sheetDetent(.fraction(0.3))
+    }
+
+    @ViewBuilder
+    private var confirmButton: some View {
+        if #available(iOS 26.0, *) {
+            Button(role: .confirm) {
+                store.send(.setQuarterPickerPresented(false))
+            }
+            .buttonStyle(.glassProminent)
+            .buttonBorderShape(.circle)
+        } else {
+            Button {
+                store.send(.setQuarterPickerPresented(false))
+            } label: {
+                Text(String(localized: "common_confirm", bundle: PresentationResources.bundle))
+            }
+            .tint(Color.accent)
+        }
     }
 
     @ViewBuilder
