@@ -26,17 +26,21 @@ public struct TodoDetailView: View {
     private let onBack: (() -> Void)?
     // 목록 옆 칸에 넣은 상세는 뒤로 갈 곳이 없어 칸 제목 줄의 뒤로 버튼 생략
     private let isPaneDetail: Bool
+    // Mac 목록 옆 칸에 붙인 상세를 닫는 동작
+    private let onClose: (() -> Void)?
 
     public init(
         store: StoreOf<TodoDetailFeature>,
         windowEvent: TodoEditorWindowEvent? = nil,
         onBack: (() -> Void)? = nil,
-        isPaneDetail: Bool = false
+        isPaneDetail: Bool = false,
+        onClose: (() -> Void)? = nil
     ) {
         self.store = store
         self.windowEvent = windowEvent
         self.onBack = onBack
         self.isPaneDetail = isPaneDetail
+        self.onClose = onClose
     }
 
     public var body: some View {
@@ -48,8 +52,8 @@ public struct TodoDetailView: View {
                     content: todo.content,
                     referenceItems: store.referenceItems,
                     number: todo.number,
-                    // 사이드바가 있는 창의 칸 제목 줄은 Todo 제목을 표시하므로 본문 제목 생략
-                    showsTitle: !(showsPaneTitleBar && usesDesktopLayout),
+                    // 사이드바가 있는 iPad 창의 칸 제목 줄은 Todo 제목을 표시하므로 본문 제목 생략
+                    showsTitle: !(showsPaneTitleBar && usesDesktopLayout && !isiOSAppOnMac),
                     onOpenTodoID: { store.send(.setSheet(.todo(TodoIdItem(id: $0)))) }
                 )
             } else if store.isLoading {
@@ -120,21 +124,33 @@ public struct TodoDetailView: View {
     @ViewBuilder
     private var topBar: some View {
         if showsPaneTitleBar {
+            // Mac 칸 제목 줄은 디자인대로 Todo 제목 대신 "Todo" 표시
+            let showsTodoTitle = usesDesktopLayout && !isiOSAppOnMac
+
             // 일반 화면에서 밀어 넣은 상세가 칸 화면으로 바뀌어도 뒤로 갈 수 있게 뒤로 버튼 표시
             PaneTitleBar(onBack: isPaneDetail ? nil : back) {
-                if usesDesktopLayout, let todo = store.todo {
+                if showsTodoTitle, let todo = store.todo {
                     HStack(spacing: 8) {
                         Text(todo.title)
                         Text(verbatim: "#\(todo.number)")
                             .foregroundStyle(Color.tertiaryLabel)
                     }
-                } else if !usesDesktopLayout {
+                } else if !showsTodoTitle {
                     Text(verbatim: "Todo")
                 }
             } actions: {
-                infoButton
+                // Mac은 창 오른쪽 세부 정보 사이드바에 속성을 표시하므로 정보 버튼 생략
+                if !isiOSAppOnMac {
+                    infoButton
+                }
                 if store.showEditButton {
                     editButton
+                }
+                if let onClose {
+                    Button(action: onClose) {
+                        Image(systemName: "xmark")
+                    }
+                    .topBarButtonStyle()
                 }
             }
         } else {
