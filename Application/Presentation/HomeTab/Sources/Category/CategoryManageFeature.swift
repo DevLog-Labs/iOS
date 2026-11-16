@@ -16,7 +16,7 @@ struct CategoryManageFeature {
         @Presents var categorySheet: CategorySheetState?
         @Presents var alert: AlertState<Action.Alert>?
         var preferences: [TodoCategoryItem]
-        // Mac 칸은 완료 버튼 없이 고친 값을 바로 저장하고 고른 카테고리를 시트 대신 사이드바에 표시
+        // 사이드바가 있는 창의 칸은 완료 버튼 없이 고친 값을 바로 저장하고 고른 카테고리를 시트 대신 사이드바에 표시
         var savesImmediately = false
     }
 

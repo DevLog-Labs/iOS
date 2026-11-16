@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Mac 사이드바 트리에서 고르는 위치
+// 사이드바 트리에서 고르는 위치
 public enum SideBarLocation: Hashable {
     case home
     case today

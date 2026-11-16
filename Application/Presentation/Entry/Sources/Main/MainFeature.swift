@@ -28,7 +28,7 @@ struct MainFeature {
         var readableContentWidth = CGFloat.infinity
         var openedTabs: Set<MainTab> = []
         var isSideBarCollapsed = false
-        // 사용자가 끌어서 정한 Mac 사이드바 폭, 정하지 않았으면 기본 폭
+        // 사용자가 끌어서 정한 사이드바 폭, 정하지 않았으면 기본 폭
         var sideBarWidth: CGFloat?
         var expandedSideBarGroups: Set<SideBarGroup> = []
         var sideBarLocations: [MainTab: SideBarLocation] = [:]
