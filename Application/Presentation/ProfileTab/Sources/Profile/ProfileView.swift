@@ -195,7 +195,20 @@ public struct ProfileView: View {
     private func destinationView(_ route: ProfileRoute) -> some View {
         switch route {
         case .settings:
-            SettingsView(store: settingsStore) { router.push($0) }
+            // 사이드바가 있는 창은 설정 아래 화면으로 이동하고 Duo 펼침은 옆 칸에 표시
+            let showsRoutePane = usesPaneLayout && !usesDesktopLayout
+
+            PaneSplitView(duoWidth: .medium, splitsOnDesktop: false) {
+                SettingsView(store: settingsStore) { route in
+                    if showsRoutePane {
+                        settingsStore.send(.binding(.set(\.selectedRoute, route)))
+                    } else {
+                        router.push(route)
+                    }
+                }
+            } detail: {
+                settingsPage(settingsStore.selectedRoute, isPaneDetail: true)
+            }
         case .activity(let todoId):
             TodoDetailView(store: Store(
                 initialState: TodoDetailFeature.State(todoId: todoId, showEditButton: false)
@@ -208,18 +221,29 @@ public struct ProfileView: View {
             ) {
                 TodoDetailFeature()
             }, windowEvent: windowEvent)
+        case .theme, .pushNotification, .account:
+            settingsPage(route, isPaneDetail: false)
+        }
+    }
+
+    // 설정에서 고르는 아래 화면
+    @ViewBuilder
+    private func settingsPage(_ route: ProfileRoute, isPaneDetail: Bool) -> some View {
+        switch route {
         case .theme:
-            ThemeView(theme: $settingsStore.theme)
+            ThemeView(theme: $settingsStore.theme, isPaneDetail: isPaneDetail)
         case .pushNotification:
             PushNotificationSettingsView(store: Store(
                 initialState: PushNotificationSettingsFeature.State()
             ) {
                 PushNotificationSettingsFeature()
-            })
+            }, isPaneDetail: isPaneDetail)
         case .account:
             AccountView(store: Store(initialState: AccountFeature.State()) {
                 AccountFeature()
-            })
+            }, isPaneDetail: isPaneDetail)
+        case .settings, .activity, .recentTodo:
+            EmptyView()
         }
     }
 }

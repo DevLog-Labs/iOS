@@ -16,6 +16,8 @@ struct PushNotificationSettingsView: View {
     @Environment(\.deviceType) private var deviceType
     @Environment(\.isTabContentActive) private var isTabContentActive
     @State var store: StoreOf<PushNotificationSettingsFeature>
+    // 설정 옆 칸에 넣은 화면은 뒤로 갈 곳이 없어 칸 제목 줄의 뒤로 버튼 생략
+    var isPaneDetail = false
 
     var body: some View {
         ScrollView {
@@ -57,7 +59,8 @@ struct PushNotificationSettingsView: View {
         let title = Text(String(localized: "nav_push_settings", bundle: PresentationResources.bundle))
 
         if showsPaneTitleBar {
-            PaneTitleBar(title)
+            // 일반 화면에서 밀어 넣은 화면이 칸 화면으로 바뀌어도 뒤로 갈 수 있게 뒤로 버튼 표시
+            PaneTitleBar(title, onBack: isPaneDetail ? nil : { dismiss() })
         } else {
             ZStack {
                 title

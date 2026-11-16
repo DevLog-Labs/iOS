@@ -69,7 +69,7 @@ struct SettingsView: View {
         let title = Text(String(localized: "nav_settings", bundle: PresentationResources.bundle))
 
         if showsPaneTitleBar {
-            PaneTitleBar(title)
+            PaneTitleBar(title, onBack: { dismiss() })
         } else {
             ZStack {
                 title
