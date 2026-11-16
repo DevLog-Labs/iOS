@@ -120,6 +120,7 @@ public extension View {
 
 private struct DetailSideBarTargetModifier: ViewModifier {
     @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
+    @Environment(\.removeDetailSideBarTarget) private var removeDetailSideBarTarget
     @State private var owner = UUID()
     let target: DetailSideBarTarget?
 
@@ -130,12 +131,13 @@ private struct DetailSideBarTargetModifier: ViewModifier {
                 selectDetailSideBarTarget?(target, owner)
             }
             // 화면을 벗어나면 고른 대상 해제
-            .onDisappear { selectDetailSideBarTarget?(nil, owner) }
+            .onDisappear { removeDetailSideBarTarget?(owner) }
     }
 }
 
 private struct HostedDetailSideBarModifier<SideBarContent: View>: ViewModifier {
     @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
+    @Environment(\.removeDetailSideBarTarget) private var removeDetailSideBarTarget
     @Environment(\.isDetailSideBarPresented) private var isDetailSideBarPresented
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var owner = UUID()
@@ -162,8 +164,6 @@ private struct HostedDetailSideBarModifier<SideBarContent: View>: ViewModifier {
         .onChange(of: isActive) { _, isActive in
             selectDetailSideBarTarget?(isActive ? .hosted : nil, owner)
         }
-        .onDisappear {
-            if isActive { selectDetailSideBarTarget?(nil, owner) }
-        }
+        .onDisappear { removeDetailSideBarTarget?(owner) }
     }
 }

@@ -37,18 +37,18 @@ struct MainFeature {
         var sideBarRequests: [MainTab: SideBarRequest] = [:]
         var sideBarContent = SideBarContent()
         var isDetailSideBarPresented = false
-        // 탭마다 세부 정보 사이드바 대상을 고른 화면, 나중에 나타난 화면이 뒤에 위치
+        // 탭마다 세부 정보 사이드바 대상을 고르는 화면, 대상이 없어도 나타난 순서대로 위치
         var detailSideBarSelections: [MainTab: [DetailSideBarSelection]] = [:]
 
-        // 탭마다 지금 고른 세부 정보 사이드바 대상
+        // 탭마다 지금 고른 세부 정보 사이드바 대상, 대상을 고른 화면 중 가장 나중에 나타난 화면의 대상
         var detailSideBarTargets: [MainTab: DetailSideBarTarget] {
-            detailSideBarSelections.compactMapValues { $0.last?.target }
+            detailSideBarSelections.compactMapValues { $0.last { $0.target != nil }?.target }
         }
     }
 
     struct DetailSideBarSelection: Equatable {
         let owner: UUID
-        var target: DetailSideBarTarget
+        var target: DetailSideBarTarget?
     }
 
     enum SideBarGroup: Hashable {
@@ -71,6 +71,7 @@ struct MainFeature {
             case tapSideBarItem(MainTab, SideBarRequest.Action)
             case sideBarResized(CGFloat)
             case detailSideBarTargetChanged(MainTab, DetailSideBarTarget?, owner: UUID)
+            case detailSideBarOwnerRemoved(MainTab, owner: UUID)
         }
 
         enum StoreAction: Equatable {
@@ -132,18 +133,17 @@ struct MainFeature {
                     updateSideBarWidthUseCase.execute(Double(width))
                 }
             case .view(.detailSideBarTargetChanged(let tab, let target, let owner)):
-                // 사라지는 화면은 자기가 고른 대상만 지우고, 그 아래 화면이 고른 대상을 다시 표시
+                // 대상을 바꿔도 화면이 나타난 순서의 자리 유지
                 var selections = state.detailSideBarSelections[tab, default: []]
-                if let target {
-                    if let index = selections.firstIndex(where: { $0.owner == owner }) {
-                        selections[index].target = target
-                    } else {
-                        selections.append(DetailSideBarSelection(owner: owner, target: target))
-                    }
+                if let index = selections.firstIndex(where: { $0.owner == owner }) {
+                    selections[index].target = target
                 } else {
-                    selections.removeAll { $0.owner == owner }
+                    selections.append(DetailSideBarSelection(owner: owner, target: target))
                 }
                 state.detailSideBarSelections[tab] = selections
+            case .view(.detailSideBarOwnerRemoved(let tab, let owner)):
+                // 사라지는 화면은 자기 자리만 지우고, 그 아래 화면이 고른 대상을 다시 표시
+                state.detailSideBarSelections[tab]?.removeAll { $0.owner == owner }
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)

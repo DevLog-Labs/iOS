@@ -374,6 +374,7 @@ private struct MainTabContent: View {
             .environment(\.sideBarRequest, store.sideBarRequests[tab])
             // 좁은 창에서도 고른 대상을 기록해 넓은 창으로 바뀌면 바로 세부 정보 사이드바에 표시
             .environment(\.selectDetailSideBarTarget) { store.send(.view(.detailSideBarTargetChanged(tab, $0, owner: $1))) }
+            .environment(\.removeDetailSideBarTarget) { store.send(.view(.detailSideBarOwnerRemoved(tab, owner: $0))) }
             .onPreferenceChange(SideBarLocationPreferenceKey.self) { location in
                 guard let location else { return }
                 store.send(.view(.sideBarLocationChanged(tab, location)))

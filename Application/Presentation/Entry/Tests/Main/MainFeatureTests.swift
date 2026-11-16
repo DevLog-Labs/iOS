@@ -148,11 +148,11 @@ struct MainFeatureTests {
 
         await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: goal)))
         await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: category)))
-        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: goal)))
+        await store.send(.view(.detailSideBarOwnerRemoved(.home, owner: goal)))
 
         #expect(store.state.detailSideBarTargets[.home] == .hosted)
 
-        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: category)))
+        await store.send(.view(.detailSideBarOwnerRemoved(.home, owner: category)))
 
         #expect(store.state.detailSideBarTargets[.home] == nil)
     }
@@ -169,9 +169,26 @@ struct MainFeatureTests {
 
         #expect(store.state.detailSideBarTargets[.home] == .hosted)
 
-        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: editor)))
+        await store.send(.view(.detailSideBarOwnerRemoved(.home, owner: editor)))
 
         #expect(store.state.detailSideBarTargets[.home] == .todo(id: "other", isEditable: true))
+    }
+
+    @Test("MainFeature는 먼저 나타난 화면이 나중에 대상을 골라도 나중에 나타난 화면의 대상을 유지한다")
+    func MainFeature는_먼저_나타난_화면이_나중에_대상을_골라도_나중에_나타난_화면의_대상을_유지한다() async {
+        let store = makeStore()
+        let list = UUID()
+        let editor = UUID()
+
+        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: list)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: editor)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .todo(id: "todo", isEditable: true), owner: list)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .hosted)
+
+        await store.send(.view(.detailSideBarOwnerRemoved(.home, owner: editor)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .todo(id: "todo", isEditable: true))
     }
 
     @Test("MainFeature는 unread count 관찰 값을 기존 Main 상태관리의 setUnreadPushCount 상태 변화로 반영한다")
