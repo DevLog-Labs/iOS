@@ -134,13 +134,17 @@ struct TodayFeature {
             case .moveTodoInspectorToSideBar:
                 guard state.isTodoInspectorPresented, let editor = state.todoEditor else { break }
                 // 고친 값이 없으면 바로 닫고 같은 Todo를 목록에서 고름
-                guard editor.isReadyToSubmit else {
+                guard editor.isReadyToSubmit || editor.isLoading else {
                     state.selectedTodoId = editor.id
                     dismissTodoInspector(state: &state)
                     break
                 }
-                // 고친 값은 저장 버튼과 같이 저장한 뒤 닫음
+                // 세부 정보 사이드바가 저장 전 Todo를 불러오지 않도록 저장이 끝날 때까지 고른 Todo를 비워 둠
+                state.selectedTodoId = nil
                 state.todoIdToSelectAfterSaving = editor.id
+                // 저장 버튼으로 이미 저장 중이면 그 저장이 끝나기를 기다림
+                guard !editor.isLoading else { break }
+                // 고친 값은 저장 버튼과 같이 저장한 뒤 닫음
                 return .send(.todoEditor(.upsertTodo))
             case .todoEditor(.delegate(.updated(let todo))):
                 guard let item = TodayTodoItem(from: todo) else {

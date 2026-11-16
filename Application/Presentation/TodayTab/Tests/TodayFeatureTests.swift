@@ -112,6 +112,21 @@ struct TodayFeatureTests {
         #expect(!adapter.showAlert)
     }
 
+    @Test("넓은 창으로 바뀌어 세부 정보를 저장하는 동안에는 고른 Todo를 비워 둔다")
+    func 넓은_창으로_바뀌어_세부_정보를_저장하는_동안에는_고른_Todo를_비워_둔다() async throws {
+        let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))
+        let adapter = TodayStoreTestAdapter(upsertUseCase: TodayPendingUpsertTodoUseCase())
+        await adapter.receiveUpdatedTodo(item)
+        await adapter.selectTodo(item.id)
+        await adapter.showTodoInspector(item)
+        await adapter.setTodoEditorTitle("수정 후")
+
+        await adapter.moveTodoInspectorToSideBar()
+
+        #expect(adapter.selectedTodoId == nil)
+        #expect(adapter.isTodoInspectorPresented)
+    }
+
     @Test("넓은 창으로 바뀔 때 세부 정보 저장에 실패하면 알림을 띄우고 닫은 뒤 같은 Todo를 고른다")
     func 넓은_창으로_바뀔_때_세부_정보_저장에_실패하면_알림을_띄우고_닫은_뒤_같은_Todo를_고른다() async throws {
         let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))

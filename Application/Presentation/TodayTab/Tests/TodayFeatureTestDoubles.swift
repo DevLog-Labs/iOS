@@ -173,6 +173,10 @@ struct TodayStoreTestAdapter: TodayStateDriving {
         await store.send(.binding(.set(\.isTodoInspectorPresented, isPresented)))
     }
 
+    func selectTodo(_ id: String) async {
+        await store.send(.binding(.set(\.selectedTodoId, id)))
+    }
+
     func setTodoEditorTitle(_ title: String) async {
         await store.send(.todoEditor(.binding(.set(\.title, title))))
     }

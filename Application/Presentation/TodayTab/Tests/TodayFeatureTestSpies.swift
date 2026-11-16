@@ -88,6 +88,17 @@ final class TodayFetchTodoByIdUseCaseSpy: FetchTodoByIdUseCase {
     }
 }
 
+// 저장이 끝나지 않은 동안의 상태를 보기 위해 저장을 끝내지 않는 대역
+final class TodayPendingUpsertTodoUseCase: UpsertTodoUseCase {
+    func execute(_ todo: Todo) async throws {
+        try await Task.sleep(for: .seconds(3600))
+    }
+
+    func execute(_ draft: TodoDraft) async throws {
+        try await Task.sleep(for: .seconds(3600))
+    }
+}
+
 final class TodayUpsertTodoUseCaseSpy: UpsertTodoUseCase {
     var error: Error?
     private(set) var todos = [Todo]()

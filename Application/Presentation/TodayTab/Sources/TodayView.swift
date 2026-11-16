@@ -159,6 +159,7 @@ public struct TodayView: View {
         .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
             if usesDesktopLayout && store.isTodoInspectorPresented {
                 store.send(.moveTodoInspectorToSideBar)
+                setDetailSideBarPresented?(true)
             }
         }
         // inspector 컨테이너의 상단 safe area 배경
