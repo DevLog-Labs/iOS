@@ -157,6 +157,12 @@ public struct TodayView: View {
                 destination: { destination($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
             )
         }
+        // Mac 오른쪽 칸에 연 Todo가 목록에서 빠지면 닫기 버튼 없는 선택 안내 대신 오른쪽 칸을 닫음
+        .onChange(of: store.sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }) { _, isListed in
+            if isiOSAppOnMac && store.isDetailPanePresented && !isListed {
+                store.send(.binding(.set(\.isDetailPanePresented, false)))
+            }
+        }
         // 사이드바 구조로 바뀌면 쌓아 연 상세 화면은 내리고 같은 Todo를 옆 칸에 표시
         .closesPushedDetail {
             guard case .todo(let item)? = router.path.last else { return }
