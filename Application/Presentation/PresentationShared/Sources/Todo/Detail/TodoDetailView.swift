@@ -261,6 +261,8 @@ public struct TodoDetailView: View {
             .environment(\.windowControlsInset, 0)
             .environment(\.deviceType, .bar)
             .environment(\.showsPaneTitleBar, false)
+            // 상세 판에서 연 참조 Todo도 자기 위쪽 줄 표시
+            .environment(\.isInDetailPanel, false)
             .background(Color.background)
         }
     }
