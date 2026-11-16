@@ -11,6 +11,7 @@ import PresentationShared
 
 struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @State private var router = NavigationRouter<Path>()
@@ -22,7 +23,14 @@ struct SearchView: View {
                 LazyVStack(alignment: .leading, spacing: 16) {
                     SearchResults(
                         store: store,
-                        onSelectTodo: { router.push(.todo($0)) }
+                        onSelectTodo: { todoId in
+                            // Mac은 사이드바까지 덮는 상세 판으로 열기
+                            if isiOSAppOnMac {
+                                store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todoId))))
+                            } else {
+                                router.push(.todo(todoId))
+                            }
+                        }
                     )
                     RecentSearchQuries(store: store)
                         .padding(.bottom, 8)
@@ -44,6 +52,13 @@ struct SearchView: View {
             }
             .background(Color.background.ignoresSafeArea())
             .prominentAlert(store, state: \.alert, action: \.alert)
+            .detailPanel(item: $store.panelTodo) { item in
+                TodoDetailPanel(
+                    todoId: item.id,
+                    location: Text("search_title", bundle: PresentationResources.bundle),
+                    isEditable: true
+                )
+            }
             .navigationDestination(for: Path.self, interactivePop: { _ in true }) { path in
                 switch path {
                 case .todo(let todoId):

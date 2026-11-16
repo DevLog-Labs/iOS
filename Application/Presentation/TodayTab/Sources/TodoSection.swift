@@ -10,6 +10,7 @@ import Core
 import PresentationShared
 
 struct TodoSection: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let section: TodayFeature.SectionContent
     let isNavigationEnabled: Bool
     let selectedTodoId: String?
@@ -47,6 +48,8 @@ struct TodoSection: View {
                     )
                     if index < section.items.count - 1 {
                         Divider().overlay(Color.secondarySeparator)
+                            // Mac은 둥근 선택 표시와 맞닿는 구분선 숨김
+                            .opacity(isiOSAppOnMac && (item.id == selectedTodoId || section.items[index + 1].id == selectedTodoId) ? 0 : 1)
                     }
                 }
             }
@@ -61,6 +64,7 @@ struct TodoSection: View {
 }
 
 private struct TodoRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     let item: TodayTodoItem
     let isNavigationEnabled: Bool
@@ -104,7 +108,11 @@ private struct TodoRow: View {
         .buttonStyle(.plain)
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
-        .background(isSelected ? Color.tintFill : .clear)
+        // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
+        .background(
+            isSelected ? Color.fill : .clear,
+            in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+        )
     }
 
     @ViewBuilder

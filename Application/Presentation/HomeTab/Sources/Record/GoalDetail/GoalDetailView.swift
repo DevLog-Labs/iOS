@@ -12,6 +12,7 @@ import PresentationShared
 public struct GoalDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<GoalDetailFeature>
 
     public var body: some View {
@@ -97,7 +98,8 @@ public struct GoalDetailView: View {
             GoalTodoLinkSheet(store: $0)
         }
         .navigationDestination(
-            item: $store.scope(state: \.recordDetail, action: \.recordDetail),
+            item: $store.scope(state: \.recordDetail, action: \.recordDetail)
+                .activePresentation(when: !isiOSAppOnMac),
             interactivePop: true
         ) { destination in
             RecordDetailView(
@@ -106,6 +108,20 @@ public struct GoalDetailView: View {
                 allowsMutation: store.allowsRecordMutation,
                 onUpdate: { store.send(.view(.refresh)) }
             )
+        }
+        // Mac은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
+        .detailPanel(
+            item: $store.scope(state: \.recordDetail, action: \.recordDetail)
+                .activePresentation(when: isiOSAppOnMac)
+        ) { destination in
+            NavigationStack {
+                RecordDetailView(
+                    goalTitle: store.goalTitle,
+                    record: destination.record,
+                    allowsMutation: store.allowsRecordMutation,
+                    onUpdate: { store.send(.view(.refresh)) }
+                )
+            }
         }
         .navigationDestination(
             item: $store.scope(state: \.todoDetail, action: \.todoDetail),

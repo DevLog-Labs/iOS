@@ -41,6 +41,10 @@ extension TodayFeature {
         var isCategoryFilterPresented = false
         var isTodoInspectorPresented = false
         var selectedTodoId: String?
+        // Mac에서 사이드바까지 덮는 상세 판에 연 Todo
+        var panelTodo: TodoIdItem?
+        // Mac에서 목록 오른쪽 칸을 연 상태, 세부 정보 사이드바만 쓰는 선택과 구분
+        var isDetailPanePresented = false
         var todoEditor: TodoEditorFeature.State?
         var dismissesTodoInspectorAfterSaving = false
         // 넓은 창으로 바뀌어 저장 중인 세부 정보 시트의 Todo, 저장이 끝나면 목록에서 고름

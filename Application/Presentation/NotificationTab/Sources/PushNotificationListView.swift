@@ -10,6 +10,7 @@ import Core
 import PresentationShared
 
 public struct PushNotificationListView: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<PushNotificationListFeature>
@@ -28,11 +29,13 @@ public struct PushNotificationListView: View {
     }
 
     public var body: some View {
-        // 사이드바가 있는 창은 시트로 열고 Duo 펼침은 옆 칸에 표시
-        let showsDetailPane = usesPaneLayout && !usesDesktopLayout
+        // Mac에서 오른쪽 칸을 열었을 때만 목록 | 상세 두 칸으로 나눔
+        let showsMacPane = isiOSAppOnMac && store.isDetailPanePresented
+        // 사이드바가 있는 iPad 창은 시트, Mac은 상세 판으로 열고 Duo 펼침은 옆 칸에 표시
+        let showsDetailPane = usesPaneLayout && !usesDesktopLayout || showsMacPane
 
         NavigationStack {
-            PaneSplitView(duoWidth: .wide, splitsOnDesktop: false) {
+            PaneSplitView(duoWidth: .wide, splitsOnDesktop: showsMacPane) {
                 PushNotificationListContent(store: store, showsSelection: showsDetailPane)
                     .background(Color.background)
                     .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
@@ -42,12 +45,30 @@ public struct PushNotificationListView: View {
                     }
                     .duoToolbarVisibility()
             } detail: {
-                TodoDetailPane(todoId: store.selectedTodoId?.id, showEditButton: false)
+                TodoDetailPane(
+                    todoId: store.selectedTodoId?.id,
+                    showEditButton: false,
+                    onClose: isiOSAppOnMac ? closeDetailPane : nil
+                )
             }
+            // Mac 오른쪽 칸은 칸 제목 줄 정보 버튼 대신 창 오른쪽 세부 정보 사이드바에 속성 표시
+            .detailSideBarTarget(
+                showsMacPane ? store.selectedTodoId.map { .todo(id: $0.id, isEditable: false) } : nil
+            )
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .prominentSheet(item: sheetStore.activePresentation(when: isSelected)) { store in
+        .prominentSheet(item: sheetStore.activePresentation(when: isSelected && !isiOSAppOnMac)) { store in
             sheetContent(store)
+        }
+        .detailPanel(item: sheetStore.activePresentation(when: isSelected && isiOSAppOnMac)) { sheetStore in
+            TodoDetailPanel(
+                todoId: sheetStore.todoId,
+                location: Text("nav_push_notifications", bundle: PresentationResources.bundle),
+                isEditable: false,
+                onMoveToPane: {
+                    store.send(.binding(.set(\.isDetailPanePresented, true)))
+                }
+            )
         }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
@@ -68,6 +89,12 @@ public struct PushNotificationListView: View {
                 LoadingView()
             }
         }
+    }
+
+    // 선택을 먼저 비워 오른쪽 칸을 닫을 때 같은 Todo를 상세 판으로 다시 열지 않음
+    private func closeDetailPane() {
+        store.send(.view(.selectNotification(nil)))
+        store.send(.binding(.set(\.isDetailPanePresented, false)))
     }
 
     @ViewBuilder
@@ -98,6 +125,7 @@ public struct PushNotificationListView: View {
 }
 
 private struct PushNotificationListContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
@@ -185,15 +213,44 @@ private struct PushNotificationListContent: View {
                                             }
                                             .padding(16)
                                             .frame(maxWidth: .infinity, alignment: .leading)
-                                            .hoverHighlight(isEnabled: !isSelected)
+                                            // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
+                                            .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
                                             // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
-                                            .background(isSelected ? Color.tintFill : .clear, in: .rect)
+                                            .background(
+                                                isSelected ? Color.fill : .clear,
+                                                in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+                                            )
                                             .background(Color.secondaryBackground, in: .rect)
                                             .contentShape(.rect)
                                             .onTapGesture {
                                                 store.send(.view(.selectNotification(item.id)))
                                             }
                                             .itemActions {
+                                                // Mac 우클릭 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
+                                                if isiOSAppOnMac {
+                                                    Button {
+                                                        store.send(.binding(.set(\.isDetailPanePresented, false)))
+                                                        store.send(.view(.selectNotification(item.id)))
+                                                    } label: {
+                                                        Label {
+                                                            Text("detail_panel_open", bundle: PresentationResources.bundle)
+                                                        } icon: {
+                                                            Image(systemName: "doc.text")
+                                                        }
+                                                    }
+                                                    Button {
+                                                        store.send(.binding(.set(\.isDetailPanePresented, true)))
+                                                        store.send(.view(.selectNotification(item.id)))
+                                                    } label: {
+                                                        Label {
+                                                            Text("detail_panel_open_in_pane", bundle: PresentationResources.bundle)
+                                                        } icon: {
+                                                            Image(systemName: "sidebar.left")
+                                                        }
+                                                    }
+                                                    Divider()
+                                                }
+
                                                 ItemActionButton(
                                                     title: item.isRead
                                                         ? String(localized: "push_mark_unread", bundle: PresentationResources.bundle) : String(localized: "push_mark_read", bundle: PresentationResources.bundle),
@@ -202,6 +259,10 @@ private struct PushNotificationListContent: View {
                                                         ? "circle.badge.xmark" : "checkmark.circle")
                                                 ) {
                                                     store.send(.view(.toggleRead(item)))
+                                                }
+
+                                                if isiOSAppOnMac {
+                                                    Divider()
                                                 }
 
                                                 ItemActionButton(

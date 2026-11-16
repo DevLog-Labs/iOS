@@ -27,6 +27,15 @@ public struct TodoDetailSideBarView: View {
         self.windowEvent = windowEvent
     }
 
+    // 상세 판처럼 바깥 화면이 속성 상태를 함께 쓰는 세부 정보 열
+    init(
+        store: StoreOf<TodoDetailSideBarFeature>,
+        windowEvent: TodoEditorWindowEvent?
+    ) {
+        self._store = State(initialValue: store)
+        self.windowEvent = windowEvent
+    }
+
     public var body: some View {
         ZStack(alignment: .top) {
             if let editorStore = store.scope(state: \.editor, action: \.editor) {

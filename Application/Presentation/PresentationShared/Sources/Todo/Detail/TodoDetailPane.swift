@@ -13,15 +13,18 @@ public struct TodoDetailPane: View {
     private let todoId: String?
     private let showEditButton: Bool
     private let windowEvent: TodoEditorWindowEvent?
+    private let onClose: (() -> Void)?
 
     public init(
         todoId: String?,
         showEditButton: Bool,
-        windowEvent: TodoEditorWindowEvent? = nil
+        windowEvent: TodoEditorWindowEvent? = nil,
+        onClose: (() -> Void)? = nil
     ) {
         self.todoId = todoId
         self.showEditButton = showEditButton
         self.windowEvent = windowEvent
+        self.onClose = onClose
     }
 
     public var body: some View {
@@ -33,7 +36,8 @@ public struct TodoDetailPane: View {
                     TodoDetailFeature()
                 },
                 windowEvent: windowEvent,
-                isPaneDetail: true
+                isPaneDetail: true,
+                onClose: onClose
             )
             .environment(\.showsPaneTitleBar, true)
             .id(todoId)

@@ -623,7 +623,7 @@ private struct SideBarRow: View {
                     .frame(width: isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
                 Image(systemName: symbolName)
                     .font(.adaptive(.body))
-                    .foregroundStyle(isSelected ? Color.tintLabel : symbolColor ?? .secondaryLabel)
+                    .foregroundStyle(symbolColor ?? .secondaryLabel)
                     .frame(width: isiOSAppOnMac ? 18 * AdaptiveSize.boardScale : 20)
                     // 아이콘만 보일 때 읽지 않은 알림은 아이콘 오른쪽 위 점으로 표시
                     .overlay(alignment: .topTrailing) {
@@ -652,15 +652,16 @@ private struct SideBarRow: View {
                         .fixedSize()
                 }
             }
-            .foregroundStyle(isSelected ? Color.tintLabel : .label)
+            .foregroundStyle(Color.label)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.leading, isiOSAppOnMac ? (isChild && !isCompact ? 22 : 4) * AdaptiveSize.boardScale : (isChild && !isCompact ? 34 : 6))
             .padding(.trailing, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
             .frame(minHeight: isiOSAppOnMac ? 28 * AdaptiveSize.boardScale : 44)
             .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
+            // 선택 표시는 마우스 표시와 같은 회색
             .background {
                 RoundedRectangle(cornerRadius: CornerRadius.control)
-                    .fill(isSelected ? Color.tintFill : .clear)
+                    .fill(isSelected ? Color.fill : .clear)
             }
             .contentShape(.rect)
         }

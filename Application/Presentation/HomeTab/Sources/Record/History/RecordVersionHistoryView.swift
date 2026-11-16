@@ -11,6 +11,7 @@ import PresentationShared
 
 struct RecordVersionHistoryView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
 
     @Bindable var store: StoreOf<RecordDetailFeature>
 
@@ -37,8 +38,19 @@ struct RecordVersionHistoryView: View {
         .background(Color.background)
         .toolbarVisibility(.hidden, for: .navigationBar)
         .navigationDestination(
-            item: $store.scope(state: \.versionDetail, action: \.versionDetail),
+            item: $store.scope(state: \.versionDetail, action: \.versionDetail)
+                .activePresentation(when: !isiOSAppOnMac),
             interactivePop: true
+        ) { destination in
+            RecordVersionDetailView(
+                store: store,
+                version: destination.version
+            )
+        }
+        // Mac은 이전 버전을 사이드바까지 덮는 상세 판으로 열기
+        .detailPanel(
+            item: $store.scope(state: \.versionDetail, action: \.versionDetail)
+                .activePresentation(when: isiOSAppOnMac)
         ) { destination in
             RecordVersionDetailView(
                 store: store,

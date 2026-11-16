@@ -51,6 +51,7 @@ struct RecentActivityCard: View {
 }
 
 private struct RecentTodoCard: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @ScaledMetric(relativeTo: .title3) private var iconSize = CGFloat(44)
     let todo: RecentTodoItem
@@ -112,7 +113,12 @@ private struct RecentTodoCard: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(16)
-        .background(isSelected ? Color.tintFill : .secondaryBackground, in: Rectangle())
+        // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
+        .background(
+            isSelected ? Color.fill : .clear,
+            in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+        )
+        .background(Color.secondaryBackground, in: Rectangle())
         .contentShape(.rect)
     }
 }
