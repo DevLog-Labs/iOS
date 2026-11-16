@@ -13,9 +13,8 @@ import PresentationShared
 
 public struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
-    @Environment(\.horizontalSizeClass) private var horizontalSizeClass
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
@@ -53,10 +52,10 @@ public struct TodayView: View {
                                 TodoSection(
                                     section: section,
                                     isNavigationEnabled: !store.isTodoInspectorPresented,
-                                    // 좁은 창은 상세 칸이 없어 선택 표시 생략
-                                    selectedTodoId: usesDesktopLayout ? store.selectedTodoId : nil,
+                                    // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
+                                    selectedTodoId: usesPaneLayout ? store.selectedTodoId : nil,
                                     onSelect: { item in
-                                        if usesDesktopLayout {
+                                        if usesPaneLayout {
                                             store.send(.binding(.set(\.selectedTodoId, item.id)))
                                         } else {
                                             router.push(.todo(TodoIdItem(id: item.id)))
@@ -92,17 +91,22 @@ public struct TodayView: View {
                                 TodayFilterMenu(store: store)
                             }
                         } else {
+                            if usesPaneLayout {
+                                PaneTitleBar(title)
+                            }
                             VStack(alignment: .leading) {
-                                title
-                                    .font(.adaptive(.largeTitle).bold())
-                                    .padding(.bottom, 8)
+                                if !usesPaneLayout {
+                                    title
+                                        .font(.adaptive(.largeTitle).bold())
+                                        .padding(.bottom, 8)
+                                }
                                 TodayFilterBar(store: store)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal)
                             .frame(maxWidth: readableContentWidth)
-                            .padding(.top, windowControlsInset)
+                            .padding(.top, usesPaneLayout ? 12 : windowControlsInset)
                             .padding(.bottom, 8)
                         }
                     }
@@ -131,7 +135,7 @@ public struct TodayView: View {
             .navigationDestination(
                 for: TodayRoute.self,
                 interactivePop: { _ in true },
-                destination: { destination($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
+                destination: { destination($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
             )
         }
         // 사이드바 구조로 바뀌면 쌓아 연 상세 화면은 내리고 같은 Todo를 옆 칸에 표시
@@ -140,17 +144,9 @@ public struct TodayView: View {
             store.send(.binding(.set(\.selectedTodoId, item.id)))
             router.path = []
         }
-        // 사이드바가 있으면 창 오른쪽 세부 정보 사이드바 사용
-        .inspector(
-            isPresented: !usesDesktopLayout && horizontalSizeClass == .regular
-                ? $store.isTodoInspectorPresented : .constant(false)
-        ) {
-            TodayTodoInspector(store: store)
-        }
-        // 좁은 화면의 세부 정보는 시스템 시트 대신 직접 그린 시트로 표시
+        // 사이드바가 있으면 창 오른쪽 세부 정보 사이드바, 좁은 화면과 Duo 펼침은 직접 그린 시트로 표시
         .prominentSheet(
-            isPresented: isiOSAppOnMac || horizontalSizeClass == .regular
-                ? .constant(false) : $store.isTodoInspectorPresented
+            isPresented: usesDesktopLayout ? .constant(false) : $store.isTodoInspectorPresented
         ) {
             TodayTodoInspector(store: store, showsCloseButton: true)
         }
@@ -161,7 +157,7 @@ public struct TodayView: View {
                 setDetailSideBarPresented?(true)
             }
         }
-        // inspector 컨테이너의 상단 safe area 배경
+        // 상단 safe area 배경
         .background(Color.background)
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
@@ -467,7 +463,6 @@ private struct TodayTodoInspector: View {
                 onSubmit: { editorStore.send(.upsertTodo) },
                 onClose: { store.send(.dismissTodoInspector) }
             )
-            .inspectorColumnWidth(min: 320, ideal: 420, max: 520)
             .onAppear { editorStore.send(.onAppear) }
             .prominentAlert(editorStore, state: \.alert, action: \.alert)
         }

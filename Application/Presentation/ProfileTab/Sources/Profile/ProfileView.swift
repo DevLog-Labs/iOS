@@ -14,6 +14,7 @@ public struct ProfileView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
     @State private var settingsStore: StoreOf<SettingsFeature>
@@ -40,7 +41,7 @@ public struct ProfileView: View {
 
     public var body: some View {
         NavigationStack(path: $router.path) {
-            PaneSplitView {
+            PaneSplitView(duoWidth: .medium) {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 16) {
                         UserInfoCard(store: store, isSelected: isSelected)
@@ -58,7 +59,7 @@ public struct ProfileView: View {
                     .frame(maxWidth: .infinity)
                 }
                 // 칸 제목 줄 구분선과 첫 카드 사이 여백
-                .contentMargins(.top, usesDesktopLayout ? 12 : 0, for: .scrollContent)
+                .contentMargins(.top, usesPaneLayout ? 12 : 0, for: .scrollContent)
                 .safeAreaInset(edge: .top, spacing: 0) { titleBar }
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
@@ -99,7 +100,7 @@ public struct ProfileView: View {
                     default: false
                     }
                 },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
+                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
             )
         }
         // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 같은 Todo를 옆 칸에 표시
@@ -157,7 +158,7 @@ public struct ProfileView: View {
         }
         .topBarButtonStyle()
 
-        if usesDesktopLayout {
+        if usesPaneLayout {
             PaneTitleBar(Text("nav_profile", bundle: PresentationResources.bundle)) {
                 settingsButton
             }
@@ -181,9 +182,9 @@ public struct ProfileView: View {
         }
     }
 
-    // 사이드바가 있으면 옆 칸에 상세를 열고 나머지는 화면 이동
+    // 칸 화면은 옆 칸에 상세를 열고 나머지는 화면 이동
     private func showTodo(_ route: ProfileRoute) {
-        if usesDesktopLayout {
+        if usesPaneLayout {
             store.send(.binding(.set(\.selectedTodoRoute, route)))
         } else {
             router.push(route)

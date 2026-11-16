@@ -176,12 +176,16 @@ public extension View {
 
 private struct DuoToolbarVisibilityModifier: ViewModifier {
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
 
     func body(content: Content) -> some View {
+        // Duo 펼침은 시스템 막대 대신 칸 제목 줄 사용
+        let showsNavigationBar = deviceType == .duo && !usesPaneLayout
+
         content
-            .toolbarTitleDisplayMode(deviceType == .duo ? .inline : .automatic)
-            .toolbarBackgroundVisibility(deviceType == .duo ? .hidden : .automatic, for: .navigationBar)
-            .toolbarVisibility(deviceType == .duo ? .visible : .hidden, for: .navigationBar)
+            .toolbarTitleDisplayMode(showsNavigationBar ? .inline : .automatic)
+            .toolbarBackgroundVisibility(showsNavigationBar ? .hidden : .automatic, for: .navigationBar)
+            .toolbarVisibility(showsNavigationBar ? .visible : .hidden, for: .navigationBar)
     }
 }
 

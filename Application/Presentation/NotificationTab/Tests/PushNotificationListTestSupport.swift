@@ -155,6 +155,10 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
         await store.send(.sheet(.dismiss))
     }
 
+    func hideSheet() async {
+        await store.send(.view(.hideSheet))
+    }
+
     func finishEffects() async {
         await drainReceivedActions()
         await store.finish()

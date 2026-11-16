@@ -16,6 +16,7 @@ public struct TodoDetailView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
@@ -23,15 +24,19 @@ public struct TodoDetailView: View {
     @State var store: StoreOf<TodoDetailFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onBack: (() -> Void)?
+    // 목록 옆 칸에 넣은 상세는 뒤로 갈 곳이 없어 칸 제목 줄의 뒤로 버튼 생략
+    private let isPaneDetail: Bool
 
     public init(
         store: StoreOf<TodoDetailFeature>,
         windowEvent: TodoEditorWindowEvent? = nil,
-        onBack: (() -> Void)? = nil
+        onBack: (() -> Void)? = nil,
+        isPaneDetail: Bool = false
     ) {
         self.store = store
         self.windowEvent = windowEvent
         self.onBack = onBack
+        self.isPaneDetail = isPaneDetail
     }
 
     public var body: some View {
@@ -43,7 +48,8 @@ public struct TodoDetailView: View {
                     content: todo.content,
                     referenceItems: store.referenceItems,
                     number: todo.number,
-                    showsTitle: !showsPaneTitleBar,
+                    // 사이드바가 있는 창의 칸 제목 줄은 Todo 제목을 표시하므로 본문 제목 생략
+                    showsTitle: !(showsPaneTitleBar && usesDesktopLayout),
                     onOpenTodoID: { store.send(.setSheet(.todo(TodoIdItem(id: $0)))) }
                 )
             } else if store.isLoading {
@@ -51,7 +57,7 @@ public struct TodoDetailView: View {
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if deviceType != .duo {
+            if deviceType != .duo || showsPaneTitleBar {
                 topBar
             }
         }
@@ -114,13 +120,16 @@ public struct TodoDetailView: View {
     @ViewBuilder
     private var topBar: some View {
         if showsPaneTitleBar {
-            PaneTitleBar {
-                if let todo = store.todo {
+            // 일반 화면에서 밀어 넣은 상세가 칸 화면으로 바뀌어도 뒤로 갈 수 있게 뒤로 버튼 표시
+            PaneTitleBar(onBack: isPaneDetail ? nil : back) {
+                if usesDesktopLayout, let todo = store.todo {
                     HStack(spacing: 8) {
                         Text(todo.title)
                         Text(verbatim: "#\(todo.number)")
                             .foregroundStyle(Color.tertiaryLabel)
                     }
+                } else if !usesDesktopLayout {
+                    Text(verbatim: "Todo")
                 }
             } actions: {
                 infoButton
@@ -130,13 +139,7 @@ public struct TodoDetailView: View {
             }
         } else {
             HStack(spacing: 12) {
-                NavigationBackButton {
-                    if let onBack {
-                        onBack()
-                    } else {
-                        dismiss()
-                    }
-                }
+                NavigationBackButton(action: back)
                 Spacer()
                 infoButton
                 if store.showEditButton {
@@ -149,6 +152,14 @@ public struct TodoDetailView: View {
             .padding(.vertical, 12)
             .padding(.top, windowControlsInset)
             .background(Color.background, ignoresSafeAreaEdges: .top)
+        }
+    }
+
+    private func back() {
+        if let onBack {
+            onBack()
+        } else {
+            dismiss()
         }
     }
 

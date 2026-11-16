@@ -335,6 +335,29 @@ struct PushNotificationListFeatureTests {
         #expect(adapter.selectedTodoId == nil)
     }
 
+    @Test("hideSheet은 시트만 닫고 선택한 알림과 Todo를 유지한다")
+    func hideSheet은_시트만_닫고_선택한_알림과_Todo를_유지한다() async throws {
+        let fetchSpy = PushNotificationListFetchUseCaseSpy(pages: [
+            PushNotificationPage(
+                items: [
+                    makePushNotification(id: "notification-1", number: 1, isRead: true)
+                ],
+                nextCursor: nil
+            )
+        ])
+        let adapter = PushNotificationListStoreTestAdapter(fetchUseCase: fetchSpy)
+
+        await adapter.fetchNotifications()
+        await adapter.selectNotification("notification-1")
+        await adapter.syncSheetPresentation()
+
+        await adapter.hideSheet()
+
+        #expect(adapter.sheetTodoId == nil)
+        #expect(adapter.selectedNotificationId == "notification-1")
+        #expect(adapter.selectedTodoId?.id == "todo-1")
+    }
+
     @Test("delete와 undoDelete는 숨김 상태와 최종 제거 상태를 제어한다")
     func delete와_undoDelete는_숨김_상태와_최종_제거_상태를_제어한다() async throws {
         let fetchSpy = PushNotificationListFetchUseCaseSpy(pages: [

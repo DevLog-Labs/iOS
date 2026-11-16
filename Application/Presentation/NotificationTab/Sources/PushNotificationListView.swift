@@ -10,6 +10,8 @@ import Core
 import PresentationShared
 
 public struct PushNotificationListView: View {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<PushNotificationListFeature>
     private let isSelected: Bool
 
@@ -26,15 +28,22 @@ public struct PushNotificationListView: View {
     }
 
     public var body: some View {
+        // 사이드바가 있는 창은 시트로 열고 Duo 펼침은 옆 칸에 표시
+        let showsDetailPane = usesPaneLayout && !usesDesktopLayout
+
         NavigationStack {
-            PushNotificationListContent(store: store)
-                .background(Color.background)
-                .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
-                    let task = store.send(.view(.refresh))
-                    await task.finish()
-                    store.send(.view(.startObserving))
-                }
-                .duoToolbarVisibility()
+            PaneSplitView(duoWidth: .wide, splitsOnDesktop: false) {
+                PushNotificationListContent(store: store, showsSelection: showsDetailPane)
+                    .background(Color.background)
+                    .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
+                        let task = store.send(.view(.refresh))
+                        await task.finish()
+                        store.send(.view(.startObserving))
+                    }
+                    .duoToolbarVisibility()
+            } detail: {
+                TodoDetailPane(todoId: store.selectedTodoId?.id, showEditButton: false)
+            }
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(item: sheetStore.activePresentation(when: isSelected)) { store in
@@ -46,7 +55,13 @@ public struct PushNotificationListView: View {
             }
         }
         .onChange(of: store.selectedTodoId?.id, initial: true) {
-            store.send(.view(.syncSheetPresentation))
+            if !showsDetailPane {
+                store.send(.view(.syncSheetPresentation))
+            }
+        }
+        // 접으면 옆 칸에서 보던 Todo를 시트로 열고 펼치면 시트만 닫아 같은 Todo를 옆 칸에 표시
+        .onChange(of: showsDetailPane) { _, showsDetailPane in
+            store.send(.view(showsDetailPane ? .hideSheet : .syncSheetPresentation))
         }
         .overlay {
             if store.isLoading {
@@ -84,10 +99,13 @@ public struct PushNotificationListView: View {
 
 private struct PushNotificationListContent: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @ScaledMetric(relativeTo: .headline) private var iconSize = 36
     let store: StoreOf<PushNotificationListFeature>
+    // 고른 알림을 옆 칸에 표시하는 동안 목록 행에 선택 표시
+    let showsSelection: Bool
 
     @ViewBuilder
     var body: some View {
@@ -124,6 +142,7 @@ private struct PushNotificationListContent: View {
                                     LazyVStack(spacing: 12) {
                                         ForEach(items) { item in
                                             let category = TodoCategoryItem(from: item.todoCategory)
+                                            let isSelected = showsSelection && item.id == store.selectedNotificationId
 
                                             HStack(alignment: .top, spacing: 12) {
                                                 Image(systemName: category.symbolName)
@@ -166,7 +185,9 @@ private struct PushNotificationListContent: View {
                                             }
                                             .padding(16)
                                             .frame(maxWidth: .infinity, alignment: .leading)
-                                            .hoverHighlight()
+                                            .hoverHighlight(isEnabled: !isSelected)
+                                            // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
+                                            .background(isSelected ? Color.tintFill : .clear, in: .rect)
                                             .background(Color.secondaryBackground, in: .rect)
                                             .contentShape(.rect)
                                             .onTapGesture {
@@ -220,10 +241,15 @@ private struct PushNotificationListContent: View {
                         PushNotificationPaneMenus(store: store)
                     }
                 } else {
+                    if usesPaneLayout {
+                        PaneTitleBar(title)
+                    }
                     VStack(alignment: .leading, spacing: 12) {
-                        title
-                            .font(.adaptive(.largeTitle).bold())
-                            .padding(.bottom, 8)
+                        if !usesPaneLayout {
+                            title
+                                .font(.adaptive(.largeTitle).bold())
+                                .padding(.bottom, 8)
+                        }
 
                         ScrollView(.horizontal) {
                             PushNotificationFilterBar(store: store)
@@ -236,7 +262,7 @@ private struct PushNotificationListContent: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
                     .frame(maxWidth: readableContentWidth)
-                    .padding(.top, windowControlsInset)
+                    .padding(.top, usesPaneLayout ? 12 : windowControlsInset)
                     .padding(.bottom, 8)
                 }
             }

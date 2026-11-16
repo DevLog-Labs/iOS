@@ -13,7 +13,7 @@ import PresentationShared
 
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onSelectTodo: (String) -> Void
@@ -31,9 +31,9 @@ struct TodoListView: View {
     var body: some View {
         PaneSplitView {
             TodoListContent(store: store) { todoId in
-                // 사이드바 구조로 바뀌면 같은 Todo를 옆 칸에 표시하도록 좁은 창에서도 선택 기억
+                // 칸 화면으로 바뀌면 같은 Todo를 옆 칸에 표시하도록 칸으로 나누지 않은 화면에서도 선택 기억
                 store.send(.binding(.set(\.selectedTodoId, todoId)))
-                if !usesDesktopLayout {
+                if !usesPaneLayout {
                     onSelectTodo(todoId)
                 }
             }
@@ -89,7 +89,7 @@ struct TodoListView: View {
 }
 
 private struct TodoListContent: View {
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
@@ -113,12 +113,14 @@ private struct TodoListContent: View {
                             id: \.1.id
                         ) { index, todo in
                             let isLast = index == visibleTodos.count - 1
-                            // 좁은 창은 상세 칸이 없어 선택 표시 생략
-                            let isSelected = usesDesktopLayout && todo.id == store.selectedTodoId
+                            // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
+                            let isSelected = usesPaneLayout && todo.id == store.selectedTodoId
 
                             TodoItemRow(todo)
                                 .hoverHighlight(isEnabled: !isSelected)
-                                .background(isSelected ? Color.tintFill : .secondaryBackground)
+                                // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
+                                .background(isSelected ? Color.tintFill : .clear)
+                                .background(Color.secondaryBackground)
                                 .contentShape(.rect)
                                 .todoDetailPreview(todoId: todo.id)
                                 .onTapGesture {
@@ -228,6 +230,7 @@ private struct TodoListTopBar: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
@@ -236,17 +239,21 @@ private struct TodoListTopBar: View {
 
     var body: some View {
         let title = Text(TodoCategoryItem(from: store.category).localizedName)
+        // Duo 펼침 칸은 디자인대로 제목 줄 아래 필터 줄 유지
+        let usesPaneMenus = showsPaneTitleBar && usesDesktopLayout
 
         VStack(spacing: 0) {
             if showsPaneTitleBar {
-                PaneTitleBar(title) {
-                    TodoListPaneMenus(store: store)
+                PaneTitleBar(title, onBack: { dismiss() }) {
+                    if usesPaneMenus {
+                        TodoListPaneMenus(store: store)
+                    }
                     actions
                 }
             }
 
-            // 칸 제목 줄은 필터와 정렬을 버튼으로 옮겨 검색 중일 때만 아래 줄 표시
-            if !showsPaneTitleBar || store.isSearching {
+            // 사이드바가 있는 창의 칸 제목 줄은 필터와 정렬을 버튼으로 옮겨 검색 중일 때만 아래 줄 표시
+            if !usesPaneMenus || store.isSearching {
                 VStack(spacing: 8) {
                     if !showsPaneTitleBar {
                         ZStack {
@@ -275,7 +282,7 @@ private struct TodoListTopBar: View {
                             .padding(.horizontal, 16)
                     }
 
-                    if !showsPaneTitleBar {
+                    if !usesPaneMenus {
                         TodoListFilterHeader(store: store)
                     }
                 }
