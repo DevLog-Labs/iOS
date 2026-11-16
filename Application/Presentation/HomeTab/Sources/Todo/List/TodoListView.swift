@@ -54,6 +54,9 @@ struct TodoListView: View {
             .id(store.detailRevision)
         }
         .detailPanel(item: $store.panelTodo.activePresentation(when: isTabContentActive)) { item in
+            // 목록에서 빠진 Todo는 지울 경로가 없어 판 메뉴에서 삭제 생략
+            let todo = store.todos.first { $0.id == item.id }
+
             TodoDetailPanel(
                 todoId: item.id,
                 location: Text(TodoCategoryItem(from: store.category).localizedName),
@@ -63,11 +66,12 @@ struct TodoListView: View {
                     store.send(.binding(.set(\.panelTodo, nil)))
                     store.send(.binding(.set(\.selectedTodoId, item.id)))
                 },
-                onDelete: {
-                    store.send(.binding(.set(\.panelTodo, nil)))
-                    guard let todo = store.todos.first(where: { $0.id == item.id }) else { return }
-                    store.send(.view(.swipeTodo(todo)))
-                    presentDeleteTodoToast(todo.id, store: store)
+                onDelete: todo.map { todo in
+                    {
+                        store.send(.binding(.set(\.panelTodo, nil)))
+                        store.send(.view(.swipeTodo(todo)))
+                        presentDeleteTodoToast(todo.id, store: store)
+                    }
                 }
             )
         }
