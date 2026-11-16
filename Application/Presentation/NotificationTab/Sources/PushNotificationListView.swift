@@ -51,6 +51,10 @@ public struct PushNotificationListView: View {
                     onClose: isiOSAppOnMac ? closeDetailPane : nil
                 )
             }
+            // Mac 오른쪽 칸은 칸 제목 줄 정보 버튼 대신 창 오른쪽 세부 정보 사이드바에 속성 표시
+            .detailSideBarTarget(
+                showsMacPane ? store.selectedTodoId.map { .todo(id: $0.id, isEditable: false) } : nil
+            )
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(item: sheetStore.activePresentation(when: isSelected && !isiOSAppOnMac)) { store in
