@@ -11,6 +11,8 @@ import SwiftUI
 public struct PaneSplitView<Primary: View, Detail: View>: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var width = CGFloat.infinity
+    // 경계선을 끌어 정한 목록 칸 폭, 없으면 기본 폭
+    @State private var primaryWidth: CGFloat?
     // 상세 칸이 편집 화면처럼 화면을 덮는 표시를 띄운 동안
     @State private var isDetailPresenting = false
     private let primary: Primary
@@ -29,19 +31,20 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
         let paneWidth = min(400, width / 2)
 
         HStack(spacing: 0) {
-            if usesDesktopLayout {
-                // 경계선은 사이드바 경계선부터 창 오른쪽 끝까지 이동
-                primary
-                    .resizablePane(
-                        minimumWidth: 0,
-                        idealWidth: paneWidth,
-                        maximumWidth: width
-                    )
-                    // 세부 정보 사이드바 여는 버튼은 오른쪽 칸 제목 줄에만 표시
-                    .environment(\.showDetailSideBar, nil)
-            } else {
-                primary
-            }
+            // 넓은 창과 좁은 창을 오가도 목록 칸을 다시 만들지 않도록 같은 구조로 두고 사이드바 구조에서만 폭 조절
+            // 경계선은 사이드바 경계선부터 창 오른쪽 끝까지 이동
+            primary
+                .resizablePane(
+                    width: primaryWidth,
+                    minimumWidth: 0,
+                    idealWidth: paneWidth,
+                    maximumWidth: width,
+                    isEnabled: usesDesktopLayout
+                ) { width in
+                    primaryWidth = width
+                }
+                // 세부 정보 사이드바 여는 버튼은 오른쪽 칸 제목 줄에만 표시
+                .environment(\.showDetailSideBar, nil)
             // 좁은 창으로 바뀌어도 상세 칸이 띄운 편집 화면이 닫히지 않도록 폭 0으로 남겨 두고 닫히면 해제
             if usesDesktopLayout || isDetailPresenting {
                 // 상세 칸이 기본 폭보다 좁으면 내용을 줄이지 않고 잘라서 표시
@@ -110,26 +113,14 @@ struct PaneDetailPresentingPreferenceKey: PreferenceKey {
 
 public extension View {
     // 오른쪽 경계선을 끌어 폭을 바꾸는 칸
-    func resizablePane(
-        minimumWidth: CGFloat,
-        idealWidth: CGFloat,
-        maximumWidth: CGFloat
-    ) -> some View {
-        modifier(ResizablePaneModifier(
-            width: nil,
-            minimumWidth: minimumWidth,
-            idealWidth: idealWidth,
-            maximumWidth: maximumWidth,
-            onResize: nil
-        ))
-    }
-
     // 폭을 바깥 상태에 두어 칸을 다시 만들어도 같은 폭으로 표시하고, 끌기를 마치면 바뀐 폭 전달
+    // 꺼 두면 폭을 정하지 않고 칸을 자르지 않음
     func resizablePane(
         width: CGFloat?,
         minimumWidth: CGFloat,
         idealWidth: CGFloat,
         maximumWidth: CGFloat,
+        isEnabled: Bool = true,
         onResize: @escaping (CGFloat) -> Void
     ) -> some View {
         modifier(ResizablePaneModifier(
@@ -137,6 +128,7 @@ public extension View {
             minimumWidth: minimumWidth,
             idealWidth: idealWidth,
             maximumWidth: maximumWidth,
+            isEnabled: isEnabled,
             onResize: onResize
         ))
     }
@@ -152,19 +144,22 @@ private struct ResizablePaneModifier: ViewModifier {
     private let minimumWidth: CGFloat
     private let idealWidth: CGFloat
     private let maximumWidth: CGFloat
-    private let onResize: ((CGFloat) -> Void)?
+    private let isEnabled: Bool
+    private let onResize: (CGFloat) -> Void
 
     init(
         width: CGFloat?,
         minimumWidth: CGFloat,
         idealWidth: CGFloat,
         maximumWidth: CGFloat,
-        onResize: ((CGFloat) -> Void)?
+        isEnabled: Bool,
+        onResize: @escaping (CGFloat) -> Void
     ) {
         self.storedWidth = width
         self.minimumWidth = minimumWidth
         self.idealWidth = idealWidth
         self.maximumWidth = maximumWidth
+        self.isEnabled = isEnabled
         self.onResize = onResize
         self._width = State(initialValue: width)
     }
@@ -175,26 +170,37 @@ private struct ResizablePaneModifier: ViewModifier {
     }
 
     func body(content: Content) -> some View {
+        // 켜고 끌 때 칸 내용을 다시 만들지 않도록 수정자 구성은 그대로 두고 값만 바꿈
         content
-            .environment(\.paneWidth, paneWidth)
+            .transformEnvironment(\.paneWidth) { value in
+                if isEnabled {
+                    value = paneWidth
+                }
+            }
             // 칸이 기본 폭보다 좁으면 내용을 줄이지 않고 기본 폭 그대로 두고 잘라서 표시
-            .frame(width: max(paneWidth, idealWidth), alignment: .leading)
-            .frame(width: paneWidth, alignment: .leading)
-            .clipped()
+            .frame(width: isEnabled ? max(paneWidth, idealWidth) : nil, alignment: .leading)
+            .frame(width: isEnabled ? paneWidth : nil, alignment: .leading)
+            // 꺼 두면 안전 영역까지 그린 내용도 자르지 않음
+            .mask {
+                Rectangle()
+                    .ignoresSafeArea(edges: isEnabled ? [] : .all)
+            }
             // 잘린 영역 밖 내용이 입력을 받지 않도록 칸 영역으로 제한
             .contentShape(.rect)
             .overlay(alignment: .trailing) {
-                Color.clear
-                    .frame(width: 16)
-                    .contentShape(.rect)
-                    .gesture(resizeGesture)
-                    .overlay(alignment: .trailing) {
-                        Rectangle()
-                            .fill(Color.separator)
-                            .frame(width: 2)
-                    }
-                    // 위쪽은 상태 표시줄 영역 구분선까지만 연결
-                    .ignoresSafeArea(.container, edges: .bottom)
+                if isEnabled {
+                    Color.clear
+                        .frame(width: 16)
+                        .contentShape(.rect)
+                        .gesture(resizeGesture)
+                        .overlay(alignment: .trailing) {
+                            Rectangle()
+                                .fill(Color.separator)
+                                .frame(width: 2)
+                        }
+                        // 위쪽은 상태 표시줄 영역 구분선까지만 연결
+                        .ignoresSafeArea(.container, edges: .bottom)
+                }
             }
             // 저장한 폭을 불러오거나 기본 폭으로 되돌리면 칸 폭도 맞춤
             .onChange(of: storedWidth) { _, value in
@@ -216,7 +222,7 @@ private struct ResizablePaneModifier: ViewModifier {
             }
             .onEnded { _ in
                 dragStartWidth = nil
-                onResize?(paneWidth)
+                onResize(paneWidth)
             }
     }
 }
