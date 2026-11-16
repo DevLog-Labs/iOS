@@ -23,7 +23,8 @@ struct GoalCreateView: View {
             NavigationStack {
                 content
             }
-            .sheetDismissDisabled(store.isSaving)
+            // 전체 화면처럼 닫기·저장 버튼으로만 닫음
+            .sheetDismissDisabled()
         }
     }
 
