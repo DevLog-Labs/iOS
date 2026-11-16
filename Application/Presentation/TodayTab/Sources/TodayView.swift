@@ -137,16 +137,19 @@ public struct TodayView: View {
                 .id(item?.updatedAt)
             }
             .detailPanel(item: $store.panelTodo.activePresentation(when: isSelected)) { item in
+                // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 판 메뉴에서 오른쪽 칸으로 옮기기 생략
+                let isListed = sections.flatMap(\.items).contains { $0.id == item.id }
+
                 TodoDetailPanel(
                     todoId: item.id,
                     location: Text("nav_today", bundle: PresentationResources.bundle),
                     isEditable: true,
                     windowEvent: windowEvent,
-                    onMoveToPane: {
+                    onMoveToPane: isListed ? {
                         store.send(.binding(.set(\.panelTodo, nil)))
                         store.send(.binding(.set(\.selectedTodoId, item.id)))
                         store.send(.binding(.set(\.isDetailPanePresented, true)))
-                    }
+                    } : nil
                 )
             }
             .detailSideBarTarget(
