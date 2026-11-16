@@ -245,17 +245,17 @@ private struct SheetSideSafeArea: UIViewControllerRepresentable {
         private var verticalBarWidth: CGFloat?
         private var isOverridden = false
         private var displayLink: CADisplayLink?
+        private var isVisible = false
 
         override func viewDidAppear(_ animated: Bool) {
             super.viewDidAppear(animated)
-            // 시트 안에서 새로 밀어 넣은 화면도 반영하도록 시트가 떠 있는 동안 화면을 그릴 때마다 확인
-            displayLink?.invalidate()
-            displayLink = CADisplayLink(target: self, selector: #selector(apply))
-            displayLink?.add(to: .main, forMode: .common)
+            isVisible = true
+            apply()
         }
 
         override func viewWillDisappear(_ animated: Bool) {
             super.viewWillDisappear(animated)
+            isVisible = false
             displayLink?.invalidate()
             displayLink = nil
         }
@@ -274,8 +274,17 @@ private struct SheetSideSafeArea: UIViewControllerRepresentable {
                     onVerticalBarWidthChange?(width)
                 }
             }
-            // 옆 안전 영역이 없고 지운 적도 없으면 확인할 것이 없음
-            guard isOverridden || 0 < width else { return }
+            // 옆 안전 영역이 없고 지운 적도 없으면 확인할 것이 없어 화면마다 하던 확인도 멈춤
+            guard isOverridden || 0 < width else {
+                displayLink?.invalidate()
+                displayLink = nil
+                return
+            }
+            // 시트 안에서 새로 밀어 넣은 화면도 반영하도록 옆 안전 영역이 있는 동안 화면을 그릴 때마다 확인
+            if isVisible && displayLink == nil {
+                displayLink = CADisplayLink(target: self, selector: #selector(apply))
+                displayLink?.add(to: .main, forMode: .common)
+            }
             // 시트 안 화면은 부모와 따로 창 기준 옆 안전 영역을 받으므로 컨트롤러마다 남은 만큼 지움
             var controllers = [host]
             while let controller = controllers.popLast() {
