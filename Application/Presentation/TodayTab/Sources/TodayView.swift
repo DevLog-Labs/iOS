@@ -222,29 +222,39 @@ private struct TodayAchievementCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            HStack(spacing: 10) {
-                Text(String(
-                    localized: "today_achievement_title",
-                    bundle: PresentationResources.bundle)
-                )
-                .font(.adaptive(.title3).bold())
-
-                Text(achievementStatusTitle)
-                    .font(.adaptive(.callout).weight(.semibold))
-                    .foregroundStyle(Color.tintLabel)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
-
-                Spacer(minLength: 8)
-
-                progressCount
+            // 좁은 칸에서 한 줄에 들어가지 않으면 작은 상태 칩으로 줄바꿈 없이 표시
+            ViewThatFits(in: .horizontal) {
+                header(isCompact: false)
+                header(isCompact: true)
             }
 
             ProgressView(value: store.todayAchievement?.progress ?? 0)
         }
         .padding(20)
         .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+    }
+
+    private func header(isCompact: Bool) -> some View {
+        HStack(spacing: isCompact ? 8 : 10) {
+            Text(String(
+                localized: "today_achievement_title",
+                bundle: PresentationResources.bundle)
+            )
+            .font(.adaptive(.title3).bold())
+            .lineLimit(1)
+
+            Text(achievementStatusTitle)
+                .font(.adaptive(isCompact ? .caption : .callout).weight(.semibold))
+                .foregroundStyle(Color.tintLabel)
+                .lineLimit(1)
+                .padding(.horizontal, isCompact ? 6 : 12)
+                .padding(.vertical, isCompact ? 3 : 6)
+                .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
+
+            Spacer(minLength: isCompact ? 4 : 8)
+
+            progressCount
+        }
     }
 
     @ViewBuilder
