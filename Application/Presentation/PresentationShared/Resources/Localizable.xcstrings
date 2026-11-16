@@ -4238,6 +4238,23 @@
         }
       }
     },
+    "settings_back_to_app" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Back to App"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "앱으로 돌아가기"
+          }
+        }
+      }
+    },
     "settings_delete_account" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4285,6 +4302,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "모든 데이터가 삭제됩니다."
+          }
+        }
+      }
+    },
+    "settings_information" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "About"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "정보"
           }
         }
       }

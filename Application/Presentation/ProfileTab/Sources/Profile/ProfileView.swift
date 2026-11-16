@@ -244,7 +244,7 @@ public struct ProfileView: View {
             ) {
                 TodoDetailFeature()
             }, windowEvent: windowEvent)
-        case .theme, .pushNotification, .account:
+        case .theme, .pushNotification, .account, .information:
             settingsPage(route, isPaneDetail: false)
         }
     }
@@ -265,7 +265,7 @@ public struct ProfileView: View {
             AccountView(store: Store(initialState: AccountFeature.State()) {
                 AccountFeature()
             }, isPaneDetail: isPaneDetail)
-        case .settings, .activity, .recentTodo:
+        case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }
     }
@@ -292,6 +292,8 @@ enum ProfileRoute: Hashable, Identifiable {
     case theme
     case pushNotification
     case account
+    // Mac 설정 화면 목차에서만 고르는 앱 정보
+    case information
 
     var id: Self { self }
 }

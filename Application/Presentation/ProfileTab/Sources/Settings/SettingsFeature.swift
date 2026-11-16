@@ -37,7 +37,7 @@ struct SettingsFeature {
             testFlightURL: Bundle.main.object(forInfoDictionaryKey: "TESTFLIGHT_URL") as? String
         )
         var policyURL = Bundle.main.object(forInfoDictionaryKey: "PRIVACY_POLICY_URL") as? String
-        // 칸 화면에서 설정 옆 칸에 표시하는 화면
+        // 칸 화면에서 설정 옆 칸에, Mac 설정 화면에서 목차 옆에 표시하는 화면
         var selectedRoute = ProfileRoute.theme
 
         var isLoading: Bool {
