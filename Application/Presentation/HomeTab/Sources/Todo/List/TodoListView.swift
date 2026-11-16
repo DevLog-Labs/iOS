@@ -38,12 +38,21 @@ struct TodoListView: View {
                 }
             }
         } detail: {
-            TodoDetailPane(
-                todoId: store.selectedTodoId,
-                showEditButton: true,
-                windowEvent: windowEvent
-            )
-            .id(store.detailRevision)
+            // 칸으로 나눈 화면은 새 Todo를 덮는 화면 대신 상세 칸 자리에서 작성
+            if usesPaneLayout,
+               let editorStore = store.scope(
+                state: \.fullScreenCover?.todoEditor,
+                action: \.fullScreenCover.presented.todoEditor
+               ) {
+                TodoEditorView(store: editorStore, onClose: { store.send(.fullScreenCover(.dismiss)) })
+            } else {
+                TodoDetailPane(
+                    todoId: store.selectedTodoId,
+                    showEditButton: true,
+                    windowEvent: windowEvent
+                )
+                .id(store.detailRevision)
+            }
         }
         .detailSideBarTarget(
             store.selectedTodoId.map { .todo(id: $0, isEditable: true, revision: store.detailRevision) }
@@ -62,6 +71,7 @@ struct TodoListView: View {
         .fullScreenCover(
             item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
                 .activePresentation(when: isTabContentActive)
+                .hiddenInPane(usesPaneLayout)
         ) { coverStore in
             fullScreenCoverContent(coverStore)
         }

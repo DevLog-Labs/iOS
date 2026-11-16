@@ -20,6 +20,7 @@ public struct TodoDetailView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
     @State var store: StoreOf<TodoDetailFeature>
     private let windowEvent: TodoEditorWindowEvent?
@@ -40,6 +41,41 @@ public struct TodoDetailView: View {
     }
 
     public var body: some View {
+        // 칸으로 나눈 화면은 편집 화면을 덮는 화면 대신 상세 칸 자리에 표시
+        let editsInPane = usesPaneLayout && showsPaneTitleBar
+
+        detailContent(editsInPane: editsInPane)
+            .onAppear { store.send(.onAppear) }
+            // 좁은 창으로 바뀌어도 편집 화면이 닫히지 않도록 상세 칸을 남겨 두게 알림
+            .preference(key: PaneDetailPresentingPreferenceKey.self, value: store.fullScreenCover != nil)
+            // 편집 화면에서 저장하면 창 폭과 상관없이 Mac 편집 창과 같은 경로로 옆 목록에도 전달
+            // 편집 화면이 닫히며 놓치지 않도록 상세 상태에 남긴 저장 결과로 전달
+            .onChange(of: store.savedTodo) { _, todo in
+                guard let todo else { return }
+                windowEvent?.submitUpdate(value: TodoEditorWindowValue(todo: todo), todo: todo)
+            }
+            .onReceive(windowSubmits) { submit in
+                guard case .update(let value, let todo) = submit,
+                      value.matchesEdit(todoId: store.todoId) else { return }
+                store.send(.setTodo(todo))
+            }
+            .prominentAlert(store, state: \.alert, action: \.alert)
+            .prominentSheet(
+                item: $store.scope(state: \.sheet, action: \.sheet)
+                    .activePresentation(when: isTabContentActive)
+            ) { store in
+                sheetContent(store)
+            }
+            .fullScreenCover(
+                item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
+                    .activePresentation(when: isTabContentActive)
+                    .hiddenInPane(editsInPane)
+            ) { store in
+                fullScreenCoverContent(store)
+            }
+    }
+
+    private func detailContent(editsInPane: Bool) -> some View {
         ZStack {
             Color.background.ignoresSafeArea()
             if let todo = store.todo {
@@ -61,9 +97,19 @@ public struct TodoDetailView: View {
                 topBar
             }
         }
+        .overlay {
+            if editsInPane,
+               let editorStore = store.scope(
+                state: \.fullScreenCover?.todoEditor,
+                action: \.fullScreenCover.presented.todoEditor
+               ) {
+                TodoEditorView(store: editorStore, onClose: { store.send(.fullScreenCover(.dismiss)) })
+            }
+        }
         .duoToolbarVisibility()
         .toolbar {
-            if deviceType == .duo {
+            // 칸에서 편집하는 동안은 편집 화면 제목 줄 버튼만 사용
+            if deviceType == .duo, !(editsInPane && store.fullScreenCover?.todoEditor != nil) {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
                     Group {
@@ -83,33 +129,6 @@ public struct TodoDetailView: View {
                     .id(windowControlsInset)
                 }
             }
-        }
-        .onAppear { store.send(.onAppear) }
-        // 좁은 창으로 바뀌어도 편집 화면이 닫히지 않도록 상세 칸을 남겨 두게 알림
-        .preference(key: PaneDetailPresentingPreferenceKey.self, value: store.fullScreenCover != nil)
-        // 편집 화면에서 저장하면 창 폭과 상관없이 Mac 편집 창과 같은 경로로 옆 목록에도 전달
-        // 편집 화면이 닫히며 놓치지 않도록 상세 상태에 남긴 저장 결과로 전달
-        .onChange(of: store.savedTodo) { _, todo in
-            guard let todo else { return }
-            windowEvent?.submitUpdate(value: TodoEditorWindowValue(todo: todo), todo: todo)
-        }
-        .onReceive(windowSubmits) { submit in
-            guard case .update(let value, let todo) = submit,
-                  value.matchesEdit(todoId: store.todoId) else { return }
-            store.send(.setTodo(todo))
-        }
-        .prominentAlert(store, state: \.alert, action: \.alert)
-        .prominentSheet(
-            item: $store.scope(state: \.sheet, action: \.sheet)
-                .activePresentation(when: isTabContentActive)
-        ) { store in
-            sheetContent(store)
-        }
-        .fullScreenCover(
-            item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
-                .activePresentation(when: isTabContentActive)
-        ) { store in
-            fullScreenCoverContent(store)
         }
     }
 
