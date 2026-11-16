@@ -245,7 +245,13 @@ struct HomeFeature {
             case .sheet(.presented(.categoryManage(.delegate(.done(let preferences))))):
                 return orderTodoCategory(preferences, state: &state)
             case .sheet(.presented(.categoryManage(.delegate(.changed(let preferences))))):
-                // Mac 카테고리 관리 칸은 고친 값을 바로 저장
+                // 사이드바가 있는 창의 카테고리 관리 칸은 고친 값을 바로 저장
+                state.preferences = preferences
+                return delayedTodoCategoryPreferencesUpdateEffect(preferences)
+            case .sheet(.presented(.categoryManage(.setSavesImmediately(true)))):
+                // 시트에서 고친 값은 바로 저장하는 칸으로 바뀔 때 저장
+                guard let preferences = state.sheet?.categoryManageState?.preferences,
+                      preferences != state.preferences else { break }
                 state.preferences = preferences
                 return delayedTodoCategoryPreferencesUpdateEffect(preferences)
             case .sheet(.presented(.goalCreate(.delegate(.saved)))):
@@ -316,7 +322,7 @@ private extension HomeFeature {
         case .tapDevelopmentGoal(let goalID):
             state.sheet = .goalDetail(goalID)
         case .tapManageTodoCategory:
-            // 이미 연 Mac 카테고리 관리 칸은 바로 저장하는 상태를 그대로 유지
+            // 이미 연 카테고리 관리 칸은 바로 저장하는 상태를 그대로 유지
             guard state.sheet?.categoryManageState == nil else { break }
             state.sheet = .reorderTodo(CategoryManageFeature.State(preferences: state.preferences))
         case .tapTodoCategoryExpansionButton:

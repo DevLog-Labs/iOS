@@ -28,8 +28,8 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
                 isPresented: Binding(
                     get: { isCovered },
                     set: { isPresented in
-                        // 내용 안에서 dismiss를 부르면 표시 상태도 함께 닫음
-                        if !isPresented {
+                        // 내용 안에서 dismiss를 부르면 표시 상태도 함께 닫음, 표시 상태가 먼저 닫혀 내리는 중이면 그대로 둠
+                        if !isPresented && isCovered {
                             item.wrappedValue = nil
                         }
                     }

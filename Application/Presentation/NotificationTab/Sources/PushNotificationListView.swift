@@ -83,7 +83,7 @@ public struct PushNotificationListView: View {
 }
 
 private struct PushNotificationListContent: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @ScaledMetric(relativeTo: .headline) private var iconSize = 36
@@ -206,8 +206,8 @@ private struct PushNotificationListContent: View {
                 }
             }
             .padding(.horizontal, 16)
-            // Mac은 필터 줄 없이 제목 줄 바로 아래에서 시작
-            .padding(.top, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 0)
+            // 사이드바가 있으면 필터 줄 없이 제목 줄 바로 아래에서 시작
+            .padding(.top, usesDesktopLayout ? 16 * AdaptiveSize.boardScale : 0)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
@@ -215,7 +215,7 @@ private struct PushNotificationListContent: View {
             let title = Text(String(localized: "nav_push_notifications", bundle: PresentationResources.bundle))
 
             VStack(spacing: 0) {
-                if isiOSAppOnMac {
+                if usesDesktopLayout {
                     PaneTitleBar(title) {
                         PushNotificationPaneMenus(store: store)
                     }
@@ -375,7 +375,7 @@ private struct PushNotificationFilterBar: View {
     }
 }
 
-// Mac 제목 줄의 필터와 정렬 버튼
+// 칸 제목 줄의 필터와 정렬 버튼
 private struct PushNotificationPaneMenus: View {
     let store: StoreOf<PushNotificationListFeature>
 

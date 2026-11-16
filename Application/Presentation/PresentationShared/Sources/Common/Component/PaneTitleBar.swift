@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Mac 창에서 화면 칸 맨 위에 두는 제목 줄
+// 사이드바가 있는 창에서 화면 칸 맨 위에 두는 제목 줄
 public struct PaneTitleBar<Title: View, Actions: View>: View {
     @Environment(\.expandSideBar) private var expandSideBar
     @Environment(\.showDetailSideBar) private var showDetailSideBar

@@ -19,13 +19,14 @@ public extension View {
 }
 
 private struct InputBackgroundModifier: ViewModifier {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     let isMultiline: Bool
     let isFocused: Bool
     let isInvalid: Bool
 
     func body(content: Content) -> some View {
-        if isiOSAppOnMac {
+        // 사이드바가 있는 창은 Mac과 같은 입력칸 모양
+        if usesDesktopLayout {
             let shape = RoundedRectangle(cornerRadius: isMultiline ? CornerRadius.group : CornerRadius.control)
             let border = isInvalid ? Color.danger : isFocused ? .accent : isMultiline ? .multilineInputBorder : .inputBorder
 

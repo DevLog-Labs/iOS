@@ -12,6 +12,7 @@ struct CategoryManageView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.deviceType) private var deviceType
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @Bindable var store: StoreOf<CategoryManageFeature>
 
@@ -32,8 +33,8 @@ struct CategoryManageView: View {
                     .margins(.horizontal, 16)
                     .margins(.vertical, 8),
                     footer: UIHostingConfiguration {
-                        // Mac은 목록 바로 아래에 추가 버튼 표시
-                        if isiOSAppOnMac {
+                        // 사이드바가 있으면 목록 바로 아래에 추가 버튼 표시
+                        if usesDesktopLayout {
                             Button {
                                 store.send(.tapAddUserCategory)
                                 setDetailSideBarPresented?(true)
@@ -42,7 +43,7 @@ struct CategoryManageView: View {
                                     String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle),
                                     systemImage: "plus"
                                 )
-                                .font(.adaptive(.headline))
+                                .font(.adaptive(isiOSAppOnMac ? .headline : .subheadline).weight(.semibold))
                                 .foregroundStyle(Color.label)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 6 * AdaptiveSize.boardScale)
@@ -57,14 +58,14 @@ struct CategoryManageView: View {
                         UIHostingConfiguration {
                             CategoryManageRow(
                                 item: item,
-                                isSelected: isiOSAppOnMac && item.id == selectedID,
+                                isSelected: usesDesktopLayout && item.id == selectedID,
                                 onToggle: { store.send(.tapItem(item)) },
                                 onEdit: {
                                     store.send(.tapEditUserCategory(item))
                                     setDetailSideBarPresented?(true)
                                 },
                                 onDelete: { store.send(.tapDeleteUserCategory(item)) },
-                                onSelect: isiOSAppOnMac ? { store.send(.selectCategory(item)) } : nil
+                                onSelect: usesDesktopLayout ? { store.send(.selectCategory(item)) } : nil
                             )
                         }
                         .margins(.horizontal, 0)
@@ -75,18 +76,18 @@ struct CategoryManageView: View {
                     }
                 )
             }
-            // Mac은 칸 가운데 보드 폭으로 표시
-            .frame(maxWidth: isiOSAppOnMac ? 600 * AdaptiveSize.boardScale : .infinity)
+            // 사이드바가 있으면 칸 가운데 보드 폭으로 표시
+            .frame(maxWidth: usesDesktopLayout ? 600 * AdaptiveSize.boardScale : .infinity)
             .frame(maxWidth: .infinity)
             .safeAreaInset(edge: .top, spacing: 0) {
-                if isiOSAppOnMac {
+                if usesDesktopLayout {
                     PaneTitleBar(Text("todo_category_manage", bundle: PresentationResources.bundle))
                 } else {
                     toolBar
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !isiOSAppOnMac {
+                if !usesDesktopLayout {
                     Button {
                         store.send(.tapAddUserCategory)
                     } label: {
@@ -106,15 +107,15 @@ struct CategoryManageView: View {
                 }
             }
             .background(Color.background.ignoresSafeArea())
-            // Mac은 고른 카테고리를 시트 대신 세부 정보 사이드바에 표시
+            // 사이드바가 있으면 고른 카테고리를 시트 대신 세부 정보 사이드바에 표시
             .prominentSheet(
                 item: $store.scope(state: \.categorySheet, action: \.categorySheet)
-                    .activePresentation(when: isTabContentActive && !isiOSAppOnMac)
+                    .activePresentation(when: isTabContentActive && !usesDesktopLayout)
             ) { sheetStore in
                 CategoryManageSheet(store: sheetStore)
             }
             .prominentAlert(store, state: \.alert, action: \.alert)
-            .detailSideBar(isActive: isiOSAppOnMac) {
+            .detailSideBar(isActive: usesDesktopLayout) {
                 if let sheetStore = store.scope(state: \.categorySheet, action: \.categorySheet.presented) {
                     CategorySideBarContent(store: sheetStore) {
                         if let item = store.preferences.first(where: { $0.id == sheetStore.category.id }) {
@@ -125,10 +126,9 @@ struct CategoryManageView: View {
                     DetailSideBarPlaceholder()
                 }
             }
-            .onAppear {
-                if isiOSAppOnMac {
-                    store.send(.setSavesImmediately)
-                }
+            // 창 폭이 바뀌어 칸과 시트를 오가면 저장 방식도 맞춤
+            .onChange(of: usesDesktopLayout, initial: true) { _, usesDesktopLayout in
+                store.send(.setSavesImmediately(usesDesktopLayout))
             }
     }
 
@@ -167,7 +167,7 @@ private struct CategoryManageRow: View {
     let onToggle: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
-    // Mac에서 행을 눌러 사이드바에 표시할 카테고리 선택
+    // 사이드바가 있으면 행을 눌러 세부 정보 사이드바에 표시할 카테고리 선택
     let onSelect: (() -> Void)?
 
     var body: some View {
@@ -424,20 +424,23 @@ private struct CategoryManageSheet: View {
     }
 }
 
-// Mac 세부 정보 사이드바의 카테고리 속성, 고친 값은 바로 저장
+// 세부 정보 사이드바의 카테고리 속성, 고친 값은 바로 저장
+// Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
 private struct CategorySideBarContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: Store<CategoryManageFeature.CategorySheetState, CategoryManageFeature.Action.CategorySheet>
     @FocusState private var isNameFocused: Bool
     let onDelete: () -> Void
 
     var body: some View {
         let item = store.todoCategoryItem
+        let colorSize = isiOSAppOnMac ? 30 * AdaptiveSize.boardScale : 34
 
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 6 * AdaptiveSize.boardScale) {
                     Text(String(localized: "todo_manage_name_placeholder", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.subheadline))
+                        .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                         .foregroundStyle(Color.secondaryLabel)
                     HStack(spacing: 8 * AdaptiveSize.boardScale) {
                         TextField(
@@ -447,14 +450,14 @@ private struct CategorySideBarContent: View {
                         )
                         .focused($isNameFocused)
                         Text(store.categoryNameCountText)
-                            .font(.adaptive(.subheadline))
+                            .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                             .foregroundStyle(Color.secondaryLabel)
                             .monospacedDigit()
                     }
-                    .font(.adaptive(.body))
+                    .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                     .tint(Color.accent)
                     .padding(.horizontal, 12 * AdaptiveSize.boardScale)
-                    .frame(height: 32 * AdaptiveSize.boardScale)
+                    .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
                     .inputBackground(isFocused: isNameFocused, isInvalid: store.isDuplicatedName)
                     if store.isDuplicatedName {
                         Text(store.nameMessage)
@@ -478,10 +481,10 @@ private struct CategorySideBarContent: View {
                         }
                         .buttonStyle(.plain)
                     }
-                    .font(.adaptive(.subheadline))
+                    .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                     LazyVGrid(
                         columns: [GridItem(
-                            .adaptive(minimum: 30 * AdaptiveSize.boardScale, maximum: 30 * AdaptiveSize.boardScale),
+                            .adaptive(minimum: colorSize, maximum: colorSize),
                             spacing: 10 * AdaptiveSize.boardScale
                         )],
                         alignment: .leading,
@@ -493,7 +496,7 @@ private struct CategorySideBarContent: View {
                             } label: {
                                 Circle()
                                     .fill(Color(hexString: colorHex) ?? .gray)
-                                    .frame(width: 30 * AdaptiveSize.boardScale, height: 30 * AdaptiveSize.boardScale)
+                                    .frame(width: colorSize, height: colorSize)
                                     .overlay {
                                         if store.category.colorHex.caseInsensitiveCompare(colorHex) == .orderedSame {
                                             Image(systemName: "checkmark")
@@ -511,7 +514,7 @@ private struct CategorySideBarContent: View {
 
                 VStack(alignment: .leading, spacing: 6 * AdaptiveSize.boardScale) {
                     Text(String(localized: "todo_preview", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.subheadline))
+                        .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                         .foregroundStyle(Color.secondaryLabel)
                         .padding(.horizontal, 4 * AdaptiveSize.boardScale)
                     CategoryManageRowContent(item: item, onToggle: {})
@@ -528,7 +531,7 @@ private struct CategorySideBarContent: View {
 
                 Button(action: onDelete) {
                     Text(String(localized: "todo_manage_delete_category_title", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.body).weight(.semibold))
+                        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline).weight(.semibold))
                         .foregroundStyle(Color.danger)
                 }
                 .buttonStyle(.plain)

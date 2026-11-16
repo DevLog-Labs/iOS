@@ -13,6 +13,7 @@ import PresentationShared
 public struct HomeView: View {
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
@@ -50,18 +51,18 @@ public struct HomeView: View {
         } else {
             .home
         }
-        // Mac은 카테고리 관리와 새 개발 목표를 시트 대신 칸으로 표시
-        let showsSheetAsPane = isiOSAppOnMac
+        // 사이드바가 있으면 카테고리 관리와 새 개발 목표를 시트 대신 칸으로 표시
+        let showsSheetAsPane = usesDesktopLayout
             && (store.sheet?.categoryManageState != nil || store.sheet?.goalCreateState != nil)
         let sheetBinding = $store.scope(state: \.sheet, action: \.sheet)
             .activePresentation(when: isSelected)
 
         NavigationStack(path: $router.path) {
             Group {
-                if isiOSAppOnMac,
+                if usesDesktopLayout,
                    let manageStore = store.scope(state: \.sheet?.categoryManageState, action: \.sheet.presented.categoryManage) {
                     CategoryManageView(store: manageStore)
-                } else if isiOSAppOnMac,
+                } else if usesDesktopLayout,
                           let goalStore = store.scope(state: \.sheet?.goalCreateState, action: \.sheet.presented.goalCreate) {
                     // 홈 오른쪽 칸에서 쓰고 연결된 Todo는 세부 정보 사이드바에 표시
                     PaneSplitView {
@@ -86,8 +87,15 @@ public struct HomeView: View {
                     case .todo: true
                     }
                 },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
+                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
             )
+        }
+        // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 카테고리 목록 옆 칸에 표시
+        .closesPushedDetail {
+            router.path.removeAll {
+                if case .todo = $0 { return true }
+                return false
+            }
         }
         .preference(key: SideBarLocationPreferenceKey.self, value: sideBarLocation)
         .preference(
@@ -107,8 +115,10 @@ public struct HomeView: View {
         }
         .onAppear {
             store.send(.view(.startObserving))
-            // Mac은 홈이 아닌 탭으로 켜져도 사이드바 하위 항목을 채우도록 한 번 불러옴
-            if isiOSAppOnMac && !isSelected {
+        }
+        // 사이드바가 있으면 홈이 아닌 탭으로 켜지거나 좁은 창에서 넓어져도 사이드바 하위 항목을 채우도록 불러옴
+        .onChange(of: usesDesktopLayout, initial: true) { _, usesDesktopLayout in
+            if usesDesktopLayout && !isSelected {
                 store.send(.view(.fetchData))
             }
         }
@@ -128,7 +138,7 @@ public struct HomeView: View {
                 get: { showsSheetAsPane ? nil : sheetBinding.wrappedValue },
                 // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸으로 연 화면을 지우지 않도록 지금 상태로 판단
                 set: { sheet in
-                    guard !isiOSAppOnMac
+                    guard !usesDesktopLayout
                         || store.sheet?.categoryManageState == nil && store.sheet?.goalCreateState == nil
                     else { return }
                     sheetBinding.wrappedValue = sheet
@@ -164,21 +174,15 @@ public struct HomeView: View {
         case .open(.developmentGoal(let goalID)):
             store.send(.view(.tapDevelopmentGoal(goalID)))
         case .createTodo:
-            // 카테고리 목록이 보이면 그 목록의 작성 버튼과 같은 창으로 작성
-            if case .category(let item)? = router.root {
-                openWindow(
-                    id: TodoEditorWindowValue.sceneId,
-                    value: TodoEditorWindowValue(todoCategory: item.todoCategory, source: .list)
-                )
-            } else if store.isNetworkConnected {
-                // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
-                store.send(.store(.setPresentation(.contentPicker, true)))
-            }
+            // 카테고리 목록이 보이면 그 목록이 자기 작성 버튼과 같은 방식으로 작성
+            // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
+            guard router.root == nil, store.isNetworkConnected else { break }
+            store.send(.store(.setPresentation(.contentPicker, true)))
         case .manageTodoCategory:
             // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
             guard !store.preferences.isEmpty else { break }
-            // Mac은 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
-            if isiOSAppOnMac {
+            // 사이드바가 있으면 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
+            if usesDesktopLayout {
                 router.path = []
             }
             store.send(.view(.tapManageTodoCategory))
@@ -198,8 +202,8 @@ public struct HomeView: View {
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
-        // Mac 제목 줄 구분선과 첫 카드 사이 여백
-        .contentMargins(.top, isiOSAppOnMac ? 12 : 0, for: .scrollContent)
+        // 칸 제목 줄 구분선과 첫 카드 사이 여백
+        .contentMargins(.top, usesDesktopLayout ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background)
         .duoToolbarVisibility()
@@ -228,7 +232,7 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var topBar: some View {
-        if isiOSAppOnMac {
+        if usesDesktopLayout {
             PaneTitleBar(Text("nav_home", bundle: PresentationResources.bundle)) {
                 searchButton
                 HomeCreateButton(store: store)
@@ -284,7 +288,9 @@ public struct HomeView: View {
             HomeContentPicker(store: store, onSelect: openTodoEditor)
         case .reorderTodo:
             if let store = sheetStore.scope(state: \.categoryManageState, action: \.categoryManage) {
+                // 넓은 창으로 바뀌어 닫히는 시트가 칸으로 연 화면의 세부 정보 사이드바를 가져가지 않음
                 CategoryManageView(store: store)
+                    .environment(\.selectDetailSideBarTarget, nil)
             }
         case .goalCreate:
             if let goalStore = sheetStore.scope(state: \.goalCreateState, action: \.goalCreate) {

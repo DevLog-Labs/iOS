@@ -8,7 +8,7 @@
 import SwiftUI
 import ComposableArchitecture
 
-// Mac 목록 오른쪽 칸의 Todo 상세, 선택 전에는 선택 안내
+// 사이드바가 있는 창에서 목록 오른쪽 칸의 Todo 상세, 선택 전에는 선택 안내
 public struct TodoDetailPane: View {
     private let todoId: String?
     private let showEditButton: Bool

@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 import ComposableArchitecture
 
-// Mac 세부 정보 사이드바의 Todo 속성 칸
+// 세부 정보 사이드바의 Todo 속성 칸
 public struct TodoDetailSideBarView: View {
     @State private var store: StoreOf<TodoDetailSideBarFeature>
     private let windowEvent: TodoEditorWindowEvent?
@@ -59,7 +59,9 @@ public struct TodoDetailSideBarView: View {
     }
 }
 
+// Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
 private struct TodoSideBarProperties: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<TodoDetailSideBarFeature>
     @Bindable var editorStore: StoreOf<TodoEditorFeature>
 
@@ -136,7 +138,7 @@ private struct TodoSideBarProperties: View {
 
             VStack(alignment: .leading, spacing: 6 * AdaptiveSize.boardScale) {
                 Text(String(localized: "todo_tags", bundle: PresentationResources.bundle))
-                    .font(.adaptive(.subheadline))
+                    .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                     .foregroundStyle(Color.secondaryLabel)
                 if isEditable {
                     TagField(store: editorStore)
@@ -152,7 +154,7 @@ private struct TodoSideBarProperties: View {
                     }
                 } else if editorStore.tags.isEmpty {
                     Text(String(localized: "todo_no_tags", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.body))
+                        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                         .foregroundStyle(Color.secondaryLabel)
                 } else {
                     TagList(
@@ -194,10 +196,10 @@ private struct TodoSideBarProperties: View {
                 ? Color.danger : .secondaryLabel
 
             Text(dueDate.formatted(.dateTime.month(.abbreviated).day().weekday(.abbreviated)))
-                .font(.adaptive(.caption2).weight(.semibold))
+                .font(.adaptive(isiOSAppOnMac ? .caption2 : .caption).weight(.semibold))
                 .foregroundStyle(color)
                 .padding(.horizontal, 6 * AdaptiveSize.boardScale)
-                .frame(height: 18.5 * AdaptiveSize.boardScale)
+                .frame(height: isiOSAppOnMac ? 18.5 * AdaptiveSize.boardScale : 20)
                 .background(color.opacity(0.13), in: .rect(cornerRadius: CornerRadius.badge))
         } else {
             Text(String(localized: "todo_none", bundle: PresentationResources.bundle))
@@ -208,6 +210,7 @@ private struct TodoSideBarProperties: View {
 
 // 카드 안 속성 한 줄
 private struct PropertyRow<Value: View>: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     private let title: String
     private let value: Value
 
@@ -224,13 +227,14 @@ private struct PropertyRow<Value: View>: View {
             Spacer(minLength: 0)
             value
         }
-        .font(.adaptive(.body))
+        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
         .padding(.horizontal, 12 * AdaptiveSize.boardScale)
-        .frame(minHeight: 38 * AdaptiveSize.boardScale)
+        .frame(minHeight: isiOSAppOnMac ? 38 * AdaptiveSize.boardScale : 44)
     }
 }
 
 private struct TagField: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<TodoEditorFeature>
     @FocusState private var isFocused: Bool
 
@@ -256,10 +260,10 @@ private struct TagField: View {
             .buttonStyle(.plain)
             .disabled(!canSubmit)
         }
-        .font(.adaptive(.body))
+        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
         .tint(Color.accent)
         .padding(.horizontal, 12 * AdaptiveSize.boardScale)
-        .frame(height: 32 * AdaptiveSize.boardScale)
+        .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
         .inputBackground(isFocused: isFocused)
     }
 

@@ -20,7 +20,6 @@ struct MainFeature {
         @Presents var alert: AlertState<Never>?
         var unreadPushCount = 0
         var isObservingUnreadPushCount = false
-        var isWide = false
         var windowControlsInset = CGFloat.zero
         // Duo 세로 칸 자리의 양옆 안전 영역
         var verticalBarInsets = EdgeInsets()
@@ -29,7 +28,7 @@ struct MainFeature {
         var readableContentWidth = CGFloat.infinity
         var openedTabs: Set<MainTab> = []
         var isSideBarCollapsed = false
-        // 사용자가 끌어서 정한 Mac 사이드바 폭, 정하지 않았으면 기본 폭
+        // 사용자가 끌어서 정한 사이드바 폭, 정하지 않았으면 기본 폭
         var sideBarWidth: CGFloat?
         var expandedSideBarGroups: Set<SideBarGroup> = []
         var sideBarLocations: [MainTab: SideBarLocation] = [:]

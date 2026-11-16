@@ -285,6 +285,26 @@ struct CategoryManageFeatureTests {
         #expect(driver.userCategory(at: 1)?.name == "Renamed")
     }
 
+    @Test("바로 저장 상태로 바뀌면 목록에 없는 새 카테고리 입력을 닫고 고치던 카테고리는 목록에 반영한다")
+    func 바로_저장_상태로_바뀌면_목록에_없는_새_카테고리_입력을_닫고_고치던_카테고리는_목록에_반영한다() {
+        let category = UserTodoCategory(id: "custom", name: "Custom", colorHex: "#111111")
+        let item = TodoCategoryItem(from: .user(category))
+        let driver = CategoryManageTestDriver(preferences: [item])
+
+        driver.tapAddUserCategory()
+        driver.setSavesImmediately()
+
+        #expect(driver.categorySheet == nil)
+
+        driver.setSavesImmediately(false)
+        driver.selectCategory(item)
+        driver.setCategoryName("Renamed")
+        driver.setSavesImmediately()
+
+        #expect(driver.categorySheet?.category.id == category.id)
+        #expect(driver.userCategory(at: 0)?.name == "Renamed")
+    }
+
     @Test("완료 버튼을 누르면 현재 preferences를 delegate로 전달한다")
     func 완료_버튼을_누르면_현재_preferences를_delegate로_전달한다() async {
         let item = TodoCategoryItem(from: .system(.issue))
@@ -323,8 +343,8 @@ private struct CategoryManageTestDriver {
         }
     }
 
-    func setSavesImmediately() {
-        feature.send(.setSavesImmediately)
+    func setSavesImmediately(_ savesImmediately: Bool = true) {
+        feature.send(.setSavesImmediately(savesImmediately))
     }
 
     func selectCategory(_ item: TodoCategoryItem) {

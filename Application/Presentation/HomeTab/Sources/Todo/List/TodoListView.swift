@@ -13,7 +13,7 @@ import PresentationShared
 
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onSelectTodo: (String) -> Void
@@ -31,9 +31,9 @@ struct TodoListView: View {
     var body: some View {
         PaneSplitView {
             TodoListContent(store: store) { todoId in
-                if isiOSAppOnMac {
-                    store.send(.binding(.set(\.selectedTodoId, todoId)))
-                } else {
+                // 사이드바 구조로 바뀌면 같은 Todo를 옆 칸에 표시하도록 좁은 창에서도 선택 기억
+                store.send(.binding(.set(\.selectedTodoId, todoId)))
+                if !usesDesktopLayout {
                     onSelectTodo(todoId)
                 }
             }
@@ -90,6 +90,7 @@ struct TodoListView: View {
 }
 
 private struct TodoListContent: View {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
@@ -113,10 +114,12 @@ private struct TodoListContent: View {
                             id: \.1.id
                         ) { index, todo in
                             let isLast = index == visibleTodos.count - 1
+                            // 좁은 창은 상세 칸이 없어 선택 표시 생략
+                            let isSelected = usesDesktopLayout && todo.id == store.selectedTodoId
 
                             TodoItemRow(todo)
-                                .hoverHighlight(isEnabled: todo.id != store.selectedTodoId)
-                                .background(todo.id == store.selectedTodoId ? Color.tintFill : .secondaryBackground)
+                                .hoverHighlight(isEnabled: !isSelected)
+                                .background(isSelected ? Color.tintFill : .secondaryBackground)
                                 .contentShape(.rect)
                                 .todoDetailPreview(todoId: todo.id)
                                 .onTapGesture {
@@ -228,6 +231,7 @@ private struct TodoListTopBar: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.sideBarRequest) private var sideBarRequest
     @Namespace private var searchTransition
     let store: StoreOf<TodoListFeature>
 
@@ -242,7 +246,7 @@ private struct TodoListTopBar: View {
                 }
             }
 
-            // Mac 제목 줄은 필터와 정렬을 버튼으로 옮겨 검색 중일 때만 아래 줄 표시
+            // 칸 제목 줄은 필터와 정렬을 버튼으로 옮겨 검색 중일 때만 아래 줄 표시
             if !showsPaneTitleBar || store.isSearching {
                 VStack(spacing: 8) {
                     if !showsPaneTitleBar {
@@ -283,6 +287,11 @@ private struct TodoListTopBar: View {
             }
         }
         .background(Color.background, ignoresSafeAreaEdges: .top)
+        // 사이드바 Todo 메뉴의 작성은 이 목록의 작성 버튼과 같은 방식으로 작성
+        .onChange(of: sideBarRequest) { _, request in
+            guard request?.action == .createTodo else { return }
+            openTodoEditor()
+        }
     }
 
     @ViewBuilder
@@ -509,7 +518,7 @@ private struct TodoListFilterHeader: View {
     }
 }
 
-// Mac 제목 줄의 필터와 정렬 버튼
+// 칸 제목 줄의 필터와 정렬 버튼
 private struct TodoListPaneMenus: View {
     let store: StoreOf<TodoListFeature>
 

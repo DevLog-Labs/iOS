@@ -10,14 +10,14 @@ import Domain
 import PresentationShared
 
 struct GoalCreateView: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Bindable var store: StoreOf<GoalCreateFeature>
     @FocusState private var focusedField: GoalCreateField?
     let onClose: () -> Void
 
     var body: some View {
-        // Mac은 홈 내비게이션 안의 칸이라 시트용 내비게이션을 겹치지 않음
-        if isiOSAppOnMac {
+        // 사이드바가 있으면 홈 내비게이션 안의 칸이라 시트용 내비게이션을 겹치지 않음
+        if usesDesktopLayout {
             content
         } else {
             NavigationStack {
@@ -32,18 +32,18 @@ struct GoalCreateView: View {
             LazyVStack(alignment: .leading, spacing: 24) {
                 GoalCreateTitleField(store: store, focusedField: $focusedField)
                 GoalCreateDescriptionEditor(store: store, focusedField: $focusedField)
-                // Mac은 연결된 Todo를 세부 정보 사이드바에 표시
-                if !isiOSAppOnMac {
+                // 사이드바가 있으면 연결된 Todo를 세부 정보 사이드바에 표시
+                if !usesDesktopLayout {
                     GoalCreateStatusField()
                     GoalCreateTodoField(store: store)
                 }
             }
             .padding(.horizontal)
-            .padding(.top, isiOSAppOnMac ? 12 : 0)
+            .padding(.top, usesDesktopLayout ? 12 : 0)
             .padding(.bottom, 20)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if isiOSAppOnMac {
+            if usesDesktopLayout {
                 PaneTitleBar(Text(RecordPresentation.text("development_goal_create_title"))) {
                     Button(action: save) {
                         Text(RecordPresentation.text("todo_manage_save"))
@@ -67,7 +67,7 @@ struct GoalCreateView: View {
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if !isiOSAppOnMac {
+            if !usesDesktopLayout {
                 GoalCreateSaveBar(
                     isSaving: store.isSaving,
                     isSaveEnabled: store.isReadyToSave,
@@ -321,8 +321,10 @@ private struct GoalCreateTodoField: View {
     }
 }
 
-// Mac 세부 정보 사이드바의 새 개발 목표 속성, 목표를 저장할 때 함께 저장
+// 세부 정보 사이드바의 새 개발 목표 속성, 목표를 저장할 때 함께 저장
+// Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
 struct GoalCreateSideBarContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<GoalCreateFeature>
 
     var body: some View {
@@ -333,15 +335,15 @@ struct GoalCreateSideBarContent: View {
                 HStack(spacing: 10 * AdaptiveSize.boardScale) {
                     VStack(alignment: .leading, spacing: 2 * AdaptiveSize.boardScale) {
                         Text(RecordPresentation.text("development_goal_create_todo_label"))
-                            .font(.adaptive(.body))
+                            .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                             .foregroundStyle(Color.label)
                         Text(RecordPresentation.text("development_goal_create_todo_hint"))
-                            .font(.adaptive(.subheadline))
+                            .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                             .foregroundStyle(Color.secondaryLabel)
                     }
                     Spacer(minLength: 0)
                     Text(store.todoSelectionTitle)
-                        .font(.adaptive(.body))
+                        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                         .foregroundStyle(Color.secondaryLabel)
                         .lineLimit(1)
                     Image(systemName: "chevron.right")
@@ -350,7 +352,7 @@ struct GoalCreateSideBarContent: View {
                 }
                 .padding(.horizontal, 12 * AdaptiveSize.boardScale)
                 .padding(.vertical, 6 * AdaptiveSize.boardScale)
-                .frame(minHeight: 38 * AdaptiveSize.boardScale)
+                .frame(minHeight: isiOSAppOnMac ? 38 * AdaptiveSize.boardScale : 44)
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)

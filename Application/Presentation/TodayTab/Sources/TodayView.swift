@@ -15,6 +15,7 @@ public struct TodayView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
@@ -52,17 +53,18 @@ public struct TodayView: View {
                                 TodoSection(
                                     section: section,
                                     isNavigationEnabled: !store.isTodoInspectorPresented,
-                                    selectedTodoId: store.selectedTodoId,
+                                    // 좁은 창은 상세 칸이 없어 선택 표시 생략
+                                    selectedTodoId: usesDesktopLayout ? store.selectedTodoId : nil,
                                     onSelect: { item in
-                                        if isiOSAppOnMac {
+                                        if usesDesktopLayout {
                                             store.send(.binding(.set(\.selectedTodoId, item.id)))
                                         } else {
                                             router.push(.todo(TodoIdItem(id: item.id)))
                                         }
                                     },
                                     onInspect: { item in
-                                        // Mac은 고른 Todo를 창 오른쪽 세부 정보 사이드바에 표시
-                                        if isiOSAppOnMac {
+                                        // 사이드바가 있으면 고른 Todo를 창 오른쪽 세부 정보 사이드바에 표시
+                                        if usesDesktopLayout {
                                             store.send(.binding(.set(\.selectedTodoId, item.id)))
                                             setDetailSideBarPresented?(true)
                                         } else {
@@ -76,8 +78,8 @@ public struct TodayView: View {
                         }
                     }
                     .padding(.horizontal)
-                    // Mac은 필터 줄 없이 제목 줄 바로 아래에서 시작
-                    .padding(.top, isiOSAppOnMac ? 4 * AdaptiveSize.boardScale : 0)
+                    // 사이드바가 있으면 필터 줄 없이 제목 줄 바로 아래에서 시작
+                    .padding(.top, usesDesktopLayout ? 4 * AdaptiveSize.boardScale : 0)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -85,7 +87,7 @@ public struct TodayView: View {
                     let title = Text(String(localized: "nav_today", bundle: PresentationResources.bundle))
 
                     VStack(spacing: 0) {
-                        if isiOSAppOnMac {
+                        if usesDesktopLayout {
                             PaneTitleBar(title) {
                                 TodayFilterMenu(store: store)
                             }
@@ -130,12 +132,18 @@ public struct TodayView: View {
             .navigationDestination(
                 for: TodayRoute.self,
                 interactivePop: { _ in true },
-                destination: { destination($0).environment(\.showsPaneTitleBar, isiOSAppOnMac) }
+                destination: { destination($0).environment(\.showsPaneTitleBar, usesDesktopLayout) }
             )
         }
-        // Mac은 창 오른쪽 세부 정보 사이드바 사용
+        // 사이드바 구조로 바뀌면 쌓아 연 상세 화면은 내리고 같은 Todo를 옆 칸에 표시
+        .closesPushedDetail {
+            guard case .todo(let item)? = router.path.last else { return }
+            store.send(.binding(.set(\.selectedTodoId, item.id)))
+            router.path = []
+        }
+        // 사이드바가 있으면 창 오른쪽 세부 정보 사이드바 사용
         .inspector(
-            isPresented: !isiOSAppOnMac && horizontalSizeClass == .regular
+            isPresented: !usesDesktopLayout && horizontalSizeClass == .regular
                 ? $store.isTodoInspectorPresented : .constant(false)
         ) {
             TodayTodoInspector(store: store)
@@ -146,6 +154,13 @@ public struct TodayView: View {
                 ? .constant(false) : $store.isTodoInspectorPresented
         ) {
             TodayTodoInspector(store: store, showsCloseButton: true)
+        }
+        // 사이드바 구조로 바뀌면 가려진 세부 정보 시트는 고친 값을 저장하고 닫아 같은 Todo를 세부 정보 사이드바에 표시
+        .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
+            if usesDesktopLayout && store.isTodoInspectorPresented {
+                store.send(.moveTodoInspectorToSideBar)
+                setDetailSideBarPresented?(true)
+            }
         }
         // inspector 컨테이너의 상단 safe area 배경
         .background(Color.background)
@@ -335,7 +350,7 @@ private struct TodayFilterBar: View {
     }
 }
 
-// Mac 제목 줄의 필터 버튼
+// 칸 제목 줄의 필터 버튼
 private struct TodayFilterMenu: View {
     let store: StoreOf<TodayFeature>
 
