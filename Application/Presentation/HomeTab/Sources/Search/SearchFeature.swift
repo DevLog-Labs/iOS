@@ -21,6 +21,8 @@ struct SearchFeature {
         var todos: [SearchTodoItem] = []
         var recentQueries = OrderedSet<String>()
         var showAllTodos = false
+        // Mac에서 사이드바까지 덮는 상세 판에 연 Todo
+        var panelTodo: TodoIdItem?
         let contentsLimit = 5
 
         init(recentQueries: [String] = []) {
