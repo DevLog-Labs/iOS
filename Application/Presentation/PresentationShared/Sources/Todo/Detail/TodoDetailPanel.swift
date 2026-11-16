@@ -83,6 +83,14 @@ public struct TodoDetailPanel: View {
                 }
             }
         }
+        // 세부 정보 열을 닫아 둔 동안 판 메뉴로 저장하다 실패하면 판에서 알림 표시
+        .background {
+            if !store.isDetailColumnPresented,
+               let editorStore = store.scope(state: \.sideBar.editor, action: \.sideBar.editor) {
+                Color.clear
+                    .prominentAlert(editorStore, state: \.alert, action: \.alert)
+            }
+        }
         // 세부 정보 열을 닫아 둔 동안에도 판 메뉴로 중요 표시와 완료를 바꾸도록 속성을 불러옴
         .onAppear { store.send(.sideBar(.onAppear)) }
         .onChange(of: store.sideBar.editor?.saveResult) { _, result in
