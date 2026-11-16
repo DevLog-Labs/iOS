@@ -77,6 +77,7 @@ struct TodayStoreTestAdapter: TodayStateDriving {
     var isCategoryFilterPresented: Bool { store.state.isCategoryFilterPresented }
     var isTodoInspectorPresented: Bool { store.state.isTodoInspectorPresented }
     var todoEditorTitle: String? { store.state.todoEditor?.title }
+    var selectedTodoId: String? { store.state.selectedTodoId }
     var visibleCategoryIDs: [String] { store.state.visibleCategories.map(\.id) }
     var showAlert: Bool { store.state.alert != nil }
     var isLoading: Bool { store.state.isLoading }
@@ -170,6 +171,15 @@ struct TodayStoreTestAdapter: TodayStateDriving {
 
     func setTodoInspectorPresented(_ isPresented: Bool) async {
         await store.send(.binding(.set(\.isTodoInspectorPresented, isPresented)))
+    }
+
+    func setTodoEditorTitle(_ title: String) async {
+        await store.send(.todoEditor(.binding(.set(\.title, title))))
+    }
+
+    func moveTodoInspectorToSideBar() async {
+        await store.send(.moveTodoInspectorToSideBar)
+        await drainReceivedActions()
     }
 
     func updateTodoFromInspector(_ todo: Todo) async {

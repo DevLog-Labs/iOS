@@ -44,7 +44,7 @@ public struct TodoEditorFeature {
             }
         }
         public var saveResult: SaveResult?
-        let id: String
+        public let id: String
         let isChecked: Bool
         let number: Int?
         let createdAt: Date?

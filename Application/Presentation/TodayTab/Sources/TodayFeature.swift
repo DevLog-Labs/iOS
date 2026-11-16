@@ -51,6 +51,7 @@ struct TodayFeature {
         case completeTodo(TodayTodoItem)
         case showTodoInspector(TodayTodoItem)
         case dismissTodoInspector
+        case moveTodoInspectorToSideBar
         case todoEditor(TodoEditorFeature.Action)
         case store(StoreAction)
         case loading(LoadingFeature.Action)
@@ -130,6 +131,17 @@ struct TodayFeature {
                 state.isTodoInspectorPresented = true
             case .dismissTodoInspector:
                 dismissTodoInspector(state: &state)
+            case .moveTodoInspectorToSideBar:
+                guard state.isTodoInspectorPresented, let editor = state.todoEditor else { break }
+                // 고친 값이 없으면 바로 닫고 같은 Todo를 목록에서 고름
+                guard editor.isReadyToSubmit else {
+                    state.selectedTodoId = editor.id
+                    dismissTodoInspector(state: &state)
+                    break
+                }
+                // 고친 값은 저장 버튼과 같이 저장한 뒤 닫음
+                state.todoIdToSelectAfterSaving = editor.id
+                return .send(.todoEditor(.upsertTodo))
             case .todoEditor(.delegate(.updated(let todo))):
                 guard let item = TodayTodoItem(from: todo) else {
                     return .send(.store(.setAlert))
@@ -137,6 +149,15 @@ struct TodayFeature {
                 state.dismissesTodoInspectorAfterSaving = true
                 return .send(.store(.updateTodo(item)))
             case .todoEditor(.loading(.end(target: .default, mode: .immediate))):
+                if let id = state.todoIdToSelectAfterSaving {
+                    // 가려진 시트 대신 오늘 화면에서 저장 실패를 알림
+                    if state.todoEditor?.saveResult == nil {
+                        state.alert = Self.alertState()
+                    }
+                    state.selectedTodoId = id
+                    dismissTodoInspector(state: &state)
+                    break
+                }
                 guard state.dismissesTodoInspectorAfterSaving else { break }
                 return .send(.dismissTodoInspector)
             case .todoEditor:
@@ -223,6 +244,7 @@ private extension TodayFeature {
         state.isTodoInspectorPresented = false
         state.todoEditor = nil
         state.dismissesTodoInspectorAfterSaving = false
+        state.todoIdToSelectAfterSaving = nil
     }
 
     func prepareTodayInterval(state: inout State, now: Date) -> DateInterval {

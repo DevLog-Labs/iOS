@@ -43,6 +43,8 @@ extension TodayFeature {
         var selectedTodoId: String?
         var todoEditor: TodoEditorFeature.State?
         var dismissesTodoInspectorAfterSaving = false
+        // 넓은 창으로 바뀌어 저장 중인 세부 정보 시트의 Todo, 저장이 끝나면 목록에서 고름
+        var todoIdToSelectAfterSaving: String?
         var loading = LoadingFeature.State()
         var todayInterval: DateInterval
         var isIncompleteDataLoaded = false

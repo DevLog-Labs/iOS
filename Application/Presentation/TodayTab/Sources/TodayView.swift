@@ -155,10 +155,10 @@ public struct TodayView: View {
         ) {
             TodayTodoInspector(store: store, showsCloseButton: true)
         }
-        // 사이드바 구조로 바뀌면 가려진 세부 정보 시트 상태도 닫아 목록 탭을 막지 않음
+        // 사이드바 구조로 바뀌면 가려진 세부 정보 시트는 고친 값을 저장하고 닫아 같은 Todo를 세부 정보 사이드바에 표시
         .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
             if usesDesktopLayout && store.isTodoInspectorPresented {
-                store.send(.dismissTodoInspector)
+                store.send(.moveTodoInspectorToSideBar)
             }
         }
         // inspector 컨테이너의 상단 safe area 배경
