@@ -28,6 +28,8 @@ struct HomeFeature {
         var isNetworkConnected = true
         var selectedTodoCategory: TodoCategory?
         var searchInset = CGFloat.zero
+        // 홈 제목 줄 아래 보이는 높이, 새로 만들기 팝오버가 화면 밖으로 넘치지 않게 사용
+        var visibleHeight = CGFloat.infinity
         var loading = LoadingFeature.State()
 
         var showContentPicker: Bool {

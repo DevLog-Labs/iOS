@@ -45,16 +45,19 @@ public struct HomeView: View {
     }
 
     public var body: some View {
-        let sideBarLocation: SideBarLocation = if case .goalDetail(let goalID)? = store.sheet {
-            .developmentGoal(goalID)
+        let goalDetailID: String? = if case .goalDetail(let goalID)? = store.sheet { goalID } else { nil }
+        let sideBarLocation: SideBarLocation = if let goalDetailID {
+            .developmentGoal(goalDetailID)
         } else if case .category(let item)? = router.root {
             .todoCategory(item.id)
         } else {
             .home
         }
-        // 사이드바가 있으면 카테고리 관리와 새 개발 목표를 시트 대신 칸으로 표시
+        // 사이드바가 있으면 카테고리 관리, 새 개발 목표, 개발 목표를 시트 대신 칸으로 표시
         let showsSheetAsPane = usesDesktopLayout
-            && (store.sheet?.categoryManageState != nil || store.sheet?.goalCreateState != nil)
+            && (store.sheet?.categoryManageState != nil || store.sheet?.goalCreateState != nil || goalDetailID != nil)
+        // 칸으로 나눈 화면은 새로 만들기를 시트 대신 만들기 버튼 옆 팝오버로 표시
+        let showsPickerAsPopover = usesPaneLayout && store.showContentPicker
         let sheetBinding = $store.scope(state: \.sheet, action: \.sheet)
             .activePresentation(when: isSelected)
 
@@ -75,6 +78,21 @@ public struct HomeView: View {
                     }
                     .detailSideBar {
                         GoalCreateSideBarContent(store: goalStore)
+                    }
+                } else if usesDesktopLayout, let goalDetailID {
+                    // 홈 자리에 개발 목표를 표시하고 기록 작성은 오른쪽 칸에 표시
+                    GoalDetailView(goalId: goalDetailID)
+                        .id(goalDetailID)
+                } else if usesPaneLayout,
+                          let editorStore = store.scope(
+                            state: \.fullScreenCover?.todoEditor,
+                            action: \.fullScreenCover.presented.todoEditor
+                          ) {
+                    // 홈 오른쪽 칸에서 새 Todo 작성
+                    PaneSplitView {
+                        homeContent
+                    } detail: {
+                        TodoEditorView(store: editorStore, onClose: { store.send(.fullScreenCover(.dismiss)) })
                     }
                 } else {
                     homeContent
@@ -136,12 +154,16 @@ public struct HomeView: View {
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(
             item: Binding(
-                get: { showsSheetAsPane ? nil : sheetBinding.wrappedValue },
-                // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸으로 연 화면을 지우지 않도록 지금 상태로 판단
+                get: { showsSheetAsPane || showsPickerAsPopover ? nil : sheetBinding.wrappedValue },
+                // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸이나 팝오버로 연 화면을 지우지 않도록 지금 상태로 판단
                 set: { sheet in
+                    let isGoalDetail = if case .goalDetail? = store.sheet { true } else { false }
                     guard !usesDesktopLayout
-                        || store.sheet?.categoryManageState == nil && store.sheet?.goalCreateState == nil
+                        || store.sheet?.categoryManageState == nil
+                        && store.sheet?.goalCreateState == nil
+                        && !isGoalDetail
                     else { return }
+                    guard !(usesPaneLayout && store.showContentPicker) else { return }
                     sheetBinding.wrappedValue = sheet
                 }
             ),
@@ -149,7 +171,8 @@ public struct HomeView: View {
         )
         .fullScreenCover(
             item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
-                .activePresentation(when: isSelected),
+                .activePresentation(when: isSelected)
+                .hiddenInPane(usesPaneLayout && store.showTodoEditor),
             content: coverContent
         )
     }
@@ -173,6 +196,10 @@ public struct HomeView: View {
             guard let item = store.preferences.first(where: { $0.id == id }) else { break }
             router.replace(with: .category(item))
         case .open(.developmentGoal(let goalID)):
+            // 사이드바가 있으면 개발 목표를 홈 루트에 그려 위에 쌓인 목록을 비움
+            if usesDesktopLayout {
+                router.path = []
+            }
             store.send(.view(.tapDevelopmentGoal(goalID)))
         case .createTodo:
             // 카테고리 목록이 보이면 그 목록이 자기 작성 버튼과 같은 방식으로 작성
@@ -205,6 +232,11 @@ public struct HomeView: View {
         }
         // 칸 제목 줄 구분선과 첫 카드 사이 여백
         .contentMargins(.top, usesPaneLayout ? 12 : 0, for: .scrollContent)
+        .onScrollGeometryChange(for: CGFloat.self) { geometry in
+            geometry.containerSize.height - geometry.contentInsets.top - geometry.contentInsets.bottom
+        } action: { _, height in
+            store.send(.binding(.set(\.visibleHeight, height)))
+        }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background)
         .duoToolbarVisibility()
@@ -237,6 +269,26 @@ public struct HomeView: View {
             PaneTitleBar(Text("nav_home", bundle: PresentationResources.bundle)) {
                 searchButton
                 HomeCreateButton(store: store)
+                    .popover(
+                        isPresented: Binding(
+                            get: { isSelected && store.showContentPicker },
+                            // 좁은 창으로 바뀌며 팝오버가 닫혀도 같은 상태를 시트로 다시 그림
+                            set: { isPresented in
+                                if usesPaneLayout {
+                                    store.send(.store(.setPresentation(.contentPicker, isPresented)))
+                                }
+                            }
+                        ),
+                        // 버튼 옆으로 붙으면 위쪽이 상태 표시 영역에 가려지므로 버튼 아래로 표시
+                        arrowEdge: .top
+                    ) {
+                        HomeContentPicker(store: store, onSelect: openTodoEditor)
+                            // 화면이 낮거나 Duo 접는 선에 걸리면 팝오버 높이를 줄이고 목록을 스크롤
+                            .frame(width: 320)
+                            .frame(minHeight: 0, idealHeight: min(640, store.visibleHeight), maxHeight: min(640, store.visibleHeight))
+                            .presentationBackground(Color.secondaryBackground)
+                            .presentationCompactAdaptation(.popover)
+                    }
             }
         } else {
             HStack(spacing: 12) {
