@@ -38,6 +38,8 @@ struct MainView: View {
 
     var body: some View {
         let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular
+        // Duo 펼침은 사이드바 없이 목록 | 상세 두 칸으로 표시
+        let usesPaneLayout = showsSideBar || deviceType == .duo && horizontalSizeClass == .regular
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
         let readableContentWidth = showsSideBar ? store.readableContentWidth : .infinity
         // iPhone, Duo, 좁은 iPad 창은 시스템 탭 바 대신 직접 그린 탭 사용
@@ -81,6 +83,7 @@ struct MainView: View {
                                 tab: tab,
                                 isSelected: selectedTab == tab,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -101,6 +104,7 @@ struct MainView: View {
                                 tab: .home,
                                 isSelected: selectedTab == .home,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -116,6 +120,7 @@ struct MainView: View {
                                 tab: .today,
                                 isSelected: selectedTab == .today,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -131,6 +136,7 @@ struct MainView: View {
                                 tab: .notification,
                                 isSelected: selectedTab == .notification,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -147,6 +153,7 @@ struct MainView: View {
                                 tab: .profile,
                                 isSelected: selectedTab == .profile,
                                 isTabBarHidden: isSystemTabBarHidden,
+                                usesPaneLayout: usesPaneLayout,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -329,6 +336,7 @@ private struct MainTabContent: View {
     let tab: MainTab
     let isSelected: Bool
     let isTabBarHidden: Bool
+    let usesPaneLayout: Bool
     let windowControlsInset: CGFloat
     let readableContentWidth: CGFloat
     let windowEvent: TodoEditorWindowEvent
@@ -336,6 +344,7 @@ private struct MainTabContent: View {
     var body: some View {
         content
             .environment(\.isTabContentActive, isSelected)
+            .environment(\.usesPaneLayout, usesPaneLayout)
             .environment(\.windowControlsInset, windowControlsInset)
             .environment(\.readableContentWidth, readableContentWidth)
             .environment(\.sideBarRequest, store.sideBarRequests[tab])
