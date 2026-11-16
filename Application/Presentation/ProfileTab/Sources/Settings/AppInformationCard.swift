@@ -9,12 +9,61 @@ import SwiftUI
 import PresentationShared
 
 struct AppInformationCard: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @ScaledMetric(relativeTo: .headline) private var iconSize = 36
     let appVersion: String?
     let privacyPolicyURL: URL?
     let betaTestURL: URL?
 
     var body: some View {
+        // Mac 설정 화면은 위쪽 줄 경로가 정보라서 묶음 제목 없이 표시
+        if isiOSAppOnMac {
+            DesktopSettingsSection {
+                if let appVersion {
+                    DesktopSettingsRow(
+                        symbolName: "info.circle",
+                        title: Text(String(localized: "settings_version", bundle: PresentationResources.bundle))
+                    ) {
+                        Text(appVersion)
+                            .foregroundStyle(Color.secondaryLabel)
+                    }
+                }
+
+                if let privacyPolicyURL {
+                    Link(destination: privacyPolicyURL) {
+                        DesktopSettingsRow(
+                            symbolName: "doc.text",
+                            title: Text(String(localized: "settings_privacy_policy", bundle: PresentationResources.bundle))
+                        ) {
+                            Image(systemName: "chevron.right")
+                                .font(.adaptive(.footnote).weight(.semibold))
+                                .foregroundStyle(Color.secondaryLabel)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+
+                if let betaTestURL {
+                    Link(destination: betaTestURL) {
+                        DesktopSettingsRow(
+                            symbolName: "flask",
+                            title: Text(String(localized: "settings_join_beta", bundle: PresentationResources.bundle)),
+                            subtitle: Text(String(localized: "settings_join_beta_subtitle", bundle: PresentationResources.bundle))
+                        ) {
+                            Image(systemName: "chevron.right")
+                                .font(.adaptive(.footnote).weight(.semibold))
+                                .foregroundStyle(Color.secondaryLabel)
+                        }
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        } else {
+            card
+        }
+    }
+
+    private var card: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("settings_information_section", bundle: PresentationResources.bundle)
                 .font(.adaptive(.title3).bold())
