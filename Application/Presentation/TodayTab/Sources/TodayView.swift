@@ -40,8 +40,11 @@ public struct TodayView: View {
     public var body: some View {
         NavigationStack(path: $router.path) {
             let sections = store.sections
-            // Mac은 목록을 창 전체 폭으로 두고 오른쪽 칸을 열었을 때만 두 칸으로 나눔
-            PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.isDetailPanePresented) {
+            // Mac은 목록을 창 전체 폭으로 두고 오른쪽 칸을 열었고 그 Todo가 목록에 있을 때만 두 칸으로 나눔
+            let showsMacPane = store.isDetailPanePresented
+                && sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }
+
+            PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || showsMacPane) {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         TodayAchievementCard(store: store)
@@ -58,7 +61,7 @@ public struct TodayView: View {
                                     selectedTodoId: usesPaneLayout ? store.selectedTodoId : nil,
                                     onSelect: { item in
                                         // Mac은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
-                                        if isiOSAppOnMac && !store.isDetailPanePresented {
+                                        if isiOSAppOnMac && !showsMacPane {
                                             store.send(.binding(.set(\.panelTodo, TodoIdItem(id: item.id))))
                                         } else if usesPaneLayout {
                                             store.send(.binding(.set(\.selectedTodoId, item.id)))
