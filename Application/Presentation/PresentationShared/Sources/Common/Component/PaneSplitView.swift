@@ -67,6 +67,10 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
             proxy.size.width
         } action: { width in
             self.width = width
+            // 회전처럼 창 폭이 줄어 끌어서 정한 폭으로는 상세 칸이 잘리면 기본 폭으로 되돌림
+            if let primaryWidth, width < primaryWidth + min(400, width / 2) {
+                self.primaryWidth = nil
+            }
         }
         // 잘라 낸 칸 바탕이 닿지 않는 아래쪽 안전 영역을 칸 바탕과 같은 색으로 채움
         .background(usesDesktopLayout ? Color.background : .clear, ignoresSafeAreaEdges: .bottom)
