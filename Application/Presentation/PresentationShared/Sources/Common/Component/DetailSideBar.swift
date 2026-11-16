@@ -120,7 +120,6 @@ public extension View {
 
 private struct DetailSideBarTargetModifier: ViewModifier {
     @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var owner = UUID()
     let target: DetailSideBarTarget?
 
@@ -129,12 +128,6 @@ private struct DetailSideBarTargetModifier: ViewModifier {
             .onAppear { selectDetailSideBarTarget?(target, owner) }
             .onChange(of: target) { _, target in
                 selectDetailSideBarTarget?(target, owner)
-            }
-            // 좁은 창에서 고른 대상도 사이드바가 있는 창으로 바뀌면 세부 정보 사이드바에 표시
-            .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
-                if usesDesktopLayout {
-                    selectDetailSideBarTarget?(target, owner)
-                }
             }
             // 화면을 벗어나면 고른 대상 해제
             .onDisappear { selectDetailSideBarTarget?(nil, owner) }
