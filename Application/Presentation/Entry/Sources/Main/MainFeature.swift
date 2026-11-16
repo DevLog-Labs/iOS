@@ -37,10 +37,18 @@ struct MainFeature {
         var sideBarRequests: [MainTab: SideBarRequest] = [:]
         var sideBarContent = SideBarContent()
         var isDetailSideBarPresented = false
+        // 탭마다 세부 정보 사이드바 대상을 고른 화면, 나중에 나타난 화면이 뒤에 위치
+        var detailSideBarSelections: [MainTab: [DetailSideBarSelection]] = [:]
+
         // 탭마다 지금 고른 세부 정보 사이드바 대상
-        var detailSideBarTargets: [MainTab: DetailSideBarTarget] = [:]
-        // 탭마다 지금 대상을 고른 화면
-        var detailSideBarOwners: [MainTab: UUID] = [:]
+        var detailSideBarTargets: [MainTab: DetailSideBarTarget] {
+            detailSideBarSelections.compactMapValues { $0.last?.target }
+        }
+    }
+
+    struct DetailSideBarSelection: Equatable {
+        let owner: UUID
+        var target: DetailSideBarTarget
     }
 
     enum SideBarGroup: Hashable {
@@ -124,10 +132,18 @@ struct MainFeature {
                     updateSideBarWidthUseCase.execute(Double(width))
                 }
             case .view(.detailSideBarTargetChanged(let tab, let target, let owner)):
-                // 화면이 바뀔 때 먼저 나타난 화면이 고른 대상을 사라지는 화면이 지우지 않음
-                if target == nil && state.detailSideBarOwners[tab] != owner { break }
-                state.detailSideBarTargets[tab] = target
-                state.detailSideBarOwners[tab] = target == nil ? nil : owner
+                // 사라지는 화면은 자기가 고른 대상만 지우고, 그 아래 화면이 고른 대상을 다시 표시
+                var selections = state.detailSideBarSelections[tab, default: []]
+                if let target {
+                    if let index = selections.firstIndex(where: { $0.owner == owner }) {
+                        selections[index].target = target
+                    } else {
+                        selections.append(DetailSideBarSelection(owner: owner, target: target))
+                    }
+                } else {
+                    selections.removeAll { $0.owner == owner }
+                }
+                state.detailSideBarSelections[tab] = selections
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)

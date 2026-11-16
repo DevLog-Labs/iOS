@@ -157,6 +157,23 @@ struct MainFeatureTests {
         #expect(store.state.detailSideBarTargets[.home] == nil)
     }
 
+    @Test("MainFeature는 위 화면이 사라지면 아래 화면이 고른 세부 정보 사이드바 대상을 다시 표시한다")
+    func MainFeature는_위_화면이_사라지면_아래_화면이_고른_세부_정보_사이드바_대상을_다시_표시한다() async {
+        let store = makeStore()
+        let list = UUID()
+        let editor = UUID()
+
+        await store.send(.view(.detailSideBarTargetChanged(.home, .todo(id: "todo", isEditable: true), owner: list)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: editor)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .todo(id: "other", isEditable: true), owner: list)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .hosted)
+
+        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: editor)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .todo(id: "other", isEditable: true))
+    }
+
     @Test("MainFeature는 unread count 관찰 값을 기존 Main 상태관리의 setUnreadPushCount 상태 변화로 반영한다")
     func MainFeature는_unread_count_관찰_값을_기존_Main_상태관리의_setUnreadPushCount_상태_변화로_반영한다() async {
         let reference = MainStateManagementReference()
