@@ -447,6 +447,23 @@
         }
       }
     },
+    "detail_panel_move_to_pane" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move to Right Pane"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오른쪽 칸으로 옮기기"
+          }
+        }
+      }
+    },
     "detail_sidebar_empty" : {
       "extractionState" : "manual",
       "localizations" : {

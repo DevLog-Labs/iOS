@@ -21,6 +21,7 @@ public struct TodoDetailView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.isInDetailPanel) private var isInDetailPanel
     @State var store: StoreOf<TodoDetailFeature>
     private let windowEvent: TodoEditorWindowEvent?
     private let onBack: (() -> Void)?
@@ -61,7 +62,8 @@ public struct TodoDetailView: View {
             }
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            if deviceType != .duo || showsPaneTitleBar {
+            // 상세 판은 판 위쪽 막대를 쓰므로 상세 위쪽 줄 생략
+            if !isInDetailPanel && (deviceType != .duo || showsPaneTitleBar) {
                 topBar
             }
         }
