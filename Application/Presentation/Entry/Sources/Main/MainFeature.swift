@@ -25,6 +25,8 @@ struct MainFeature {
         var verticalBarInsets = EdgeInsets()
         // 화면 키보드가 떠 있는 동안 직접 그린 하단 탭 바를 숨김
         var isKeyboardVisible = false
+        // 탭 안 화면이 직접 그린 하단 탭 바 뒤로 들어가지 않도록 비울 높이
+        var tabBarHeight = CGFloat.zero
         var readableContentWidth = CGFloat.infinity
         var openedTabs: Set<MainTab> = []
         var isSideBarCollapsed = false
