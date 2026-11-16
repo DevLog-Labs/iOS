@@ -47,8 +47,8 @@ struct MainView: View {
             ? max(store.verticalBarInsets.leading, store.verticalBarInsets.trailing) : 0
         // 시스템 탭 바처럼 키보드가 올라오면 키보드 뒤로 사라짐
         let showsTabBar = !showsSideBar && usesCustomTabBar && verticalBarWidth == 0 && !store.isKeyboardVisible
-        // Mac 창 오른쪽 세부 정보 사이드바, 설정 화면에서는 표시하지 않음
-        let showsDetailSideBar = isiOSAppOnMac
+        // 사이드바가 있는 창 오른쪽 세부 정보 사이드바, 설정 화면에서는 표시하지 않음
+        let showsDetailSideBar = showsSideBar
             && (store.sideBarLocations[selectedTab] ?? selectedTab.sideBarLocation) != .settings
         let sideBarIdealWidth = isiOSAppOnMac ? 220 * AdaptiveSize.boardScale : 250
 
@@ -325,7 +325,7 @@ struct ReadableContentWidthReader: UIViewRepresentable {
 }
 
 private struct MainTabContent: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     let store: StoreOf<MainFeature>
     let tab: MainTab
     let isSelected: Bool
@@ -342,7 +342,7 @@ private struct MainTabContent: View {
             .environment(\.sideBarRequest, store.sideBarRequests[tab])
             .environment(
                 \.selectDetailSideBarTarget,
-                isiOSAppOnMac ? { store.send(.view(.detailSideBarTargetChanged(tab, $0, owner: $1))) } : nil
+                usesDesktopLayout ? { store.send(.view(.detailSideBarTargetChanged(tab, $0, owner: $1))) } : nil
             )
             .onPreferenceChange(SideBarLocationPreferenceKey.self) { location in
                 guard let location else { return }

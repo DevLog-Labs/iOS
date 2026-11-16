@@ -63,8 +63,8 @@ public struct TodayView: View {
                                         }
                                     },
                                     onInspect: { item in
-                                        // Mac은 고른 Todo를 창 오른쪽 세부 정보 사이드바에 표시
-                                        if isiOSAppOnMac {
+                                        // 사이드바가 있으면 고른 Todo를 창 오른쪽 세부 정보 사이드바에 표시
+                                        if usesDesktopLayout {
                                             store.send(.binding(.set(\.selectedTodoId, item.id)))
                                             setDetailSideBarPresented?(true)
                                         } else {
@@ -141,9 +141,9 @@ public struct TodayView: View {
             store.send(.binding(.set(\.selectedTodoId, item.id)))
             router.path = []
         }
-        // Mac은 창 오른쪽 세부 정보 사이드바 사용
+        // 사이드바가 있으면 창 오른쪽 세부 정보 사이드바 사용
         .inspector(
-            isPresented: !isiOSAppOnMac && horizontalSizeClass == .regular
+            isPresented: !usesDesktopLayout && horizontalSizeClass == .regular
                 ? $store.isTodoInspectorPresented : .constant(false)
         ) {
             TodayTodoInspector(store: store)

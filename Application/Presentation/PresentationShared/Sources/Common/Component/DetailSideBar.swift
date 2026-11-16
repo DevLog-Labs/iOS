@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-// Mac 세부 정보 사이드바에 속성을 표시할 대상
+// 세부 정보 사이드바에 속성을 표시할 대상
 public enum DetailSideBarTarget: Hashable {
     // 고칠 수 없는 활동 기록 Todo는 읽기 전용
     // 다른 곳에서 바꾼 Todo를 다시 조회하도록 목록이 올리는 revision
@@ -16,7 +16,7 @@ public enum DetailSideBarTarget: Hashable {
     case hosted
 }
 
-// Mac 창 오른쪽에 두는 세부 정보 사이드바
+// 사이드바가 있는 창 오른쪽에 두는 세부 정보 사이드바
 public struct DetailSideBar<Content: View>: View {
     private let onClose: () -> Void
     private let content: Content
@@ -104,12 +104,12 @@ public struct DetailSideBarPlaceholder: View {
 }
 
 public extension View {
-    // 지금 고른 대상을 Mac 세부 정보 사이드바에 표시
+    // 지금 고른 대상을 세부 정보 사이드바에 표시
     func detailSideBarTarget(_ target: DetailSideBarTarget?) -> some View {
         modifier(DetailSideBarTargetModifier(target: target))
     }
 
-    // 창 오른쪽 끝 칸 화면이 세부 정보 사이드바 내용을 직접 그림, Mac에서만 표시
+    // 창 오른쪽 끝 칸 화면이 세부 정보 사이드바 내용을 직접 그림, 사이드바가 있는 창에서만 표시
     func detailSideBar<Content: View>(
         isActive: Bool = true,
         @ViewBuilder content: () -> Content
@@ -120,6 +120,7 @@ public extension View {
 
 private struct DetailSideBarTargetModifier: ViewModifier {
     @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var owner = UUID()
     let target: DetailSideBarTarget?
 
@@ -128,6 +129,12 @@ private struct DetailSideBarTargetModifier: ViewModifier {
             .onAppear { selectDetailSideBarTarget?(target, owner) }
             .onChange(of: target) { _, target in
                 selectDetailSideBarTarget?(target, owner)
+            }
+            // 좁은 창에서 고른 대상도 사이드바가 있는 창으로 바뀌면 세부 정보 사이드바에 표시
+            .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
+                if usesDesktopLayout {
+                    selectDetailSideBarTarget?(target, owner)
+                }
             }
             // 화면을 벗어나면 고른 대상 해제
             .onDisappear { selectDetailSideBarTarget?(nil, owner) }

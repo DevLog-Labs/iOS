@@ -51,18 +51,18 @@ public struct HomeView: View {
         } else {
             .home
         }
-        // Mac은 카테고리 관리와 새 개발 목표를 시트 대신 칸으로 표시
-        let showsSheetAsPane = isiOSAppOnMac
+        // 사이드바가 있으면 카테고리 관리와 새 개발 목표를 시트 대신 칸으로 표시
+        let showsSheetAsPane = usesDesktopLayout
             && (store.sheet?.categoryManageState != nil || store.sheet?.goalCreateState != nil)
         let sheetBinding = $store.scope(state: \.sheet, action: \.sheet)
             .activePresentation(when: isSelected)
 
         NavigationStack(path: $router.path) {
             Group {
-                if isiOSAppOnMac,
+                if usesDesktopLayout,
                    let manageStore = store.scope(state: \.sheet?.categoryManageState, action: \.sheet.presented.categoryManage) {
                     CategoryManageView(store: manageStore)
-                } else if isiOSAppOnMac,
+                } else if usesDesktopLayout,
                           let goalStore = store.scope(state: \.sheet?.goalCreateState, action: \.sheet.presented.goalCreate) {
                     // 홈 오른쪽 칸에서 쓰고 연결된 Todo는 세부 정보 사이드바에 표시
                     PaneSplitView {
@@ -138,7 +138,7 @@ public struct HomeView: View {
                 get: { showsSheetAsPane ? nil : sheetBinding.wrappedValue },
                 // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸으로 연 화면을 지우지 않도록 지금 상태로 판단
                 set: { sheet in
-                    guard !isiOSAppOnMac
+                    guard !usesDesktopLayout
                         || store.sheet?.categoryManageState == nil && store.sheet?.goalCreateState == nil
                     else { return }
                     sheetBinding.wrappedValue = sheet
@@ -181,8 +181,8 @@ public struct HomeView: View {
         case .manageTodoCategory:
             // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
             guard !store.preferences.isEmpty else { break }
-            // Mac은 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
-            if isiOSAppOnMac {
+            // 사이드바가 있으면 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
+            if usesDesktopLayout {
                 router.path = []
             }
             store.send(.view(.tapManageTodoCategory))

@@ -11,7 +11,7 @@ import PresentationShared
 struct CategoryManageView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.deviceType) private var deviceType
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @Bindable var store: StoreOf<CategoryManageFeature>
 
@@ -32,8 +32,8 @@ struct CategoryManageView: View {
                     .margins(.horizontal, 16)
                     .margins(.vertical, 8),
                     footer: UIHostingConfiguration {
-                        // Mac은 목록 바로 아래에 추가 버튼 표시
-                        if isiOSAppOnMac {
+                        // 사이드바가 있으면 목록 바로 아래에 추가 버튼 표시
+                        if usesDesktopLayout {
                             Button {
                                 store.send(.tapAddUserCategory)
                                 setDetailSideBarPresented?(true)
@@ -57,14 +57,14 @@ struct CategoryManageView: View {
                         UIHostingConfiguration {
                             CategoryManageRow(
                                 item: item,
-                                isSelected: isiOSAppOnMac && item.id == selectedID,
+                                isSelected: usesDesktopLayout && item.id == selectedID,
                                 onToggle: { store.send(.tapItem(item)) },
                                 onEdit: {
                                     store.send(.tapEditUserCategory(item))
                                     setDetailSideBarPresented?(true)
                                 },
                                 onDelete: { store.send(.tapDeleteUserCategory(item)) },
-                                onSelect: isiOSAppOnMac ? { store.send(.selectCategory(item)) } : nil
+                                onSelect: usesDesktopLayout ? { store.send(.selectCategory(item)) } : nil
                             )
                         }
                         .margins(.horizontal, 0)
@@ -75,18 +75,18 @@ struct CategoryManageView: View {
                     }
                 )
             }
-            // Mac은 칸 가운데 보드 폭으로 표시
-            .frame(maxWidth: isiOSAppOnMac ? 600 * AdaptiveSize.boardScale : .infinity)
+            // 사이드바가 있으면 칸 가운데 보드 폭으로 표시
+            .frame(maxWidth: usesDesktopLayout ? 600 * AdaptiveSize.boardScale : .infinity)
             .frame(maxWidth: .infinity)
             .safeAreaInset(edge: .top, spacing: 0) {
-                if isiOSAppOnMac {
+                if usesDesktopLayout {
                     PaneTitleBar(Text("todo_category_manage", bundle: PresentationResources.bundle))
                 } else {
                     toolBar
                 }
             }
             .safeAreaInset(edge: .bottom, spacing: 0) {
-                if !isiOSAppOnMac {
+                if !usesDesktopLayout {
                     Button {
                         store.send(.tapAddUserCategory)
                     } label: {
@@ -106,15 +106,15 @@ struct CategoryManageView: View {
                 }
             }
             .background(Color.background.ignoresSafeArea())
-            // Mac은 고른 카테고리를 시트 대신 세부 정보 사이드바에 표시
+            // 사이드바가 있으면 고른 카테고리를 시트 대신 세부 정보 사이드바에 표시
             .prominentSheet(
                 item: $store.scope(state: \.categorySheet, action: \.categorySheet)
-                    .activePresentation(when: isTabContentActive && !isiOSAppOnMac)
+                    .activePresentation(when: isTabContentActive && !usesDesktopLayout)
             ) { sheetStore in
                 CategoryManageSheet(store: sheetStore)
             }
             .prominentAlert(store, state: \.alert, action: \.alert)
-            .detailSideBar(isActive: isiOSAppOnMac) {
+            .detailSideBar(isActive: usesDesktopLayout) {
                 if let sheetStore = store.scope(state: \.categorySheet, action: \.categorySheet.presented) {
                     CategorySideBarContent(store: sheetStore) {
                         if let item = store.preferences.first(where: { $0.id == sheetStore.category.id }) {
@@ -126,7 +126,7 @@ struct CategoryManageView: View {
                 }
             }
             .onAppear {
-                if isiOSAppOnMac {
+                if usesDesktopLayout {
                     store.send(.setSavesImmediately)
                 }
             }
@@ -167,7 +167,7 @@ private struct CategoryManageRow: View {
     let onToggle: () -> Void
     let onEdit: () -> Void
     let onDelete: () -> Void
-    // Mac에서 행을 눌러 사이드바에 표시할 카테고리 선택
+    // 사이드바가 있으면 행을 눌러 세부 정보 사이드바에 표시할 카테고리 선택
     let onSelect: (() -> Void)?
 
     var body: some View {
@@ -424,7 +424,7 @@ private struct CategoryManageSheet: View {
     }
 }
 
-// Mac 세부 정보 사이드바의 카테고리 속성, 고친 값은 바로 저장
+// 세부 정보 사이드바의 카테고리 속성, 고친 값은 바로 저장
 private struct CategorySideBarContent: View {
     @Bindable var store: Store<CategoryManageFeature.CategorySheetState, CategoryManageFeature.Action.CategorySheet>
     @FocusState private var isNameFocused: Bool
