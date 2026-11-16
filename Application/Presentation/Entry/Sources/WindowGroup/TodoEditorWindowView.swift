@@ -45,6 +45,8 @@ public struct TodoEditorWindowView: View {
             }
         }
         .environment(\.readableContentWidth, readableContentWidth)
+        // 작성 창은 칸이 아니라 창 하나를 채우는 화면이라 속성을 창 안의 정보 버튼으로 표시
+        .environment(\.usesPaneLayout, false)
         .background {
             WindowSceneReader { windowScene = $0 }
             ReadableContentWidthReader { readableContentWidth = $0 }
