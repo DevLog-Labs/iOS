@@ -10,6 +10,7 @@ import Domain
 import PresentationShared
 
 struct GoalCreateView: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Bindable var store: StoreOf<GoalCreateFeature>
     @FocusState private var focusedField: GoalCreateField?
@@ -30,7 +31,8 @@ struct GoalCreateView: View {
 
     private var content: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
+            // Mac은 Orca 데스크톱 작성 칸처럼 간격을 좁히고 칸 좌우 여백 14로 표시
+            LazyVStack(alignment: .leading, spacing: isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 24) {
                 GoalCreateTitleField(store: store, focusedField: $focusedField)
                 GoalCreateDescriptionEditor(store: store, focusedField: $focusedField)
                 // 사이드바가 있으면 연결된 Todo를 세부 정보 사이드바에 표시
@@ -39,7 +41,7 @@ struct GoalCreateView: View {
                     GoalCreateTodoField(store: store)
                 }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : nil)
             .padding(.top, usesDesktopLayout ? 12 : 0)
             .padding(.bottom, 20)
         }
@@ -120,13 +122,16 @@ private struct GoalCreateTopBar: View {
 }
 
 private struct GoalCreateTitleField: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<GoalCreateFeature>
     let focusedField: FocusState<GoalCreateField?>.Binding
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        // Mac은 입력칸 이름을 작은 회색 글자로 입력칸 바로 위에 표시
+        VStack(alignment: .leading, spacing: isiOSAppOnMac ? 6 * AdaptiveSize.boardScale : 14) {
             Text(RecordPresentation.text("development_goal_create_title_label"))
-                .font(.adaptive(.headline))
+                .font(.adaptive(isiOSAppOnMac ? .subheadline : .headline))
+                .foregroundStyle(isiOSAppOnMac ? Color.secondaryLabel : .primary)
 
             TextField(
                 RecordPresentation.text("development_goal_create_title_placeholder"),
@@ -134,7 +139,10 @@ private struct GoalCreateTitleField: View {
             )
             .focused(focusedField, equals: .title)
             .font(.adaptive(.body))
-            .padding()
+            // Mac은 Orca 한 줄 입력칸 높이 32
+            .padding(.all, isiOSAppOnMac ? 0 : nil)
+            .padding(.horizontal, isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 0)
+            .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : nil)
             .inputBackground(isFocused: focusedField.wrappedValue == .title)
         }
         .disabled(store.isSaving)
@@ -142,24 +150,36 @@ private struct GoalCreateTitleField: View {
 }
 
 private struct GoalCreateDescriptionEditor: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<GoalCreateFeature>
     let focusedField: FocusState<GoalCreateField?>.Binding
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            Text(RecordPresentation.text("development_goal_create_description_label"))
-                .font(.adaptive(.headline))
+        VStack(alignment: .leading, spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 14) {
+            // Mac은 작성·미리보기 버튼을 입력칸 이름 오른쪽 같은 줄에 표시
+            HStack {
+                Text(RecordPresentation.text("development_goal_create_description_label"))
+                    .font(.adaptive(isiOSAppOnMac ? .subheadline : .headline))
+                    .foregroundStyle(isiOSAppOnMac ? Color.secondaryLabel : .primary)
+                if isiOSAppOnMac {
+                    Spacer()
+                    GoalCreateModePicker(store: store, focusedField: focusedField)
+                }
+            }
 
             VStack(spacing: 16) {
-                GoalCreateModePicker(store: store, focusedField: focusedField)
+                if !isiOSAppOnMac {
+                    GoalCreateModePicker(store: store, focusedField: focusedField)
+                }
 
                 Group {
                     switch store.selectedTab {
                     case .write:
-                        TextEditorContentLayout(minimumHeight: 120) {
+                        // Mac은 안내 문구를 입력칸 아래에 표시
+                        TextEditorContentLayout(minimumHeight: 120, placesHintBelow: isiOSAppOnMac) {
                             Text(RecordPresentation.text("development_goal_create_markdown_hint"))
                                 .font(.adaptive(.caption))
-                                .foregroundStyle(Color.tertiaryLabel)
+                                .foregroundStyle(isiOSAppOnMac ? Color.secondaryLabel : .tertiaryLabel)
                             UIKitTextEditor
                                 .composable(
                                     update: { textEditor in
@@ -220,6 +240,7 @@ private struct GoalCreateDescriptionEditor: View {
 }
 
 private struct GoalCreateModePicker: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<GoalCreateFeature>
     let focusedField: FocusState<GoalCreateField?>.Binding
 
@@ -241,25 +262,35 @@ private struct GoalCreateModePicker: View {
             }
         }
         .padding(2)
-        .background(Color.separator, in: .rect(cornerRadius: CornerRadius.control))
+        .background(isiOSAppOnMac ? Color.tertiaryBackground : .separator, in: .rect(cornerRadius: CornerRadius.control))
     }
 }
 
 private struct GoalCreateModeButton: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let title: String
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
+            let selectedColor = isiOSAppOnMac ? Color.label : .accent
+
+            // Mac은 칸 폭을 채우지 않고 글자 폭만큼 작게, 고른 조각은 강조색 대신 글자색과 옅은 테두리로 표시
             Text(title)
-                .font(.adaptive(.body))
-                .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
-                .frame(maxWidth: .infinity, minHeight: 36)
+                .font(.adaptive(isiOSAppOnMac ? .subheadline : .body).weight(isiOSAppOnMac ? .semibold : .regular))
+                .foregroundStyle(isSelected ? selectedColor : Color.secondaryLabel)
+                .padding(.horizontal, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 0)
+                .padding(.vertical, isiOSAppOnMac ? 3 * AdaptiveSize.boardScale : 0)
+                .frame(maxWidth: isiOSAppOnMac ? nil : .infinity, minHeight: isiOSAppOnMac ? nil : 36)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: CornerRadius.segment)
                             .fill(Color.secondaryBackground)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: CornerRadius.segment)
+                                    .strokeBorder(isiOSAppOnMac ? Color.label.opacity(0.12) : .clear)
+                            }
                             .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }
                 }
