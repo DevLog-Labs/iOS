@@ -178,6 +178,10 @@ struct MainView: View {
                 \.expandSideBar,
                 store.isSideBarCollapsed ? { store.send(.binding(.set(\.isSideBarCollapsed, false))) } : nil
             )
+            .environment(
+                \.presentSettings,
+                isiOSAppOnMac ? { store.send(.binding(.set(\.isSettingsPresented, true))) } : nil
+            )
             // 닫힌 세부 정보 사이드바는 화면 칸 제목 줄의 버튼으로 엶
             .environment(
                 \.showDetailSideBar,
@@ -200,6 +204,16 @@ struct MainView: View {
                 ) {
                     store.send(.binding(.set(\.isDetailSideBarPresented, false)))
                 }
+            }
+        }
+        // Mac 설정은 앱 화면을 덮어 창 전체에 표시하고 닫으면 보던 화면으로 돌아감
+        .overlay {
+            if store.isSettingsPresented {
+                DesktopSettingsView {
+                    store.send(.binding(.set(\.isSettingsPresented, false)))
+                }
+                .environment(\.readableContentWidth, readableContentWidth)
+                .background(Color.background)
             }
         }
         .environment(\.usesDesktopLayout, showsSideBar)
@@ -568,7 +582,12 @@ private struct TreeSideBar: View {
                         symbolName: "gearshape.fill",
                         isSelected: location == .settings
                     ) {
-                        open(.settings)
+                        // Mac은 앱 화면과 분리한 설정 화면 표시
+                        if isiOSAppOnMac {
+                            store.send(.binding(.set(\.isSettingsPresented, true)))
+                        } else {
+                            open(.settings)
+                        }
                     }
                 }
                 .padding(.horizontal, 8 * AdaptiveSize.boardScale)

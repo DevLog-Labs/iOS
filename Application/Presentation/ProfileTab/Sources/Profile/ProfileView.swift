@@ -18,6 +18,7 @@ public struct ProfileView: View {
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
+    @Environment(\.presentSettings) private var presentSettings
     @State private var settingsStore: StoreOf<SettingsFeature>
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
@@ -174,7 +175,12 @@ public struct ProfileView: View {
     @ViewBuilder
     private var titleBar: some View {
         let settingsButton = Button {
-            router.push(.settings)
+            // Mac은 앱 화면과 분리한 설정 화면 표시
+            if let presentSettings {
+                presentSettings()
+            } else {
+                router.push(.settings)
+            }
         } label: {
             Image(systemName: "gearshape")
         }
@@ -246,7 +252,7 @@ public struct ProfileView: View {
             ) {
                 TodoDetailFeature()
             }, windowEvent: windowEvent)
-        case .theme, .pushNotification, .account:
+        case .theme, .pushNotification, .account, .information:
             settingsPage(route, isPaneDetail: false)
         }
     }
@@ -267,7 +273,7 @@ public struct ProfileView: View {
             AccountView(store: Store(initialState: AccountFeature.State()) {
                 AccountFeature()
             }, isPaneDetail: isPaneDetail)
-        case .settings, .activity, .recentTodo:
+        case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }
     }
@@ -294,6 +300,8 @@ enum ProfileRoute: Hashable, Identifiable {
     case theme
     case pushNotification
     case account
+    // Mac 설정 화면 목차에서만 고르는 앱 정보
+    case information
 
     var id: Self { self }
 }

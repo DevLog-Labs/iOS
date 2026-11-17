@@ -39,6 +39,8 @@ struct MainFeature {
         var paneEditingTabs: Set<MainTab> = []
         var sideBarContent = SideBarContent()
         var isDetailSideBarPresented = false
+        // 앱 화면과 분리해 창 전체에 표시하는 Mac 설정 화면
+        var isSettingsPresented = false
         // 탭마다 세부 정보 사이드바 대상을 고르는 화면, 대상이 없어도 나타난 순서대로 위치
         var detailSideBarSelections: [MainTab: [DetailSideBarSelection]] = [:]
 

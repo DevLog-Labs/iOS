@@ -38,13 +38,13 @@ private struct PillToggle: View {
             } label: {
                 Capsule()
                     .fill(configuration.isOn ? Color.accent : .switchOffFill)
-                    .frame(width: 44, height: 24)
+                    .frame(width: 44 * AdaptiveSize.boardScale, height: 24 * AdaptiveSize.boardScale)
                     .overlay(alignment: configuration.isOn ? .trailing : .leading) {
                         Circle()
                             .fill(Color.white)
-                            .frame(width: 18, height: 18)
+                            .frame(width: 18 * AdaptiveSize.boardScale, height: 18 * AdaptiveSize.boardScale)
                             .shadow(color: Color.black.opacity(0.1), radius: 1.5, y: 1)
-                            .padding(3)
+                            .padding(3 * AdaptiveSize.boardScale)
                     }
             }
             .buttonStyle(.plain)

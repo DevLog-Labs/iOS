@@ -45,6 +45,12 @@ public extension EnvironmentValues {
         set { self[ExpandSideBarKey.self] = newValue }
     }
 
+    // 앱 화면과 분리한 설정 화면을 여는 동작, Mac 메인 창 탭 화면 안에서만 있음
+    var presentSettings: (() -> Void)? {
+        get { self[PresentSettingsKey.self] }
+        set { self[PresentSettingsKey.self] = newValue }
+    }
+
     // 고른 대상과 고른 화면을 세부 정보 사이드바에 알리는 동작, 메인 창 탭 화면 안에서만 있음
     var selectDetailSideBarTarget: ((DetailSideBarTarget?, UUID) -> Void)? {
         get { self[SelectDetailSideBarTargetKey.self] }
@@ -150,6 +156,10 @@ public extension EnvironmentValues {
     }
 
     private struct ExpandSideBarKey: EnvironmentKey {
+        static let defaultValue: (() -> Void)? = nil
+    }
+
+    private struct PresentSettingsKey: EnvironmentKey {
         static let defaultValue: (() -> Void)? = nil
     }
 
