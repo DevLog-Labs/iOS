@@ -15,34 +15,64 @@ struct ThemeView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Binding var theme: SystemTheme
     // 설정 옆 칸에 넣은 화면은 뒤로 갈 곳이 없어 칸 제목 줄의 뒤로 버튼 생략
     var isPaneDetail = false
+    // 앱 화면과 분리한 Mac 설정 화면은 위쪽 줄을 직접 그려 화면 제목 줄 생략
+    var showsTopBar = true
 
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
-                VStack(spacing: 0) {
-                    ForEach(Self.themes) { option in
-                        themeButton(option)
-
-                        if option != Self.themes.last {
-                            Divider().overlay(Color.separator)
-                                .padding(.leading, 68)
-                                .padding(.trailing, 16)
+                if isiOSAppOnMac {
+                    DesktopSettingsSection {
+                        ForEach(Self.themes) { option in
+                            Button {
+                                theme = option
+                            } label: {
+                                DesktopSettingsRow(
+                                    symbolName: option.desktopSymbolName,
+                                    title: Text(option.localizedName(in: PresentationResources.bundle))
+                                ) {
+                                    SettingsCheck(isSelected: theme == option)
+                                }
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
+                } else {
+                    VStack(spacing: 0) {
+                        ForEach(Self.themes) { option in
+                            themeButton(option)
+
+                            if option != Self.themes.last {
+                                Divider().overlay(Color.separator)
+                                    .padding(.leading, 68)
+                                    .padding(.trailing, 16)
+                            }
+                        }
+                    }
+                    .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
                 }
-                .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
+            // Mac 설정 화면은 묶음마다 보드의 위아래 8, 좌우 14 여백
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 24)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
         // Mac 제목 줄 구분선과 첫 항목 사이 여백
-        .contentMargins(.top, showsPaneTitleBar ? 12 : 0, for: .scrollContent)
-        .safeAreaInset(edge: .top, spacing: 0) { topBar }
+        .contentMargins(
+            .top,
+            isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : showsPaneTitleBar ? 12 : 0,
+            for: .scrollContent
+        )
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if showsTopBar {
+                topBar
+            }
+        }
         .background(Color.background)
         .duoToolbarVisibility()
     }
@@ -112,6 +142,18 @@ private extension SystemTheme {
             return "sun.max.fill"
         case .dark:
             return "moon.fill"
+        }
+    }
+
+    // Mac 설정 화면 아이콘 사각형 안 기호
+    var desktopSymbolName: String {
+        switch self {
+        case .automatic:
+            return "desktopcomputer"
+        case .light:
+            return "sun.max"
+        case .dark:
+            return "moon"
         }
     }
 

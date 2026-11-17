@@ -49,7 +49,8 @@ struct SettingsView: View {
                     onSignOut: { store.send(.setAlert(.signOut)) }
                 )
 
-                deleteAccountContent
+                DeleteAccountSection(store: store)
+                    .padding(.top, 24)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
@@ -90,8 +91,37 @@ struct SettingsView: View {
             .toolbarBackground(Color.background)
         }
     }
+}
 
-    private var deleteAccountContent: some View {
+// 설정 목록과 Mac 설정 화면의 계정 화면이 함께 쓰는 회원 탈퇴 버튼과 안내
+struct DeleteAccountSection: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    let store: StoreOf<SettingsFeature>
+
+    var body: some View {
+        if isiOSAppOnMac {
+            // GitHub 위험 구역처럼 설명 행 오른쪽 빨간 버튼으로 실행
+            DesktopSettingsSection {
+                DesktopSettingsRow(
+                    title: Text(String(localized: "settings_delete_account", bundle: PresentationResources.bundle)),
+                    subtitle: Text("settings_delete_account_subtitle", bundle: PresentationResources.bundle)
+                ) {
+                    DesktopSettingsButton(
+                        title: String(localized: "settings_delete_account_action", bundle: PresentationResources.bundle),
+                        role: .destructive,
+                        showsProgress: store.activeLoadingRow == .deleteAuth
+                    ) {
+                        store.send(.setAlert(.deleteAuth))
+                    }
+                    .disabled(!store.isNetworkConnected || store.isLoading)
+                }
+            }
+        } else {
+            card
+        }
+    }
+
+    private var card: some View {
         VStack(spacing: 16) {
             Button {
                 store.send(.setAlert(.deleteAuth))
@@ -120,6 +150,5 @@ struct SettingsView: View {
                 .foregroundStyle(Color.secondaryLabel)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 24)
     }
 }
