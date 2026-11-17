@@ -123,7 +123,8 @@ public struct TodoEditorView: View {
     }
 
     private var isWideLayout: Bool {
-        isiOSAppOnMac || horizontalSizeClass == .regular
+        // Duo는 펼쳐도 좁은 화면처럼 세부 정보를 시트로 표시
+        isiOSAppOnMac || horizontalSizeClass == .regular && UIDevice.current.userInterfaceIdiom == .pad
     }
 
     private func close() {
