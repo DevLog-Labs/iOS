@@ -55,6 +55,11 @@ struct MainFeature {
         var target: DetailSideBarTarget?
     }
 
+    enum KeyboardEvent: Equatable {
+        case willShow(height: CGFloat)
+        case willHide
+    }
+
     enum SideBarGroup: Hashable {
         case todo
         case developmentGoal
@@ -81,12 +86,14 @@ struct MainFeature {
 
         enum StoreAction: Equatable {
             case setUnreadPushCount(Int)
+            case keyboardChanged(KeyboardEvent)
             case setAlert
         }
     }
 
     private enum CancelID: Hashable {
         case unreadPushCount
+        case keyboard
     }
 
     @Dependency(\.observeUnreadPushCountUseCase) var observeUnreadPushCountUseCase
@@ -94,6 +101,7 @@ struct MainFeature {
     @Dependency(\.trackAnalyticsEventUseCase) var trackAnalyticsEventUseCase
     @Dependency(\.setApplicationBadgeCount) var setApplicationBadgeCount
     @Dependency(\.updateSideBarWidthUseCase) var updateSideBarWidthUseCase
+    @Dependency(\.keyboardEvents) var keyboardEvents
 
     var body: some ReducerOf<Self> {
         BindingReducer()
@@ -106,7 +114,7 @@ struct MainFeature {
             case .view(.onAppear):
                 guard !state.isObservingUnreadPushCount else { break }
                 state.isObservingUnreadPushCount = true
-                return observeUnreadPushCountEffect()
+                return .merge(observeUnreadPushCountEffect(), observeKeyboardEffect())
             case .view(.selectedTabChanged(let tab)):
                 state.openedTabs.insert(tab)
                 guard let screenName = tab.analyticsScreenName else { break }
@@ -159,6 +167,10 @@ struct MainFeature {
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)
+            case .store(.keyboardChanged(.willShow)):
+                state.isKeyboardVisible = true
+            case .store(.keyboardChanged(.willHide)):
+                state.isKeyboardVisible = false
             case .store(.setAlert):
                 state.alert = Self.alertState()
             }
@@ -178,6 +190,11 @@ extension DependencyValues {
     var setApplicationBadgeCount: @Sendable (Int) async throws -> Void {
         get { self[SetApplicationBadgeCountKey.self] }
         set { self[SetApplicationBadgeCountKey.self] = newValue }
+    }
+
+    var keyboardEvents: @Sendable () -> AnyPublisher<MainFeature.KeyboardEvent, Never> {
+        get { self[KeyboardEventsKey.self] }
+        set { self[KeyboardEventsKey.self] = newValue }
     }
 
     var fetchSideBarWidthUseCase: FetchSideBarWidthUseCase {
@@ -231,7 +248,33 @@ private enum SetApplicationBadgeCountKey: DependencyKey {
     }
 }
 
+private enum KeyboardEventsKey: DependencyKey {
+    static let liveValue: @Sendable () -> AnyPublisher<MainFeature.KeyboardEvent, Never> = {
+        let center = NotificationCenter.default
+        return center.publisher(for: UIResponder.keyboardWillShowNotification)
+            .map { notification in
+                let frame = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+                return MainFeature.KeyboardEvent.willShow(height: frame?.height ?? 0)
+            }
+            .merge(with: center.publisher(for: UIResponder.keyboardWillHideNotification).map { _ in .willHide })
+            .eraseToAnyPublisher()
+    }
+
+    static var testValue: @Sendable () -> AnyPublisher<MainFeature.KeyboardEvent, Never> {
+        liveValue
+    }
+}
+
 private extension MainFeature {
+    func observeKeyboardEffect() -> Effect<Action> {
+        .run { [keyboardEvents] send in
+            for await event in keyboardEvents().values {
+                await send(.store(.keyboardChanged(event)))
+            }
+        }
+        .cancellable(id: CancelID.keyboard, cancelInFlight: true)
+    }
+
     func observeUnreadPushCountEffect() -> Effect<Action> {
         .run { [observeUnreadPushCountUseCase] send in
             do {

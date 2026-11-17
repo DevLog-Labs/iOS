@@ -278,12 +278,6 @@ struct MainView: View {
                 }
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
-            store.send(.binding(.set(\.isKeyboardVisible, true)))
-        }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
-            store.send(.binding(.set(\.isKeyboardVisible, false)))
-        }
         .onGeometryChange(for: EdgeInsets.self) { proxy in
             EdgeInsets(
                 top: 0,
