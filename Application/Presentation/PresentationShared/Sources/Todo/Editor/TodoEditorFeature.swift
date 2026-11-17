@@ -17,6 +17,8 @@ public struct TodoEditorFeature {
         @Presents public var alert: AlertState<Never>?
         public var isInspectorPresented = false
         public var inspectorContent = InspectorContent.options
+        // 칸에 그린 작성 화면의 세부 정보에서 마감일 선택을 띄웠는지 여부
+        public var isDueDatePickerPresented = false
         public var isCompleted: Bool = false
         public var completedAt: Date?
         public var isPinned: Bool = false

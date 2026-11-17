@@ -135,7 +135,7 @@ struct HomeFeatureTests {
 
         await adapter.tapDevelopmentGoal("goal")
 
-        #expect(adapter.sheet == .goalDetail("goal"))
+        #expect(adapter.sheet?.goalDetailState?.goalId == "goal")
     }
 
     @Test("작성 중인 새 개발 목표가 있으면 버릴지 물은 뒤 버리면 고른 목표를 연다")
@@ -151,7 +151,7 @@ struct HomeFeatureTests {
 
         await adapter.discardGoalDraft()
 
-        #expect(adapter.sheet == .goalDetail("goal"))
+        #expect(adapter.sheet?.goalDetailState?.goalId == "goal")
     }
 
     @Test("작성 중인 새 개발 목표를 버리지 않으면 칸을 유지한다")
@@ -192,7 +192,7 @@ struct HomeFeatureTests {
         await adapter.tapDevelopmentGoal("goal")
 
         #expect(adapter.alert == nil)
-        #expect(adapter.sheet == .goalDetail("goal"))
+        #expect(adapter.sheet?.goalDetailState?.goalId == "goal")
     }
 
     @Test("새 개발 목표를 저장하는 동안 시트를 바꾸지 않는다")

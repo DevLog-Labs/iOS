@@ -11,26 +11,28 @@ import PresentationShared
 
 public struct GoalDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @State private var store: StoreOf<GoalDetailFeature>
-
-    public init(goalId: String) {
-        self._store = State(initialValue: Store(
-            initialState: GoalDetailFeature.State(goalId: goalId)
-        ) {
-            GoalDetailFeature()
-        })
-    }
+    @Bindable var store: StoreOf<GoalDetailFeature>
 
     public var body: some View {
-        NavigationStack {
-            presentedContent
-                .overlay {
-                    if store.isTransitioning {
-                        LoadingView()
-                    }
-                }
+        // 사이드바가 있으면 홈 내비게이션 안의 칸이라 시트용 내비게이션을 겹치지 않음
+        if usesDesktopLayout {
+            transitionContent
+        } else {
+            NavigationStack {
+                transitionContent
+            }
         }
+    }
+
+    private var transitionContent: some View {
+        presentedContent
+            .overlay {
+                if store.isTransitioning {
+                    LoadingView()
+                }
+            }
     }
 
     private var mainContent: some View {
@@ -53,6 +55,8 @@ public struct GoalDetailView: View {
                 )
             }
             .padding(.horizontal)
+            // 칸 제목 줄 구분선과 큰 제목 사이 여백
+            .padding(.top, usesDesktopLayout ? 12 : 0)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .safeAreaInset(edge: .bottom, spacing: 0) { recordActionBar }
@@ -63,25 +67,54 @@ public struct GoalDetailView: View {
     }
 
     private var presentedContent: some View {
-        mainContent
-            .prominentSheet(item: $store.scope(state: \.recordEditor, action: \.recordEditor)) { destination in
+        // 사이드바가 있으면 기록 작성을 개발 목표 오른쪽 칸에 표시
+        PaneSplitView(splitsOnDesktop: store.recordEditor != nil) {
+            mainContent
+        } detail: {
+            if let editorStore = store.scope(state: \.recordEditor, action: \.recordEditor.presented) {
                 RecordEditorView(
-                    goalId: store.goalId,
-                    goalTitle: store.goalTitle,
-                    record: destination.record,
+                    store: editorStore,
                     onCompletion: {
                         store.send(.view(.refresh))
+                    },
+                    onClose: {
+                        store.send(.recordEditor(.dismiss))
                     }
                 )
             }
-            .prominentSheet(item: $store.scope(state: \.todoLinkSheet, action: \.todoLinkSheet)) {
-                GoalTodoLinkSheet(store: $0)
-            }
-            .navigationDestination(
-                item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                    .activePresentation(when: !isiOSAppOnMac),
-                interactivePop: true
-            ) { destination in
+        }
+        .prominentSheet(
+            item: $store.scope(state: \.recordEditor, action: \.recordEditor)
+                .hiddenInPane(usesDesktopLayout)
+        ) { editorStore in
+            RecordEditorView(
+                store: editorStore,
+                onCompletion: {
+                    store.send(.view(.refresh))
+                }
+            )
+        }
+        .prominentSheet(item: $store.scope(state: \.todoLinkSheet, action: \.todoLinkSheet)) {
+            GoalTodoLinkSheet(store: $0)
+        }
+        .navigationDestination(
+            item: $store.scope(state: \.recordDetail, action: \.recordDetail)
+                .activePresentation(when: !isiOSAppOnMac),
+            interactivePop: true
+        ) { destination in
+            RecordDetailView(
+                goalTitle: store.goalTitle,
+                record: destination.record,
+                allowsMutation: store.allowsRecordMutation,
+                onUpdate: { store.send(.view(.refresh)) }
+            )
+        }
+        // Mac은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
+        .detailPanel(
+            item: $store.scope(state: \.recordDetail, action: \.recordDetail)
+                .activePresentation(when: isiOSAppOnMac)
+        ) { destination in
+            NavigationStack {
                 RecordDetailView(
                     goalTitle: store.goalTitle,
                     record: destination.record,
@@ -89,38 +122,45 @@ public struct GoalDetailView: View {
                     onUpdate: { store.send(.view(.refresh)) }
                 )
             }
-            // Mac은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
-            .detailPanel(
-                item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                    .activePresentation(when: isiOSAppOnMac)
-            ) { destination in
-                NavigationStack {
-                    RecordDetailView(
-                        goalTitle: store.goalTitle,
-                        record: destination.record,
-                        allowsMutation: store.allowsRecordMutation,
-                        onUpdate: { store.send(.view(.refresh)) }
+        }
+        .navigationDestination(
+            item: $store.scope(state: \.todoDetail, action: \.todoDetail),
+            interactivePop: true
+        ) {
+            TodoDetailView(
+                store: Store(
+                    initialState: TodoDetailFeature.State(
+                        todoId: $0.todoId,
+                        showEditButton: false
                     )
+                ) {
+                    TodoDetailFeature()
                 }
-            }
-            .navigationDestination(
-                item: $store.scope(state: \.todoDetail, action: \.todoDetail),
-                interactivePop: true
-            ) {
-                TodoDetailView(
-                    store: Store(
-                        initialState: TodoDetailFeature.State(
-                            todoId: $0.todoId,
-                            showEditButton: false
-                        )
-                    ) {
-                        TodoDetailFeature()
-                    }
-                )
-            }
+            )
+        }
     }
 
+    @ViewBuilder
     private var topBar: some View {
+        if usesDesktopLayout {
+            PaneTitleBar(Text(RecordPresentation.text("development_goal_title"))) {
+                if let status = store.goalStatus {
+                    Image(systemName: "ellipsis")
+                        .prominentMenu(
+                            items: statusMenuItems(status),
+                            isEnabled: !store.isLoading && !store.isTransitioning
+                        ) { status in
+                            store.send(.view(.selectStatus(status)))
+                        }
+                        .topBarButtonStyle()
+                }
+            }
+        } else {
+            sheetTopBar
+        }
+    }
+
+    private var sheetTopBar: some View {
         HStack {
             if #available(iOS 26.0, *) {
                 Button(action: { dismiss() }) {

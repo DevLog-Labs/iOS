@@ -40,7 +40,11 @@ public struct TodoDetailSideBarView: View {
         ZStack(alignment: .top) {
             if let editorStore = store.scope(state: \.editor, action: \.editor) {
                 ScrollView {
-                    TodoSideBarProperties(store: store, editorStore: editorStore)
+                    TodoSideBarProperties(
+                        editorStore: editorStore,
+                        isEditable: store.isEditable,
+                        isDueDatePickerPresented: $store.isDueDatePickerPresented
+                    )
                 }
                 .onChange(of: editorStore.saveResult) { _, result in
                     // 저장한 Todo를 목록과 상세 칸에도 반영
@@ -69,14 +73,14 @@ public struct TodoDetailSideBarView: View {
 }
 
 // Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
-private struct TodoSideBarProperties: View {
+// 저장한 Todo는 고치는 즉시 저장하고, 작성 중인 Todo는 작성 화면의 저장 버튼으로 함께 저장
+struct TodoSideBarProperties: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @Bindable var store: StoreOf<TodoDetailSideBarFeature>
     @Bindable var editorStore: StoreOf<TodoEditorFeature>
+    let isEditable: Bool
+    @Binding var isDueDatePickerPresented: Bool
 
     var body: some View {
-        let isEditable = store.isEditable
-
         VStack(alignment: .leading, spacing: 0) {
             VStack(spacing: 0) {
                 PropertyRow(String(localized: "todo_category", bundle: PresentationResources.bundle)) {
@@ -128,12 +132,12 @@ private struct TodoSideBarProperties: View {
                 PropertyRow(String(localized: "todo_due_date", bundle: PresentationResources.bundle)) {
                     if isEditable {
                         Button {
-                            store.send(.binding(.set(\.isDueDatePickerPresented, true)))
+                            isDueDatePickerPresented = true
                         } label: {
                             dueDateLabel
                         }
                         .buttonStyle(.plain)
-                        .popover(isPresented: $store.isDueDatePickerPresented) {
+                        .popover(isPresented: $isDueDatePickerPresented) {
                             DueDatePopover(store: editorStore)
                         }
                     } else {

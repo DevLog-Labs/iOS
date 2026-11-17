@@ -28,6 +28,8 @@ struct HomeFeature {
         var isNetworkConnected = true
         var selectedTodoCategory: TodoCategory?
         var searchInset = CGFloat.zero
+        // 홈 제목 줄 아래 보이는 높이, 새로 만들기 팝오버가 화면 밖으로 넘치지 않게 사용
+        var visibleHeight = CGFloat.infinity
         var loading = LoadingFeature.State()
 
         var showContentPicker: Bool {
@@ -93,7 +95,8 @@ struct HomeFeature {
         case reorderTodo(CategoryManageFeature.State)
         case contentPicker
         case goalCreate(GoalCreateFeature.State)
-        case goalDetail(String)
+        // 넓은 창의 칸과 시트가 같은 상태를 그려 창 폭이 바뀌어도 작성 중인 기록 유지
+        case goalDetail(GoalDetailFeature.State)
 
         var categoryManageState: CategoryManageFeature.State? {
             get {
@@ -117,6 +120,17 @@ struct HomeFeature {
             }
         }
 
+        var goalDetailState: GoalDetailFeature.State? {
+            get {
+                guard case .goalDetail(let state) = self else { return nil }
+                return state
+            }
+            set {
+                guard let newValue else { return }
+                self = .goalDetail(newValue)
+            }
+        }
+
         var isDevelopmentGoalPresentation: Bool {
             switch self {
             case .goalCreate, .goalDetail:
@@ -132,6 +146,7 @@ struct HomeFeature {
         case tapCloseButton
         case categoryManage(CategoryManageFeature.Action)
         case goalCreate(GoalCreateFeature.Action)
+        case goalDetail(GoalDetailFeature.Action)
     }
 
     @ObservableState
@@ -320,7 +335,7 @@ private extension HomeFeature {
             }
             state.sheet = .goalCreate(GoalCreateFeature.State())
         case .tapDevelopmentGoal(let goalID):
-            state.sheet = .goalDetail(goalID)
+            state.sheet = .goalDetail(GoalDetailFeature.State(goalId: goalID))
         case .tapManageTodoCategory:
             // 이미 연 카테고리 관리 칸은 바로 저장하는 상태를 그대로 유지
             guard state.sheet?.categoryManageState == nil else { break }
@@ -386,6 +401,9 @@ private struct SheetFeature: Reducer {
         }
         .ifCaseLet(\.goalCreate, action: \.goalCreate) {
             GoalCreateFeature()
+        }
+        .ifCaseLet(\.goalDetail, action: \.goalDetail) {
+            GoalDetailFeature()
         }
     }
 }

@@ -148,13 +148,67 @@ struct MainFeatureTests {
 
         await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: goal)))
         await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: category)))
-        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: goal)))
+        await store.send(.view(.detailSideBarOwnerRemoved(.home, owner: goal)))
 
         #expect(store.state.detailSideBarTargets[.home] == .hosted)
 
-        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: category)))
+        await store.send(.view(.detailSideBarOwnerRemoved(.home, owner: category)))
 
         #expect(store.state.detailSideBarTargets[.home] == nil)
+    }
+
+    @Test("MainFeature는 위 화면이 사라지면 아래 화면이 고른 세부 정보 사이드바 대상을 다시 표시한다")
+    func MainFeature는_위_화면이_사라지면_아래_화면이_고른_세부_정보_사이드바_대상을_다시_표시한다() async {
+        let store = makeStore()
+        let list = UUID()
+        let editor = UUID()
+
+        await store.send(.view(.detailSideBarTargetChanged(.home, .todo(id: "todo", isEditable: true), owner: list)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: editor)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .todo(id: "other", isEditable: true), owner: list)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .hosted)
+
+        await store.send(.view(.detailSideBarOwnerRemoved(.home, owner: editor)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .todo(id: "other", isEditable: true))
+    }
+
+    @Test("MainFeature는 먼저 나타난 화면이 나중에 대상을 골라도 나중에 나타난 화면의 대상을 유지한다")
+    func MainFeature는_먼저_나타난_화면이_나중에_대상을_골라도_나중에_나타난_화면의_대상을_유지한다() async {
+        let store = makeStore()
+        let list = UUID()
+        let editor = UUID()
+
+        await store.send(.view(.detailSideBarTargetChanged(.home, nil, owner: list)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .hosted, owner: editor)))
+        await store.send(.view(.detailSideBarTargetChanged(.home, .todo(id: "todo", isEditable: true), owner: list)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .hosted)
+
+        await store.send(.view(.detailSideBarOwnerRemoved(.home, owner: editor)))
+
+        #expect(store.state.detailSideBarTargets[.home] == .todo(id: "todo", isEditable: true))
+    }
+
+    @Test("MainFeature는 칸에 작성 화면을 그린 탭의 사이드바 이동 요청을 무시한다")
+    func MainFeature는_칸에_작성_화면을_그린_탭의_사이드바_이동_요청을_무시한다() async {
+        let store = TestStore(initialState: MainFeature.State()) {
+            MainFeature()
+        } withDependencies: {
+            $0.uuid = .incrementing
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.view(.paneEditingChanged(.home, true)))
+        await store.send(.view(.tapSideBarItem(.home, .open(.home))))
+
+        #expect(store.state.sideBarRequests[.home] == nil)
+
+        await store.send(.view(.paneEditingChanged(.home, false)))
+        await store.send(.view(.tapSideBarItem(.home, .open(.home))))
+
+        #expect(store.state.sideBarRequests[.home]?.action == .open(.home))
     }
 
     @Test("MainFeature는 unread count 관찰 값을 기존 Main 상태관리의 setUnreadPushCount 상태 변화로 반영한다")

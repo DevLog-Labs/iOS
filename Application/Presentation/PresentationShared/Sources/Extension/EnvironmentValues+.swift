@@ -57,6 +57,12 @@ public extension EnvironmentValues {
         set { self[SelectDetailSideBarTargetKey.self] = newValue }
     }
 
+    // 화면이 사라질 때 세부 정보 사이드바에서 그 화면을 빼는 동작, 메인 창 탭 화면 안에서만 있음
+    var removeDetailSideBarTarget: ((UUID) -> Void)? {
+        get { self[RemoveDetailSideBarTargetKey.self] }
+        set { self[RemoveDetailSideBarTargetKey.self] = newValue }
+    }
+
     // 세부 정보 사이드바가 열려 있는지 여부
     var isDetailSideBarPresented: Bool {
         get { self[IsDetailSideBarPresentedKey.self] }
@@ -159,6 +165,10 @@ public extension EnvironmentValues {
 
     private struct SelectDetailSideBarTargetKey: EnvironmentKey {
         static let defaultValue: ((DetailSideBarTarget?, UUID) -> Void)? = nil
+    }
+
+    private struct RemoveDetailSideBarTargetKey: EnvironmentKey {
+        static let defaultValue: ((UUID) -> Void)? = nil
     }
 
     private struct IsDetailSideBarPresentedKey: EnvironmentKey {

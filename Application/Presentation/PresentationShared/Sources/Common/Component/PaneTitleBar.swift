@@ -16,17 +16,21 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
     @State private var windowControlsWidth = CGFloat.zero
     private let background: Color
     private let onBack: (() -> Void)?
+    // 덮는 화면을 칸에 그릴 때 닫는 버튼, Duo는 앞쪽 끝 글자 버튼, 그 밖은 뒤쪽 끝 버튼
+    private let onClose: (() -> Void)?
     private let title: Title
     private let actions: Actions
 
     public init(
         background: Color = .background,
         onBack: (() -> Void)? = nil,
+        onClose: (() -> Void)? = nil,
         @ViewBuilder title: () -> Title,
         @ViewBuilder actions: () -> Actions
     ) {
         self.background = background
         self.onBack = onBack
+        self.onClose = onClose
         self.title = title()
         self.actions = actions()
     }
@@ -43,6 +47,15 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
                 HStack(spacing: 6) {
                     HStack(spacing: 6) {
                         backButton
+                        if let onClose {
+                            Button(action: onClose) {
+                                Text("common_close", bundle: PresentationResources.bundle)
+                                    .font(.adaptive(.body))
+                                    .foregroundStyle(Color.accent)
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.leading, 8)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     // 양옆 묶음보다 먼저 폭을 받아 남는 자리까지 제목을 표시
@@ -69,6 +82,12 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
                         .lineLimit(1)
                     Spacer(minLength: 8)
                     actions
+                    if let onClose {
+                        Button(action: onClose) {
+                            Image(systemName: "xmark")
+                        }
+                        .topBarButtonStyle()
+                    }
                     // 열린 세부 정보 사이드바의 닫는 버튼과 같은 자리
                     if let showDetailSideBar {
                         Button(action: showDetailSideBar) {
@@ -112,9 +131,10 @@ public extension PaneTitleBar where Title == Text {
     init(
         _ title: Text,
         onBack: (() -> Void)? = nil,
+        onClose: (() -> Void)? = nil,
         @ViewBuilder actions: () -> Actions
     ) {
-        self.init(onBack: onBack, title: { title }, actions: actions)
+        self.init(onBack: onBack, onClose: onClose, title: { title }, actions: actions)
     }
 }
 

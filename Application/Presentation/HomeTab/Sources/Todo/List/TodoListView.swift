@@ -45,13 +45,22 @@ struct TodoListView: View {
                 }
             }
         } detail: {
-            TodoDetailPane(
-                todoId: store.selectedTodoId,
-                showEditButton: true,
-                windowEvent: windowEvent,
-                onClose: isiOSAppOnMac ? { store.send(.binding(.set(\.selectedTodoId, nil))) } : nil
-            )
-            .id(store.detailRevision)
+            // 칸으로 나눈 화면은 새 Todo를 덮는 화면 대신 상세 칸 자리에서 작성
+            if usesPaneLayout,
+               let editorStore = store.scope(
+                state: \.fullScreenCover?.todoEditor,
+                action: \.fullScreenCover.presented.todoEditor
+               ) {
+                TodoEditorView(store: editorStore, onClose: { store.send(.fullScreenCover(.dismiss)) })
+            } else {
+                TodoDetailPane(
+                    todoId: store.selectedTodoId,
+                    showEditButton: true,
+                    windowEvent: windowEvent,
+                    onClose: isiOSAppOnMac ? { store.send(.binding(.set(\.selectedTodoId, nil))) } : nil
+                )
+                .id(store.detailRevision)
+            }
         }
         .detailPanel(item: $store.panelTodo.activePresentation(when: isTabContentActive)) { item in
             // 목록에서 빠진 Todo는 지울 경로가 없어 판 메뉴에서 삭제 생략
@@ -92,6 +101,7 @@ struct TodoListView: View {
         .fullScreenCover(
             item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
                 .activePresentation(when: isTabContentActive)
+                .hiddenInPane(usesPaneLayout)
         ) { coverStore in
             fullScreenCoverContent(coverStore)
         }

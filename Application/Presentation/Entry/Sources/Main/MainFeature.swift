@@ -35,14 +35,24 @@ struct MainFeature {
         var expandedSideBarGroups: Set<SideBarGroup> = []
         var sideBarLocations: [MainTab: SideBarLocation] = [:]
         var sideBarRequests: [MainTab: SideBarRequest] = [:]
+        // 칸에 작성 화면을 그린 탭, 덮는 화면처럼 닫기·저장 버튼으로 닫기 전에는 사이드바로 이동하지 않음
+        var paneEditingTabs: Set<MainTab> = []
         var sideBarContent = SideBarContent()
         var isDetailSideBarPresented = false
         // 앱 화면과 분리해 창 전체에 표시하는 Mac 설정 화면
         var isSettingsPresented = false
-        // 탭마다 지금 고른 세부 정보 사이드바 대상
-        var detailSideBarTargets: [MainTab: DetailSideBarTarget] = [:]
-        // 탭마다 지금 대상을 고른 화면
-        var detailSideBarOwners: [MainTab: UUID] = [:]
+        // 탭마다 세부 정보 사이드바 대상을 고르는 화면, 대상이 없어도 나타난 순서대로 위치
+        var detailSideBarSelections: [MainTab: [DetailSideBarSelection]] = [:]
+
+        // 탭마다 지금 고른 세부 정보 사이드바 대상, 대상을 고른 화면 중 가장 나중에 나타난 화면의 대상
+        var detailSideBarTargets: [MainTab: DetailSideBarTarget] {
+            detailSideBarSelections.compactMapValues { $0.last { $0.target != nil }?.target }
+        }
+    }
+
+    struct DetailSideBarSelection: Equatable {
+        let owner: UUID
+        var target: DetailSideBarTarget?
     }
 
     enum SideBarGroup: Hashable {
@@ -63,8 +73,10 @@ struct MainFeature {
             case sideBarContentChanged(SideBarContent)
             case tapSideBarGroup(SideBarGroup)
             case tapSideBarItem(MainTab, SideBarRequest.Action)
+            case paneEditingChanged(MainTab, Bool)
             case sideBarResized(CGFloat)
             case detailSideBarTargetChanged(MainTab, DetailSideBarTarget?, owner: UUID)
+            case detailSideBarOwnerRemoved(MainTab, owner: UUID)
         }
 
         enum StoreAction: Equatable {
@@ -119,17 +131,31 @@ struct MainFeature {
                     state.expandedSideBarGroups.insert(group)
                 }
             case .view(.tapSideBarItem(let tab, let action)):
+                guard !state.paneEditingTabs.contains(tab) else { break }
                 state.sideBarRequests[tab] = SideBarRequest(id: uuid(), action: action)
+            case .view(.paneEditingChanged(let tab, let isEditing)):
+                if isEditing {
+                    state.paneEditingTabs.insert(tab)
+                } else {
+                    state.paneEditingTabs.remove(tab)
+                }
             case .view(.sideBarResized(let width)):
                 state.sideBarWidth = width
                 return .run { [updateSideBarWidthUseCase] _ in
                     updateSideBarWidthUseCase.execute(Double(width))
                 }
             case .view(.detailSideBarTargetChanged(let tab, let target, let owner)):
-                // 화면이 바뀔 때 먼저 나타난 화면이 고른 대상을 사라지는 화면이 지우지 않음
-                if target == nil && state.detailSideBarOwners[tab] != owner { break }
-                state.detailSideBarTargets[tab] = target
-                state.detailSideBarOwners[tab] = target == nil ? nil : owner
+                // 대상을 바꿔도 화면이 나타난 순서의 자리 유지
+                var selections = state.detailSideBarSelections[tab, default: []]
+                if let index = selections.firstIndex(where: { $0.owner == owner }) {
+                    selections[index].target = target
+                } else {
+                    selections.append(DetailSideBarSelection(owner: owner, target: target))
+                }
+                state.detailSideBarSelections[tab] = selections
+            case .view(.detailSideBarOwnerRemoved(let tab, let owner)):
+                // 사라지는 화면은 자기 자리만 지우고, 그 아래 화면이 고른 대상을 다시 표시
+                state.detailSideBarSelections[tab]?.removeAll { $0.owner == owner }
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)

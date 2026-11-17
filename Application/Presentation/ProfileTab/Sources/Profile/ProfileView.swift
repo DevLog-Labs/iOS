@@ -161,7 +161,9 @@ public struct ProfileView: View {
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(
-            isPresented: $store.showQuarterPicker.activePresentation(when: isSelected)
+            isPresented: $store.showQuarterPicker
+                .hiddenInPane(usesPaneLayout)
+                .activePresentation(when: isSelected)
         ) { QuarterPickerSheet(store: store) }
         .overlay {
             if store.isLoading {

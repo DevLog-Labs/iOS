@@ -12,16 +12,20 @@ import PresentationShared
 public struct RecordEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<RecordEditorFeature>
     @FocusState private var focusedField: Field?
     private let onCompletion: () -> Void
+    // 칸에 그린 작성 화면을 닫는 동작, 없으면 시트를 닫음
+    private let onClose: (() -> Void)?
 
     public init(
         goalId: String,
         goalTitle: String,
         record: DevelopmentRecord? = nil,
         baseVersion: DevelopmentRecord.Version? = nil,
-        onCompletion: @escaping () -> Void = { }
+        onCompletion: @escaping () -> Void = { },
+        onClose: (() -> Void)? = nil
     ) {
         self._store = State(initialValue: Store(
             initialState: RecordEditorFeature.State(
@@ -34,34 +38,95 @@ public struct RecordEditorView: View {
             RecordEditorFeature()
         })
         self.onCompletion = onCompletion
+        self.onClose = onClose
+    }
+
+    // 개발 목표가 가진 작성 상태를 칸과 시트에 같이 그림
+    init(
+        store: StoreOf<RecordEditorFeature>,
+        onCompletion: @escaping () -> Void,
+        onClose: (() -> Void)? = nil
+    ) {
+        self._store = State(initialValue: store)
+        self.onCompletion = onCompletion
+        self.onClose = onClose
     }
 
     public var body: some View {
-        NavigationStack {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 20) {
-                    versionCard
-                    titleCard
-                    contentEditor
-                }
-                .padding(.horizontal)
-                .padding(.bottom, 20)
+        // 개발 목표 오른쪽 칸에 그리면 개발 목표 화면의 내비게이션을 겹치지 않음
+        if usesPaneLayout {
+            content
+                .preference(key: PaneDetailEditingPreferenceKey.self, value: true)
+        } else {
+            NavigationStack {
+                content
             }
-            .safeAreaInset(edge: .top, spacing: 0) { topBar }
-            .safeAreaInset(edge: .bottom, spacing: 0) { confirmBar }
-            .background(Color.background.ignoresSafeArea())
-            .toolbarVisibility(.hidden, for: .navigationBar)
-            .prominentAlert(store, state: \.alert, action: \.alert)
-            .onChange(of: store.result) { _, result in
-                guard result != nil else { return }
-                onCompletion()
-                dismiss()
-            }
+            .sheetDismissDisabled(store.isLoading)
         }
-        .sheetDismissDisabled(store.isLoading)
     }
 
+    private var content: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 20) {
+                versionCard
+                titleCard
+                contentEditor
+            }
+            .padding(.horizontal)
+            .padding(.top, usesPaneLayout ? 12 : 0)
+            .padding(.bottom, 20)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) { topBar }
+        .safeAreaInset(edge: .bottom, spacing: 0) { confirmBar }
+        .background(Color.background.ignoresSafeArea())
+        .toolbarVisibility(.hidden, for: .navigationBar)
+        .prominentAlert(store, state: \.alert, action: \.alert)
+        .onChange(of: store.result) { _, result in
+            guard result != nil else { return }
+            onCompletion()
+            close()
+        }
+    }
+
+    private func close() {
+        if let onClose {
+            onClose()
+        } else {
+            dismiss()
+        }
+    }
+
+    @ViewBuilder
     private var topBar: some View {
+        if usesPaneLayout {
+            PaneTitleBar(Text(title), onClose: close) {
+                Button {
+                    focusedField = nil
+                    store.send(.view(.save))
+                } label: {
+                    Text(RecordPresentation.text("development_record_save"))
+                        .font(.adaptive(.body).weight(.semibold))
+                        .foregroundStyle(Color.accent)
+                }
+                .buttonStyle(.plain)
+                .disabled(!store.isReadyToSave)
+                .opacity(store.isReadyToSave ? 1 : 0.4)
+            }
+            .disabled(store.isLoading)
+        } else {
+            sheetTopBar
+        }
+    }
+
+    private var title: String {
+        RecordPresentation.text(
+            store.isCorrection
+                ? "development_record_editor_correction_title"
+                : "development_record_editor_title"
+        )
+    }
+
+    private var sheetTopBar: some View {
         HStack {
             Button {
                 dismiss()
@@ -75,11 +140,7 @@ public struct RecordEditorView: View {
             .topBarButtonStyle()
             .disabled(store.isLoading)
             Spacer()
-            Text(RecordPresentation.text(
-                store.isCorrection
-                    ? "development_record_editor_correction_title"
-                    : "development_record_editor_title"
-            ))
+            Text(title)
                 .font(.adaptive(.headline))
             Spacer()
             Button {

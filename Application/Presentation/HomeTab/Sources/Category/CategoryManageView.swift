@@ -197,7 +197,7 @@ private struct CategoryManageRow: View {
     @ViewBuilder
     private var content: some View {
         let row = CategoryManageRowContent(item: item, onToggle: onToggle)
-            .background(isSelected ? Color.tintFill : .clear)
+            .background(isSelected ? Color.fill : .clear)
 
         if let onSelect {
             row
