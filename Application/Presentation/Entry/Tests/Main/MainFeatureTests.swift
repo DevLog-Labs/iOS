@@ -211,6 +211,22 @@ struct MainFeatureTests {
         #expect(store.state.sideBarRequests[.home]?.action == .open(.home))
     }
 
+    @Test("MainFeature는 화면 회전 때 오는 높이 0인 키보드 표시 알림을 무시한다")
+    func MainFeature는_화면_회전_때_오는_높이_0인_키보드_표시_알림을_무시한다() async {
+        let store = makeStore()
+
+        await store.send(.store(.keyboardChanged(.willShow(height: 0))))
+
+        #expect(!store.state.isKeyboardVisible)
+
+        await store.send(.store(.keyboardChanged(.willShow(height: 300)))) {
+            $0.isKeyboardVisible = true
+        }
+        await store.send(.store(.keyboardChanged(.willHide))) {
+            $0.isKeyboardVisible = false
+        }
+    }
+
     @Test("MainFeature는 unread count 관찰 값을 기존 Main 상태관리의 setUnreadPushCount 상태 변화로 반영한다")
     func MainFeature는_unread_count_관찰_값을_기존_Main_상태관리의_setUnreadPushCount_상태_변화로_반영한다() async {
         let reference = MainStateManagementReference()
