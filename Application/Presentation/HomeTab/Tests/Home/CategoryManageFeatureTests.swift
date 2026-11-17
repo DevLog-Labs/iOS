@@ -70,6 +70,20 @@ struct CategoryManageFeatureTests {
         ))
     }
 
+    @Test(
+        "앱 언어와 관계없이 시스템 카테고리의 표시 이름과 중복되면 저장할 수 없다",
+        arguments: SystemTodoCategory.allCases.flatMap { SystemTodoCategoryItem(from: $0).localizedNames }
+    )
+    func 앱_언어와_관계없이_시스템_카테고리의_표시_이름과_중복되면_저장할_수_없다(name: String) {
+        let driver = CategoryManageTestDriver(preferences: [])
+
+        driver.tapAddUserCategory()
+        driver.setCategoryName("  \(name)  ")
+
+        #expect(driver.categorySheet?.isDuplicatedName == true)
+        #expect(driver.categorySheet?.canSubmitUserCategory == false)
+    }
+
     @Test("다른 사용자 카테고리 이름은 대소문자를 구분하지 않고 중복을 검사한다")
     func 다른_사용자_카테고리_이름은_대소문자를_구분하지_않고_중복을_검사한다() {
         let category = UserTodoCategory(id: "custom", name: "Custom", colorHex: "#111111")
