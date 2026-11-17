@@ -93,7 +93,6 @@ struct TodoListFeature {
             case tapTogglePinned(TodoListItem)
             case undoDelete
             case onAppear
-            case windowTodoCreated
             case windowTodoUpdated
             case loadNextPage
             case searchQueryDebounced
@@ -304,11 +303,6 @@ private extension TodoListFeature {
             return fetchEffect(query: state.query, cursor: nil, showsIndicator: false)
         case .onAppear:
             return fetchEffect(query: state.query, cursor: nil)
-        case .windowTodoCreated:
-            return .merge(
-                trackTodoCreateEffect(),
-                fetchEffect(query: state.query, cursor: nil, showsIndicator: false)
-            )
         case .windowTodoUpdated:
             // 편집으로 목록 조건에서 벗어난 Todo도 반영되도록 다시 조회
             return fetchEffect(query: state.query, cursor: nil, showsIndicator: false)

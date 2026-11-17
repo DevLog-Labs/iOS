@@ -9,26 +9,11 @@ import Foundation
 import Domain
 
 public enum TodoEditorWindowValue: Codable, Hashable {
-    case create(TodoEditorWindowCategory, TodoEditorWindowSource)
     case edit(TodoEditorWindowTodo)
-
-    public static let sceneId = "todo-editor"
-
-    public init(
-        todoCategory: TodoCategory,
-        source: TodoEditorWindowSource
-    ) {
-        self = .create(TodoEditorWindowCategory(todoCategory: todoCategory), source)
-    }
 
     init(todo: Todo) {
         self = .edit(TodoEditorWindowTodo(todo: todo))
     }
-}
-
-public enum TodoEditorWindowSource: String, Codable, Hashable {
-    case home
-    case list
 }
 
 public struct TodoEditorWindowCategory: Codable, Hashable {
@@ -137,23 +122,10 @@ public struct TodoEditorWindowTodo: Codable, Hashable {
 }
 
 public enum TodoEditorWindowSubmit: Equatable {
-    case create(TodoEditorWindowValue)
     case update(TodoEditorWindowValue, Todo)
 }
 
 public extension TodoEditorWindowValue {
-    func matchesCreate(
-        category: TodoCategory? = nil,
-        source: TodoEditorWindowSource
-    ) -> Bool {
-        guard case .create(let windowCategory, let windowSource) = self,
-              windowSource == source else { return false }
-        if let category {
-            return windowCategory.todoCategory == category
-        }
-        return true
-    }
-
     func matchesEdit(todoId: String) -> Bool {
         guard case .edit(let windowTodo) = self else { return false }
         return windowTodo.todo.id == todoId

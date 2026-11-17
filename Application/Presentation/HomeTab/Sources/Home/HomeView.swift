@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Combine
 import Domain
 import PresentationShared
 
@@ -146,11 +145,6 @@ public struct HomeView: View {
             if isSelected {
                 store.send(.view(.fetchData))
             }
-        }
-        .onReceive(windowEvent.submits) { submit in
-            guard case .create(let value) = submit,
-                  value.matchesCreate(source: .home) else { return }
-            store.send(.view(.todoEditorCreated))
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(

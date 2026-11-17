@@ -88,15 +88,9 @@ struct TodoListView: View {
             store.selectedTodoId.map { .todo(id: $0, isEditable: true, revision: store.detailRevision) }
         )
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .onReceive(windowSubmits) { submit in
-            switch submit {
-            case .create(let value):
-                guard value.matchesCreate(category: store.category, source: .list) else { return }
-                store.send(.view(.windowTodoCreated))
-            case .update:
-                // 상세 칸에서 편집한 Todo를 옆 목록에도 반영
-                store.send(.view(.windowTodoUpdated))
-            }
+        .onReceive(windowSubmits) { _ in
+            // 상세 칸에서 편집한 Todo를 옆 목록에도 반영
+            store.send(.view(.windowTodoUpdated))
         }
         .fullScreenCover(
             item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
