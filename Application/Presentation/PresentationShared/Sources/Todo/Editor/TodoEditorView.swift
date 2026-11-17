@@ -507,10 +507,11 @@ private struct ContentView: View {
         .padding(.top, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 0)
         .overlay(alignment: .top) {
             if isiOSAppOnMac {
+                // 본문 폭이 읽기 폭으로 줄어도 가운데 정렬된 본문 위에서 스크롤 칸 폭만큼 표시
                 Rectangle()
                     .fill(Color.secondarySeparator)
                     .frame(height: 1)
-                    .padding(.horizontal, -14 * AdaptiveSize.boardScale)
+                    .containerRelativeFrame(.horizontal)
             }
         }
         .contentShape(.rect)
