@@ -48,6 +48,8 @@ public struct HomeView: View {
         let goalDetailID = store.sheet?.goalDetailState?.goalId
         let sideBarLocation: SideBarLocation = if let goalDetailID {
             .developmentGoal(goalDetailID)
+        } else if usesDesktopLayout && store.sheet?.categoryManageState != nil {
+            .todoCategoryManagement
         } else if case .category(let item)? = router.root {
             .todoCategory(item.id)
         } else {

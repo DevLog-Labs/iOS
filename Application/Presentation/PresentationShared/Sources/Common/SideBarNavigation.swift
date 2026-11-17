@@ -13,6 +13,8 @@ public enum SideBarLocation: Hashable {
     case today
     case notification
     case todoCategory(String)
+    // 사이드바 트리의 Todo 묶음에서 연 카테고리 관리
+    case todoCategoryManagement
     case developmentGoal(String)
     case profile
     case settings
