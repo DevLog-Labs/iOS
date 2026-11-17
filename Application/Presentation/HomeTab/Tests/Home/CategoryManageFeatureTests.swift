@@ -71,10 +71,10 @@ struct CategoryManageFeatureTests {
     }
 
     @Test(
-        "시스템 카테고리의 표시 이름과 중복되면 저장할 수 없다",
-        arguments: SystemTodoCategory.allCases.map { SystemTodoCategoryItem(from: $0).localizedName }
+        "앱 언어와 관계없이 시스템 카테고리의 표시 이름과 중복되면 저장할 수 없다",
+        arguments: SystemTodoCategory.allCases.flatMap { SystemTodoCategoryItem(from: $0).localizedNames }
     )
-    func 시스템_카테고리의_표시_이름과_중복되면_저장할_수_없다(name: String) {
+    func 앱_언어와_관계없이_시스템_카테고리의_표시_이름과_중복되면_저장할_수_없다(name: String) {
         let driver = CategoryManageTestDriver(preferences: [])
 
         driver.tapAddUserCategory()
