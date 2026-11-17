@@ -11,8 +11,6 @@ import Domain
 import PresentationShared
 
 public struct HomeView: View {
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
@@ -296,7 +294,7 @@ public struct HomeView: View {
                         // 버튼 옆으로 붙으면 위쪽이 상태 표시 영역에 가려지므로 버튼 아래로 표시
                         arrowEdge: .top
                     ) {
-                        HomeContentPicker(store: store, onSelect: openTodoEditor)
+                        HomeContentPicker(store: store) { store.send(.view(.tapTodoCategory($0))) }
                             // 화면이 낮거나 Duo 접는 선에 걸리면 팝오버 높이를 줄이고 목록을 스크롤
                             .frame(width: 320 * AdaptiveSize.boardScale)
                             .frame(minHeight: 0, idealHeight: min(640, store.visibleHeight), maxHeight: min(640, store.visibleHeight))
@@ -352,7 +350,7 @@ public struct HomeView: View {
     private func sheetContent(_ sheetStore: Store<HomeFeature.SheetState, HomeFeature.Sheet>) -> some View {
         switch sheetStore.state {
         case .contentPicker:
-            HomeContentPicker(store: store, onSelect: openTodoEditor)
+            HomeContentPicker(store: store) { store.send(.view(.tapTodoCategory($0))) }
         case .reorderTodo:
             if let store = sheetStore.scope(state: \.categoryManageState, action: \.categoryManage) {
                 // 넓은 창으로 바뀌어 닫히는 시트가 칸으로 연 화면의 세부 정보 사이드바를 가져가지 않음
@@ -417,18 +415,6 @@ public struct HomeView: View {
                 windowEvent: windowEvent
             )
             .id(item.id)
-        }
-    }
-
-    private func openTodoEditor(for todoCategory: TodoCategory) {
-        if isiOSAppOnMac {
-            store.send(.store(.setPresentation(.contentPicker, false)))
-            openWindow(
-                id: TodoEditorWindowValue.sceneId,
-                value: TodoEditorWindowValue(todoCategory: todoCategory, source: .home)
-            )
-        } else {
-            store.send(.view(.tapTodoCategory(todoCategory)))
         }
     }
 }

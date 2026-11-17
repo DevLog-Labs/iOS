@@ -14,7 +14,6 @@ import Domain
 public struct TodoDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isTabContentActive) private var isTabContentActive
-    @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
@@ -124,7 +123,7 @@ public struct TodoDetailView: View {
                         }
                         if store.showEditButton {
                             Button {
-                                openTodoEditor()
+                                store.send(.setFullScreenCover(.editor))
                             } label: {
                                 Image(systemName: "pencil")
                             }
@@ -222,7 +221,7 @@ public struct TodoDetailView: View {
     @ViewBuilder
     private var editButton: some View {
         Button {
-            openTodoEditor()
+            store.send(.setFullScreenCover(.editor))
         } label: {
             if #available(iOS 26.0, *) {
                 Image(systemName: "pencil")
@@ -232,18 +231,6 @@ public struct TodoDetailView: View {
             }
         }
         .topBarButtonStyle()
-    }
-
-    private func openTodoEditor() {
-        if isiOSAppOnMac {
-            guard let todo = store.todo else { return }
-            openWindow(
-                id: TodoEditorWindowValue.sceneId,
-                value: TodoEditorWindowValue(todo: todo)
-            )
-        } else {
-            store.send(.setFullScreenCover(.editor))
-        }
     }
 
     @ViewBuilder
