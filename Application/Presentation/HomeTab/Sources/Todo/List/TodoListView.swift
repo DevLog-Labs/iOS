@@ -318,7 +318,6 @@ private struct TodoListTopBar: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
@@ -327,21 +326,17 @@ private struct TodoListTopBar: View {
 
     var body: some View {
         let title = Text(TodoCategoryItem(from: store.category).localizedName)
-        // Duo 펼침 칸은 디자인대로 제목 줄 아래 필터 줄 유지
-        let usesPaneMenus = showsPaneTitleBar && usesDesktopLayout
 
         VStack(spacing: 0) {
             if showsPaneTitleBar {
                 PaneTitleBar(title, onBack: { dismiss() }) {
-                    if usesPaneMenus {
-                        TodoListPaneMenus(store: store)
-                    }
+                    TodoListPaneMenus(store: store)
                     actions
                 }
             }
 
             // 사이드바가 있는 창의 칸 제목 줄은 필터와 정렬을 버튼으로 옮겨 검색 중일 때만 아래 줄 표시
-            if !usesPaneMenus || store.isSearching {
+            if !showsPaneTitleBar || store.isSearching {
                 VStack(spacing: 8) {
                     if !showsPaneTitleBar {
                         ZStack {
@@ -370,7 +365,7 @@ private struct TodoListTopBar: View {
                             .padding(.horizontal, 16)
                     }
 
-                    if !usesPaneMenus {
+                    if !showsPaneTitleBar {
                         TodoListFilterHeader(store: store)
                     }
                 }

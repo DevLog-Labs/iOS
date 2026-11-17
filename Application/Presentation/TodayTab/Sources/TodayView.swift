@@ -99,22 +99,17 @@ public struct TodayView: View {
                                 TodayFilterMenu(store: store)
                             }
                         } else {
-                            if usesPaneLayout {
-                                PaneTitleBar(title)
-                            }
                             VStack(alignment: .leading) {
-                                if !usesPaneLayout {
-                                    title
-                                        .font(.adaptive(.largeTitle).bold())
-                                        .padding(.bottom, 8)
-                                }
+                                title
+                                    .font(.adaptive(.largeTitle).bold())
+                                    .padding(.bottom, 8)
                                 TodayFilterBar(store: store)
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal)
                             .frame(maxWidth: readableContentWidth)
-                            .padding(.top, usesPaneLayout ? 12 : windowControlsInset)
+                            .padding(.top, windowControlsInset)
                             .padding(.bottom, 8)
                         }
                     }

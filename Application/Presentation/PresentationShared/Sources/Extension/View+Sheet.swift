@@ -100,8 +100,9 @@ private struct ProminentSheet<Content: View>: View {
     @ViewBuilder let content: Content
 
     var body: some View {
-        // 넓은 화면은 가운데 대화상자, 좁은 화면은 아래에서 올라오는 시트
-        let isDialog = horizontalSizeClass == .regular
+        // 넓은 iPad·Mac 화면은 가운데 대화상자, 좁은 화면과 Duo는 아래에서 올라오는 시트
+        // 시트 내용이 재정의하는 deviceType 대신 실제 기기로 판별
+        let isDialog = horizontalSizeClass == .regular && UIDevice.current.userInterfaceIdiom == .pad
 
         GeometryReader { proxy in
             ZStack(alignment: isDialog ? .center : .bottom) {

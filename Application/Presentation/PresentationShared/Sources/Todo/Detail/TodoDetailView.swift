@@ -16,7 +16,6 @@ public struct TodoDetailView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.openWindow) private var openWindow
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
@@ -90,7 +89,7 @@ public struct TodoDetailView: View {
                     referenceItems: store.referenceItems,
                     number: todo.number,
                     // 사이드바가 있는 iPad 창의 칸 제목 줄은 Todo 제목을 표시하므로 본문 제목 생략
-                    showsTitle: !(showsPaneTitleBar && usesDesktopLayout && !isiOSAppOnMac),
+                    showsTitle: !(showsPaneTitleBar && !isiOSAppOnMac),
                     onOpenTodoID: { store.send(.setSheet(.todo(TodoIdItem(id: $0)))) }
                 )
             } else if store.isLoading {
@@ -99,7 +98,7 @@ public struct TodoDetailView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             // 상세 판은 판 위쪽 막대를 쓰므로 상세 위쪽 줄 생략
-            if !isInDetailPanel && (deviceType != .duo || showsPaneTitleBar) {
+            if !isInDetailPanel && deviceType != .duo {
                 topBar
             }
         }
@@ -114,8 +113,7 @@ public struct TodoDetailView: View {
         }
         .duoToolbarVisibility()
         .toolbar {
-            // 칸에서 편집하는 동안은 편집 화면 제목 줄 버튼만 사용
-            if deviceType == .duo, !(editsInPane && store.fullScreenCover?.todoEditor != nil) {
+            if deviceType == .duo {
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
                     Group {
@@ -146,7 +144,7 @@ public struct TodoDetailView: View {
     private var topBar: some View {
         if showsPaneTitleBar {
             // Mac 칸 제목 줄은 디자인대로 Todo 제목 대신 "Todo" 표시
-            let showsTodoTitle = usesDesktopLayout && !isiOSAppOnMac
+            let showsTodoTitle = !isiOSAppOnMac
 
             // 일반 화면에서 밀어 넣은 상세가 칸 화면으로 바뀌어도 뒤로 갈 수 있게 뒤로 버튼 표시
             PaneTitleBar(onBack: isPaneDetail ? nil : back) {

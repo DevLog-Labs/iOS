@@ -14,7 +14,6 @@ public struct ProfileView: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
@@ -44,7 +43,7 @@ public struct ProfileView: View {
     public var body: some View {
         NavigationStack(path: $router.path) {
             // Mac은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
-            PaneSplitView(duoWidth: .medium, splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoRoute != nil) {
+            PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoRoute != nil) {
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 16) {
                         UserInfoCard(store: store, isSelected: isSelected)
@@ -226,19 +225,8 @@ public struct ProfileView: View {
     private func destinationView(_ route: ProfileRoute) -> some View {
         switch route {
         case .settings:
-            // 사이드바가 있는 창은 설정 아래 화면으로 이동하고 Duo 펼침은 옆 칸에 표시
-            let showsRoutePane = usesPaneLayout && !usesDesktopLayout
-
-            PaneSplitView(duoWidth: .medium, splitsOnDesktop: false) {
-                SettingsView(store: settingsStore) { route in
-                    if showsRoutePane {
-                        settingsStore.send(.binding(.set(\.selectedRoute, route)))
-                    } else {
-                        router.push(route)
-                    }
-                }
-            } detail: {
-                settingsPage(settingsStore.selectedRoute, isPaneDetail: true)
+            SettingsView(store: settingsStore) { route in
+                router.push(route)
             }
         case .activity(let todoId):
             TodoDetailView(store: Store(
@@ -253,26 +241,26 @@ public struct ProfileView: View {
                 TodoDetailFeature()
             }, windowEvent: windowEvent)
         case .theme, .pushNotification, .account, .information:
-            settingsPage(route, isPaneDetail: false)
+            settingsPage(route)
         }
     }
 
     // 설정에서 고르는 아래 화면
     @ViewBuilder
-    private func settingsPage(_ route: ProfileRoute, isPaneDetail: Bool) -> some View {
+    private func settingsPage(_ route: ProfileRoute) -> some View {
         switch route {
         case .theme:
-            ThemeView(theme: $settingsStore.theme, isPaneDetail: isPaneDetail)
+            ThemeView(theme: $settingsStore.theme)
         case .pushNotification:
             PushNotificationSettingsView(store: Store(
                 initialState: PushNotificationSettingsFeature.State()
             ) {
                 PushNotificationSettingsFeature()
-            }, isPaneDetail: isPaneDetail)
+            })
         case .account:
             AccountView(store: Store(initialState: AccountFeature.State()) {
                 AccountFeature()
-            }, isPaneDetail: isPaneDetail)
+            })
         case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }

@@ -98,7 +98,7 @@ public extension EnvironmentValues {
         set { self[UsesDesktopLayoutKey.self] = newValue }
     }
 
-    // 목록 | 상세 두 칸으로 나눠 표시하는지 여부, Mac 화면 구조 창과 Duo 펼침에서 사용
+    // 목록 | 상세 두 칸으로 나눠 표시하는지 여부, 사이드바가 있는 창에서 사용
     var usesPaneLayout: Bool {
         get { self[UsesPaneLayoutKey.self] }
         set { self[UsesPaneLayoutKey.self] = newValue }

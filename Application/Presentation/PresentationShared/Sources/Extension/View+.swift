@@ -176,11 +176,10 @@ public extension View {
 
 private struct DuoToolbarVisibilityModifier: ViewModifier {
     @Environment(\.deviceType) private var deviceType
-    @Environment(\.usesPaneLayout) private var usesPaneLayout
 
     func body(content: Content) -> some View {
-        // Duo 펼침은 시스템 막대 대신 칸 제목 줄 사용
-        let showsNavigationBar = deviceType == .duo && !usesPaneLayout
+        // 세로 막대가 있는 Duo는 시스템 막대 버튼을 세로 막대에 표시하고, 그 밖은 직접 그린 위쪽 막대 사용
+        let showsNavigationBar = deviceType == .duo
 
         content
             .toolbarTitleDisplayMode(showsNavigationBar ? .inline : .automatic)
