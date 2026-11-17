@@ -333,10 +333,10 @@ public struct RecordEditorView: View {
                 .font(.adaptive(.headline))
                 .foregroundStyle(Color.white)
                 .frame(maxWidth: isiOSAppOnMac ? nil : .infinity)
-                // Mac은 버튼 모양이 더하는 여백 8을 빼고 좌우 여백 16, 높이 32로 표시
-                .padding(.horizontal, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 0)
+                // Mac은 버튼 모양이 배율 없이 더하는 여백 8을 빼고 보드 기준 좌우 여백 16, 높이 32로 표시
+                .padding(.horizontal, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale - 8 : 0)
                 .padding(.vertical, isiOSAppOnMac ? 0 : 10)
-                .frame(height: isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : nil)
+                .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale - 16 : nil)
             }
             .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!store.canConfirmVersion)
