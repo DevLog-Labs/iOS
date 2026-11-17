@@ -24,14 +24,16 @@ struct CategoryManageView: View {
                 view.updateContent(
                     items: store.preferences,
                     header: UIHostingConfiguration {
+                        // Mac은 목록 상자 왼쪽 끝에 맞춰 왼쪽 정렬
                         Text(String(localized: "todo_manage_description", bundle: PresentationResources.bundle))
                             .font(.adaptive(.footnote))
                             .foregroundStyle(Color.secondaryLabel)
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: .infinity)
+                            .multilineTextAlignment(isiOSAppOnMac ? .leading : .center)
+                            .frame(maxWidth: .infinity, alignment: isiOSAppOnMac ? .leading : .center)
                     }
-                    .margins(.horizontal, 16)
-                    .margins(.vertical, 8),
+                    .margins(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                    .margins(.top, isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : 8)
+                    .margins(.bottom, 8),
                     footer: UIHostingConfiguration {
                         // 사이드바가 있으면 목록 바로 아래에 추가 버튼 표시
                         if usesDesktopLayout {
@@ -48,12 +50,22 @@ struct CategoryManageView: View {
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 6 * AdaptiveSize.boardScale)
                             }
-                            .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .fill)
+                            .adaptiveButtonStyle(
+                                shape: RoundedRectangle(cornerRadius: CornerRadius.control),
+                                color: isiOSAppOnMac ? .tertiaryBackground : .fill
+                            )
+                            // Mac은 목록 상자와 같은 옅은 테두리
+                            .overlay {
+                                if isiOSAppOnMac {
+                                    RoundedRectangle(cornerRadius: CornerRadius.control)
+                                        .strokeBorder(Color.secondarySeparator)
+                                }
+                            }
                         }
                     }
                     // 목록 카드 배경과 같은 좌우 여백
-                    .margins(.horizontal, 16)
-                    .margins(.vertical, 8),
+                    .margins(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                    .margins(.vertical, isiOSAppOnMac ? 4 * AdaptiveSize.boardScale : 8),
                     row: { item in
                         UIHostingConfiguration {
                             CategoryManageRow(
@@ -69,7 +81,7 @@ struct CategoryManageView: View {
                             )
                         }
                         .margins(.horizontal, 0)
-                        .margins(.vertical, 8)
+                        .margins(.vertical, isiOSAppOnMac ? 0 : 8)
                     },
                     onMove: { source, destination in
                         store.send(.moveItem(from: source, target: destination))
@@ -162,6 +174,7 @@ struct CategoryManageView: View {
 }
 
 private struct CategoryManageRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let item: TodoCategoryItem
     let isSelected: Bool
     let onToggle: () -> Void
@@ -196,7 +209,9 @@ private struct CategoryManageRow: View {
 
     @ViewBuilder
     private var content: some View {
+        // Mac은 목록 상자 끝까지 이어지는 구분선 안쪽에 행 여백을 둠
         let row = CategoryManageRowContent(item: item, onToggle: onToggle)
+            .padding(.leading, isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 0)
             .background(isSelected ? Color.fill : .clear)
 
         if let onSelect {
@@ -210,17 +225,32 @@ private struct CategoryManageRow: View {
 }
 
 private struct CategoryManageRowContent: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let item: TodoCategoryItem
     let onToggle: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: item.symbolName)
-                .font(.adaptive(.headline))
-                .frame(width: 36, height: 36)
-                .iconStyle(color: item.color, in: Circle())
+        HStack(spacing: isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 12) {
+            // Mac은 설정 행처럼 테두리 있는 아이콘 사각형에 카테고리 색 기호
+            if isiOSAppOnMac {
+                Image(systemName: item.symbolName)
+                    .font(.adaptive(.body))
+                    .foregroundStyle(item.color)
+                    .frame(width: 25 * AdaptiveSize.boardScale, height: 25 * AdaptiveSize.boardScale)
+                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.segment))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: CornerRadius.segment)
+                            .strokeBorder(Color.secondarySeparator)
+                    }
+            } else {
+                Image(systemName: item.symbolName)
+                    .font(.adaptive(.headline))
+                    .frame(width: 36, height: 36)
+                    .iconStyle(color: item.color, in: Circle())
+            }
 
             Text(item.localizedName)
+                .font(.adaptive(.body))
                 .lineLimit(1)
 
             Spacer(minLength: 8)
@@ -232,8 +262,8 @@ private struct CategoryManageRowContent: View {
             .labelsHidden()
             .toggleStyle(.pill)
         }
-        .padding(.trailing, 12)
-        .frame(minHeight: 44)
+        .padding(.trailing, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 12)
+        .frame(minHeight: isiOSAppOnMac ? 38 * AdaptiveSize.boardScale : 44)
     }
 }
 

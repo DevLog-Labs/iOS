@@ -528,6 +528,7 @@ private struct TreeSideBar: View {
                         SideBarRow(
                             title: Text(verbatim: "Todo"),
                             symbolName: "tray.fill",
+                            isSelected: location == .todoCategoryManagement,
                             isExpanded: expandedGroups.contains(.todo)
                         ) {
                             store.send(.view(.tapSideBarGroup(.todo)), animation: .easeInOut(duration: 0.2))

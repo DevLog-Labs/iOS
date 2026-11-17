@@ -2385,6 +2385,23 @@
         }
       }
     },
+    "home_create_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새로 만들기"
+          }
+        }
+      }
+    },
     "home_development_goal_count_format" : {
       "extractionState" : "manual",
       "localizations" : {

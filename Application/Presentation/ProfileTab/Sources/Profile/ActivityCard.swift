@@ -13,6 +13,7 @@ import PresentationShared
 struct ActivityCard: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.usesPaneLayout) private var usesPaneLayout
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<ProfileFeature>
     let onSelectTodoID: (String) -> Void
 
@@ -80,10 +81,12 @@ struct ActivityCard: View {
                 .popover(
                     isPresented: $store.showQuarterPicker
                         .hiddenInPane(!usesPaneLayout)
-                        .activePresentation(when: isTabContentActive)
+                        .activePresentation(when: isTabContentActive),
+                    // Mac은 분기 표시 아래로 표시
+                    arrowEdge: isiOSAppOnMac ? .top : nil
                 ) {
                     QuarterPickerSheet(store: store)
-                        .frame(width: 360)
+                        .frame(width: isiOSAppOnMac ? 320 * AdaptiveSize.boardScale : 360)
                         .fixedSize(horizontal: false, vertical: true)
                         .presentationBackground(Color.secondaryBackground)
                         .presentationCompactAdaptation(.popover)
@@ -193,9 +196,89 @@ struct ActivityCard: View {
 }
 
 struct QuarterPickerSheet: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<ProfileFeature>
 
     var body: some View {
+        if isiOSAppOnMac {
+            desktopContent
+        } else {
+            mobileContent
+        }
+    }
+
+    // Mac 분기 선택 팝오버
+    // 위쪽 제목·완료 줄, 테두리 상자 안 연도 행, 1~4분기 두 줄 격자 배치
+    private var desktopContent: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Text(String(localized: "profile_select_quarter", bundle: PresentationResources.bundle))
+                    .font(.system(size: 14 * AdaptiveSize.boardScale, weight: .bold))
+                HStack {
+                    Spacer()
+                    Button {
+                        store.send(.setQuarterPickerPresented(false))
+                    } label: {
+                        Text(String(localized: "common_done", bundle: PresentationResources.bundle))
+                            .font(.adaptive(.body).bold())
+                            .foregroundStyle(Color.tintLabel)
+                            .padding(.horizontal, 4 * AdaptiveSize.boardScale)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.horizontal, 10 * AdaptiveSize.boardScale)
+            .frame(height: 44 * AdaptiveSize.boardScale)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(Color.separator)
+                    .frame(height: 1)
+            }
+
+            Menu {
+                Picker("", selection: $store.selectedQuarterPickerYear) {
+                    ForEach(store.availableQuarterYears, id: \.self) { year in
+                        Text(verbatim: String(year))
+                            .tag(year)
+                    }
+                }
+            } label: {
+                HStack(spacing: 10 * AdaptiveSize.boardScale) {
+                    Text(String(localized: "profile_year", bundle: PresentationResources.bundle))
+                        .foregroundStyle(Color.label)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Text(verbatim: String(store.selectedQuarterPickerYear))
+                        .foregroundStyle(Color.secondaryLabel)
+                    Image(systemName: "chevron.up.chevron.down")
+                        .font(.adaptive(.caption2))
+                        .foregroundStyle(Color.secondaryLabel)
+                }
+                .font(.adaptive(.body))
+                .padding(.horizontal, 12 * AdaptiveSize.boardScale)
+                .frame(minHeight: 38 * AdaptiveSize.boardScale)
+                .contentShape(.rect)
+                .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 14 * AdaptiveSize.boardScale)
+            .padding(.vertical, 8 * AdaptiveSize.boardScale)
+
+            LazyVGrid(
+                columns: Array(repeating: GridItem(.flexible(), spacing: 8 * AdaptiveSize.boardScale), count: 2),
+                spacing: 8 * AdaptiveSize.boardScale
+            ) {
+                ForEach(1...4, id: \.self) { quarter in
+                    desktopQuarterButton(for: quarter)
+                }
+            }
+            .padding(.horizontal, 14 * AdaptiveSize.boardScale)
+            .padding(.top, 8 * AdaptiveSize.boardScale)
+            .padding(.bottom, 14 * AdaptiveSize.boardScale)
+        }
+    }
+
+    private var mobileContent: some View {
         // 팝오버가 Duo 상태 표시 영역과 겹치면 시스템 제목 줄이 그만큼 내려가므로 제목 줄을 직접 그림
         VStack(spacing: 0) {
             ZStack {
@@ -256,6 +339,37 @@ struct QuarterPickerSheet: View {
             }
             .tint(Color.accent)
         }
+    }
+
+    // 고른 분기는 강조색 테두리와 옅은 바탕, 고를 수 없는 분기는 흐린 글자
+    private func desktopQuarterButton(for quarter: Int) -> some View {
+        let quarterStart = store.state.quarterStartForPicker(quarter: quarter)
+        let isEnabled = store.state.isQuarterSelectableForPicker(quarter)
+        let isSelected = store.state.isQuarterSelectedForPicker(quarter)
+        let shape = RoundedRectangle(cornerRadius: CornerRadius.control)
+
+        return Button {
+            guard let quarterStart else { return }
+            store.send(.selectQuarter(quarterStart))
+        } label: {
+            Text(
+                String.localizedStringWithFormat(
+                    String(localized: "profile_quarter_format", bundle: PresentationResources.bundle),
+                    Int64(quarter)
+                )
+            )
+            .font(.adaptive(.body).weight(.semibold))
+            .foregroundStyle(isSelected ? Color.tintLabel : isEnabled ? .label : .tertiaryLabel)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14 * AdaptiveSize.boardScale)
+            .background(isSelected ? Color.tintFill : .tertiaryBackground, in: shape)
+            .overlay {
+                shape.strokeBorder(isSelected ? Color.accent : .secondarySeparator)
+            }
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
     }
 
     @ViewBuilder
