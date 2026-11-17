@@ -207,6 +207,8 @@ public struct RecordEditorView: View {
             .padding(.horizontal, isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 0)
             .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : nil)
             .inputBackground(isFocused: focusedField == .title)
+            // iPad 넓은 창은 기존 입력칸 바탕을 유지하도록 Mac 입력칸 모양은 Mac에서만 사용
+            .environment(\.usesDesktopLayout, isiOSAppOnMac)
         }
         .disabled(store.isLoading)
     }
@@ -254,6 +256,8 @@ public struct RecordEditorView: View {
                         .focused($focusedField, equals: .content)
                         .padding(12)
                         .inputBackground(isMultiline: true, isFocused: focusedField == .content)
+                        // iPad 넓은 창은 기존 입력칸 바탕을 유지하도록 Mac 입력칸 모양은 Mac에서만 사용
+                        .environment(\.usesDesktopLayout, isiOSAppOnMac)
                 }
                 .frame(minHeight: 340, alignment: .topLeading)
                 .contentShape(.rect)
@@ -272,6 +276,8 @@ public struct RecordEditorView: View {
                         .padding(12)
                         .frame(maxWidth: .infinity, minHeight: 340, alignment: .center)
                         .inputBackground(isMultiline: true)
+                        // iPad 넓은 창은 기존 입력칸 바탕을 유지하도록 Mac 입력칸 모양은 Mac에서만 사용
+                        .environment(\.usesDesktopLayout, isiOSAppOnMac)
                     } else {
                         MarkdownContentView(
                             content: store.markdownContent,
@@ -282,6 +288,8 @@ public struct RecordEditorView: View {
                         .padding(12)
                         .frame(minHeight: 340, alignment: .topLeading)
                         .inputBackground(isMultiline: true)
+                        // iPad 넓은 창은 기존 입력칸 바탕을 유지하도록 Mac 입력칸 모양은 Mac에서만 사용
+                        .environment(\.usesDesktopLayout, isiOSAppOnMac)
                     }
                 }
                 .frame(minHeight: 340, alignment: .topLeading)
