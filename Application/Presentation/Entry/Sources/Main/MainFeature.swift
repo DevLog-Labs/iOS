@@ -167,7 +167,9 @@ struct MainFeature {
             case .store(.setUnreadPushCount(let count)):
                 state.unreadPushCount = count
                 return updateBadgeCountEffect(count)
-            case .store(.keyboardChanged(.willShow)):
+            case .store(.keyboardChanged(.willShow(let height))):
+                // 화면을 돌리면 키보드 없이도 높이 0인 키보드 표시 알림이 와서 무시
+                guard 0 < height else { break }
                 state.isKeyboardVisible = true
             case .store(.keyboardChanged(.willHide)):
                 state.isKeyboardVisible = false
