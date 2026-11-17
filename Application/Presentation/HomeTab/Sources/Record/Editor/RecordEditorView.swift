@@ -12,6 +12,7 @@ import PresentationShared
 public struct RecordEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<RecordEditorFeature>
     @FocusState private var focusedField: Field?
@@ -67,17 +68,26 @@ public struct RecordEditorView: View {
 
     private var content: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
+            // Mac은 Orca 데스크톱 작성 칸처럼 간격을 좁히고 칸 좌우 여백 14로 표시
+            LazyVStack(alignment: .leading, spacing: isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 20) {
                 versionCard
                 titleCard
                 contentEditor
+                // Mac은 확정 줄을 내용 아래에 이어서 표시
+                if isiOSAppOnMac {
+                    confirmBar
+                }
             }
-            .padding(.horizontal)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : nil)
             .padding(.top, usesPaneLayout ? 12 : 0)
             .padding(.bottom, 20)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .safeAreaInset(edge: .bottom, spacing: 0) { confirmBar }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !isiOSAppOnMac {
+                confirmBar
+            }
+        }
         .background(Color.background.ignoresSafeArea())
         .toolbarVisibility(.hidden, for: .navigationBar)
         .prominentAlert(store, state: \.alert, action: \.alert)
@@ -162,13 +172,25 @@ public struct RecordEditorView: View {
         .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
+    @ViewBuilder
     private var versionCard: some View {
-        FieldSection(title: RecordPresentation.text("development_record_version")) {
-            Text(RecordPresentation.versionLabel(store.versionNumber))
-                .font(.adaptive(.body))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
-                .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+        // Mac은 버전 이름 오른쪽 끝에 버전 배지 표시
+        if isiOSAppOnMac {
+            HStack {
+                Text(RecordPresentation.text("development_record_version"))
+                    .font(.adaptive(.subheadline))
+                    .foregroundStyle(Color.secondaryLabel)
+                Spacer()
+                RecordVersionBadge(number: store.versionNumber, isCurrent: false)
+            }
+        } else {
+            FieldSection(title: RecordPresentation.text("development_record_version")) {
+                Text(RecordPresentation.versionLabel(store.versionNumber))
+                    .font(.adaptive(.body))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+                    .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+            }
         }
     }
 
@@ -180,22 +202,39 @@ public struct RecordEditorView: View {
             )
             .font(.adaptive(.body))
             .focused($focusedField, equals: .title)
-            .padding()
-            .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+            // Mac은 Orca 한 줄 입력칸 높이 32
+            .padding(.all, isiOSAppOnMac ? 0 : nil)
+            .padding(.horizontal, isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 0)
+            .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : nil)
+            .inputBackground(isFocused: focusedField == .title)
+            // iPad 넓은 창은 기존 입력칸 바탕을 유지하도록 Mac 입력칸 모양은 Mac에서만 사용
+            .environment(\.usesDesktopLayout, isiOSAppOnMac)
         }
         .disabled(store.isLoading)
     }
 
     private var contentEditor: some View {
-        VStack(spacing: 16) {
-            ModePicker(store: store, focusedField: _focusedField)
+        VStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 16) {
+            // Mac은 내용 이름을 두고 작성·미리보기 버튼을 이름 오른쪽 같은 줄에 표시
+            if isiOSAppOnMac {
+                HStack {
+                    Text(RecordPresentation.text("development_record_content_label"))
+                        .font(.adaptive(.subheadline))
+                        .foregroundStyle(Color.secondaryLabel)
+                    Spacer()
+                    ModePicker(store: store, focusedField: _focusedField)
+                }
+            } else {
+                ModePicker(store: store, focusedField: _focusedField)
+            }
 
             switch store.selectedTab {
             case .write:
-                TextEditorContentLayout(minimumHeight: 340) {
+                // Mac은 안내 문구를 입력칸 아래에 표시
+                TextEditorContentLayout(minimumHeight: 340, placesHintBelow: isiOSAppOnMac) {
                     Text(RecordPresentation.text("development_record_markdown_hint"))
                         .font(.adaptive(.caption))
-                        .foregroundStyle(Color.tertiaryLabel)
+                        .foregroundStyle(isiOSAppOnMac ? Color.secondaryLabel : .tertiaryLabel)
                     UIKitTextEditor
                         .composable(
                             update: { textEditor in
@@ -216,7 +255,9 @@ public struct RecordEditorView: View {
                         )
                         .focused($focusedField, equals: .content)
                         .padding(12)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                        .inputBackground(isMultiline: true, isFocused: focusedField == .content)
+                        // iPad 넓은 창은 기존 입력칸 바탕을 유지하도록 Mac 입력칸 모양은 Mac에서만 사용
+                        .environment(\.usesDesktopLayout, isiOSAppOnMac)
                 }
                 .frame(minHeight: 340, alignment: .topLeading)
                 .contentShape(.rect)
@@ -234,7 +275,9 @@ public struct RecordEditorView: View {
                         .multilineTextAlignment(.center)
                         .padding(12)
                         .frame(maxWidth: .infinity, minHeight: 340, alignment: .center)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                        .inputBackground(isMultiline: true)
+                        // iPad 넓은 창은 기존 입력칸 바탕을 유지하도록 Mac 입력칸 모양은 Mac에서만 사용
+                        .environment(\.usesDesktopLayout, isiOSAppOnMac)
                     } else {
                         MarkdownContentView(
                             content: store.markdownContent,
@@ -244,7 +287,9 @@ public struct RecordEditorView: View {
                         .padding(.horizontal, -16)
                         .padding(12)
                         .frame(minHeight: 340, alignment: .topLeading)
-                        .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                        .inputBackground(isMultiline: true)
+                        // iPad 넓은 창은 기존 입력칸 바탕을 유지하도록 Mac 입력칸 모양은 Mac에서만 사용
+                        .environment(\.usesDesktopLayout, isiOSAppOnMac)
                     }
                 }
                 .frame(minHeight: 340, alignment: .topLeading)
@@ -255,7 +300,21 @@ public struct RecordEditorView: View {
     }
 
     private var confirmBar: some View {
-        VStack(spacing: 8) {
+        let hint = Text(String.localizedStringWithFormat(
+            RecordPresentation.text("development_record_confirm_hint_format"),
+            RecordPresentation.versionLabel(store.versionNumber)
+        ))
+        .font(.adaptive(isiOSAppOnMac ? .subheadline : .caption))
+        .foregroundStyle(isiOSAppOnMac ? Color.secondaryLabel : .tertiaryLabel)
+        // Mac은 안내 문구 오른쪽에 글자 폭만큼의 확정 버튼을 한 줄로 표시
+        let layout = isiOSAppOnMac
+            ? AnyLayout(HStackLayout(spacing: 10 * AdaptiveSize.boardScale)) : AnyLayout(VStackLayout(spacing: 8))
+
+        return layout {
+            if isiOSAppOnMac {
+                hint
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
             Button {
                 focusedField = nil
                 store.send(.view(.confirm))
@@ -273,27 +332,28 @@ public struct RecordEditorView: View {
                 }
                 .font(.adaptive(.headline))
                 .foregroundStyle(Color.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 10)
+                .frame(maxWidth: isiOSAppOnMac ? nil : .infinity)
+                // Mac은 버튼 모양이 배율 없이 더하는 여백 8을 빼고 보드 기준 좌우 여백 16, 높이 32로 표시
+                .padding(.horizontal, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale - 8 : 0)
+                .padding(.vertical, isiOSAppOnMac ? 0 : 10)
+                .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale - 16 : nil)
             }
             .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
             .disabled(!store.canConfirmVersion)
 
-            Text(String.localizedStringWithFormat(
-                RecordPresentation.text("development_record_confirm_hint_format"),
-                RecordPresentation.versionLabel(store.versionNumber)
-            ))
-            .font(.adaptive(.caption))
-            .foregroundStyle(Color.tertiaryLabel)
+            if !isiOSAppOnMac {
+                hint
+            }
         }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(deviceType == .duo ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
+        .padding(.horizontal, isiOSAppOnMac ? 0 : nil)
+        .padding(.vertical, isiOSAppOnMac ? 4 * AdaptiveSize.boardScale : 12)
+        .background(deviceType == .duo || isiOSAppOnMac ? Color.background : .secondaryBackground, ignoresSafeAreaEdges: .bottom)
     }
 
 }
 
 private struct FieldSection<Content: View>: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let title: String
     @ViewBuilder let content: Content
 
@@ -303,15 +363,18 @@ private struct FieldSection<Content: View>: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        // Mac은 입력칸 이름을 작은 회색 글자로 입력칸 바로 위에 표시
+        VStack(alignment: .leading, spacing: isiOSAppOnMac ? 6 * AdaptiveSize.boardScale : 14) {
             Text(title)
-                .font(.adaptive(.headline))
+                .font(.adaptive(isiOSAppOnMac ? .subheadline : .headline))
+                .foregroundStyle(isiOSAppOnMac ? Color.secondaryLabel : .primary)
             content
         }
     }
 }
 
 private struct ModePicker: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<RecordEditorFeature>
     @FocusState var focusedField: Field?
 
@@ -327,7 +390,7 @@ private struct ModePicker: View {
             )
         }
         .padding(2)
-        .background(Color.separator, in: RoundedRectangle(cornerRadius: CornerRadius.control))
+        .background(isiOSAppOnMac ? Color.tertiaryBackground : .separator, in: RoundedRectangle(cornerRadius: CornerRadius.control))
     }
 
     private func modeButton(
@@ -335,6 +398,7 @@ private struct ModePicker: View {
         tab: RecordEditorFeature.EditorTab
     ) -> some View {
         let isSelected = store.selectedTab == tab
+        let selectedColor = isiOSAppOnMac ? Color.label : .accent
 
         return Button {
             if tab == .write {
@@ -347,14 +411,21 @@ private struct ModePicker: View {
                 }
             }
         } label: {
+            // Mac은 칸 폭을 채우지 않고 글자 폭만큼 작게, 고른 조각은 강조색 대신 글자색과 옅은 테두리로 표시
             Text(title)
-                .font(.adaptive(.body))
-                .foregroundStyle(isSelected ? Color.accent : Color.secondaryLabel)
-                .frame(maxWidth: .infinity, minHeight: 36)
+                .font(.adaptive(isiOSAppOnMac ? .subheadline : .body).weight(isiOSAppOnMac ? .semibold : .regular))
+                .foregroundStyle(isSelected ? selectedColor : Color.secondaryLabel)
+                .padding(.horizontal, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 0)
+                .padding(.vertical, isiOSAppOnMac ? 3 * AdaptiveSize.boardScale : 0)
+                .frame(maxWidth: isiOSAppOnMac ? nil : .infinity, minHeight: isiOSAppOnMac ? nil : 36)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: CornerRadius.segment)
                             .fill(Color.secondaryBackground)
+                            .overlay {
+                                RoundedRectangle(cornerRadius: CornerRadius.segment)
+                                    .strokeBorder(isiOSAppOnMac ? Color.label.opacity(0.12) : .clear)
+                            }
                             .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }
                 }

@@ -81,6 +81,10 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                         Rectangle()
                     }
                     .contentShape(.rect)
+                    // 작성 화면을 그린 채 상세 칸이 통째로 빠지면 편집 끝 전달이 오지 않아 목록 칸 입력 차단을 직접 해제
+                    .onDisappear {
+                        isDetailEditing = false
+                    }
             }
         }
         .onGeometryChange(for: CGFloat.self) { proxy in

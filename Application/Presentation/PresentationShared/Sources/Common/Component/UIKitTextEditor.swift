@@ -241,10 +241,13 @@ public final class UIKitTextEditor: UITextView, UICoordinatedComposable {
 /// 안내 문구와 편집기를 순서대로 배치하고 남은 최소 높이를 편집기에 제안합니다.
 public struct TextEditorContentLayout: Layout {
     private let minimumHeight: CGFloat
+    // Mac 작성 칸처럼 안내 문구를 편집기 아래에 둘지 여부
+    private let placesHintBelow: Bool
     private let spacing = CGFloat(8)
 
-    public init(minimumHeight: CGFloat) {
+    public init(minimumHeight: CGFloat, placesHintBelow: Bool = false) {
         self.minimumHeight = max(0, minimumHeight)
+        self.placesHintBelow = placesHintBelow
     }
 
     public func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
@@ -266,18 +269,16 @@ public struct TextEditorContentLayout: Layout {
 
         let hintProposal = ProposedViewSize(width: bounds.width, height: nil)
         let hintSize = subviews[0].sizeThatFits(hintProposal)
+        let editorHeight = max(0, bounds.height - hintSize.height - spacing)
         subviews[0].place(
-            at: CGPoint(x: bounds.minX, y: bounds.minY),
+            at: CGPoint(x: bounds.minX, y: placesHintBelow ? bounds.minY + editorHeight + spacing : bounds.minY),
             anchor: .topLeading,
             proposal: hintProposal
         )
         subviews[1].place(
-            at: CGPoint(x: bounds.minX, y: bounds.minY + hintSize.height + spacing),
+            at: CGPoint(x: bounds.minX, y: placesHintBelow ? bounds.minY : bounds.minY + hintSize.height + spacing),
             anchor: .topLeading,
-            proposal: ProposedViewSize(
-                width: bounds.width,
-                height: max(0, bounds.height - hintSize.height - spacing)
-            )
+            proposal: ProposedViewSize(width: bounds.width, height: editorHeight)
         )
     }
 }

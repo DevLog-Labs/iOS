@@ -30,8 +30,8 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        // Mac은 목록을 창 전체 폭으로 두고 오른쪽 칸에서 연 Todo가 있을 때만 두 칸으로 나눔
-        PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoId != nil) {
+        // Mac은 목록을 창 전체 폭으로 두고 오른쪽 칸에서 연 Todo나 작성 화면이 있을 때만 두 칸으로 나눔
+        PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoId != nil || store.fullScreenCover != nil) {
             TodoListContent(store: store) { todoId in
                 // Mac은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
                 if isiOSAppOnMac && store.selectedTodoId == nil {
@@ -88,15 +88,9 @@ struct TodoListView: View {
             store.selectedTodoId.map { .todo(id: $0, isEditable: true, revision: store.detailRevision) }
         )
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .onReceive(windowSubmits) { submit in
-            switch submit {
-            case .create(let value):
-                guard value.matchesCreate(category: store.category, source: .list) else { return }
-                store.send(.view(.windowTodoCreated))
-            case .update:
-                // 상세 칸에서 편집한 Todo를 옆 목록에도 반영
-                store.send(.view(.windowTodoUpdated))
-            }
+        .onReceive(windowSubmits) { _ in
+            // 상세 칸에서 편집한 Todo를 옆 목록에도 반영
+            store.send(.view(.windowTodoUpdated))
         }
         .fullScreenCover(
             item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
@@ -314,8 +308,6 @@ private func presentDeleteTodoToast(_ todoId: String, store: StoreOf<TodoListFea
 
 private struct TodoListTopBar: View {
     @Environment(\.dismiss) private var dismiss
-    @Environment(\.openWindow) private var openWindow
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
@@ -379,7 +371,7 @@ private struct TodoListTopBar: View {
         // 사이드바 Todo 메뉴의 작성은 이 목록의 작성 버튼과 같은 방식으로 작성
         .onChange(of: sideBarRequest) { _, request in
             guard request?.action == .createTodo else { return }
-            openTodoEditor()
+            store.send(.store(.setFullScreenCover(.editor)))
         }
     }
 
@@ -417,14 +409,14 @@ private struct TodoListTopBar: View {
 
         if #available(iOS 26.0, *) {
             Button {
-                openTodoEditor()
+                store.send(.store(.setFullScreenCover(.editor)))
             } label: {
                 Image(systemName: "plus")
             }
             .topBarButtonStyle()
         } else {
             Button {
-                openTodoEditor()
+                store.send(.store(.setFullScreenCover(.editor)))
             } label: {
                 Image(systemName: "plus")
                     .font(.adaptive(.title3).weight(.semibold))
@@ -435,17 +427,6 @@ private struct TodoListTopBar: View {
                 color: .secondaryBackground,
                 glassEffect: .enabled
             )
-        }
-    }
-
-    private func openTodoEditor() {
-        if isiOSAppOnMac {
-            openWindow(
-                id: TodoEditorWindowValue.sceneId,
-                value: TodoEditorWindowValue(todoCategory: store.category, source: .list)
-            )
-        } else {
-            store.send(.store(.setFullScreenCover(.editor)))
         }
     }
 }
