@@ -38,8 +38,6 @@ struct MainView: View {
 
     var body: some View {
         let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular
-        // Duo 펼침은 사이드바 없이 목록 | 상세 두 칸으로 표시
-        let usesPaneLayout = showsSideBar || deviceType == .duo && horizontalSizeClass == .regular
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
         let readableContentWidth = showsSideBar ? store.readableContentWidth : .infinity
         // iPhone, Duo, 좁은 iPad 창은 시스템 탭 바 대신 직접 그린 탭 사용
@@ -85,7 +83,7 @@ struct MainView: View {
                                 isSelected: selectedTab == tab,
                                 isTabBarHidden: isSystemTabBarHidden,
                                 tabBarInset: tabBarInset,
-                                usesPaneLayout: usesPaneLayout,
+                                usesPaneLayout: showsSideBar,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -107,7 +105,7 @@ struct MainView: View {
                                 isSelected: selectedTab == .home,
                                 isTabBarHidden: isSystemTabBarHidden,
                                 tabBarInset: tabBarInset,
-                                usesPaneLayout: usesPaneLayout,
+                                usesPaneLayout: showsSideBar,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -124,7 +122,7 @@ struct MainView: View {
                                 isSelected: selectedTab == .today,
                                 isTabBarHidden: isSystemTabBarHidden,
                                 tabBarInset: tabBarInset,
-                                usesPaneLayout: usesPaneLayout,
+                                usesPaneLayout: showsSideBar,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -141,7 +139,7 @@ struct MainView: View {
                                 isSelected: selectedTab == .notification,
                                 isTabBarHidden: isSystemTabBarHidden,
                                 tabBarInset: tabBarInset,
-                                usesPaneLayout: usesPaneLayout,
+                                usesPaneLayout: showsSideBar,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -159,7 +157,7 @@ struct MainView: View {
                                 isSelected: selectedTab == .profile,
                                 isTabBarHidden: isSystemTabBarHidden,
                                 tabBarInset: tabBarInset,
-                                usesPaneLayout: usesPaneLayout,
+                                usesPaneLayout: showsSideBar,
                                 windowControlsInset: tabContentInset,
                                 readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
@@ -217,6 +215,13 @@ struct MainView: View {
             }
         }
         .environment(\.usesDesktopLayout, showsSideBar)
+        // 세로로 펼친 Duo는 세로 막대가 없어 iPhone과 같은 화면 구성
+        // 접힌 Duo는 세로 막대가 늘 있어 첫 화면이나 접는 중에도 바꾸지 않음
+        .environment(
+            \.deviceType,
+            deviceType == .duo && horizontalSizeClass == .regular && verticalBarWidth == 0
+                ? .bar : deviceType
+        )
         // iPad 상태 표시줄 영역, Mac 창 제목 줄과 사이드바, 화면 영역을 나누는 구분선
         // iPad는 상태 표시줄 영역 맨 아래에 두어 상태 표시줄이 없는 창에서는 창 밖에 위치
         // Mac은 화면 영역 맨 위가 제목 줄 바로 아래라서 그 자리에 배치
