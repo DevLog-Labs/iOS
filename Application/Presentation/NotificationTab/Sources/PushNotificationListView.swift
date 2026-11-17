@@ -11,8 +11,6 @@ import PresentationShared
 
 public struct PushNotificationListView: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<PushNotificationListFeature>
     private let isSelected: Bool
 
@@ -31,12 +29,10 @@ public struct PushNotificationListView: View {
     public var body: some View {
         // Mac에서 오른쪽 칸을 열었을 때만 목록 | 상세 두 칸으로 나눔
         let showsMacPane = isiOSAppOnMac && store.isDetailPanePresented
-        // 사이드바가 있는 iPad 창은 시트, Mac은 상세 판으로 열고 Duo 펼침은 옆 칸에 표시
-        let showsDetailPane = usesPaneLayout && !usesDesktopLayout || showsMacPane
 
         NavigationStack {
-            PaneSplitView(duoWidth: .wide, splitsOnDesktop: showsMacPane) {
-                PushNotificationListContent(store: store, showsSelection: showsDetailPane)
+            PaneSplitView(splitsOnDesktop: showsMacPane) {
+                PushNotificationListContent(store: store, showsSelection: showsMacPane)
                     .background(Color.background)
                     .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
                         let task = store.send(.view(.refresh))
@@ -76,13 +72,13 @@ public struct PushNotificationListView: View {
             }
         }
         .onChange(of: store.selectedTodoId?.id, initial: true) {
-            if !showsDetailPane {
+            if !showsMacPane {
                 store.send(.view(.syncSheetPresentation))
             }
         }
-        // 접으면 옆 칸에서 보던 Todo를 시트로 열고 펼치면 시트만 닫아 같은 Todo를 옆 칸에 표시
-        .onChange(of: showsDetailPane) { _, showsDetailPane in
-            store.send(.view(showsDetailPane ? .hideSheet : .syncSheetPresentation))
+        // Mac 오른쪽 칸을 열면 상세 판만 닫고, 오른쪽 칸을 닫으면 고른 Todo를 상세 판으로 표시
+        .onChange(of: showsMacPane) { _, showsMacPane in
+            store.send(.view(showsMacPane ? .hideSheet : .syncSheetPresentation))
         }
         .overlay {
             if store.isLoading {
@@ -127,7 +123,6 @@ public struct PushNotificationListView: View {
 private struct PushNotificationListContent: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @ScaledMetric(relativeTo: .headline) private var iconSize = 36
@@ -302,15 +297,10 @@ private struct PushNotificationListContent: View {
                         PushNotificationPaneMenus(store: store)
                     }
                 } else {
-                    if usesPaneLayout {
-                        PaneTitleBar(title)
-                    }
                     VStack(alignment: .leading, spacing: 12) {
-                        if !usesPaneLayout {
-                            title
-                                .font(.adaptive(.largeTitle).bold())
-                                .padding(.bottom, 8)
-                        }
+                        title
+                            .font(.adaptive(.largeTitle).bold())
+                            .padding(.bottom, 8)
 
                         ScrollView(.horizontal) {
                             PushNotificationFilterBar(store: store)
@@ -323,7 +313,7 @@ private struct PushNotificationListContent: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
                     .frame(maxWidth: readableContentWidth)
-                    .padding(.top, usesPaneLayout ? 12 : windowControlsInset)
+                    .padding(.top, windowControlsInset)
                     .padding(.bottom, 8)
                 }
             }

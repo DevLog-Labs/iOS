@@ -7,10 +7,9 @@
 
 import SwiftUI
 
-// 사이드바가 있는 창과 Duo 펼침에서 목록 칸 오른쪽에 상세 칸을 나란히 두는 화면
+// 사이드바가 있는 창에서 목록 칸 오른쪽에 상세 칸을 나란히 두는 화면
 public struct PaneSplitView<Primary: View, Detail: View>: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var width = CGFloat.infinity
     // 경계선을 끌어 정한 목록 칸 폭, 없으면 기본 폭
     @State private var primaryWidth: CGFloat?
@@ -18,7 +17,6 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     @State private var isDetailPresenting = false
     // 상세 칸에 작성 화면을 그린 동안
     @State private var isDetailEditing = false
-    private let duoWidth: PanePrimaryWidth
     // 사이드바가 있는 창은 따로 정한 화면만 두 칸으로 나눔
     private let splitsOnDesktop: Bool
     private let primary: Primary
@@ -26,12 +24,10 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     private let detail: () -> Detail
 
     public init(
-        duoWidth: PanePrimaryWidth = .narrow,
         splitsOnDesktop: Bool = true,
         @ViewBuilder primary: () -> Primary,
         @ViewBuilder detail: @escaping () -> Detail
     ) {
-        self.duoWidth = duoWidth
         self.splitsOnDesktop = splitsOnDesktop
         self.primary = primary()
         self.detail = detail
@@ -40,10 +36,7 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     public var body: some View {
         // 두 칸이 기본 폭으로 함께 들어가지 않는 창은 반씩 나눠 처음부터 상세 칸이 잘리지 않게 함
         let paneWidth = min(400, width / 2)
-        let splitsDesktop = usesDesktopLayout && splitsOnDesktop
-        // Duo 펼침은 폰 구조라 목록 칸을 디자인 캔버스 폭으로 고정
-        let isDuoPane = usesPaneLayout && !usesDesktopLayout
-        let showsDetail = splitsDesktop || isDuoPane
+        let showsDetail = usesDesktopLayout && splitsOnDesktop
 
         HStack(spacing: 0) {
             // 넓은 창과 좁은 창을 오가도 목록 칸을 다시 만들지 않도록 같은 구조로 두고 사이드바 구조에서만 폭 조절
@@ -54,21 +47,12 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                     minimumWidth: 0,
                     idealWidth: paneWidth,
                     maximumWidth: width,
-                    isEnabled: splitsDesktop
+                    isEnabled: showsDetail
                 ) { width in
                     primaryWidth = width
                 }
-                .frame(width: isDuoPane ? duoWidth.duo : nil)
                 // 덮는 화면처럼 작성 화면이 닫히기 전에는 목록 칸을 누르지 못하게 해 초안을 지킴
                 .allowsHitTesting(!(showsDetail && isDetailEditing))
-                .overlay(alignment: .trailing) {
-                    if isDuoPane {
-                        Rectangle()
-                            .fill(Color.separator)
-                            .frame(width: 1)
-                            .ignoresSafeArea(.container, edges: .vertical)
-                    }
-                }
                 // 오른쪽 칸이 있으면 세부 정보 사이드바 여는 버튼은 오른쪽 칸 제목 줄에만 표시
                 // 상세 칸을 그리지 않는 화면은 목록 칸 제목 줄에 버튼 유지
                 .transformEnvironment(\.showDetailSideBar) { value in
@@ -82,7 +66,7 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                 Color.clear
                     .overlay(alignment: .leading) {
                         detail()
-                            .frame(minWidth: splitsDesktop ? paneWidth : 0, maxWidth: .infinity)
+                            .frame(minWidth: showsDetail ? paneWidth : 0, maxWidth: .infinity)
                             // 사이드바 펴기 버튼은 왼쪽 칸 제목 줄에만 표시
                             .environment(\.expandSideBar, nil)
                             .onPreferenceChange(PaneDetailPresentingPreferenceKey.self) { isPresenting in
@@ -93,10 +77,8 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                             }
                     }
                     .frame(maxWidth: showsDetail ? .infinity : 0)
-                    // Duo 상세 칸은 위아래 안전 영역까지 그린 내용을 자르지 않음
                     .mask {
                         Rectangle()
-                            .ignoresSafeArea(edges: isDuoPane ? .all : [])
                     }
                     .contentShape(.rect)
             }
@@ -112,24 +94,6 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
         }
         // 잘라 낸 칸 바탕이 닿지 않는 아래쪽 안전 영역을 칸 바탕과 같은 색으로 채움
         .background(usesDesktopLayout ? Color.background : .clear, ignoresSafeAreaEdges: .bottom)
-    }
-}
-
-// Duo 펼침의 목록 칸 폭, 디자인 캔버스 값
-public enum PanePrimaryWidth {
-    // Todo 목록, 오늘
-    case narrow
-    // 프로필, 설정
-    case medium
-    // 알림
-    case wide
-
-    var duo: CGFloat {
-        switch self {
-        case .narrow: 300
-        case .medium: 320
-        case .wide: 340
-        }
     }
 }
 

@@ -15,7 +15,6 @@ public struct TodoEditorView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State var store: StoreOf<TodoEditorFeature>
     @FocusState private var field: Field?
@@ -37,7 +36,7 @@ public struct TodoEditorView: View {
     }
 
     public var body: some View {
-        // 목록 옆 칸에서 작성하는 넓은 창과 Duo 펼침은 칸 제목 줄에 저장 버튼 표시
+        // 목록 옆 칸에서 작성하는 넓은 창은 칸 제목 줄에 저장 버튼 표시
         if usesPaneLayout {
             paneContent
         } else {
@@ -49,11 +48,7 @@ public struct TodoEditorView: View {
         EditorForm(store: store, field: _field)
             .safeAreaInset(edge: .top, spacing: 0) {
                 PaneTitleBar(Text(store.navigationTitle), onClose: close) {
-                    PaneEditorActions(
-                        store: store,
-                        showsInspectorButton: !usesDesktopLayout,
-                        onSubmit: submit
-                    )
+                    PaneEditorActions(store: store, onSubmit: submit)
                 }
             }
             .background(Color.background.ignoresSafeArea())
@@ -64,7 +59,7 @@ public struct TodoEditorView: View {
             }
             .prominentAlert(store, state: \.alert, action: \.alert)
             // 사이드바가 있는 창은 작성 중인 속성을 세부 정보 사이드바에 표시
-            .detailSideBar(isActive: usesDesktopLayout) {
+            .detailSideBar {
                 ScrollView {
                     TodoSideBarProperties(
                         editorStore: store,
@@ -73,12 +68,11 @@ public struct TodoEditorView: View {
                     )
                 }
             }
-            // Duo 펼침의 속성과 본문에서 연 Todo는 가운데 대화상자로 표시
+            // 본문에서 연 Todo는 가운데 대화상자로 표시
             .prominentSheet(
-                isPresented: $store.isInspectorPresented
-                    .hiddenInPane(usesDesktopLayout && store.inspectorContent == .options)
+                isPresented: $store.isInspectorPresented.hiddenInPane(store.inspectorContent == .options)
             ) {
-                PaneInspector(store: store)
+                EditorInspector(store: store, isWideLayout: false)
                     .environment(\.windowControlsInset, 0)
             }
     }
@@ -188,10 +182,9 @@ private struct EditorForm: View {
     }
 }
 
-// 칸 제목 줄의 저장 버튼, Duo 펼침은 세부 정보 버튼도 표시
+// 칸 제목 줄의 저장 버튼
 private struct PaneEditorActions: View {
     let store: StoreOf<TodoEditorFeature>
-    let showsInspectorButton: Bool
     let onSubmit: () -> Void
 
     var body: some View {
@@ -206,58 +199,6 @@ private struct PaneEditorActions: View {
             .buttonStyle(.plain)
             .disabled(!store.isReadyToSubmit)
             .opacity(store.isReadyToSubmit ? 1 : 0.4)
-        }
-        if showsInspectorButton {
-            Button {
-                store.send(.showInspector(.options))
-            } label: {
-                Image(systemName: "info.circle")
-            }
-            .topBarButtonStyle()
-        }
-    }
-}
-
-// Duo 펼침 작성 화면의 가운데 대화상자, 고친 속성은 작성 화면의 저장 버튼으로 함께 저장
-private struct PaneInspector: View {
-    @Bindable var store: StoreOf<TodoEditorFeature>
-
-    var body: some View {
-        if store.inspectorContent == .options {
-            VStack(spacing: 0) {
-                ZStack {
-                    Text(String(localized: "todo_details", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.headline))
-                    HStack {
-                        Spacer()
-                        Button {
-                            store.send(.binding(.set(\.isInspectorPresented, false)))
-                        } label: {
-                            Text(String(localized: "common_done", bundle: PresentationResources.bundle))
-                                .font(.adaptive(.body).weight(.semibold))
-                                .foregroundStyle(Color.accent)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 14)
-                .overlay(alignment: .bottom) {
-                    Rectangle()
-                        .fill(Color.separator)
-                        .frame(height: 1)
-                }
-                ScrollView {
-                    TodoSideBarProperties(
-                        editorStore: store,
-                        isEditable: true,
-                        isDueDatePickerPresented: $store.isDueDatePickerPresented
-                    )
-                    .padding(.top, 8)
-                }
-            }
-        } else {
-            EditorInspector(store: store, isWideLayout: false)
         }
     }
 }
