@@ -50,8 +50,10 @@ struct CategoryManageFeature {
                 return false
             }
 
+            // 원래 이름과 화면에 표시되는 이름 모두 기본 카테고리 이름으로 취급
             if SystemTodoCategory.allCases.contains(where: {
                 $0.rawValue.caseInsensitiveCompare(name) == .orderedSame
+                    || SystemTodoCategoryItem(from: $0).localizedName.caseInsensitiveCompare(name) == .orderedSame
             }) {
                 return true
             }
