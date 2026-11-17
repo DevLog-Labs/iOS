@@ -50,10 +50,12 @@ struct CategoryManageFeature {
                 return false
             }
 
-            // 원래 이름과 화면에 표시되는 이름 모두 기본 카테고리 이름으로 취급
-            if SystemTodoCategory.allCases.contains(where: {
-                $0.rawValue.caseInsensitiveCompare(name) == .orderedSame
-                    || SystemTodoCategoryItem(from: $0).localizedName.caseInsensitiveCompare(name) == .orderedSame
+            // 원래 이름과 앱 언어에 관계없이 모든 언어의 표시 이름을 기본 카테고리 이름으로 취급
+            if SystemTodoCategory.allCases.contains(where: { category in
+                category.rawValue.caseInsensitiveCompare(name) == .orderedSame
+                    || SystemTodoCategoryItem(from: category).localizedNames.contains {
+                        $0.caseInsensitiveCompare(name) == .orderedSame
+                    }
             }) {
                 return true
             }
