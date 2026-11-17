@@ -296,7 +296,7 @@ public struct HomeView: View {
                     ) {
                         HomeContentPicker(store: store, onSelect: openTodoEditor)
                             // 화면이 낮거나 Duo 접는 선에 걸리면 팝오버 높이를 줄이고 목록을 스크롤
-                            .frame(width: 320)
+                            .frame(width: 320 * AdaptiveSize.boardScale)
                             .frame(minHeight: 0, idealHeight: min(640, store.visibleHeight), maxHeight: min(640, store.visibleHeight))
                             .presentationBackground(Color.secondaryBackground)
                             .presentationCompactAdaptation(.popover)
@@ -606,10 +606,19 @@ private struct HomeTodoCategoryLink: View {
 }
 
 private struct HomeContentPicker: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<HomeFeature>
     let onSelect: (TodoCategory) -> Void
 
     var body: some View {
+        if isiOSAppOnMac {
+            HomeDesktopContentPicker(store: store, onSelect: onSelect)
+        } else {
+            mobileContent
+        }
+    }
+
+    private var mobileContent: some View {
         NavigationStack {
             List {
                 Section {
@@ -691,5 +700,122 @@ private struct HomeContentPickerLabel: View {
             Spacer()
         }
         .contentShape(.rect)
+    }
+}
+
+// Mac 새로 만들기 팝오버
+// 위쪽 닫기·제목 줄, 작은 제목과 테두리 상자로 묶은 TODO 카테고리와 새 개발 목표 배치
+private struct HomeDesktopContentPicker: View {
+    let store: StoreOf<HomeFeature>
+    let onSelect: (TodoCategory) -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Text("home_create_title", bundle: PresentationResources.bundle)
+                    .font(.system(size: 14 * AdaptiveSize.boardScale, weight: .bold))
+                HStack {
+                    Button {
+                        store.send(.sheet(.presented(.tapCloseButton)))
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.adaptive(.body))
+                            .foregroundStyle(Color.label)
+                            .frame(width: 28 * AdaptiveSize.boardScale, height: 28 * AdaptiveSize.boardScale)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    Spacer()
+                }
+            }
+            .padding(.horizontal, 10 * AdaptiveSize.boardScale)
+            .frame(height: 44 * AdaptiveSize.boardScale)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(Color.separator)
+                    .frame(height: 1)
+            }
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16 * AdaptiveSize.boardScale) {
+                    section(Text(verbatim: "TODO")) {
+                        if store.isPreferencesLoading {
+                            LoadingView()
+                                .frame(maxWidth: .infinity, minHeight: 38 * AdaptiveSize.boardScale)
+                        } else {
+                            ForEach(store.preferences.filter(\.isVisible), id: \.id) { item in
+                                row(title: Text(item.localizedName), symbolName: item.symbolName, color: item.color) {
+                                    onSelect(item.category)
+                                }
+                            }
+                        }
+                    }
+
+                    section(Text("development_goal_title", bundle: PresentationResources.bundle)) {
+                        row(
+                            title: Text("development_goal_create_title", bundle: PresentationResources.bundle),
+                            symbolName: "flag",
+                            color: Color.tintLabel
+                        ) {
+                            store.send(.view(.tapCreateDevelopmentGoal))
+                        }
+                    }
+                }
+                .padding(.horizontal, 14 * AdaptiveSize.boardScale)
+                .padding(.vertical, 8 * AdaptiveSize.boardScale)
+            }
+            .scrollBounceBehavior(.basedOnSize)
+        }
+    }
+
+    // 작은 제목 아래 행 사이 구분선이 있는 테두리 상자
+    private func section<Content: View>(_ header: Text, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            header
+                .font(.adaptive(.footnote))
+                .foregroundStyle(Color.secondaryLabel)
+                .padding(.horizontal, 4 * AdaptiveSize.boardScale)
+                .padding(.bottom, 6 * AdaptiveSize.boardScale)
+
+            VStack(spacing: 0) {
+                Group(subviews: content()) { subviews in
+                    ForEach(subviews) { subview in
+                        subview
+
+                        if subview.id != subviews.last?.id {
+                            Rectangle()
+                                .fill(Color.secondarySeparator)
+                                .frame(height: 1)
+                        }
+                    }
+                }
+            }
+            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+            .clipShape(.rect(cornerRadius: CornerRadius.group))
+        }
+    }
+
+    // 테두리 있는 아이콘 사각형과 이름 행
+    private func row(title: Text, symbolName: String, color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10 * AdaptiveSize.boardScale) {
+                Image(systemName: symbolName)
+                    .foregroundStyle(color)
+                    .frame(width: 25 * AdaptiveSize.boardScale, height: 25 * AdaptiveSize.boardScale)
+                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.segment))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: CornerRadius.segment)
+                            .strokeBorder(Color.secondarySeparator)
+                    }
+                title
+                    .foregroundStyle(Color.label)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .font(.adaptive(.body))
+            .padding(.horizontal, 12 * AdaptiveSize.boardScale)
+            .frame(minHeight: 38 * AdaptiveSize.boardScale)
+            .hoverHighlight()
+        }
+        .buttonStyle(.plain)
     }
 }
