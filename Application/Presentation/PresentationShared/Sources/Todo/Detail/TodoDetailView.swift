@@ -291,7 +291,7 @@ private struct InfoSheetView: View {
                     store.send(.binding(.set(\.sheetBarHeight, $0)))
                 }
         }
-        .background(Color.background.ignoresSafeArea())
+        .background(Color.secondaryBackground.ignoresSafeArea())
         .onPreferenceChange(TodoInfoHeightPreferenceKey.self) { height in
             store.send(.binding(.set(\.sheetContentHeight, height)))
         }
@@ -301,26 +301,33 @@ private struct InfoSheetView: View {
         )
     }
 
+    // OS와 상관없이 같은 모양인 글자 닫기 버튼과 가운데 제목, 아래 구분선
     private var topBar: some View {
         ZStack {
             Text(String(localized: "todo_details", bundle: PresentationResources.bundle))
-                .font(.adaptive(.headline))
+                .font(.adaptive(.callout).bold())
             HStack {
                 Button {
                     onClose()
                 } label: {
-                    if #available(iOS 26.0, *) {
-                        Image(systemName: "xmark")
-                    } else {
-                        Text(String(localized: "common_close", bundle: PresentationResources.bundle))
-                    }
+                    Text(String(localized: "common_close", bundle: PresentationResources.bundle))
+                        .font(.adaptive(.callout).weight(.medium))
+                        .foregroundStyle(Color.tintLabel)
+                        .padding(.horizontal, 4)
+                        .frame(maxHeight: .infinity)
+                        .contentShape(.rect)
                 }
-                .topBarButtonStyle()
+                .buttonStyle(.plain)
                 Spacer()
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(Color.background, ignoresSafeAreaEdges: .top)
+        .frame(height: 48)
+        .padding(.horizontal, 8)
+        .overlay(alignment: .bottom) {
+            Divider().overlay(Color.secondarySeparator)
+        }
+        // 손잡이 아래부터 위쪽 줄을 둠
+        .padding(.top, 11)
+        .background(Color.secondaryBackground, ignoresSafeAreaEdges: .top)
     }
 }
