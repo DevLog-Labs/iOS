@@ -15,20 +15,7 @@ public extension View {
         interactivePop: Bool,
         @ViewBuilder destination: @escaping (Item) -> Destination
     ) -> some View {
-        navigationDestination(item: item) { value in
-            destination(value)
-                .background {
-                    if interactivePop {
-                        NavigationPopGestureController
-                            .composable { controller in
-                                controller.onInteractivePopCompleted = {
-                                    guard item.wrappedValue != nil else { return }
-                                    item.wrappedValue = nil
-                                }
-                            }
-                    }
-                }
-        }
+        modifier(ItemNavigationDestination(item: item, interactivePop: interactivePop, destination: destination))
     }
 
     func navigationDestination<Destination: View>(
@@ -38,17 +25,12 @@ public extension View {
     ) -> some View {
         navigationDestination(isPresented: isPresented) {
             destination()
-                .background {
-                    if interactivePop {
-                        NavigationPopGestureController
-                            .composable { controller in
-                                controller.onInteractivePopCompleted = {
-                                    guard isPresented.wrappedValue else { return }
-                                    isPresented.wrappedValue = false
-                                }
-                            }
+                .modifier(
+                    NavigationPopGesture(isEnabled: interactivePop) {
+                        guard isPresented.wrappedValue else { return }
+                        isPresented.wrappedValue = false
                     }
-                }
+                )
         }
     }
 
@@ -59,18 +41,81 @@ public extension View {
     ) -> some View {
         navigationDestination(for: type) { value in
             destination(value)
-                .background {
-                    if interactivePop(value) {
-                        NavigationPopGestureController.composable()
-                    }
-                }
+                .modifier(NavigationPopGesture(isEnabled: interactivePop(value)))
         }
+    }
+
+    // 사이드바가 있는 창에서 쌓는 화면을 밀리는 효과 없이 내용만 바꿈
+    // NavigationStack에 두어 경로를 바꾸는 곳과 상관없이 적용
+    func desktopNavigationTransition() -> some View {
+        modifier(DesktopNavigationTransition())
+    }
+}
+
+// 상태로 여는 화면은 NavigationStack에 건 설정이 닿지 않아 바인딩에 전환 설정을 실음
+private struct ItemNavigationDestination<Item, Destination: View>: ViewModifier {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    let item: Binding<Item?>
+    let interactivePop: Bool
+    @ViewBuilder let destination: (Item) -> Destination
+
+    func body(content: Content) -> some View {
+        let transaction = {
+            var transaction = Transaction()
+            transaction.disablesAnimations = usesDesktopLayout
+            return transaction
+        }()
+
+        content
+            .navigationDestination(item: item.transaction(transaction)) { value in
+                destination(value)
+                    .modifier(
+                        NavigationPopGesture(isEnabled: interactivePop) {
+                            guard item.wrappedValue != nil else { return }
+                            item.wrappedValue = nil
+                        }
+                    )
+            }
+    }
+}
+
+private struct DesktopNavigationTransition: ViewModifier {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+
+    func body(content: Content) -> some View {
+        content
+            .transaction { transaction in
+                if usesDesktopLayout {
+                    transaction.disablesAnimations = true
+                }
+            }
+    }
+}
+
+private struct NavigationPopGesture: ViewModifier {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    let isEnabled: Bool
+    var onCompleted: () -> Void = { }
+
+    func body(content: Content) -> some View {
+        content
+            .background {
+                if isEnabled {
+                    NavigationPopGestureController
+                        .composable { controller in
+                            controller.onInteractivePopCompleted = onCompleted
+                            controller.popsImmediately = usesDesktopLayout
+                        }
+                }
+            }
     }
 }
 
 @MainActor
 private final class NavigationPopGestureController: UIViewController, UICoordinatedComposable {
     var onInteractivePopCompleted: () -> Void = { }
+    // 사이드바가 있는 창은 밀어서 따라오는 화면 없이 바로 이전 화면으로 돌아감
+    var popsImmediately = false
     private weak var coordinator: Coordinator?
 
     override func viewDidLoad() {
@@ -99,6 +144,7 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
 
     func update(coordinator: Coordinator) {
         coordinator.completion = onInteractivePopCompleted
+        coordinator.popsImmediately = popsImmediately
         coordinator.configure(navigationController)
     }
 
@@ -114,6 +160,7 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
         private weak var delegate: (any UIGestureRecognizerDelegate)?
         private var isObserving = false
         var completion: () -> Void
+        var popsImmediately = false
 
         init(completion: @escaping () -> Void) {
             self.completion = completion
@@ -149,9 +196,15 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
         }
 
         func gestureRecognizerShouldBegin(_ recognizer: UIGestureRecognizer) -> Bool {
-            guard let controller else { return false }
-            return 1 < controller.viewControllers.count
-                && controller.transitionCoordinator == nil
+            guard let controller,
+                  1 < controller.viewControllers.count,
+                  controller.transitionCoordinator == nil else { return false }
+            guard !popsImmediately else {
+                controller.popViewController(animated: false)
+                completion()
+                return false
+            }
+            return true
         }
 
         @objc

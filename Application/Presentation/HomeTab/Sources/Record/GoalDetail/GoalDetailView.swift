@@ -122,6 +122,7 @@ public struct GoalDetailView: View {
                     onUpdate: { store.send(.view(.refresh)) }
                 )
             }
+            .desktopNavigationTransition()
         }
         .navigationDestination(
             item: $store.scope(state: \.todoDetail, action: \.todoDetail),

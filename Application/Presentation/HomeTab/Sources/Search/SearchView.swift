@@ -70,6 +70,7 @@ struct SearchView: View {
                 }
             }
         }
+        .desktopNavigationTransition()
     }
 
     private var topBar: some View {
