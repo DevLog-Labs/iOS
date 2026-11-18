@@ -264,6 +264,26 @@ struct TodoDetailFeatureTests {
         #expect(adapter.savedTodo == nil)
     }
 
+    @Test("세부 정보를 불러온 뒤 편집 화면에서 저장하면 세부 정보 속성도 저장한 Todo를 따른다")
+    func 세부_정보를_불러온_뒤_편집_화면에서_저장하면_세부_정보_속성도_저장한_Todo를_따른다() async {
+        let adapter = makeInfoAdapter(upsertSpy: TodoEditorUpsertTodoUseCaseSpy())
+        var updatedTodo = makeTodo(title: "Updated")
+        updatedTodo.tags = ["tag"]
+
+        await adapter.openInfo()
+        adapter.dismissSheet()
+        adapter.setTodo(makeTodo())
+        adapter.setFullScreenCover(.editor)
+        adapter.todoEditorUpdated(updatedTodo)
+
+        await waitUntil {
+            adapter.infoEditor?.title == "Updated"
+        }
+
+        #expect(adapter.infoEditor?.title == "Updated")
+        #expect(adapter.infoEditor?.tags == ["tag"])
+    }
+
     private func makeInfoAdapter(upsertSpy: TodoEditorUpsertTodoUseCaseSpy) -> DetailStoreTestAdapter {
         DetailStoreTestAdapter(
             fetchUseCase: FetchTodoByIdUseCaseSpy(todo: makeTodo()),
@@ -301,6 +321,7 @@ private protocol DetailTestAdapter {
     func todoEditorUpdated(_ todo: Todo)
     func setTodo(_ todo: Todo)
     func setReferenceItems(_ items: [Int: TodoReferenceItem])
+    func openInfo() async
     func openInfoAndTogglePinned() async
 }
 
@@ -378,14 +399,17 @@ private struct DetailStoreTestAdapter: DetailTestAdapter {
         store.send(.setReferenceItems(items))
     }
 
-    func openInfoAndTogglePinned() async {
+    func openInfo() async {
         store.send(.setSheet(.info))
         store.send(.info(.onAppear))
 
         await waitUntil {
             store.info.editor != nil
         }
+    }
 
+    func openInfoAndTogglePinned() async {
+        await openInfo()
         store.send(.info(.editor(.binding(.set(\.isPinned, true)))))
     }
 }

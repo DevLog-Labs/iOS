@@ -136,7 +136,11 @@ public struct TodoDetailFeature {
                 state.todo = todo
                 state.savedTodo = todo
                 state.referenceItems = [:]
-                return resolveMarkdownEffect(content: todo.content)
+                // 창 이벤트가 없는 상세도 불러온 세부 정보 시트 속성을 편집 화면에서 저장한 Todo로 갱신
+                return .merge(
+                    resolveMarkdownEffect(content: todo.content),
+                    state.info.editor == nil ? .none : .send(.info(.setTodo(todo)))
+                )
             case .fullScreenCover(.dismiss):
                 state.fullScreenCover = nil
             case .fullScreenCover:
