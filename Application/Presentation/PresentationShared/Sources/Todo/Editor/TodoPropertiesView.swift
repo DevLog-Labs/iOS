@@ -81,7 +81,6 @@ public struct TodoPropertiesView: View {
         ScrollView {
             TodoSideBarProperties(
                 editorStore: store,
-                isEditable: true,
                 isDueDatePickerPresented: $store.isDueDatePickerPresented
             )
         }

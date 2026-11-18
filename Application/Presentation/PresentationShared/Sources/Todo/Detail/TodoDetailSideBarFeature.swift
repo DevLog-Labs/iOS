@@ -64,9 +64,7 @@ public struct TodoDetailSideBarFeature {
                  .editor(.binding(\.isCompleted)),
                  .editor(.binding(\.isPinned)),
                  .editor(.binding(\.selectedDueDate)),
-                 .editor(.binding(\.dueDate)),
-                 .editor(.addTag),
-                 .editor(.removeTag):
+                 .editor(.binding(\.dueDate)):
                 guard state.isEditable else { break }
                 return .send(.editor(.upsertTodo))
             case .editor:

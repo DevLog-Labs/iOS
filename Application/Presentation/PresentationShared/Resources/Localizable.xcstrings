@@ -5923,23 +5923,6 @@
         }
       }
     },
-    "todo_no_tags" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Tags"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "태그 없음"
-          }
-        }
-      }
-    },
     "todo_none" : {
       "extractionState" : "manual",
       "localizations" : {

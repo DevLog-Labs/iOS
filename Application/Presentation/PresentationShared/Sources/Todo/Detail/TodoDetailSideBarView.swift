@@ -212,70 +212,51 @@ private struct TodoInfoProperties: View {
 struct TodoSideBarProperties: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var editorStore: StoreOf<TodoEditorFeature>
-    let isEditable: Bool
     @Binding var isDueDatePickerPresented: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             VStack(spacing: 0) {
                 PropertyRow(String(localized: "todo_category", bundle: PresentationResources.bundle)) {
-                    if isEditable {
-                        DropdownMenu(
-                            alignment: .trailing,
-                            sections: [
-                                DropdownMenuSection(items: editorStore.categories.map { category in
-                                    DropdownMenuItem(
-                                        category.localizedName,
-                                        systemImage: category.symbolName,
-                                        imageColor: category.color,
-                                        isChecked: editorStore.selectedCategoryID == category.id
-                                    ) {
-                                        editorStore.send(.binding(.set(\.selectedCategoryID, category.id)))
-                                    }
-                                })
-                            ]
-                        ) {
-                            categoryLabel(showsChevron: true)
-                        }
-                    } else {
-                        categoryLabel(showsChevron: false)
+                    DropdownMenu(
+                        alignment: .trailing,
+                        sections: [
+                            DropdownMenuSection(items: editorStore.categories.map { category in
+                                DropdownMenuItem(
+                                    category.localizedName,
+                                    systemImage: category.symbolName,
+                                    imageColor: category.color,
+                                    isChecked: editorStore.selectedCategoryID == category.id
+                                ) {
+                                    editorStore.send(.binding(.set(\.selectedCategoryID, category.id)))
+                                }
+                            })
+                        ]
+                    ) {
+                        categoryLabel
                     }
                 }
                 Divider().overlay(Color.separator)
                 PropertyRow(String(localized: "todo_completed", bundle: PresentationResources.bundle)) {
-                    if isEditable {
-                        Toggle(isOn: $editorStore.isCompleted) { EmptyView() }
-                            .toggleStyle(.pill)
-                            .labelsHidden()
-                    } else {
-                        Image(systemName: editorStore.isCompleted ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(editorStore.isCompleted ? Color.accent : .secondaryLabel)
-                    }
+                    Toggle(isOn: $editorStore.isCompleted) { EmptyView() }
+                        .toggleStyle(.pill)
+                        .labelsHidden()
                 }
                 Divider().overlay(Color.separator)
                 PropertyRow(String(localized: "todo_pinned", bundle: PresentationResources.bundle)) {
-                    if isEditable {
-                        Toggle(isOn: $editorStore.isPinned) { EmptyView() }
-                            .toggleStyle(.pill)
-                            .labelsHidden()
-                    } else {
-                        Image(systemName: editorStore.isPinned ? "star.fill" : "star")
-                            .foregroundStyle(Color.accent)
-                    }
+                    Toggle(isOn: $editorStore.isPinned) { EmptyView() }
+                        .toggleStyle(.pill)
+                        .labelsHidden()
                 }
                 Divider().overlay(Color.separator)
                 PropertyRow(String(localized: "todo_due_date", bundle: PresentationResources.bundle)) {
-                    if isEditable {
-                        Button {
-                            isDueDatePickerPresented = true
-                        } label: {
-                            dueDateLabel
-                        }
-                        .buttonStyle(.plain)
-                        .modifier(DueDatePickerModifier(isPresented: $isDueDatePickerPresented, store: editorStore))
-                    } else {
+                    Button {
+                        isDueDatePickerPresented = true
+                    } label: {
                         dueDateLabel
                     }
+                    .buttonStyle(.plain)
+                    .modifier(DueDatePickerModifier(isPresented: $isDueDatePickerPresented, store: editorStore))
                 }
             }
             .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
@@ -286,28 +267,16 @@ struct TodoSideBarProperties: View {
                 Text(String(localized: "todo_tags", bundle: PresentationResources.bundle))
                     .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote))
                     .foregroundStyle(Color.secondaryLabel)
-                if isEditable {
-                    TagField(store: editorStore)
-                    if !editorStore.tags.isEmpty {
-                        TagList(
-                            editorStore.tags,
-                            isEditing: true,
-                            verticalSpacing: 6 * AdaptiveSize.boardScale,
-                            horizontalSpacing: 6 * AdaptiveSize.boardScale,
-                            action: { editorStore.send(.removeTag($0)) }
-                        )
-                        .padding(.top, 4 * AdaptiveSize.boardScale)
-                    }
-                } else if editorStore.tags.isEmpty {
-                    Text(String(localized: "todo_no_tags", bundle: PresentationResources.bundle))
-                        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
-                        .foregroundStyle(Color.secondaryLabel)
-                } else {
+                TagField(store: editorStore)
+                if !editorStore.tags.isEmpty {
                     TagList(
                         editorStore.tags,
+                        isEditing: true,
                         verticalSpacing: 6 * AdaptiveSize.boardScale,
-                        horizontalSpacing: 6 * AdaptiveSize.boardScale
+                        horizontalSpacing: 6 * AdaptiveSize.boardScale,
+                        action: { editorStore.send(.removeTag($0)) }
                     )
+                    .padding(.top, 4 * AdaptiveSize.boardScale)
                 }
             }
             .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
@@ -315,7 +284,7 @@ struct TodoSideBarProperties: View {
         }
     }
 
-    private func categoryLabel(showsChevron: Bool) -> some View {
+    private var categoryLabel: some View {
         let category = editorStore.category
 
         return HStack(spacing: 6 * AdaptiveSize.boardScale) {
@@ -324,11 +293,9 @@ struct TodoSideBarProperties: View {
                 .lineLimit(1)
             Image(systemName: category.symbolName)
                 .foregroundStyle(category.color)
-            if showsChevron {
-                Image(systemName: "chevron.right")
-                    .font(.system(size: isiOSAppOnMac ? 11 * AdaptiveSize.boardScale : 14, weight: .medium))
-                    .foregroundStyle(Color.secondaryLabel)
-            }
+            Image(systemName: "chevron.right")
+                .font(.system(size: isiOSAppOnMac ? 11 * AdaptiveSize.boardScale : 14, weight: .medium))
+                .foregroundStyle(Color.secondaryLabel)
         }
         .contentShape(.rect)
     }
