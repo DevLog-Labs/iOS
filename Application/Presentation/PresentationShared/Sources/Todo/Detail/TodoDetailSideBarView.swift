@@ -98,6 +98,8 @@ private struct TodoInfoProperties: View {
     var body: some View {
         let category = editorStore.category
         let glyphSize = isiOSAppOnMac ? 15 * AdaptiveSize.boardScale : 18
+        // 글리프는 작게 두고 누르는 영역만 손가락 크기로 넓힘
+        let hitPadding = isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 13
 
         VStack(spacing: 0) {
             PropertyRow(String(localized: "todo_category", bundle: PresentationResources.bundle)) {
@@ -143,9 +145,11 @@ private struct TodoInfoProperties: View {
                         .fontWeight(.medium)
                         .frame(width: glyphSize, height: glyphSize)
                         .foregroundStyle(editorStore.isCompleted ? Color.accent : .secondaryLabel)
+                        .padding(hitPadding)
                         .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .padding(-hitPadding)
                 .disabled(!isEditable)
             }
             Divider().overlay(Color.separator)
@@ -158,9 +162,11 @@ private struct TodoInfoProperties: View {
                         .fontWeight(.medium)
                         .frame(width: glyphSize, height: glyphSize)
                         .foregroundStyle(editorStore.isPinned ? Color.accent : .secondaryLabel)
+                        .padding(hitPadding)
                         .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                .padding(-hitPadding)
                 .disabled(!isEditable)
             }
             Divider().overlay(Color.separator)
