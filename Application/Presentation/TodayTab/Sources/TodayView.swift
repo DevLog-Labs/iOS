@@ -175,9 +175,12 @@ public struct TodayView: View {
         .prominentSheet(
             isPresented: usesDesktopLayout ? .constant(false) : $store.isTodoInspectorPresented
         ) {
-            TodayTodoInspector(store: store, showsCloseButton: true)
+            // 넓은 창의 세부 정보 사이드바와 같은 속성 칸, 고친 값은 바로 저장
+            if let infoStore = store.scope(state: \.todoInfo, action: \.todoInfo) {
+                InfoSheetView(store: infoStore, onClose: { store.send(.dismissTodoInspector) })
+            }
         }
-        // 사이드바 구조로 바뀌면 가려진 세부 정보 시트는 고친 값을 저장하고 닫아 같은 Todo를 세부 정보 사이드바에 표시
+        // 사이드바 구조로 바뀌면 가려진 세부 정보 시트는 닫고 같은 Todo를 세부 정보 사이드바에 표시
         .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
             if usesDesktopLayout && store.isTodoInspectorPresented {
                 store.send(.moveTodoInspectorToSideBar)
@@ -483,26 +486,6 @@ private struct TodayEmptyContent: View {
         let title: String
         let message: String
         let systemImage: String
-    }
-}
-
-private struct TodayTodoInspector: View {
-    let store: StoreOf<TodayFeature>
-    var showsCloseButton = false
-
-    @ViewBuilder
-    var body: some View {
-        if let editorStore = store.scope(state: \.todoEditor, action: \.todoEditor) {
-            TodoPropertiesView(
-                store: editorStore,
-                showsEditorActions: true,
-                showsCloseButton: showsCloseButton,
-                onSubmit: { editorStore.send(.upsertTodo) },
-                onClose: { store.send(.dismissTodoInspector) }
-            )
-            .onAppear { editorStore.send(.onAppear) }
-            .prominentAlert(editorStore, state: \.alert, action: \.alert)
-        }
     }
 }
 

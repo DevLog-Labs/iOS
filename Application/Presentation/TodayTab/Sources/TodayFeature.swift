@@ -53,7 +53,7 @@ struct TodayFeature {
         case dismissTodoInspector
         case moveTodoInspectorToSideBar
         case detailTodoUpdated(TodayTodoItem)
-        case todoEditor(TodoEditorFeature.Action)
+        case todoInfo(TodoDetailSideBarFeature.Action)
         case store(StoreAction)
         case loading(LoadingFeature.Action)
 
@@ -90,10 +90,6 @@ struct TodayFeature {
             switch action {
             case .alert:
                 break
-            case .binding(\.isTodoInspectorPresented):
-                if !state.isTodoInspectorPresented {
-                    dismissTodoInspector(state: &state)
-                }
             case .binding:
                 break
             case .refresh:
@@ -127,48 +123,43 @@ struct TodayFeature {
                 return completeTodoEffect(item)
             case .showTodoInspector(let item):
                 guard let item = latestItem(id: item.id, state: state) else { break }
-                state.todoEditor = TodoEditorFeature.State(todo: item.todo)
-                state.dismissesTodoInspectorAfterSaving = false
+                state.todoInfo = TodoDetailSideBarFeature.State(todoId: item.id, isEditable: true)
                 state.isTodoInspectorPresented = true
+                // 목록에 있는 Todo로 속성 칸을 바로 채움
+                return .send(.todoInfo(.setTodo(item.todo)))
             case .dismissTodoInspector:
-                dismissTodoInspector(state: &state)
+                state.isTodoInspectorPresented = false
             case .moveTodoInspectorToSideBar:
-                guard state.isTodoInspectorPresented, let editor = state.todoEditor else { break }
-                // 고친 값이 없으면 바로 닫고 같은 Todo를 목록에서 고름
-                guard editor.isReadyToSubmit || editor.isLoading else {
-                    state.selectedTodoId = editor.id
-                    dismissTodoInspector(state: &state)
+                guard state.isTodoInspectorPresented, let info = state.todoInfo else { break }
+                // 고친 값은 이미 저장해 시트만 닫고 같은 Todo를 세부 정보 사이드바에 표시
+                state.isTodoInspectorPresented = false
+                guard info.editor?.isLoading == true else {
+                    state.selectedTodoId = info.todoId
                     break
                 }
                 // 세부 정보 사이드바가 저장 전 Todo를 불러오지 않도록 저장이 끝날 때까지 고른 Todo를 비워 둠
                 state.selectedTodoId = nil
-                state.todoIdToSelectAfterSaving = editor.id
-                // 저장 버튼으로 이미 저장 중이면 그 저장이 끝나기를 기다림
-                guard !editor.isLoading else { break }
-                // 고친 값은 저장 버튼과 같이 저장한 뒤 닫음
-                return .send(.todoEditor(.upsertTodo))
-            case .todoEditor(.delegate(.updated(let todo))):
+                state.todoIdToSelectAfterSaving = info.todoId
+            case .todoInfo(.editor(.updateSucceeded(let todo))):
+                // 시트를 닫은 뒤 끝난 저장도 목록에 반영
                 guard let item = TodayTodoItem(from: todo) else {
                     return .send(.store(.setAlert))
                 }
-                state.dismissesTodoInspectorAfterSaving = true
                 return .send(.store(.updateTodo(item)))
-            case .todoEditor(.loading(.end(target: .default, mode: .immediate))):
-                if let id = state.todoIdToSelectAfterSaving {
-                    // 가려진 시트 대신 오늘 화면에서 저장 실패를 알림
-                    if state.todoEditor?.saveResult == nil {
-                        state.alert = Self.alertState()
-                    }
-                    state.selectedTodoId = id
-                    dismissTodoInspector(state: &state)
-                    break
+            case .todoInfo(.editor(.saveFailed)):
+                // 시트를 닫은 뒤 실패한 저장은 오늘 화면에서 알림
+                if !state.isTodoInspectorPresented {
+                    state.todoInfo?.editor?.alert = nil
+                    state.alert = Self.alertState()
                 }
-                guard state.dismissesTodoInspectorAfterSaving else { break }
-                return .send(.dismissTodoInspector)
+            case .todoInfo(.editor(.loading(.end(target: .default, mode: .immediate)))):
+                guard let id = state.todoIdToSelectAfterSaving else { break }
+                state.selectedTodoId = id
+                state.todoIdToSelectAfterSaving = nil
             case .detailTodoUpdated(let item):
                 // 상세 칸이 저장해 보낸 Todo는 상세가 이미 반영해 목록 행만 갱신
                 update(item, state: &state)
-            case .todoEditor:
+            case .todoInfo:
                 break
             case .store(.setAlert):
                 state.alert = Self.alertState()
@@ -209,8 +200,8 @@ struct TodayFeature {
             return .none
         }
         .ifLet(\.$alert, action: \.alert)
-        .ifLet(\.todoEditor, action: \.todoEditor) {
-            TodoEditorFeature()
+        .ifLet(\.todoInfo, action: \.todoInfo) {
+            TodoDetailSideBarFeature()
         }
     }
 }
@@ -265,13 +256,6 @@ private extension TodayFeature {
         guard let selectedItem,
               latestItem(id: selectedItem.id, state: state)?.updatedAt != selectedItem.updatedAt else { return }
         state.detailPaneRevision += 1
-    }
-
-    func dismissTodoInspector(state: inout State) {
-        state.isTodoInspectorPresented = false
-        state.todoEditor = nil
-        state.dismissesTodoInspectorAfterSaving = false
-        state.todoIdToSelectAfterSaving = nil
     }
 
     func prepareTodayInterval(state: inout State, now: Date) -> DateInterval {

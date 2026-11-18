@@ -278,12 +278,18 @@ public struct TodoDetailView: View {
     }
 }
 
-private struct InfoSheetView: View {
+// 좁은 창의 세부 정보 시트, 상세 화면과 오늘 탭이 함께 사용
+public struct InfoSheetView: View {
     let store: StoreOf<TodoDetailSideBarFeature>
     let onClose: () -> Void
 
-    var body: some View {
-        // 저장 결과는 상세 상태가 받아 목록에 전달
+    public init(store: StoreOf<TodoDetailSideBarFeature>, onClose: @escaping () -> Void) {
+        self.store = store
+        self.onClose = onClose
+    }
+
+    public var body: some View {
+        // 저장 결과는 시트를 연 화면의 상태가 받아 목록에 전달
         TodoDetailSideBarView(store: store, windowEvent: nil)
         .safeAreaInset(edge: .top, spacing: 0) {
             topBar

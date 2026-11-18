@@ -14,13 +14,13 @@ import Foundation
 public struct TodoDetailSideBarFeature {
     @ObservableState
     public struct State: Equatable {
-        var editor: TodoEditorFeature.State?
+        public var editor: TodoEditorFeature.State?
         var isDueDatePickerPresented = false
         var isFetchFailed = false
         // 좁은 창 세부 정보 시트를 속성 칸 높이만큼 열기 위해 잰 위쪽 줄과 속성 칸 높이
         var sheetBarHeight = CGFloat.zero
         var sheetContentHeight = CGFloat.zero
-        let todoId: String
+        public let todoId: String
         let isEditable: Bool
 
         public init(todoId: String, isEditable: Bool) {
