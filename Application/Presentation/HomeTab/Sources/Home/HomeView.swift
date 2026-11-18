@@ -175,9 +175,10 @@ public struct HomeView: View {
     }
 
     private func handleSideBarRequest(_ request: SideBarRequest?, showsSheetAsPane: Bool) {
-        // 이미 표시 중인 개발 목표를 다시 누르면 칸을 닫고 다시 열지 않음
+        // 이미 표시 중인 개발 목표를 다시 누르면 다시 열지 않고 쌓아 연 화면만 닫아 개발 목표 첫 화면 표시
         if case .open(.developmentGoal(let goalID))? = request?.action,
            store.sheet?.goalDetailState?.goalId == goalID {
+            store.send(.sheet(.presented(.goalDetail(.view(.returnToGoal)))))
             return
         }
         // 작성 중인 새 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음

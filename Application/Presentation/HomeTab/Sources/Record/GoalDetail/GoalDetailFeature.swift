@@ -88,6 +88,8 @@ struct GoalDetailFeature {
             case manageTodos
             case refresh
             case retryTodos
+            // 개발 목표 위에 쌓아 연 기록, Todo 상세를 닫고 개발 목표 첫 화면으로 돌아감
+            case returnToGoal
             case selectRecord(RecordTimelineItem)
             case selectTodo(String)
             case selectStatus(DevelopmentGoal.Status)
@@ -216,6 +218,9 @@ struct GoalDetailFeature {
                 } else {
                     state.recordDetail = RecordDetailDestination(record: item.record)
                 }
+            case .view(.returnToGoal):
+                state.recordDetail = nil
+                state.todoDetail = nil
             case .view(.selectTodo(let todoId)):
                 guard state.linkedTodos.contains(where: { $0.id == todoId }),
                       state.todoDetail == nil else { break }
