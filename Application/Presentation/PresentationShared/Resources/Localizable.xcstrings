@@ -6133,13 +6133,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Write"
+            "value" : "Edit"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "작성"
+            "value" : "편집"
           }
         }
       }
