@@ -492,18 +492,39 @@ private struct HomeDevelopmentGoals: View {
 }
 
 private struct HomeTodoSection: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .title2) private var iconSize = CGFloat(64)
     let store: StoreOf<HomeFeature>
 
     var body: some View {
         let items = store.preferences.filter(\.isVisible)
-        let collapsedCount = min(items.count, 8)
         let columnCount = dynamicTypeSize.isAccessibilitySize ? 2 : 4
-        let showsExpansionButton = 8 < items.count
-            || 0 < collapsedCount && collapsedCount.isMultiple(of: columnCount)
 
         VStack(alignment: .leading, spacing: 0) {
+            HomeSectionHeader {
+                Text(verbatim: "Todo")
+            } trailing: {
+                if !store.isPreferencesLoading {
+                    Button {
+                        store.send(.view(.tapManageTodoCategory))
+                    } label: {
+                        // Todo 타일과 같은 바탕·테두리의 작은 버튼
+                        Text("todo_edit", bundle: PresentationResources.bundle)
+                            .font(.adaptive(.footnote).weight(.medium))
+                            .foregroundStyle(Color.label)
+                            .padding(.horizontal, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
+                            .frame(minHeight: isiOSAppOnMac ? 24 * AdaptiveSize.boardScale : 28)
+                            .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: CornerRadius.control)
+                                    .strokeBorder(Color.secondarySeparator)
+                            }
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
             if store.isPreferencesLoading {
                 LoadingView()
                     .frame(maxWidth: .infinity)
@@ -511,47 +532,19 @@ private struct HomeTodoSection: View {
                 let visibleItems = store.isTodoCategoryExpanded
                     ? items
                     : Array(items.prefix(8))
-                let hasAvailableSlot = visibleItems.isEmpty
-                    || !visibleItems.count.isMultiple(of: columnCount)
 
-                TodoCategoryGridLayout(
-                    columnCount: columnCount,
-                    itemWidth: iconSize,
-                    maximumRowSpacing: dynamicTypeSize.isAccessibilitySize ? .infinity : iconSize / 2
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 0, alignment: .top), count: columnCount),
+                    spacing: 0
                 ) {
                     ForEach(visibleItems) { item in
-                        HomeTodoCategoryLink(item: item, iconSize: iconSize)
-                    }
-                    if store.isTodoCategoryExpanded || hasAvailableSlot {
-                        Button {
-                            store.send(.view(.tapManageTodoCategory))
-                        } label: {
-                            VStack(spacing: 10) {
-                                RoundedRectangle(cornerRadius: CornerRadius.control)
-                                    .strokeBorder(
-                                        Color.tertiaryLabel,
-                                        style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])
-                                    )
-                                    .frame(width: iconSize, height: iconSize)
-                                    .overlay {
-                                        Image(systemName: "square.grid.2x2")
-                                            .font(.adaptive(.title2).bold())
-                                            .foregroundStyle(Color.tertiaryLabel)
-                                    }
-                                Text("todo_edit", bundle: PresentationResources.bundle)
-                                    .font(.adaptive(.subheadline))
-                                    .foregroundStyle(Color.tertiaryLabel)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .contentShape(.rect)
-                        }
-                        .buttonStyle(.plain)
+                        HomeTodoCategoryLink(item: item)
                     }
                 }
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
             }
 
-            if !store.isPreferencesLoading, showsExpansionButton {
+            if !store.isPreferencesLoading, 8 < items.count {
                 HStack {
                     Spacer()
                     Button {
@@ -569,32 +562,36 @@ private struct HomeTodoSection: View {
                 }
             }
         }
-        .padding(.bottom, 12)
-        .background(Color.secondaryBackground, in: Rectangle())
     }
 }
 
+// 테두리 있는 아이콘 사각형과 이름 타일
 private struct HomeTodoCategoryLink: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let item: TodoCategoryItem
-    let iconSize: CGFloat
 
     var body: some View {
+        let tileSize = isiOSAppOnMac ? 37 * AdaptiveSize.boardScale : 40
+
         NavigationLink(value: HomeRoute.category(item)) {
-            VStack(spacing: 10) {
+            VStack(spacing: 6) {
                 Image(systemName: item.symbolName)
-                    .font(.adaptive(.title2).bold())
-                    .frame(width: iconSize, height: iconSize)
-                    .iconStyle(
-                        color: item.color,
-                        in: RoundedRectangle(cornerRadius: CornerRadius.control)
-                    )
+                    .font(.adaptive(.body).weight(.medium))
+                    .foregroundStyle(item.color)
+                    .frame(width: tileSize, height: tileSize)
+                    .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: CornerRadius.control)
+                            .strokeBorder(Color.secondarySeparator)
+                    }
                 Text(item.localizedName)
-                    .font(.adaptive(.subheadline))
-                    .foregroundStyle(Color.secondaryLabel)
+                    .font(.adaptive(.footnote))
+                    .foregroundStyle(Color.label)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.8)
             }
+            .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
             .contentShape(.rect)
         }
