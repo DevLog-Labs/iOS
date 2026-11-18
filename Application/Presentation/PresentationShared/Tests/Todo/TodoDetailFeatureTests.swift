@@ -224,6 +224,58 @@ struct TodoDetailFeatureTests {
 
         #expect(referenceSpy.numbers == [[7]])
     }
+
+    @Test("세부 정보 시트를 닫은 뒤 끝난 저장도 상세 Todo에 반영한다")
+    func 세부_정보_시트를_닫은_뒤_끝난_저장도_상세_Todo에_반영한다() async {
+        let upsertSpy = TodoEditorUpsertTodoUseCaseSpy()
+        upsertSpy.shouldSuspend = true
+        let adapter = makeInfoAdapter(upsertSpy: upsertSpy)
+
+        await adapter.openInfoAndTogglePinned()
+        adapter.dismissSheet()
+        upsertSpy.resume()
+
+        await waitUntil {
+            adapter.todo?.isPinned == true
+        }
+
+        #expect(upsertSpy.todos.map(\.isPinned) == [true])
+        #expect(adapter.savedTodo == upsertSpy.todos.first)
+        #expect(adapter.alert == nil)
+    }
+
+    @Test("세부 정보 시트를 닫은 뒤 저장에 실패하면 상세 화면에 공통 에러 알림을 표시한다")
+    func 세부_정보_시트를_닫은_뒤_저장에_실패하면_상세_화면에_공통_에러_알림을_표시한다() async {
+        let upsertSpy = TodoEditorUpsertTodoUseCaseSpy()
+        upsertSpy.shouldSuspend = true
+        upsertSpy.error = DetailTestError.failure
+        let adapter = makeInfoAdapter(upsertSpy: upsertSpy)
+
+        await adapter.openInfoAndTogglePinned()
+        adapter.dismissSheet()
+        upsertSpy.resume()
+
+        await waitUntil {
+            adapter.alert != nil
+        }
+
+        #expect(adapter.alert == expectedErrorAlert())
+        #expect(adapter.infoEditor?.alert == nil)
+        #expect(adapter.savedTodo == nil)
+    }
+
+    private func makeInfoAdapter(upsertSpy: TodoEditorUpsertTodoUseCaseSpy) -> DetailStoreTestAdapter {
+        DetailStoreTestAdapter(
+            fetchUseCase: FetchTodoByIdUseCaseSpy(todo: makeTodo()),
+            referenceUseCase: FetchReferenceItemsUseCaseSpy(),
+            todoId: "todo-1",
+            configureDependencies: {
+                $0.date.now = todoEditorNow
+                $0.fetchTodoCategoryPreferencesUseCase = TodoEditorFetchPreferencesUseCaseSpy()
+                $0.upsertTodoUseCase = upsertSpy
+            }
+        )
+    }
 }
 
 @MainActor
@@ -238,6 +290,7 @@ private protocol DetailTestAdapter {
     var sheet: TodoDetailFeature.SheetState? { get }
     var fullScreenCover: TodoDetailFeature.FullScreenCoverState? { get }
     var fullScreenCoverDestination: TodoDetailFeature.FullScreenCoverState.Destination? { get }
+    var infoEditor: TodoEditorFeature.State? { get }
 
     func onAppear()
     func onSheetTodoAppear()
@@ -248,6 +301,7 @@ private protocol DetailTestAdapter {
     func todoEditorUpdated(_ todo: Todo)
     func setTodo(_ todo: Todo)
     func setReferenceItems(_ items: [Int: TodoReferenceItem])
+    func openInfoAndTogglePinned() async
 }
 
 @MainActor
@@ -266,6 +320,7 @@ private struct DetailStoreTestAdapter: DetailTestAdapter {
     var fullScreenCoverDestination: TodoDetailFeature.FullScreenCoverState.Destination? {
         store.fullScreenCover?.destination
     }
+    var infoEditor: TodoEditorFeature.State? { store.info.editor }
 
     init(
         fetchUseCase: FetchTodoByIdUseCase,
@@ -321,6 +376,17 @@ private struct DetailStoreTestAdapter: DetailTestAdapter {
 
     func setReferenceItems(_ items: [Int: TodoReferenceItem]) {
         store.send(.setReferenceItems(items))
+    }
+
+    func openInfoAndTogglePinned() async {
+        store.send(.setSheet(.info))
+        store.send(.info(.onAppear))
+
+        await waitUntil {
+            store.info.editor != nil
+        }
+
+        store.send(.info(.editor(.binding(.set(\.isPinned, true)))))
     }
 }
 

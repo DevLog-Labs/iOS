@@ -259,10 +259,7 @@ public struct TodoDetailView: View {
         case .info:
             // 넓은 창의 세부 정보 사이드바와 같은 속성 칸, 고친 값은 바로 저장
             InfoSheetView(
-                todoId: store.todoId,
-                isEditable: store.showEditButton,
-                windowEvent: windowEvent,
-                onUpdate: { store.send(.setTodo($0)) },
+                store: store.scope(state: \.info, action: \.info),
                 onClose: { sheetStore.send(.tapCloseButton) }
             )
         case .todo:
@@ -284,19 +281,12 @@ public struct TodoDetailView: View {
 private struct InfoSheetView: View {
     @State private var contentHeight = CGFloat.zero
     @State private var barHeight = CGFloat.zero
-    let todoId: String
-    let isEditable: Bool
-    let windowEvent: TodoEditorWindowEvent?
-    let onUpdate: (Todo) -> Void
+    let store: StoreOf<TodoDetailSideBarFeature>
     let onClose: () -> Void
 
     var body: some View {
-        TodoDetailSideBarView(
-            todoId: todoId,
-            isEditable: isEditable,
-            windowEvent: windowEvent,
-            onUpdate: onUpdate
-        )
+        // 저장 결과는 상세 상태가 받아 목록에 전달
+        TodoDetailSideBarView(store: store, windowEvent: nil)
         .safeAreaInset(edge: .top, spacing: 0) {
             topBar
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { barHeight = $0 }

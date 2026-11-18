@@ -9,7 +9,7 @@ import ComposableArchitecture
 import Domain
 import Foundation
 
-// Mac 세부 정보 사이드바의 Todo 속성, 고친 값은 바로 저장
+// 세부 정보 사이드바와 좁은 창 세부 정보 시트의 Todo 속성, 고친 값은 바로 저장
 @Reducer
 public struct TodoDetailSideBarFeature {
     @ObservableState

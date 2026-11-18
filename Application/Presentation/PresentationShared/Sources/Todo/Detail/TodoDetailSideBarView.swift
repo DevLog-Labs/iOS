@@ -14,14 +14,11 @@ import Domain
 public struct TodoDetailSideBarView: View {
     @State private var store: StoreOf<TodoDetailSideBarFeature>
     private let windowEvent: TodoEditorWindowEvent?
-    // 저장한 Todo를 시트를 연 상세 화면에도 반영하는 동작
-    private let onUpdate: ((Todo) -> Void)?
 
     public init(
         todoId: String,
         isEditable: Bool,
-        windowEvent: TodoEditorWindowEvent?,
-        onUpdate: ((Todo) -> Void)? = nil
+        windowEvent: TodoEditorWindowEvent?
     ) {
         self._store = State(initialValue: Store(
             initialState: TodoDetailSideBarFeature.State(todoId: todoId, isEditable: isEditable)
@@ -29,18 +26,15 @@ public struct TodoDetailSideBarView: View {
             TodoDetailSideBarFeature()
         })
         self.windowEvent = windowEvent
-        self.onUpdate = onUpdate
     }
 
-    // 상세 판처럼 바깥 화면이 속성 상태를 함께 쓰는 세부 정보 열
+    // 상세 판과 세부 정보 시트처럼 바깥 화면이 속성 상태를 함께 쓰는 세부 정보 열
     init(
         store: StoreOf<TodoDetailSideBarFeature>,
-        windowEvent: TodoEditorWindowEvent?,
-        onUpdate: ((Todo) -> Void)? = nil
+        windowEvent: TodoEditorWindowEvent?
     ) {
         self._store = State(initialValue: store)
         self.windowEvent = windowEvent
-        self.onUpdate = onUpdate
     }
 
     public var body: some View {
@@ -63,7 +57,6 @@ public struct TodoDetailSideBarView: View {
                     // 저장한 Todo를 목록과 상세 칸에도 반영
                     guard case .updated(let todo) = result else { return }
                     windowEvent?.submitUpdate(value: TodoEditorWindowValue(todo: todo), todo: todo)
-                    onUpdate?(todo)
                 }
                 .prominentAlert(editorStore, state: \.alert, action: \.alert)
             } else if store.isFetchFailed {

@@ -19,14 +19,18 @@ public struct TodoDetailFeature {
         public var todoId: String
         public var showEditButton: Bool
         public var todo: Todo?
-        // 편집 화면에서 저장한 Todo
+        // 편집 화면이나 세부 정보 시트에서 저장한 Todo
         public var savedTodo: Todo?
         public var referenceItems: [Int: TodoReferenceItem] = [:]
         public var loading = LoadingFeature.State()
+        // 좁은 창 세부 정보 시트의 속성
+        // 시트를 닫아도 저장 결과를 받도록 시트 밖에서 소유
+        var info: TodoDetailSideBarFeature.State
 
         public init(todoId: String, showEditButton: Bool) {
             self.todoId = todoId
             self.showEditButton = showEditButton
+            self.info = TodoDetailSideBarFeature.State(todoId: todoId, isEditable: showEditButton)
         }
 
         public var isLoading: Bool {
@@ -91,6 +95,7 @@ public struct TodoDetailFeature {
         case setTodo(Todo)
         case setReferenceItems([Int: TodoReferenceItem])
         case loading(LoadingFeature.Action)
+        case info(TodoDetailSideBarFeature.Action)
 
         @CasePathable
         public enum Sheet {
@@ -112,6 +117,9 @@ public struct TodoDetailFeature {
     public var body: some ReducerOf<Self> {
         Scope(state: \.loading, action: \.loading) {
             LoadingFeature()
+        }
+        Scope(state: \.info, action: \.info) {
+            TodoDetailSideBarFeature()
         }
         Reduce { state, action in
             switch action {
@@ -149,10 +157,32 @@ public struct TodoDetailFeature {
             case .setTodo(let todo):
                 state.todo = todo
                 state.referenceItems = [:]
-                return resolveMarkdownEffect(content: todo.content)
+                // 세부 정보 시트가 저장한 Todo는 입력 중인 값을 덮지 않도록 다시 넣지 않음
+                guard let editor = state.info.editor,
+                      editor.saveResult != .updated(todo) else {
+                    return resolveMarkdownEffect(content: todo.content)
+                }
+                return .merge(
+                    resolveMarkdownEffect(content: todo.content),
+                    .send(.info(.setTodo(todo)))
+                )
             case .setReferenceItems(let items):
                 state.referenceItems = items
             case .loading:
+                break
+            case .info(.editor(.updateSucceeded(let todo))):
+                // 시트를 닫은 뒤 끝난 저장도 상세와 목록에 반영
+                state.todo = todo
+                state.savedTodo = todo
+                state.referenceItems = [:]
+                return resolveMarkdownEffect(content: todo.content)
+            case .info(.editor(.saveFailed)):
+                // 시트를 닫은 뒤 실패한 저장은 상세 화면에서 알림
+                if state.sheet != .info {
+                    state.info.editor?.alert = nil
+                    state.alert = Self.alertState()
+                }
+            case .info:
                 break
             }
 
