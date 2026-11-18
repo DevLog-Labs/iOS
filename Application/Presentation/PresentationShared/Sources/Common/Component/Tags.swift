@@ -53,9 +53,15 @@ public struct Tag: View {
                 } label: {
                     Image(systemName: "xmark")
                         .font(.system(size: 8 * AdaptiveSize.boardScale, weight: .bold))
+                        // 글리프는 작게 두고 누르는 영역만 배지 높이와 오른쪽 끝까지 넓힘
+                        .padding(.horizontal, 6 * AdaptiveSize.boardScale)
+                        .frame(maxHeight: .infinity)
                         .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
+                // 넓힌 누르는 영역만큼 당겨 글자와 배지 끝 사이 간격 유지
+                .padding(.leading, -4 * AdaptiveSize.boardScale)
+                .padding(.trailing, -6 * AdaptiveSize.boardScale)
             }
         }
     }
