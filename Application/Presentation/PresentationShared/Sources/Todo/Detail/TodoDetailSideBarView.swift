@@ -419,7 +419,8 @@ private struct DueDatePickerModifier: ViewModifier {
     let store: StoreOf<TodoEditorFeature>
 
     func body(content: Content) -> some View {
-        let isRegular = horizontalSizeClass == .regular
+        // Duo는 펼쳐도 좁은 화면처럼 시트로 표시
+        let isRegular = horizontalSizeClass == .regular && UIDevice.current.userInterfaceIdiom == .pad
 
         content
             .popover(isPresented: isRegular ? $isPresented : .constant(false)) {
