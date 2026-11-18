@@ -6110,23 +6110,6 @@
         }
       }
     },
-    "todo_tag_duplicate_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Each tag can only be added once."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "같은 태그는 한 번만 추가할 수 있어요."
-          }
-        }
-      }
-    },
     "todo_tags" : {
       "extractionState" : "manual",
       "localizations" : {
