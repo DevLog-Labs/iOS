@@ -318,17 +318,20 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var searchButton: some View {
-        if #available(iOS 26.0, *) {
-            Button {
+        // 사이드바가 있는 창은 검색 화면을 아래에서 올리지 않고 바로 표시
+        let openSearch: () -> Void = {
+            withTransaction(\.disablesAnimations, usesDesktopLayout) {
                 store.send(.store(.setPresentation(.searchView, true)))
-            } label: {
+            }
+        }
+
+        if #available(iOS 26.0, *) {
+            Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
             }
             .topBarButtonStyle()
         } else {
-            Button {
-                store.send(.store(.setPresentation(.searchView, true)))
-            } label: {
+            Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
                     .font(.adaptive(.title3).weight(.semibold))
                     .frame(width: 28, height: 28)

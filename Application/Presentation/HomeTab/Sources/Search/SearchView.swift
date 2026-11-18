@@ -12,6 +12,7 @@ import PresentationShared
 struct SearchView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @State private var router = NavigationRouter<Path>()
@@ -74,20 +75,22 @@ struct SearchView: View {
     }
 
     private var topBar: some View {
-        VStack(alignment: .leading) {
+        let close = {
+            store.send(.binding(.set(\.isSearching, false)))
+            // 사이드바가 있는 창은 검색 화면을 아래로 내리지 않고 바로 닫음
+            withTransaction(\.disablesAnimations, usesDesktopLayout) {
+                dismiss()
+            }
+        }
+
+        return VStack(alignment: .leading) {
             if #available(iOS 26.0, *) {
-                Button {
-                    store.send(.binding(.set(\.isSearching, false)))
-                    dismiss()
-                } label: {
+                Button(action: close) {
                     Image(systemName: "xmark")
                 }
                 .topBarButtonStyle(tint: Color.accent)
             } else {
-                Button {
-                    store.send(.binding(.set(\.isSearching, false)))
-                    dismiss()
-                } label: {
+                Button(action: close) {
                     Text(String(localized: "common_close", bundle: PresentationResources.bundle))
                 }
                 .topBarButtonStyle(tint: Color.accent)
