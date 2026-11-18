@@ -459,10 +459,14 @@ private struct ContentView: View {
                         .composable(
                             update: { textEditor in
                                 // Markdown 본문은 고정폭 글꼴로 표시
-                                textEditor.font = .monospacedSystemFont(
+                                // 같은 글꼴을 다시 넣어 긴 본문을 갱신마다 다시 배치하지 않도록 다를 때만 지정
+                                let font = UIFont.monospacedSystemFont(
                                     ofSize: isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 13.5,
                                     weight: .regular
                                 )
+                                if textEditor.font != font {
+                                    textEditor.font = font
+                                }
                                 textEditor.updateInput(
                                     text: $store.content,
                                     isFocused: isContentFocused,
