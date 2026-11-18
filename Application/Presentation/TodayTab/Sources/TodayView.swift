@@ -317,27 +317,23 @@ private struct TodayFilterBar: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            LazyHStack(spacing: 8) {
+            LazyHStack(spacing: 6) {
                 ForEach(TodayFeature.TodoScope.allCases, id: \.self) { scope in
-                    let isSelected = store.selectedTodoScope == scope
                     Button {
                         withAnimation(.easeInOut) {
                             _ = store.send(.setTodoScope(scope))
                         }
                     } label: {
-                        HStack(spacing: 6) {
+                        TodayFilterChip(isSelected: store.selectedTodoScope == scope) {
                             Text(scope.title)
                             Text("\(store.summaryCounts[scope, default: 0])")
                                 .fontWeight(.bold)
                         }
-                        .font(.adaptive(.callout))
-                        .foregroundStyle(isSelected ? Color.tintLabel : .fillLabel)
                     }
-                    .adaptiveButtonStyle(color: isSelected ? Color.tintFill : .fill)
+                    .buttonStyle(.plain)
                 }
 
                 let category = store.selectedCategory
-                let isSelected = category != nil
                 DropdownMenu(
                     isPresented: $store.isCategoryFilterPresented,
                     sections: [
@@ -362,9 +358,9 @@ private struct TodayFilterBar: View {
                         })
                     ]
                 ) {
-                    HStack(spacing: 6) {
-                        Image(systemName: category?.symbolName ?? "tray.2")
-                            .foregroundStyle(category?.color ?? Color.fillLabel)
+                    TodayFilterChip(isSelected: category != nil) {
+                        // 아이콘도 칩 글자색을 따름
+                        Image(systemName: category?.symbolName ?? "tray")
                         Text(
                             category?.localizedName
                                 ?? String(
@@ -373,15 +369,33 @@ private struct TodayFilterBar: View {
                                 )
                         )
                     }
-                    .font(.adaptive(.callout))
-                    .foregroundStyle(isSelected ? Color.tintLabel : .fillLabel)
-                    .adaptiveButtonStyle(color: isSelected ? Color.tintFill : .fill)
                 }
             }
         }
         .scrollIndicators(.hidden)
         .padding(.horizontal, -16)
         .contentMargins(.horizontal, 16, for: .scrollContent)
+    }
+}
+
+// 고른 조건은 강조색 바탕과 테두리, 나머지는 테두리만 있는 칩
+private struct TodayFilterChip<Content: View>: View {
+    let isSelected: Bool
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(spacing: 5) {
+            content
+        }
+        .font(.adaptive(.footnote))
+        .foregroundStyle(isSelected ? Color.tintLabel : .label)
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(isSelected ? Color.tintFill : .clear, in: .rect(cornerRadius: CornerRadius.control))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.control)
+                .strokeBorder(isSelected ? Color.accent.opacity(0.6) : .separator)
+        }
     }
 }
 
