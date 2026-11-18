@@ -238,52 +238,26 @@ public struct HomeView: View {
     }
 
     private var homeContent: some View {
-        Group {
-            if usesDesktopLayout {
-                // 왼쪽 요약·카테고리, 오른쪽 진행 중인 개발의 두 열
-                HStack(spacing: 0) {
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 0) {
-                            HomeDevelopmentSummary(store: store)
-                            HomeTodoSection(store: store)
-                        }
+        HomeColumns(store: store)
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.containerSize.height - geometry.contentInsets.top - geometry.contentInsets.bottom
+            } action: { _, height in
+                store.send(.binding(.set(\.visibleHeight, height)))
+            }
+            .safeAreaInset(edge: .top, spacing: 0) { topBar }
+            .background(Color.background)
+            .duoToolbarVisibility()
+            .toolbar {
+                if deviceType == .duo {
+                    // 세로 막대와 위쪽 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
+                    if #available(iOS 26.0, *) {
+                        duoToolbarItems
+                            .sharedBackgroundVisibility(.hidden)
+                    } else {
+                        duoToolbarItems
                     }
-                    Divider().overlay(Color.secondarySeparator)
-                    ScrollView {
-                        HomeDevelopmentGoals(store: store)
-                    }
-                }
-            } else {
-                ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        HomeDevelopmentSummary(store: store)
-                        HomeTodoSection(store: store)
-                        HomeDevelopmentGoals(store: store)
-                    }
-                    .frame(maxWidth: readableContentWidth)
-                    .frame(maxWidth: .infinity)
                 }
             }
-        }
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-            geometry.containerSize.height - geometry.contentInsets.top - geometry.contentInsets.bottom
-        } action: { _, height in
-            store.send(.binding(.set(\.visibleHeight, height)))
-        }
-        .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .background(Color.background)
-        .duoToolbarVisibility()
-        .toolbar {
-            if deviceType == .duo {
-                // 세로 막대와 위쪽 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
-                if #available(iOS 26.0, *) {
-                    duoToolbarItems
-                        .sharedBackgroundVisibility(.hidden)
-                } else {
-                    duoToolbarItems
-                }
-            }
-        }
     }
 
     private var duoToolbarItems: some ToolbarContent {
@@ -514,6 +488,42 @@ private struct HomeTopBarIconButtonStyle: ButtonStyle {
             .opacity(isEnabled && !configuration.isPressed ? 1 : 0.4)
             .frame(width: 40, height: 40)
             .contentShape(.rect)
+    }
+}
+
+// 넓은 화면은 두 열, 좁은 화면과 오른쪽 칸이 열려 좁아진 왼쪽 칸은 한 열
+private struct HomeColumns: View {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.paneWidth) private var paneWidth
+    @Environment(\.readableContentWidth) private var readableContentWidth
+    let store: StoreOf<HomeFeature>
+
+    var body: some View {
+        if usesDesktopLayout && paneWidth == nil {
+            // 왼쪽 요약·카테고리, 오른쪽 진행 중인 개발의 두 열
+            HStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        HomeDevelopmentSummary(store: store)
+                        HomeTodoSection(store: store)
+                    }
+                }
+                Divider().overlay(Color.secondarySeparator)
+                ScrollView {
+                    HomeDevelopmentGoals(store: store)
+                }
+            }
+        } else {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    HomeDevelopmentSummary(store: store)
+                    HomeTodoSection(store: store)
+                    HomeDevelopmentGoals(store: store)
+                }
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
+            }
+        }
     }
 }
 
