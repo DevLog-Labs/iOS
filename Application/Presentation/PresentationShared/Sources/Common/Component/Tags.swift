@@ -8,8 +8,6 @@
 import SwiftUI
 
 public struct Tag: View {
-    @Environment(\.colorScheme) private var colorScheme
-    @State private var height: CGFloat = 0
     private let name: String
     private let isEditing: Bool
     private let isCopyEnabled: Bool
@@ -41,49 +39,24 @@ public struct Tag: View {
     }
 
     public var body: some View {
-        HStack(spacing: 4) {
+        TodoBadge {
             Text(name)
-                .foregroundStyle(Color.accent)
-                .bold()
-                .lineLimit(1)
-                .padding(.vertical, 4)
-                .padding(.leading, 8)
-                .padding(.trailing, isEditing ? 0 : 8)
                 .overlay {
                     if isCopyEnabled {
                         TagCopyMenuView(tagText: name)
                     }
                 }
-                .background {
-                    GeometryReader { geo in
-                        Color.clear
-                            .onAppear {
-                                height = geo.size.height
-                            }
-                    }
-                }
-
+        } trailing: {
             if isEditing {
                 Button {
                     action?()
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: height, height: height)
-                        .symbolRenderingMode(.palette)
-                        .foregroundStyle(
-                            Color.accent,
-                            .black.opacity(colorScheme == .light ? 0 : 0.4)
-                        )
-
+                    Image(systemName: "xmark")
+                        .font(.system(size: 8 * AdaptiveSize.boardScale, weight: .bold))
+                        .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
             }
-        }
-        .background {
-            RoundedRectangle(cornerRadius: CornerRadius.badge)
-                .fill(Color.accent.opacity(0.2))
         }
     }
 }
@@ -96,6 +69,7 @@ public struct TagList: View {
     private let action: ((String) -> Void)?
     private let verticalSpacing: CGFloat
     private let horizontalSpacing: CGFloat
+    private let alignsTrailing: Bool
 
     public init<C: Collection>(
         _ tags: C,
@@ -104,6 +78,7 @@ public struct TagList: View {
         isEditing: Bool = false,
         verticalSpacing: CGFloat = 8,
         horizontalSpacing: CGFloat = 8,
+        alignsTrailing: Bool = false,
         action: ((String) -> Void)? = nil
     ) where C.Element == String {
         self.tags = Array(tags)
@@ -112,6 +87,7 @@ public struct TagList: View {
         self.isEditing = isEditing
         self.verticalSpacing = verticalSpacing
         self.horizontalSpacing = horizontalSpacing
+        self.alignsTrailing = alignsTrailing
         self.action = action
     }
 
@@ -133,7 +109,8 @@ public struct TagList: View {
                 TagLayout(
                     showsOverflowIndicator: false,
                     verticalSpacing: verticalSpacing,
-                    horizontalSpacing: horizontalSpacing
+                    horizontalSpacing: horizontalSpacing,
+                    alignsTrailing: alignsTrailing
                 ) {
                     contentTags
                 }
@@ -155,7 +132,7 @@ public struct TagList: View {
     }
 }
 
-private struct TagLayout: Layout {
+struct TagLayout: Layout {
     struct Cache {
         var maxWidth: CGFloat = 0
         var rows: [Row] = []
@@ -165,15 +142,19 @@ private struct TagLayout: Layout {
     var showsOverflowIndicator: Bool
     var verticalSpacing: CGFloat
     var horizontalSpacing: CGFloat
+    // 줄마다 오른쪽 끝에 맞춰 배치
+    var alignsTrailing = false
 
     init(
         showsOverflowIndicator: Bool = true,
         verticalSpacing: CGFloat = 8,
-        horizontalSpacing: CGFloat = 8
+        horizontalSpacing: CGFloat = 8,
+        alignsTrailing: Bool = false
     ) {
         self.showsOverflowIndicator = showsOverflowIndicator
         self.verticalSpacing = verticalSpacing
         self.horizontalSpacing = horizontalSpacing
+        self.alignsTrailing = alignsTrailing
     }
 
     init(
@@ -241,7 +222,7 @@ private struct TagLayout: Layout {
         var minY = bounds.minY
 
         for row in rows {
-            var minX = bounds.minX
+            var minX = bounds.minX + (alignsTrailing ? max(0, bounds.width - row.width) : 0)
 
             for index in row.indices {
                 let size = fittedSize(of: subviews[index], maxWidth: width)

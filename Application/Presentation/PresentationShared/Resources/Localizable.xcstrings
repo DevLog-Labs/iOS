@@ -5311,6 +5311,23 @@
         }
       }
     },
+    "todo_due_date_until_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@까지"
+          }
+        }
+      }
+    },
     "todo_edit" : {
       "extractionState" : "manual",
       "localizations" : {
