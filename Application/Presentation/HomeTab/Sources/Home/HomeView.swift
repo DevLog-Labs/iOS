@@ -16,6 +16,7 @@ public struct HomeView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
+    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var router = NavigationRouter<HomeRoute>()
     @State private var searchStore: StoreOf<SearchFeature>
     @State private var store: StoreOf<HomeFeature>
@@ -147,6 +148,13 @@ public struct HomeView: View {
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.view(.fetchData))
+            }
+        }
+        // 카테고리 관리를 벗어나면 카테고리를 보여 주던 세부 정보 사이드바도 닫음
+        // 창 폭이 바뀌어 칸과 시트를 오갈 때는 카테고리 관리 상태가 남아 닫지 않음
+        .onChange(of: store.sheet?.categoryManageState == nil) { _, isClosed in
+            if usesDesktopLayout && isClosed {
+                setDetailSideBarPresented?(false)
             }
         }
         .prominentAlert(store, state: \.alert, action: \.alert)

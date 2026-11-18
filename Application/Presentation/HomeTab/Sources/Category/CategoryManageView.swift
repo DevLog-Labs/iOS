@@ -148,6 +148,12 @@ struct CategoryManageView: View {
             .onChange(of: usesDesktopLayout, initial: true) { _, usesDesktopLayout in
                 store.send(.setSavesImmediately(usesDesktopLayout))
             }
+            // 카테고리 관리를 벗어나면 카테고리를 보여 주던 세부 정보 사이드바도 닫음
+            .onChange(of: isTabContentActive) { _, isActive in
+                if usesDesktopLayout && !isActive {
+                    setDetailSideBarPresented?(false)
+                }
+            }
     }
 
     private var toolBar: some View {
