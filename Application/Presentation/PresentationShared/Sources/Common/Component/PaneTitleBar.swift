@@ -15,6 +15,8 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
     @State private var windowControlsWidth = CGFloat.zero
     private let background: Color
     private let onBack: (() -> Void)?
+    // 사이드바에서 고를 수 없는 화면은 사이드바가 있는 창에서도 뒤로 버튼 표시
+    private let showsBackOnDesktop: Bool
     // 덮는 화면을 칸에 그릴 때 뒤쪽 끝에 두는 닫는 버튼
     private let onClose: (() -> Void)?
     private let title: Title
@@ -23,12 +25,14 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
     public init(
         background: Color = .background,
         onBack: (() -> Void)? = nil,
+        showsBackOnDesktop: Bool = false,
         onClose: (() -> Void)? = nil,
         @ViewBuilder title: () -> Title,
         @ViewBuilder actions: () -> Actions
     ) {
         self.background = background
         self.onBack = onBack
+        self.showsBackOnDesktop = showsBackOnDesktop
         self.onClose = onClose
         self.title = title()
         self.actions = actions()
@@ -91,7 +95,7 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
     // 사이드바가 있는 창은 사이드바에서 위치를 고르므로 뒤로 버튼 없음
     @ViewBuilder
     private var backButton: some View {
-        if let onBack, !usesDesktopLayout {
+        if let onBack, !usesDesktopLayout || showsBackOnDesktop {
             NavigationBackButton(action: onBack)
         }
     }
@@ -101,15 +105,22 @@ public extension PaneTitleBar where Title == Text {
     init(
         _ title: Text,
         onBack: (() -> Void)? = nil,
+        showsBackOnDesktop: Bool = false,
         onClose: (() -> Void)? = nil,
         @ViewBuilder actions: () -> Actions
     ) {
-        self.init(onBack: onBack, onClose: onClose, title: { title }, actions: actions)
+        self.init(
+            onBack: onBack,
+            showsBackOnDesktop: showsBackOnDesktop,
+            onClose: onClose,
+            title: { title },
+            actions: actions
+        )
     }
 }
 
 public extension PaneTitleBar where Title == Text, Actions == EmptyView {
-    init(_ title: Text, onBack: (() -> Void)? = nil) {
-        self.init(title, onBack: onBack) { EmptyView() }
+    init(_ title: Text, onBack: (() -> Void)? = nil, showsBackOnDesktop: Bool = false) {
+        self.init(title, onBack: onBack, showsBackOnDesktop: showsBackOnDesktop) { EmptyView() }
     }
 }

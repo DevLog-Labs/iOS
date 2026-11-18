@@ -122,11 +122,13 @@ public struct GoalDetailView: View {
                     onUpdate: { store.send(.view(.refresh)) }
                 )
             }
+            .desktopNavigationTransition()
         }
         .navigationDestination(
             item: $store.scope(state: \.todoDetail, action: \.todoDetail),
             interactivePop: true
         ) {
+            // 사이드바가 있으면 Todo 목록 옆 칸의 상세와 같은 칸 모양으로 표시하고 뒤로 가면 개발 목표로 돌아감
             TodoDetailView(
                 store: Store(
                     initialState: TodoDetailFeature.State(
@@ -135,8 +137,11 @@ public struct GoalDetailView: View {
                     )
                 ) {
                     TodoDetailFeature()
-                }
+                },
+                showsBackOnDesktop: true
             )
+            .environment(\.showsPaneTitleBar, usesDesktopLayout)
+            .detailSideBarTarget(.todo(id: $0.todoId, isEditable: false))
         }
     }
 

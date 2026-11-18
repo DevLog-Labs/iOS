@@ -16,6 +16,7 @@ public struct HomeView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
+    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var router = NavigationRouter<HomeRoute>()
     @State private var searchStore: StoreOf<SearchFeature>
     @State private var store: StoreOf<HomeFeature>
@@ -64,7 +65,9 @@ public struct HomeView: View {
             Group {
                 if usesDesktopLayout,
                    let manageStore = store.scope(state: \.sheet?.categoryManageState, action: \.sheet.presented.categoryManage) {
-                    CategoryManageView(store: manageStore)
+                    CategoryManageView(store: manageStore) {
+                        store.send(.sheet(.dismiss))
+                    }
                 } else if usesDesktopLayout,
                           let goalStore = store.scope(state: \.sheet?.goalCreateState, action: \.sheet.presented.goalCreate) {
                     // 홈 오른쪽 칸에서 쓰고 연결된 Todo는 세부 정보 사이드바에 표시
@@ -109,6 +112,7 @@ public struct HomeView: View {
                 destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
             )
         }
+        .desktopNavigationTransition()
         // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 카테고리 목록 옆 칸에 표시
         .closesPushedDetail {
             router.path.removeAll {
@@ -146,6 +150,13 @@ public struct HomeView: View {
                 store.send(.view(.fetchData))
             }
         }
+        // 카테고리 관리를 벗어나면 카테고리를 보여 주던 세부 정보 사이드바도 닫음
+        // 창 폭이 바뀌어 칸과 시트를 오갈 때는 카테고리 관리 상태가 남아 닫지 않음
+        .onChange(of: store.sheet?.categoryManageState == nil) { _, isClosed in
+            if usesDesktopLayout && isClosed {
+                setDetailSideBarPresented?(false)
+            }
+        }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(
             item: Binding(
@@ -172,9 +183,10 @@ public struct HomeView: View {
     }
 
     private func handleSideBarRequest(_ request: SideBarRequest?, showsSheetAsPane: Bool) {
-        // 이미 표시 중인 개발 목표를 다시 누르면 칸을 닫고 다시 열지 않음
+        // 이미 표시 중인 개발 목표를 다시 누르면 다시 열지 않고 쌓아 연 화면만 닫아 개발 목표 첫 화면 표시
         if case .open(.developmentGoal(let goalID))? = request?.action,
            store.sheet?.goalDetailState?.goalId == goalID {
+            store.send(.sheet(.presented(.goalDetail(.view(.returnToGoal)))))
             return
         }
         // 작성 중인 새 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음
@@ -317,17 +329,20 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var searchButton: some View {
-        if #available(iOS 26.0, *) {
-            Button {
+        // 사이드바가 있는 창은 검색 화면을 아래에서 올리지 않고 바로 표시
+        let openSearch: () -> Void = {
+            withTransaction(\.disablesAnimations, usesDesktopLayout) {
                 store.send(.store(.setPresentation(.searchView, true)))
-            } label: {
+            }
+        }
+
+        if #available(iOS 26.0, *) {
+            Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
             }
             .topBarButtonStyle()
         } else {
-            Button {
-                store.send(.store(.setPresentation(.searchView, true)))
-            } label: {
+            Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
                     .font(.adaptive(.title3).weight(.semibold))
                     .frame(width: 28, height: 28)

@@ -26,6 +26,8 @@ public struct TodoDetailView: View {
     private let onBack: (() -> Void)?
     // 목록 옆 칸에 넣은 상세는 뒤로 갈 곳이 없어 칸 제목 줄의 뒤로 버튼 생략
     private let isPaneDetail: Bool
+    // 사이드바에서 고를 수 없는 화면에서 연 상세는 사이드바가 있는 창에서도 뒤로 버튼 표시
+    private let showsBackOnDesktop: Bool
     // Mac 목록 옆 칸에 붙인 상세를 닫는 동작
     private let onClose: (() -> Void)?
 
@@ -34,12 +36,14 @@ public struct TodoDetailView: View {
         windowEvent: TodoEditorWindowEvent? = nil,
         onBack: (() -> Void)? = nil,
         isPaneDetail: Bool = false,
+        showsBackOnDesktop: Bool = false,
         onClose: (() -> Void)? = nil
     ) {
         self.store = store
         self.windowEvent = windowEvent
         self.onBack = onBack
         self.isPaneDetail = isPaneDetail
+        self.showsBackOnDesktop = showsBackOnDesktop
         self.onClose = onClose
     }
 
@@ -146,7 +150,7 @@ public struct TodoDetailView: View {
             let showsTodoTitle = !isiOSAppOnMac
 
             // 일반 화면에서 밀어 넣은 상세가 칸 화면으로 바뀌어도 뒤로 갈 수 있게 뒤로 버튼 표시
-            PaneTitleBar(onBack: isPaneDetail ? nil : back) {
+            PaneTitleBar(onBack: isPaneDetail ? nil : back, showsBackOnDesktop: showsBackOnDesktop) {
                 if showsTodoTitle, let todo = store.todo {
                     HStack(spacing: 8) {
                         Text(todo.title)
