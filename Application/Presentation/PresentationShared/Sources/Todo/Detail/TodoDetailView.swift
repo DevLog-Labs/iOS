@@ -87,10 +87,8 @@ public struct TodoDetailView: View {
             Color.background.ignoresSafeArea()
             if let todo = store.todo {
                 TodoDetailContentView(
-                    title: todo.title,
-                    content: todo.content,
+                    todo: todo,
                     referenceItems: store.referenceItems,
-                    number: todo.number,
                     // 사이드바가 있는 iPad 창의 칸 제목 줄은 Todo 제목을 표시하므로 본문 제목 생략
                     showsTitle: !(showsPaneTitleBar && !isiOSAppOnMac),
                     onOpenTodoID: { store.send(.setSheet(.todo(TodoIdItem(id: $0)))) }
@@ -176,12 +174,16 @@ public struct TodoDetailView: View {
                 }
             }
         } else {
-            HStack(spacing: 12) {
-                NavigationBackButton(action: back)
-                Spacer()
-                infoButton
-                if store.showEditButton {
-                    editButton
+            ZStack {
+                Text(verbatim: "Todo")
+                    .font(.adaptive(.headline))
+                HStack(spacing: 12) {
+                    NavigationBackButton(action: back)
+                    Spacer()
+                    infoButton
+                    if store.showEditButton {
+                        editButton
+                    }
                 }
             }
             .padding(.horizontal)

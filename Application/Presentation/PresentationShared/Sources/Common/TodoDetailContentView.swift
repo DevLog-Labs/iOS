@@ -9,65 +9,71 @@ import SwiftUI
 import Domain
 
 struct TodoDetailContentView: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.readableContentWidth) private var readableContentWidth
-    let title: String
-    let content: String
+    let todo: Todo
     let referenceItems: [Int: TodoReferenceItem]
-    var number: Int
     var showsTitle = true
     var onOpenTodoID: ((String) -> Void)?
 
     var body: some View {
+        let category = TodoCategoryItem(from: todo.category)
+
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 0) {
                 if showsTitle {
-                    ScrollView(.horizontal) {
-                        LazyHStack(alignment: .firstTextBaseline, spacing: 0, pinnedViews: .sectionFooters) {
-                            Section {
-                                Text(title)
-                            } footer: {
-                                Text("#\(number)")
-                                    .foregroundStyle(Color.tertiaryLabel)
-                                    .padding(.leading, 8)
-                                    .background {
-                                        Color.background.padding(.trailing, -16)
-                                    }
-                            }
-                        }
-                        .lineLimit(1)
-                        .font(.adaptive(.title3).bold())
-                    }
-                    .scrollBounceBehavior(.always, axes: .horizontal)
-                    .scrollIndicators(.hidden)
-                    .contentMargins(.horizontal, 16, for: .scrollContent)
-                    .padding(.horizontal, -16)
+                    Text(title)
+                        .font(.system(size: isiOSAppOnMac ? 19 * AdaptiveSize.boardScale : 26, weight: .heavy))
+                        .lineSpacing(isiOSAppOnMac ? 6 : 8)
+                        .padding(.bottom, 12)
                 }
 
-                Group {
-                    if content.isEmpty {
-                        ContentUnavailableView(
-                            String(
-                                localized: "development_record_content_empty_title",
-                                bundle: PresentationResources.bundle
-                            ),
-                            systemImage: "doc.text"
-                        )
-                    } else {
-                        TodoMarkdownContentView(
-                            content: content,
-                            referenceItems: referenceItems,
-                            isScrollEnabled: false,
-                            onOpenTodoID: onOpenTodoID
-                        )
-                        .frame(minHeight: 120, alignment: .top)
+                TagLayout(showsOverflowIndicator: false, verticalSpacing: 6, horizontalSpacing: 6) {
+                    TodoBadge(category.localizedName, color: category.color)
+                    if let dueDate = todo.dueDate {
+                        TodoDueDateBadge(dueDate: dueDate, showsUntil: true)
+                    }
+                    ForEach(todo.tags, id: \.self) { tag in
+                        TodoBadge(tag)
                     }
                 }
-                .padding(.vertical, 16)
-                .background(Color.secondaryBackground, in: .rect)
+                // 본문 첫 제목의 위쪽 여백은 Markdown 화면이 빼고 그려서 배지 아래에 둠
+                .padding(.bottom, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 20)
+
+                if todo.content.isEmpty {
+                    // 시스템 빈 화면 대신 Mac 글자 크기를 따르는 빈 화면 표시
+                    EmptyStateView(
+                        String(
+                            localized: "development_record_content_empty_title",
+                            bundle: PresentationResources.bundle
+                        ),
+                        systemImage: "doc.text"
+                    )
+                } else {
+                    TodoMarkdownContentView(
+                        content: todo.content,
+                        referenceItems: referenceItems,
+                        isScrollEnabled: false,
+                        onOpenTodoID: onOpenTodoID
+                    )
+                    // MarkdownRenderer 내부의 좌우 여백을 상쇄해 제목과 정렬
+                    .padding(.horizontal, -16)
+                }
             }
-            .padding()
-            .frame(maxWidth: readableContentWidth)
+            .padding(.horizontal, isiOSAppOnMac ? 22 * AdaptiveSize.boardScale : 24)
+            .padding(.vertical, isiOSAppOnMac ? 18 * AdaptiveSize.boardScale : 20)
+            .frame(maxWidth: readableContentWidth, alignment: .leading)
             .frame(maxWidth: .infinity)
         }
+    }
+
+    // 긴 제목은 줄을 바꾸고 번호는 제목 끝에 이어 표시
+    private var title: AttributedString {
+        var title = AttributedString(todo.title + " ")
+        var number = AttributedString("#\(todo.number)")
+        number.foregroundColor = Color.secondaryLabel
+        number.font = .system(size: isiOSAppOnMac ? 19 * AdaptiveSize.boardScale : 26, weight: .semibold)
+        title.append(number)
+        return title
     }
 }
