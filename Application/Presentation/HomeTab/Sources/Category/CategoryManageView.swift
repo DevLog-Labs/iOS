@@ -15,6 +15,8 @@ struct CategoryManageView: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @Bindable var store: StoreOf<CategoryManageFeature>
+    // 사이드바가 있는 창에서 칸으로 연 카테고리 관리를 닫고 이전 화면으로 돌아가는 동작
+    var onBack: (() -> Void)?
 
     var body: some View {
         let selectedID = store.categorySheet?.category.id
@@ -93,7 +95,11 @@ struct CategoryManageView: View {
             .frame(maxWidth: .infinity)
             .safeAreaInset(edge: .top, spacing: 0) {
                 if usesDesktopLayout {
-                    PaneTitleBar(Text("todo_category_manage", bundle: PresentationResources.bundle))
+                    PaneTitleBar(
+                        Text("todo_category_manage", bundle: PresentationResources.bundle),
+                        onBack: onBack,
+                        showsBackOnDesktop: true
+                    )
                 } else {
                     toolBar
                 }

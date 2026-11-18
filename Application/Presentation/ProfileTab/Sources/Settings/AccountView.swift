@@ -88,7 +88,7 @@ struct AccountView<Accessory: View, Footer: View>: View {
 
         if showsPaneTitleBar {
             // 일반 화면에서 밀어 넣은 화면이 칸 화면으로 바뀌어도 뒤로 갈 수 있게 뒤로 버튼 표시
-            PaneTitleBar(title, onBack: isPaneDetail ? nil : { dismiss() })
+            PaneTitleBar(title, onBack: isPaneDetail ? nil : { dismiss() }, showsBackOnDesktop: true)
         } else {
             ZStack {
                 title

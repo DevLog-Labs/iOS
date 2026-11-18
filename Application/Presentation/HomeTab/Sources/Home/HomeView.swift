@@ -64,7 +64,9 @@ public struct HomeView: View {
             Group {
                 if usesDesktopLayout,
                    let manageStore = store.scope(state: \.sheet?.categoryManageState, action: \.sheet.presented.categoryManage) {
-                    CategoryManageView(store: manageStore)
+                    CategoryManageView(store: manageStore) {
+                        store.send(.sheet(.dismiss))
+                    }
                 } else if usesDesktopLayout,
                           let goalStore = store.scope(state: \.sheet?.goalCreateState, action: \.sheet.presented.goalCreate) {
                     // 홈 오른쪽 칸에서 쓰고 연결된 Todo는 세부 정보 사이드바에 표시
