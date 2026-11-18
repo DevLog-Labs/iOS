@@ -275,24 +275,34 @@ public struct HomeView: View {
         .duoToolbarVisibility()
         .toolbar {
             if deviceType == .duo {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
-                    Group {
-                        Button {
-                            store.send(.store(.setPresentation(.searchView, true)))
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-                        }
-                        Button {
-                            store.send(.store(.setPresentation(.contentPicker, true)))
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        .disabled(!store.isNetworkConnected)
-                    }
-                    .id(windowControlsInset)
+                // 세로 막대와 위쪽 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
+                if #available(iOS 26.0, *) {
+                    duoToolbarItems
+                        .sharedBackgroundVisibility(.hidden)
+                } else {
+                    duoToolbarItems
                 }
             }
+        }
+    }
+
+    private var duoToolbarItems: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+            Group {
+                Button {
+                    store.send(.store(.setPresentation(.searchView, true)))
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+                Button {
+                    store.send(.store(.setPresentation(.contentPicker, true)))
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .disabled(!store.isNetworkConnected)
+            }
+            .id(windowControlsInset)
         }
     }
 
@@ -324,7 +334,7 @@ public struct HomeView: View {
                     }
             }
         } else {
-            HStack(spacing: 12) {
+            HStack(spacing: 0) {
                 Text("DevLog")
                     .font(.adaptive(.largeTitle).weight(.bold))
                 Spacer()
@@ -333,7 +343,8 @@ public struct HomeView: View {
                     HomeCreateButton(store: store)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.leading, 16)
+            .padding(.trailing, 8)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 8)
@@ -351,7 +362,12 @@ public struct HomeView: View {
             }
         }
 
-        if #available(iOS 26.0, *) {
+        if !usesPaneLayout {
+            Button(action: openSearch) {
+                Image(systemName: "magnifyingglass")
+            }
+            .buttonStyle(HomeTopBarIconButtonStyle())
+        } else if #available(iOS 26.0, *) {
             Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
             }
@@ -449,10 +465,19 @@ public enum HomeRoute: Hashable {
 }
 
 private struct HomeCreateButton: View {
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     let store: StoreOf<HomeFeature>
 
     var body: some View {
-        if #available(iOS 26.0, *) {
+        if !usesPaneLayout {
+            Button {
+                store.send(.store(.setPresentation(.contentPicker, true)))
+            } label: {
+                Image(systemName: "plus")
+            }
+            .buttonStyle(HomeTopBarIconButtonStyle())
+            .disabled(!store.isNetworkConnected)
+        } else if #available(iOS 26.0, *) {
             Button {
                 store.send(.store(.setPresentation(.contentPicker, true)))
             } label: {
@@ -475,6 +500,20 @@ private struct HomeCreateButton: View {
             )
             .disabled(!store.isNetworkConnected)
         }
+    }
+}
+
+// 좁은 화면 위쪽 줄의 배경 없는 40pt 아이콘 버튼
+private struct HomeTopBarIconButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.adaptive(.title3).weight(.medium))
+            .foregroundStyle(Color.label)
+            .opacity(isEnabled && !configuration.isPressed ? 1 : 0.4)
+            .frame(width: 40, height: 40)
+            .contentShape(.rect)
     }
 }
 
