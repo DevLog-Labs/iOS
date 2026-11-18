@@ -2425,13 +2425,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%lld in progress"
+            "value" : "%lld"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "진행 중 %lld개"
+            "value" : "%lld개"
           }
         }
       }
