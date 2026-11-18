@@ -129,7 +129,7 @@ public struct TodayView: View {
                     onClose: isiOSAppOnMac ? { store.send(.binding(.set(\.isDetailPanePresented, false))) } : nil
                 )
                 // 인스펙터 등에서 목록 행이 바뀌면 상세 칸도 다시 조회
-                .id(item?.updatedAt)
+                .id(store.detailPaneRevision)
             }
             .detailPanel(item: $store.panelTodo.activePresentation(when: isSelected)) { item in
                 // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 판 메뉴에서 오른쪽 칸으로 옮기기 생략
@@ -204,7 +204,7 @@ public struct TodayView: View {
             // 상세 칸에서 편집한 Todo를 옆 목록 행에도 반영
             guard case .update(_, let todo) = submit,
                   let item = TodayTodoItem(from: todo) else { return }
-            store.send(.store(.updateTodo(item)))
+            store.send(.detailTodoUpdated(item))
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .overlay {

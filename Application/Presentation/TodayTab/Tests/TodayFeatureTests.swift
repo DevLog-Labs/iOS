@@ -94,6 +94,27 @@ struct TodayFeatureTests {
         #expect(adapter.todoEditorTitle == nil)
     }
 
+    @Test("상세 칸이 저장해 보낸 Todo는 목록 행만 바꾸고 상세 칸은 다시 만들지 않는다")
+    func 상세_칸이_저장해_보낸_Todo는_목록_행만_바꾸고_상세_칸은_다시_만들지_않는다() async throws {
+        var todo = makeTodayTodo(id: "detail", title: "수정 전")
+        let adapter = TodayStoreTestAdapter()
+        await adapter.receiveUpdatedTodo(try #require(TodayTodoItem(from: todo)))
+        await adapter.selectTodo("detail")
+        let revision = adapter.detailPaneRevision
+
+        todo.title = "상세에서 수정"
+        await adapter.receiveDetailTodo(try #require(TodayTodoItem(from: todo)))
+
+        #expect(adapter.todos.first?.title == "상세에서 수정")
+        #expect(adapter.detailPaneRevision == revision)
+
+        todo.title = "목록에서 수정"
+        await adapter.receiveUpdatedTodo(try #require(TodayTodoItem(from: todo)))
+
+        #expect(adapter.todos.first?.title == "목록에서 수정")
+        #expect(adapter.detailPaneRevision == revision + 1)
+    }
+
     @Test("넓은 창으로 바뀌면 세부 정보에서 고친 값을 저장하고 닫은 뒤 같은 Todo를 고른다")
     func 넓은_창으로_바뀌면_세부_정보에서_고친_값을_저장하고_닫은_뒤_같은_Todo를_고른다() async throws {
         let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))
