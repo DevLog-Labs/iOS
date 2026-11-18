@@ -13,50 +13,51 @@ struct TodoSection: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let section: TodayFeature.SectionContent
     let isNavigationEnabled: Bool
-    let selectedTodoId: String?
+    let highlightedTodoIds: [String]
     let onSelect: (TodayTodoItem) -> Void
     let onInspect: (TodayTodoItem) -> Void
+    let onHover: (TodayTodoItem, Bool) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 6) {
                 Text(section.title)
-                    .font(.adaptive(.title3).bold())
+                    .font(.adaptive(.subheadline).bold())
                     .foregroundStyle(section.category.accentColor)
                 Text("\(section.items.count)")
-                    .font(.adaptive(.callout).bold())
-                    .foregroundStyle(section.category.accentColor)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 5)
-                    .background(section.category.accentColor.opacity(0.1), in: .capsule)
+                    .font(.adaptive(.subheadline).weight(.medium))
+                    .foregroundStyle(Color.secondaryLabel)
                 Spacer()
-                if section.category == .today {
+                if section.category == .overdue {
                     Text(String(localized: "today_pinned_first", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.callout))
+                        .font(.adaptive(.caption).weight(.medium))
                         .foregroundStyle(Color.secondaryLabel)
                 }
             }
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            .padding(.top, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 20)
+            .padding(.bottom, isiOSAppOnMac ? 6 * AdaptiveSize.boardScale : 10)
 
             LazyVStack(spacing: 0) {
                 ForEach(Array(zip(section.items.indices, section.items)), id: \.1.id) { index, item in
+                    let isHighlighted = highlightedTodoIds.contains(item.id)
+                    let isNextHighlighted = index < section.items.count - 1
+                        && highlightedTodoIds.contains(section.items[index + 1].id)
+
                     TodoRow(
                         item: item,
                         isNavigationEnabled: isNavigationEnabled,
-                        isSelected: item.id == selectedTodoId,
+                        isHighlighted: isHighlighted,
+                        // Mac은 둥근 선택·마우스 표시와 맞닿는 구분선 숨김
+                        showsSeparator: !(isiOSAppOnMac && (isHighlighted || isNextHighlighted)),
                         onSelect: { onSelect(item) },
                         onInspect: { onInspect(item) }
                     )
-                    if index < section.items.count - 1 {
-                        Divider().overlay(Color.secondarySeparator)
-                            // Mac은 둥근 선택 표시와 맞닿는 구분선 숨김
-                            .opacity(isiOSAppOnMac && (item.id == selectedTodoId || section.items[index + 1].id == selectedTodoId) ? 0 : 1)
-                    }
+                    .onHover { onHover(item, $0) }
                 }
             }
-            .background {
-                Rectangle()
-                    .fill(Color.secondaryBackground)
-            }
+            // Mac은 둥근 선택 표시가 칸 가장자리에 붙지 않도록 좌우 여백 표시
+            .padding(.horizontal, isiOSAppOnMac ? 16 : 0)
             // 선택한 행 배경이 목록 영역을 넘지 않도록 자름
             .clipShape(.rect)
         }
@@ -68,7 +69,8 @@ private struct TodoRow: View {
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     let item: TodayTodoItem
     let isNavigationEnabled: Bool
-    let isSelected: Bool
+    let isHighlighted: Bool
+    let showsSeparator: Bool
     let onSelect: () -> Void
     let onInspect: () -> Void
 
@@ -77,40 +79,58 @@ private struct TodoRow: View {
             guard isNavigationEnabled else { return }
             onSelect()
         } label: {
-            HStack {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(item.title)
-                        .font(.adaptive(.headline))
-                        .strikethrough(item.isCompleted)
-                        .foregroundStyle(item.isCompleted ? Color.secondaryLabel : .label)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(2)
+            HStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack(spacing: 6) {
+                        Text(item.title)
+                            .font(.adaptive(.callout).weight(.semibold))
+                            .strikethrough(item.isCompleted)
+                            .foregroundStyle(item.isCompleted ? Color.secondaryLabel : .label)
+                            .multilineTextAlignment(.leading)
+                            .lineLimit(2)
+                        if item.isPinned {
+                            Image(systemName: "star.fill")
+                                .font(.system(size: isiOSAppOnMac ? 12.5 * AdaptiveSize.boardScale : 14))
+                                .foregroundStyle(Color.tintLabel)
+                        }
+                    }
                     if !item.content.isEmpty {
                         Text(item.content)
-                            .font(.adaptive(.subheadline))
+                            .font(.adaptive(.footnote))
                             .foregroundStyle(Color.secondaryLabel)
                             .lineLimit(1)
                             .multilineTextAlignment(.leading)
+                            .padding(.top, 3)
                     }
                     todoMetadata
+                        .padding(.top, 5)
                 }
-                Spacer()
+                .frame(maxWidth: .infinity, alignment: .leading)
+
                 Image(systemName: "chevron.right")
-                    .font(.adaptive(.callout).bold())
-                    .foregroundStyle(Color.tertiaryLabel)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundStyle(Color.secondaryLabel)
                     // 칸 화면은 옆 칸에 상세를 열어 화면 이동 표시 생략
                     .opacity(isNavigationEnabled && !usesPaneLayout ? 1 : 0)
             }
+            .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+            .padding(.trailing, 16)
+            // 구분선은 글자 줄 시작부터 행 오른쪽 끝까지 표시
+            .overlay(alignment: .bottom) {
+                if showsSeparator {
+                    Divider().overlay(Color.secondarySeparator)
+                }
+            }
+            .contentShape(.rect)
             .overlay {
                 TodoInspectorInteractionView(action: onInspect)
             }
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 14)
-        // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
+        .padding(.leading, 16)
+        // 선택·마우스 표시는 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
         .background(
-            isSelected ? Color.fill : .clear,
+            isHighlighted ? Color.fill : .clear,
             in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
         )
     }
@@ -118,22 +138,23 @@ private struct TodoRow: View {
     @ViewBuilder
     private var todoMetadata: some View {
         let category = TodoCategoryItem(from: item.category)
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Text("#\(item.number)")
-                .foregroundStyle(Color.accent)
+                .fontWeight(.semibold)
+                .foregroundStyle(Color.tintLabel)
 
             Image(systemName: category.symbolName)
                 .foregroundStyle(category.color)
 
             if let dueDate = item.dueDate {
-                HStack(spacing: 4) {
+                HStack(spacing: 3) {
                     Image(systemName: "clock")
                     Text(dueDateText(dueDate))
                 }
                 .foregroundStyle(dueDateColor(dueDate))
             }
         }
-        .font(.adaptive(.caption).weight(.semibold))
+        .font(.adaptive(.caption))
         .lineLimit(1)
     }
 
