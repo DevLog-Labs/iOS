@@ -257,11 +257,14 @@ public struct TodoDetailView: View {
     ) -> some View {
         switch sheetStore.state {
         case .info:
-            if let todo = store.todo {
-                InfoSheetView(todo: todo) {
-                    sheetStore.send(.tapCloseButton)
-                }
-            }
+            // 넓은 창의 세부 정보 사이드바와 같은 속성 칸, 고친 값은 바로 저장
+            InfoSheetView(
+                todoId: store.todoId,
+                isEditable: store.showEditButton,
+                windowEvent: windowEvent,
+                onUpdate: { store.send(.setTodo($0)) },
+                onClose: { sheetStore.send(.tapCloseButton) }
+            )
         case .todo:
             NavigationStack {
                 if let todoStore = sheetStore.scope(state: \.todoDetail, action: \.todo) {
@@ -279,88 +282,29 @@ public struct TodoDetailView: View {
 }
 
 private struct InfoSheetView: View {
-    let todo: Todo
+    @State private var contentHeight = CGFloat.zero
+    @State private var barHeight = CGFloat.zero
+    let todoId: String
+    let isEditable: Bool
+    let windowEvent: TodoEditorWindowEvent?
+    let onUpdate: (Todo) -> Void
     let onClose: () -> Void
-    private let calendar = Calendar.current
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
-                VStack(alignment: .leading, spacing: 0) {
-                    optionRow(
-                        systemImage: "tag.fill",
-                        color: Color.accent,
-                        title: String(localized: "todo_category", bundle: PresentationResources.bundle)
-                    ) {
-                        Text(TodoCategoryItem(from: todo.category).localizedName)
-                            .foregroundStyle(Color.accent)
-                            .lineLimit(1)
-                    }
-
-                    Divider().overlay(Color.separator)
-
-                    optionRow(
-                        systemImage: "circle",
-                        color: Color.secondaryLabel,
-                        title: String(localized: "todo_completed", bundle: PresentationResources.bundle)
-                    ) {
-                        Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
-                            .foregroundStyle(todo.isCompleted ? Color.accent : Color.tertiaryLabel)
-                    }
-
-                    Divider().overlay(Color.separator)
-
-                    optionRow(
-                        systemImage: "star.fill",
-                        color: Color.orange,
-                        title: String(localized: "todo_pinned", bundle: PresentationResources.bundle)
-                    ) {
-                        Image(systemName: todo.isPinned ? "star.fill" : "star")
-                            .foregroundStyle(todo.isPinned ? Color.orange : Color.tertiaryLabel)
-                    }
-
-                    Divider().overlay(Color.separator)
-
-                    optionRow(
-                        systemImage: "calendar",
-                        color: Color.secondaryLabel,
-                        title: String(localized: "todo_due_date", bundle: PresentationResources.bundle)
-                    ) {
-                        if let dueDate = todo.dueDate {
-                            Tag(dueDateText(for: dueDate), isEditing: false)
-                        } else {
-                            Text(String(localized: "todo_none", bundle: PresentationResources.bundle))
-                                .foregroundStyle(Color.secondaryLabel)
-                        }
-                    }
-                }
-                .background(Color.secondaryBackground)
-                .clipShape(.rect(cornerRadius: CornerRadius.group))
-
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(String(localized: "todo_tags", bundle: PresentationResources.bundle))
-                        .font(.adaptive(.headline))
-                        .padding(.horizontal, 16)
-
-                    Group {
-                        if todo.tags.isEmpty {
-                            Text(String(localized: "todo_no_tags", bundle: PresentationResources.bundle))
-                                .foregroundStyle(Color.secondaryLabel)
-                        } else {
-                            TagList(todo.tags, verticalSpacing: 4, horizontalSpacing: 4)
-                        }
-                    }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.secondaryBackground)
-                    .clipShape(.rect(cornerRadius: CornerRadius.group))
-                }
-            }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 16)
+        TodoDetailSideBarView(
+            todoId: todoId,
+            isEditable: isEditable,
+            windowEvent: windowEvent,
+            onUpdate: onUpdate
+        )
+        .safeAreaInset(edge: .top, spacing: 0) {
+            topBar
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { barHeight = $0 }
         }
-        .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background.ignoresSafeArea())
+        .onPreferenceChange(TodoInfoHeightPreferenceKey.self) { contentHeight = $0 }
+        // 속성을 불러오기 전에는 시트 높이를 바꾸지 않음
+        .sheetDetent(contentHeight == 0 ? .large : .height(barHeight + contentHeight))
     }
 
     private var topBar: some View {
@@ -384,44 +328,5 @@ private struct InfoSheetView: View {
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
         .background(Color.background, ignoresSafeAreaEdges: .top)
-    }
-
-    private func optionRow<Trailing: View>(
-        systemImage: String,
-        color: Color,
-        title: String,
-        @ViewBuilder trailing: () -> Trailing
-    ) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: systemImage)
-                .font(.adaptive(.title3))
-                .foregroundStyle(color)
-                .frame(width: 28, height: 28)
-
-            Text(title)
-                .font(.adaptive(.headline))
-                .layoutPriority(1)
-
-            Spacer(minLength: 8)
-
-            trailing()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-    }
-
-    private func dueDateText(for dueDate: Date) -> String {
-        let currentYear = calendar.component(.year, from: Date())
-        let dueDateYear = calendar.component(.year, from: dueDate)
-
-        if currentYear == dueDateYear {
-            return dueDate.formatted(
-                .dateTime.month(.defaultDigits).day(.defaultDigits)
-            )
-        }
-
-        return dueDate.formatted(
-            .dateTime.year(.twoDigits).month(.defaultDigits).day(.defaultDigits)
-        )
     }
 }
