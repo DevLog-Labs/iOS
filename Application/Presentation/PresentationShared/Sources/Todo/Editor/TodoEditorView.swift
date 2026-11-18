@@ -63,7 +63,6 @@ public struct TodoEditorView: View {
                 ScrollView {
                     TodoSideBarProperties(
                         editorStore: store,
-                        isEditable: true,
                         isDueDatePickerPresented: $store.isDueDatePickerPresented
                     )
                 }
@@ -156,12 +155,9 @@ private struct EditorForm: View {
         GeometryReader { geometry in
             ScrollView {
                 // Mac은 Orca 데스크톱 작성 칸처럼 간격을 좁히고 칸 좌우 여백 14로 표시
-                VStack(spacing: isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 16) {
+                VStack(spacing: isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 8) {
                     // Mac은 글자 폭만큼 작은 작성·미리보기 버튼을 제목 아래 왼쪽에 표시
-                    VStack(
-                        alignment: isiOSAppOnMac ? .leading : .trailing,
-                        spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 16
-                    ) {
+                    VStack(alignment: .leading, spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12) {
                         TitleField(store: store, field: _field)
                         ModePicker(store: store, field: _field)
                     }
@@ -179,7 +175,7 @@ private struct EditorForm: View {
                         field = .content
                     }
                 }
-                .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : nil)
+                .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
                 .frame(maxWidth: readableContentWidth)
                 .frame(maxWidth: .infinity)
             }
@@ -372,16 +368,15 @@ private struct TitleField: View {
             )
             .foregroundStyle(Color.secondaryLabel),
         )
-        // Mac은 입력칸 바탕 없이 큰 굵은 제목으로 표시
-        .font(isiOSAppOnMac ? .system(size: 17 * AdaptiveSize.boardScale, weight: .heavy) : .adaptive(.body))
+        // 입력칸 바탕 없이 큰 굵은 제목으로 표시
+        .font(.system(size: isiOSAppOnMac ? 17 * AdaptiveSize.boardScale : 24, weight: .heavy))
         .focused($field, equals: .title)
-        .padding(.all, isiOSAppOnMac ? 0 : nil)
-        .background(isiOSAppOnMac ? Color.clear : .secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }
 }
 
 private struct ModePicker: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Bindable var store: StoreOf<TodoEditorFeature>
     @FocusState var field: Field?
 
@@ -397,13 +392,14 @@ private struct ModePicker: View {
             )
         }
         .padding(2)
-        .background(isiOSAppOnMac ? Color.tertiaryBackground : .separator, in: RoundedRectangle(cornerRadius: CornerRadius.control))
+        .background(Color.tertiaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.control))
     }
 
     @ViewBuilder
     private func modeButton(_ title: String, tab: TodoEditorFeature.EditorTab) -> some View {
         let isSelected = store.tabViewTag == tab
-        let selectedColor = isiOSAppOnMac ? Color.label : .accent
+        // 넓은 창은 칸 폭을 채우지 않고 글자 폭만큼 작게 표시
+        let isWide = isiOSAppOnMac || usesPaneLayout
 
         Button {
             if tab == .editor {
@@ -416,20 +412,20 @@ private struct ModePicker: View {
                 }
             }
         } label: {
-            // Mac은 칸 폭을 채우지 않고 글자 폭만큼 작게, 고른 조각은 강조색 대신 글자색과 옅은 테두리로 표시
+            // 고른 조각은 강조색 대신 글자색으로 표시하고 넓은 창은 옅은 테두리도 표시
             Text(title)
-                .font(.adaptive(isiOSAppOnMac ? .subheadline : .body).weight(isiOSAppOnMac ? .semibold : .regular))
-                .foregroundStyle(isSelected ? selectedColor : Color.secondaryLabel)
-                .padding(.horizontal, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 0)
-                .padding(.vertical, isiOSAppOnMac ? 3 * AdaptiveSize.boardScale : 0)
-                .frame(maxWidth: isiOSAppOnMac ? nil : .infinity, minHeight: isiOSAppOnMac ? nil : 36)
+                .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote).weight(.semibold))
+                .foregroundStyle(isSelected ? Color.label : .secondaryLabel)
+                .padding(.horizontal, isWide ? (isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 14) : 0)
+                .padding(.vertical, isiOSAppOnMac ? 3 * AdaptiveSize.boardScale : 5)
+                .frame(maxWidth: isWide ? nil : .infinity)
                 .background {
                     if isSelected {
                         RoundedRectangle(cornerRadius: CornerRadius.segment)
                             .fill(Color.secondaryBackground)
                             .overlay {
                                 RoundedRectangle(cornerRadius: CornerRadius.segment)
-                                    .strokeBorder(isiOSAppOnMac ? Color.label.opacity(0.12) : .clear)
+                                    .strokeBorder(isWide ? Color.label.opacity(0.12) : .clear)
                             }
                             .shadow(color: Color.secondaryLabel.opacity(0.08), radius: 2, y: 2)
                     }
@@ -455,12 +451,21 @@ private struct ContentView: View {
         let isContentFocused = field == .content
         Group {
             if store.tabViewTag == .editor {
-                // Mac은 안내 문구를 본문 바로 아래에 표시하고 빈 영역은 바깥 최소 높이로 누를 수 있게 둠
-                TextEditorContentLayout(minimumHeight: isiOSAppOnMac ? 0 : minimumHeight, placesHintBelow: isiOSAppOnMac) {
+                // 안내 문구를 본문 바로 아래에 표시하고 빈 영역은 바깥 최소 높이로 누를 수 있게 둠
+                TextEditorContentLayout(minimumHeight: 0, placesHintBelow: true) {
                     markdownHint
                     UIKitTextEditor
                         .composable(
                             update: { textEditor in
+                                // Markdown 본문은 고정폭 글꼴로 표시
+                                // 같은 글꼴을 다시 넣어 긴 본문을 갱신마다 다시 배치하지 않도록 다를 때만 지정
+                                let font = UIFont.monospacedSystemFont(
+                                    ofSize: isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 13.5,
+                                    weight: .regular
+                                )
+                                if textEditor.font != font {
+                                    textEditor.font = font
+                                }
                                 textEditor.updateInput(
                                     text: $store.content,
                                     isFocused: isContentFocused,
@@ -481,8 +486,6 @@ private struct ContentView: View {
                         )
                         // SwiftUI 포커싱 시스템에 등록하기 위해 사용
                         .focused($field, equals: .content)
-                        .padding(isiOSAppOnMac ? 0 : 12)
-                        .background(isiOSAppOnMac ? Color.clear : .secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
             } else {
                 if store.content.isEmpty {
@@ -496,23 +499,19 @@ private struct ContentView: View {
                     )
                     // MarkdownRenderer 내부의 좌우 여백을 상쇄해 입력 본문과 정렬
                     .padding(.horizontal, -16)
-                    .padding(isiOSAppOnMac ? 0 : 12)
                     .frame(minHeight: minimumHeight, alignment: .topLeading)
-                    .background(isiOSAppOnMac ? Color.clear : .secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                 }
             }
         }
         .frame(minHeight: minimumHeight, alignment: .topLeading)
-        // Mac은 카드 바탕 대신 칸 폭 전체를 가로지르는 구분선 아래에 본문 표시
-        .padding(.top, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 0)
+        // 카드 바탕 대신 칸 폭 전체를 가로지르는 구분선 아래에 본문 표시
+        .padding(.top, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
         .overlay(alignment: .top) {
-            if isiOSAppOnMac {
-                // 본문 폭이 읽기 폭으로 줄어도 가운데 정렬된 본문 위에서 스크롤 칸 폭만큼 표시
-                Rectangle()
-                    .fill(Color.secondarySeparator)
-                    .frame(height: 1)
-                    .containerRelativeFrame(.horizontal)
-            }
+            // 본문 폭이 읽기 폭으로 줄어도 가운데 정렬된 본문 위에서 스크롤 칸 폭만큼 표시
+            Rectangle()
+                .fill(Color.secondarySeparator)
+                .frame(height: 1)
+                .containerRelativeFrame(.horizontal)
         }
         .contentShape(.rect)
     }
@@ -520,7 +519,7 @@ private struct ContentView: View {
     private var markdownHint: some View {
         Text(String(localized: "todo_editor_markdown_hint", bundle: PresentationResources.bundle))
             .font(.adaptive(.caption))
-            .foregroundStyle(isiOSAppOnMac ? Color.secondaryLabel : .tertiaryLabel)
+            .foregroundStyle(Color.secondaryLabel)
     }
 
     private var previewPlaceholder: some View {
@@ -534,7 +533,6 @@ private struct ContentView: View {
         .multilineTextAlignment(.center)
         .padding(12)
         .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .center)
-        .background(isiOSAppOnMac ? Color.clear : .secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
     }
 }
 

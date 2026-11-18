@@ -52,6 +52,7 @@ struct TodayFeature {
         case showTodoInspector(TodayTodoItem)
         case dismissTodoInspector
         case moveTodoInspectorToSideBar
+        case detailTodoUpdated(TodayTodoItem)
         case todoEditor(TodoEditorFeature.Action)
         case store(StoreAction)
         case loading(LoadingFeature.Action)
@@ -164,20 +165,27 @@ struct TodayFeature {
                 }
                 guard state.dismissesTodoInspectorAfterSaving else { break }
                 return .send(.dismissTodoInspector)
+            case .detailTodoUpdated(let item):
+                // 상세 칸이 저장해 보낸 Todo는 상세가 이미 반영해 목록 행만 갱신
+                update(item, state: &state)
             case .todoEditor:
                 break
             case .store(.setAlert):
                 state.alert = Self.alertState()
             case .store(.setTodos(let incomplete, let completedToday, let interval)):
                 guard state.todayInterval == interval else { break }
+                let selectedItem = state.selectedTodoId.flatMap { latestItem(id: $0, state: state) }
                 state.todos = incomplete
                 state.isIncompleteDataLoaded = true
                 state.completedTodayTodos = completedToday
                 state.isCompletedTodayDataLoaded = true
+                reloadDetailPaneIfChanged(from: selectedItem, state: &state)
             case .store(.setCompletedTodayTodos(let todos, let interval)):
                 guard state.todayInterval == interval else { break }
+                let selectedItem = state.selectedTodoId.flatMap { latestItem(id: $0, state: state) }
                 state.completedTodayTodos = todos
                 state.isCompletedTodayDataLoaded = true
+                reloadDetailPaneIfChanged(from: selectedItem, state: &state)
             case .store(.setCategories(let categories)):
                 state.categories = categories
                 let visibleCategoryIDs = Set(state.visibleCategories.map(\.id))
@@ -186,25 +194,11 @@ struct TodayFeature {
                     state.selectedCategoryID = nil
                 }
             case .store(.updateTodo(let item)):
-                if item.isCompleted {
-                    state.todos.removeAll { $0.id == item.id }
-                    if Self.isDue(item, in: state.todayInterval) {
-                        if let index = state.completedTodayTodos.firstIndex(where: { $0.id == item.id }) {
-                            state.completedTodayTodos[index] = item
-                        } else {
-                            state.completedTodayTodos.append(item)
-                        }
-                    } else {
-                        state.completedTodayTodos.removeAll { $0.id == item.id }
-                    }
-                } else {
-                    state.completedTodayTodos.removeAll { $0.id == item.id }
-                    if let index = state.todos.firstIndex(where: { $0.id == item.id }) {
-                        state.todos[index] = item
-                    } else {
-                        state.todos.append(item)
-                    }
+                // 인스펙터나 완료 버튼으로 바꾼 Todo는 오른쪽 칸 상세도 다시 만듦
+                if item.id == state.selectedTodoId {
+                    state.detailPaneRevision += 1
                 }
+                update(item, state: &state)
             case .store(.removeTodo(let todoId)):
                 state.todos.removeAll { $0.id == todoId }
                 state.completedTodayTodos.removeAll { $0.id == todoId }
@@ -242,6 +236,35 @@ private extension TodayFeature {
     func latestItem(id: String, state: State) -> TodayTodoItem? {
         state.todos.first { $0.id == id }
             ?? state.completedTodayTodos.first { $0.id == id }
+    }
+
+    func update(_ item: TodayTodoItem, state: inout State) {
+        if item.isCompleted {
+            state.todos.removeAll { $0.id == item.id }
+            if Self.isDue(item, in: state.todayInterval) {
+                if let index = state.completedTodayTodos.firstIndex(where: { $0.id == item.id }) {
+                    state.completedTodayTodos[index] = item
+                } else {
+                    state.completedTodayTodos.append(item)
+                }
+            } else {
+                state.completedTodayTodos.removeAll { $0.id == item.id }
+            }
+        } else {
+            state.completedTodayTodos.removeAll { $0.id == item.id }
+            if let index = state.todos.firstIndex(where: { $0.id == item.id }) {
+                state.todos[index] = item
+            } else {
+                state.todos.append(item)
+            }
+        }
+    }
+
+    // 다시 불러온 목록에서 고른 Todo가 바뀌었으면 오른쪽 칸 상세도 다시 만듦
+    func reloadDetailPaneIfChanged(from selectedItem: TodayTodoItem?, state: inout State) {
+        guard let selectedItem,
+              latestItem(id: selectedItem.id, state: state)?.updatedAt != selectedItem.updatedAt else { return }
+        state.detailPaneRevision += 1
     }
 
     func dismissTodoInspector(state: inout State) {

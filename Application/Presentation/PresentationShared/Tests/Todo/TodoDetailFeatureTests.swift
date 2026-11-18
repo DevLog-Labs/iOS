@@ -224,6 +224,78 @@ struct TodoDetailFeatureTests {
 
         #expect(referenceSpy.numbers == [[7]])
     }
+
+    @Test("세부 정보 시트를 닫은 뒤 끝난 저장도 상세 Todo에 반영한다")
+    func 세부_정보_시트를_닫은_뒤_끝난_저장도_상세_Todo에_반영한다() async {
+        let upsertSpy = TodoEditorUpsertTodoUseCaseSpy()
+        upsertSpy.shouldSuspend = true
+        let adapter = makeInfoAdapter(upsertSpy: upsertSpy)
+
+        await adapter.openInfoAndTogglePinned()
+        adapter.dismissSheet()
+        upsertSpy.resume()
+
+        await waitUntil {
+            adapter.todo?.isPinned == true
+        }
+
+        #expect(upsertSpy.todos.map(\.isPinned) == [true])
+        #expect(adapter.savedTodo == upsertSpy.todos.first)
+        #expect(adapter.alert == nil)
+    }
+
+    @Test("세부 정보 시트를 닫은 뒤 저장에 실패하면 상세 화면에 공통 에러 알림을 표시한다")
+    func 세부_정보_시트를_닫은_뒤_저장에_실패하면_상세_화면에_공통_에러_알림을_표시한다() async {
+        let upsertSpy = TodoEditorUpsertTodoUseCaseSpy()
+        upsertSpy.shouldSuspend = true
+        upsertSpy.error = DetailTestError.failure
+        let adapter = makeInfoAdapter(upsertSpy: upsertSpy)
+
+        await adapter.openInfoAndTogglePinned()
+        adapter.dismissSheet()
+        upsertSpy.resume()
+
+        await waitUntil {
+            adapter.alert != nil
+        }
+
+        #expect(adapter.alert == expectedErrorAlert())
+        #expect(adapter.infoEditor?.alert == nil)
+        #expect(adapter.savedTodo == nil)
+    }
+
+    @Test("세부 정보를 불러온 뒤 편집 화면에서 저장하면 세부 정보 속성도 저장한 Todo를 따른다")
+    func 세부_정보를_불러온_뒤_편집_화면에서_저장하면_세부_정보_속성도_저장한_Todo를_따른다() async {
+        let adapter = makeInfoAdapter(upsertSpy: TodoEditorUpsertTodoUseCaseSpy())
+        var updatedTodo = makeTodo(title: "Updated")
+        updatedTodo.tags = ["tag"]
+
+        await adapter.openInfo()
+        adapter.dismissSheet()
+        adapter.setTodo(makeTodo())
+        adapter.setFullScreenCover(.editor)
+        adapter.todoEditorUpdated(updatedTodo)
+
+        await waitUntil {
+            adapter.infoEditor?.title == "Updated"
+        }
+
+        #expect(adapter.infoEditor?.title == "Updated")
+        #expect(adapter.infoEditor?.tags == ["tag"])
+    }
+
+    private func makeInfoAdapter(upsertSpy: TodoEditorUpsertTodoUseCaseSpy) -> DetailStoreTestAdapter {
+        DetailStoreTestAdapter(
+            fetchUseCase: FetchTodoByIdUseCaseSpy(todo: makeTodo()),
+            referenceUseCase: FetchReferenceItemsUseCaseSpy(),
+            todoId: "todo-1",
+            configureDependencies: {
+                $0.date.now = todoEditorNow
+                $0.fetchTodoCategoryPreferencesUseCase = TodoEditorFetchPreferencesUseCaseSpy()
+                $0.upsertTodoUseCase = upsertSpy
+            }
+        )
+    }
 }
 
 @MainActor
@@ -238,6 +310,7 @@ private protocol DetailTestAdapter {
     var sheet: TodoDetailFeature.SheetState? { get }
     var fullScreenCover: TodoDetailFeature.FullScreenCoverState? { get }
     var fullScreenCoverDestination: TodoDetailFeature.FullScreenCoverState.Destination? { get }
+    var infoEditor: TodoEditorFeature.State? { get }
 
     func onAppear()
     func onSheetTodoAppear()
@@ -248,6 +321,8 @@ private protocol DetailTestAdapter {
     func todoEditorUpdated(_ todo: Todo)
     func setTodo(_ todo: Todo)
     func setReferenceItems(_ items: [Int: TodoReferenceItem])
+    func openInfo() async
+    func openInfoAndTogglePinned() async
 }
 
 @MainActor
@@ -266,6 +341,7 @@ private struct DetailStoreTestAdapter: DetailTestAdapter {
     var fullScreenCoverDestination: TodoDetailFeature.FullScreenCoverState.Destination? {
         store.fullScreenCover?.destination
     }
+    var infoEditor: TodoEditorFeature.State? { store.info.editor }
 
     init(
         fetchUseCase: FetchTodoByIdUseCase,
@@ -321,6 +397,20 @@ private struct DetailStoreTestAdapter: DetailTestAdapter {
 
     func setReferenceItems(_ items: [Int: TodoReferenceItem]) {
         store.send(.setReferenceItems(items))
+    }
+
+    func openInfo() async {
+        store.send(.setSheet(.info))
+        store.send(.info(.onAppear))
+
+        await waitUntil {
+            store.info.editor != nil
+        }
+    }
+
+    func openInfoAndTogglePinned() async {
+        await openInfo()
+        store.send(.info(.editor(.binding(.set(\.isPinned, true)))))
     }
 }
 

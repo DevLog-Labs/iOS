@@ -9,7 +9,7 @@ import ComposableArchitecture
 import Domain
 import Foundation
 
-// Mac 세부 정보 사이드바의 Todo 속성, 고친 값은 바로 저장
+// 세부 정보 사이드바와 좁은 창 세부 정보 시트의 Todo 속성, 고친 값은 바로 저장
 @Reducer
 public struct TodoDetailSideBarFeature {
     @ObservableState
@@ -17,6 +17,9 @@ public struct TodoDetailSideBarFeature {
         var editor: TodoEditorFeature.State?
         var isDueDatePickerPresented = false
         var isFetchFailed = false
+        // 좁은 창 세부 정보 시트를 속성 칸 높이만큼 열기 위해 잰 위쪽 줄과 속성 칸 높이
+        var sheetBarHeight = CGFloat.zero
+        var sheetContentHeight = CGFloat.zero
         let todoId: String
         let isEditable: Bool
 
@@ -61,9 +64,7 @@ public struct TodoDetailSideBarFeature {
                  .editor(.binding(\.isCompleted)),
                  .editor(.binding(\.isPinned)),
                  .editor(.binding(\.selectedDueDate)),
-                 .editor(.binding(\.dueDate)),
-                 .editor(.addTag),
-                 .editor(.removeTag):
+                 .editor(.binding(\.dueDate)):
                 guard state.isEditable else { break }
                 return .send(.editor(.upsertTodo))
             case .editor:

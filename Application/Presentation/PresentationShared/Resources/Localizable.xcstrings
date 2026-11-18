@@ -5311,6 +5311,23 @@
         }
       }
     },
+    "todo_due_date_until_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Due %@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%@까지"
+          }
+        }
+      }
+    },
     "todo_edit" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5906,23 +5923,6 @@
         }
       }
     },
-    "todo_no_tags" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No Tags"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "태그 없음"
-          }
-        }
-      }
-    },
     "todo_none" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6093,23 +6093,6 @@
         }
       }
     },
-    "todo_tag_duplicate_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Each tag can only be added once."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "같은 태그는 한 번만 추가할 수 있어요."
-          }
-        }
-      }
-    },
     "todo_tags" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -6133,13 +6116,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Write"
+            "value" : "Edit"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "작성"
+            "value" : "편집"
           }
         }
       }

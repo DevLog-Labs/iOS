@@ -16,10 +16,8 @@ struct PreviewView: View {
             Color.background.ignoresSafeArea()
             if let todo = store.todo {
                 TodoDetailContentView(
-                    title: todo.title,
-                    content: todo.content,
+                    todo: todo,
                     referenceItems: store.referenceItems,
-                    number: todo.number,
                     onOpenTodoID: nil
                 )
             } else if store.alert != nil {

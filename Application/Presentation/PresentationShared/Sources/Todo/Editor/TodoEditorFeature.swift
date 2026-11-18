@@ -19,6 +19,8 @@ public struct TodoEditorFeature {
         public var inspectorContent = InspectorContent.options
         // 칸에 그린 작성 화면의 세부 정보에서 마감일 선택을 띄웠는지 여부
         public var isDueDatePickerPresented = false
+        // 좁은 창의 마감일 달력 시트를 달력 높이만큼 열기 위해 잰 높이
+        public var dueDatePickerHeight = CGFloat.zero
         public var isCompleted: Bool = false
         public var completedAt: Date?
         public var isPinned: Bool = false

@@ -156,14 +156,18 @@ private struct TodoListContent: View {
                             let isHighlighted = highlightedTodoIds.contains(todo.id)
                             let isNextHighlighted = !isLast && highlightedTodoIds.contains(visibleTodos[index + 1].id)
 
-                            TodoItemRow(todo)
+                            // Mac은 둥근 선택·마우스 표시와 맞닿는 구분선 숨김
+                            TodoItemRow(
+                                todo,
+                                showsSeparator: !isLast && !(isiOSAppOnMac && (isHighlighted || isNextHighlighted))
+                            )
                                 // 선택·마우스 표시는 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
                                 // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
                                 .background(
                                     isHighlighted ? Color.fill : .clear,
                                     in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
                                 )
-                                .background(Color.secondaryBackground)
+                                .background(Color.background)
                                 .contentShape(.rect)
                                 .onHover { isHovering in
                                     guard isiOSAppOnMac else { return }
@@ -234,12 +238,6 @@ private struct TodoListContent: View {
                                         presentDeleteTodoToast(todo.id, store: store)
                                     }
                                 }
-                                .overlay(alignment: .bottom) {
-                                    // Mac은 둥근 선택·마우스 표시와 맞닿는 구분선 숨김
-                                    if !isLast && !(isiOSAppOnMac && (isHighlighted || isNextHighlighted)) {
-                                        Divider().overlay(Color.secondarySeparator)
-                                    }
-                                }
                                 .onAppear {
                                     if isLast, store.state.hasMore {
                                         store.send(.view(.loadNextPage))
@@ -247,9 +245,10 @@ private struct TodoListContent: View {
                                 }
                         }
                     }
-                    .background(Color.secondaryBackground)
+                    .background(Color.background)
                     .clipShape(.rect)
-                    .padding(.horizontal, 16)
+                    // Mac은 둥근 선택·마우스 표시가 칸 가장자리에 붙지 않도록 좌우 여백 표시
+                    .padding(.horizontal, isiOSAppOnMac ? 16 : 0)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -492,7 +491,7 @@ private struct TodoListFilterHeader: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 if 0 < store.appliedFilterCount {
                     DropdownMenu(sections: [
                         DropdownMenuSection(
@@ -514,12 +513,16 @@ private struct TodoListFilterHeader: View {
                             ]
                         )
                     ]) {
-                        HStack(spacing: 6) {
+                        HStack(spacing: 5) {
                             Text("\(store.appliedFilterCount)")
                             Image(systemName: "xmark")
+                                .font(.system(size: 10, weight: .semibold))
                         }
+                        .font(.adaptive(.footnote))
                         .foregroundStyle(Color.tintLabel)
-                        .adaptiveButtonStyle(color: .tintFill)
+                        .padding(.horizontal, 12)
+                        .frame(height: 34)
+                        .background(Color.tintFill, in: .capsule)
                     }
                 }
 
@@ -542,14 +545,11 @@ private struct TodoListFilterHeader: View {
                         }
                     )
                 ]) {
-                    let condition = store.state.query.isPinned || store.state.query.completionFilter != .all
-                    HStack(spacing: 6) {
-                        Image(systemName: "line.3.horizontal.decrease")
-                        Text(String(localized: "todo_list_filter_options", bundle: PresentationResources.bundle))
-                        Image(systemName: "chevron.down")
-                    }
-                    .foregroundStyle(condition ? Color.tintLabel : .fillLabel)
-                    .adaptiveButtonStyle(color: condition ? .tintFill : .fill)
+                    TodoListFilterChip(
+                        title: String(localized: "todo_list_filter_options", bundle: PresentationResources.bundle),
+                        systemImage: "line.3.horizontal.decrease",
+                        isActive: store.state.query.isPinned || store.state.query.completionFilter != .all
+                    )
                 }
 
                 DropdownMenu(sections: [
@@ -570,14 +570,11 @@ private struct TodoListFilterHeader: View {
                         }
                     )
                 ]) {
-                    let condition = store.state.query.sortTarget == .createdAt && store.state.query.sortOrder == .latest
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.up.arrow.down")
-                        Text(String(localized: "todo_list_sort_by", bundle: PresentationResources.bundle))
-                        Image(systemName: "chevron.down")
-                    }
-                    .foregroundStyle(condition ? Color.fillLabel : .tintLabel)
-                    .adaptiveButtonStyle(color: condition ? .fill : .tintFill)
+                    TodoListFilterChip(
+                        title: String(localized: "todo_list_sort_by", bundle: PresentationResources.bundle),
+                        systemImage: "arrow.up.arrow.down",
+                        isActive: store.state.query.sortTarget != .createdAt || store.state.query.sortOrder != .latest
+                    )
                 }
             }
         }
@@ -585,6 +582,31 @@ private struct TodoListFilterHeader: View {
         .fixedSize(horizontal: false, vertical: true)
         .contentMargins(.horizontal, 16, for: .scrollContent)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// 필터와 정렬 메뉴를 여는 칩, 기본값에서 바꾼 조건은 강조색 바탕으로 표시
+private struct TodoListFilterChip: View {
+    let title: String
+    let systemImage: String
+    let isActive: Bool
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Image(systemName: systemImage)
+                .font(.system(size: 13, weight: .medium))
+            Text(title)
+            Image(systemName: "chevron.down")
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .font(.adaptive(.footnote))
+        .foregroundStyle(isActive ? Color.tintLabel : .label)
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(isActive ? Color.tintFill : .clear, in: .capsule)
+        .overlay {
+            Capsule().strokeBorder(isActive ? Color.clear : .separator)
+        }
     }
 }
 
