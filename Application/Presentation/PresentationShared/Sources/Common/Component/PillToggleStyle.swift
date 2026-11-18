@@ -19,6 +19,7 @@ public extension ToggleStyle where Self == PillToggleStyle {
 
 private struct PillToggle: View {
     @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.labelsVisibility) private var labelsVisibility
     let configuration: ToggleStyleConfiguration
 
@@ -36,15 +37,21 @@ private struct PillToggle: View {
                     configuration.isOn.toggle()
                 }
             } label: {
+                // Mac은 손가락 크기보다 작은 Orca 데스크톱 스위치 크기
+                let knob = (isiOSAppOnMac ? 14 : 18) * AdaptiveSize.boardScale
+
                 Capsule()
                     .fill(configuration.isOn ? Color.accent : .switchOffFill)
-                    .frame(width: 44 * AdaptiveSize.boardScale, height: 24 * AdaptiveSize.boardScale)
+                    .frame(
+                        width: (isiOSAppOnMac ? 32 : 44) * AdaptiveSize.boardScale,
+                        height: (isiOSAppOnMac ? 18 : 24) * AdaptiveSize.boardScale
+                    )
                     .overlay(alignment: configuration.isOn ? .trailing : .leading) {
                         Circle()
                             .fill(Color.white)
-                            .frame(width: 18 * AdaptiveSize.boardScale, height: 18 * AdaptiveSize.boardScale)
+                            .frame(width: knob, height: knob)
                             .shadow(color: Color.black.opacity(0.1), radius: 1.5, y: 1)
-                            .padding(3 * AdaptiveSize.boardScale)
+                            .padding((isiOSAppOnMac ? 2 : 3) * AdaptiveSize.boardScale)
                     }
             }
             .buttonStyle(.plain)
