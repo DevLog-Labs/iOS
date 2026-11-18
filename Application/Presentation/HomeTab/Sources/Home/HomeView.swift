@@ -238,18 +238,33 @@ public struct HomeView: View {
     }
 
     private var homeContent: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 16) {
-                HomeDevelopmentSummary(store: store)
-                HomeTodoSection(store: store)
-                HomeDevelopmentGoals(store: store)
+        Group {
+            if usesDesktopLayout {
+                // 왼쪽 요약·카테고리, 오른쪽 진행 중인 개발의 두 열
+                HStack(spacing: 0) {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: 0) {
+                            HomeDevelopmentSummary(store: store)
+                            HomeTodoSection(store: store)
+                        }
+                    }
+                    Divider().overlay(Color.secondarySeparator)
+                    ScrollView {
+                        HomeDevelopmentGoals(store: store)
+                    }
+                }
+            } else {
+                ScrollView {
+                    LazyVStack(alignment: .leading, spacing: 0) {
+                        HomeDevelopmentSummary(store: store)
+                        HomeTodoSection(store: store)
+                        HomeDevelopmentGoals(store: store)
+                    }
+                    .frame(maxWidth: readableContentWidth)
+                    .frame(maxWidth: .infinity)
+                }
             }
-            .padding(.horizontal, 16)
-            .frame(maxWidth: readableContentWidth)
-            .frame(maxWidth: .infinity)
         }
-        // 칸 제목 줄 구분선과 첫 카드 사이 여백
-        .contentMargins(.top, usesPaneLayout ? 12 : 0, for: .scrollContent)
         .onScrollGeometryChange(for: CGFloat.self) { geometry in
             geometry.containerSize.height - geometry.contentInsets.top - geometry.contentInsets.bottom
         } action: { _, height in
@@ -464,6 +479,7 @@ private struct HomeCreateButton: View {
 }
 
 private struct HomeDevelopmentSummary: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<HomeFeature>
 
     var body: some View {
@@ -473,6 +489,9 @@ private struct HomeDevelopmentSummary: View {
             hasLoaded: store.hasDevelopmentGoalsLoaded,
             hasLoadFailure: store.hasDevelopmentGoalsLoadFailure
         )
+        .padding(.top, isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 16)
+        .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .padding(.bottom, 4)
     }
 }
 
