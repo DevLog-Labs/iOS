@@ -238,46 +238,45 @@ public struct HomeView: View {
     }
 
     private var homeContent: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 16) {
-                HomeDevelopmentSummary(store: store)
-                HomeTodoSection(store: store)
-                HomeDevelopmentGoals(store: store)
+        HomeColumns(store: store)
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.containerSize.height - geometry.contentInsets.top - geometry.contentInsets.bottom
+            } action: { _, height in
+                store.send(.binding(.set(\.visibleHeight, height)))
             }
-            .padding(.horizontal, 16)
-            .frame(maxWidth: readableContentWidth)
-            .frame(maxWidth: .infinity)
-        }
-        // 칸 제목 줄 구분선과 첫 카드 사이 여백
-        .contentMargins(.top, usesPaneLayout ? 12 : 0, for: .scrollContent)
-        .onScrollGeometryChange(for: CGFloat.self) { geometry in
-            geometry.containerSize.height - geometry.contentInsets.top - geometry.contentInsets.bottom
-        } action: { _, height in
-            store.send(.binding(.set(\.visibleHeight, height)))
-        }
-        .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .background(Color.background)
-        .duoToolbarVisibility()
-        .toolbar {
-            if deviceType == .duo {
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
-                    Group {
-                        Button {
-                            store.send(.store(.setPresentation(.searchView, true)))
-                        } label: {
-                            Image(systemName: "magnifyingglass")
-                        }
-                        Button {
-                            store.send(.store(.setPresentation(.contentPicker, true)))
-                        } label: {
-                            Image(systemName: "plus")
-                        }
-                        .disabled(!store.isNetworkConnected)
+            .safeAreaInset(edge: .top, spacing: 0) { topBar }
+            .background(Color.background)
+            .duoToolbarVisibility()
+            .toolbar {
+                if deviceType == .duo {
+                    // 세로 막대와 위쪽 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
+                    if #available(iOS 26.0, *) {
+                        duoToolbarItems
+                            .sharedBackgroundVisibility(.hidden)
+                    } else {
+                        duoToolbarItems
                     }
-                    .id(windowControlsInset)
                 }
             }
+    }
+
+    private var duoToolbarItems: some ToolbarContent {
+        ToolbarItemGroup(placement: .topBarTrailing) {
+            // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+            Group {
+                Button {
+                    store.send(.store(.setPresentation(.searchView, true)))
+                } label: {
+                    Image(systemName: "magnifyingglass")
+                }
+                Button {
+                    store.send(.store(.setPresentation(.contentPicker, true)))
+                } label: {
+                    Image(systemName: "plus")
+                }
+                .disabled(!store.isNetworkConnected)
+            }
+            .id(windowControlsInset)
         }
     }
 
@@ -309,7 +308,7 @@ public struct HomeView: View {
                     }
             }
         } else {
-            HStack(spacing: 12) {
+            HStack(spacing: 0) {
                 Text("DevLog")
                     .font(.adaptive(.largeTitle).weight(.bold))
                 Spacer()
@@ -318,7 +317,8 @@ public struct HomeView: View {
                     HomeCreateButton(store: store)
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.leading, 16)
+            .padding(.trailing, 8)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 8)
@@ -336,7 +336,12 @@ public struct HomeView: View {
             }
         }
 
-        if #available(iOS 26.0, *) {
+        if !usesPaneLayout {
+            Button(action: openSearch) {
+                Image(systemName: "magnifyingglass")
+            }
+            .buttonStyle(HomeTopBarIconButtonStyle())
+        } else if #available(iOS 26.0, *) {
             Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
             }
@@ -434,10 +439,19 @@ public enum HomeRoute: Hashable {
 }
 
 private struct HomeCreateButton: View {
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     let store: StoreOf<HomeFeature>
 
     var body: some View {
-        if #available(iOS 26.0, *) {
+        if !usesPaneLayout {
+            Button {
+                store.send(.store(.setPresentation(.contentPicker, true)))
+            } label: {
+                Image(systemName: "plus")
+            }
+            .buttonStyle(HomeTopBarIconButtonStyle())
+            .disabled(!store.isNetworkConnected)
+        } else if #available(iOS 26.0, *) {
             Button {
                 store.send(.store(.setPresentation(.contentPicker, true)))
             } label: {
@@ -463,7 +477,58 @@ private struct HomeCreateButton: View {
     }
 }
 
+// 좁은 화면 위쪽 줄의 배경 없는 40pt 아이콘 버튼
+private struct HomeTopBarIconButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.adaptive(.title3).weight(.medium))
+            .foregroundStyle(Color.label)
+            .opacity(isEnabled && !configuration.isPressed ? 1 : 0.4)
+            .frame(width: 40, height: 40)
+            .contentShape(.rect)
+    }
+}
+
+// 넓은 화면은 두 열, 좁은 화면과 오른쪽 칸이 열려 좁아진 왼쪽 칸은 한 열
+private struct HomeColumns: View {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.paneWidth) private var paneWidth
+    @Environment(\.readableContentWidth) private var readableContentWidth
+    let store: StoreOf<HomeFeature>
+
+    var body: some View {
+        if usesDesktopLayout && paneWidth == nil {
+            // 왼쪽 요약·카테고리, 오른쪽 진행 중인 개발의 두 열
+            HStack(spacing: 0) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        HomeDevelopmentSummary(store: store)
+                        HomeTodoSection(store: store)
+                    }
+                }
+                Divider().overlay(Color.secondarySeparator)
+                ScrollView {
+                    HomeDevelopmentGoals(store: store)
+                }
+            }
+        } else {
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    HomeDevelopmentSummary(store: store)
+                    HomeTodoSection(store: store)
+                    HomeDevelopmentGoals(store: store)
+                }
+                .frame(maxWidth: readableContentWidth)
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+}
+
 private struct HomeDevelopmentSummary: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<HomeFeature>
 
     var body: some View {
@@ -473,6 +538,9 @@ private struct HomeDevelopmentSummary: View {
             hasLoaded: store.hasDevelopmentGoalsLoaded,
             hasLoadFailure: store.hasDevelopmentGoalsLoadFailure
         )
+        .padding(.top, isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 16)
+        .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .padding(.bottom, 4)
     }
 }
 
@@ -492,18 +560,39 @@ private struct HomeDevelopmentGoals: View {
 }
 
 private struct HomeTodoSection: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @ScaledMetric(relativeTo: .title2) private var iconSize = CGFloat(64)
     let store: StoreOf<HomeFeature>
 
     var body: some View {
         let items = store.preferences.filter(\.isVisible)
-        let collapsedCount = min(items.count, 8)
         let columnCount = dynamicTypeSize.isAccessibilitySize ? 2 : 4
-        let showsExpansionButton = 8 < items.count
-            || 0 < collapsedCount && collapsedCount.isMultiple(of: columnCount)
 
         VStack(alignment: .leading, spacing: 0) {
+            HomeSectionHeader {
+                Text(verbatim: "Todo")
+            } trailing: {
+                if !store.isPreferencesLoading {
+                    Button {
+                        store.send(.view(.tapManageTodoCategory))
+                    } label: {
+                        // Todo 타일과 같은 바탕·테두리의 작은 버튼
+                        Text("todo_edit", bundle: PresentationResources.bundle)
+                            .font(.adaptive(.footnote).weight(.medium))
+                            .foregroundStyle(Color.label)
+                            .padding(.horizontal, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
+                            .frame(minHeight: isiOSAppOnMac ? 24 * AdaptiveSize.boardScale : 28)
+                            .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                            .overlay {
+                                RoundedRectangle(cornerRadius: CornerRadius.control)
+                                    .strokeBorder(Color.secondarySeparator)
+                            }
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+
             if store.isPreferencesLoading {
                 LoadingView()
                     .frame(maxWidth: .infinity)
@@ -511,47 +600,19 @@ private struct HomeTodoSection: View {
                 let visibleItems = store.isTodoCategoryExpanded
                     ? items
                     : Array(items.prefix(8))
-                let hasAvailableSlot = visibleItems.isEmpty
-                    || !visibleItems.count.isMultiple(of: columnCount)
 
-                TodoCategoryGridLayout(
-                    columnCount: columnCount,
-                    itemWidth: iconSize,
-                    maximumRowSpacing: dynamicTypeSize.isAccessibilitySize ? .infinity : iconSize / 2
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 0, alignment: .top), count: columnCount),
+                    spacing: 0
                 ) {
                     ForEach(visibleItems) { item in
-                        HomeTodoCategoryLink(item: item, iconSize: iconSize)
-                    }
-                    if store.isTodoCategoryExpanded || hasAvailableSlot {
-                        Button {
-                            store.send(.view(.tapManageTodoCategory))
-                        } label: {
-                            VStack(spacing: 10) {
-                                RoundedRectangle(cornerRadius: CornerRadius.control)
-                                    .strokeBorder(
-                                        Color.tertiaryLabel,
-                                        style: StrokeStyle(lineWidth: 1.5, dash: [5, 4])
-                                    )
-                                    .frame(width: iconSize, height: iconSize)
-                                    .overlay {
-                                        Image(systemName: "square.grid.2x2")
-                                            .font(.adaptive(.title2).bold())
-                                            .foregroundStyle(Color.tertiaryLabel)
-                                    }
-                                Text("todo_edit", bundle: PresentationResources.bundle)
-                                    .font(.adaptive(.subheadline))
-                                    .foregroundStyle(Color.tertiaryLabel)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .contentShape(.rect)
-                        }
-                        .buttonStyle(.plain)
+                        HomeTodoCategoryLink(item: item)
                     }
                 }
-                .frame(maxWidth: .infinity)
+                .padding(.horizontal, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
             }
 
-            if !store.isPreferencesLoading, showsExpansionButton {
+            if !store.isPreferencesLoading, 8 < items.count {
                 HStack {
                     Spacer()
                     Button {
@@ -569,32 +630,36 @@ private struct HomeTodoSection: View {
                 }
             }
         }
-        .padding(.bottom, 12)
-        .background(Color.secondaryBackground, in: Rectangle())
     }
 }
 
+// 테두리 있는 아이콘 사각형과 이름 타일
 private struct HomeTodoCategoryLink: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let item: TodoCategoryItem
-    let iconSize: CGFloat
 
     var body: some View {
+        let tileSize = isiOSAppOnMac ? 37 * AdaptiveSize.boardScale : 40
+
         NavigationLink(value: HomeRoute.category(item)) {
-            VStack(spacing: 10) {
+            VStack(spacing: 6) {
                 Image(systemName: item.symbolName)
-                    .font(.adaptive(.title2).bold())
-                    .frame(width: iconSize, height: iconSize)
-                    .iconStyle(
-                        color: item.color,
-                        in: RoundedRectangle(cornerRadius: CornerRadius.control)
-                    )
+                    .font(.adaptive(.body).weight(.medium))
+                    .foregroundStyle(item.color)
+                    .frame(width: tileSize, height: tileSize)
+                    .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: CornerRadius.control)
+                            .strokeBorder(Color.secondarySeparator)
+                    }
                 Text(item.localizedName)
-                    .font(.adaptive(.subheadline))
-                    .foregroundStyle(Color.secondaryLabel)
+                    .font(.adaptive(.footnote))
+                    .foregroundStyle(Color.label)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.8)
             }
+            .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
             .contentShape(.rect)
         }

@@ -9,6 +9,7 @@ import SwiftUI
 import PresentationShared
 
 struct DevelopmentGoalSection: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let items: [DevelopmentGoalItem]
     let isLoading: Bool
     let hasLoaded: Bool
@@ -17,11 +18,24 @@ struct DevelopmentGoalSection: View {
     let onRetry: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            header
+        VStack(alignment: .leading, spacing: 0) {
+            HomeSectionHeader {
+                Text("home_development_goal_section_title", bundle: PresentationResources.bundle)
+                if hasLoaded {
+                    Text(
+                        String.localizedStringWithFormat(
+                            String(localized: "home_development_goal_count_format", bundle: PresentationResources.bundle),
+                            items.count
+                        )
+                    )
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.secondaryLabel)
+                }
+            } trailing: {
+                EmptyView()
+            }
             content
         }
-        .padding(.top, 8)
     }
 
     @ViewBuilder
@@ -62,93 +76,80 @@ struct DevelopmentGoalSection: View {
                 )
             }
         } else {
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: 0) {
                 ForEach(items) { item in
                     Button {
                         onSelect(item)
                     } label: {
-                        DevelopmentGoalCard(item: item)
+                        DevelopmentGoalRow(item: item)
                     }
                     .buttonStyle(.plain)
                 }
             }
-        }
-    }
-
-    private var header: some View {
-        HStack(spacing: 8) {
-            Text("home_development_goal_section_title", bundle: PresentationResources.bundle)
-                .font(.adaptive(.title2))
-                .foregroundStyle(Color.label)
-            if hasLoaded {
-                Text(
-                    String.localizedStringWithFormat(
-                        String(localized: "home_development_goal_count_format", bundle: PresentationResources.bundle),
-                        items.count
-                    )
-                )
-                .font(.adaptive(.subheadline).weight(.medium))
-                .foregroundStyle(Color.accent)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(Color.accent.opacity(0.1), in: .capsule)
-            }
-            Spacer()
+            .padding(.leading, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
         }
     }
 }
 
-private struct DevelopmentGoalCard: View {
+// 카드 없이 아래 구분선으로 나눈 목표 행
+private struct DevelopmentGoalRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let item: DevelopmentGoalItem
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 12) {
-                DevelopmentGoalStatusBadge()
-                Spacer(minLength: 12)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                TodoBadge(
+                    String(localized: "development_goal_status_in_progress", bundle: PresentationResources.bundle),
+                    color: .tintLabel
+                )
                 if let recentRecord = item.recentRecord {
                     Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
-                        .font(.adaptive(.caption))
-                        .foregroundStyle(Color.tertiaryLabel)
+                        .font(.adaptive(.footnote))
+                        .foregroundStyle(Color.secondaryLabel)
                 }
             }
 
             Text(item.goal.title)
-                .font(.adaptive(.title3).weight(.semibold))
+                .font(.adaptive(isiOSAppOnMac ? .body : .callout).weight(.bold))
                 .foregroundStyle(Color.label)
                 .lineLimit(2)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 8)
 
             if !item.goal.description.isEmpty {
                 Text(item.goal.description)
-                    .font(.adaptive(.subheadline))
+                    .font(.adaptive(.footnote))
                     .foregroundStyle(Color.secondaryLabel)
                     .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 4)
             }
 
             DevelopmentTodoProgressView(progress: item.todoProgress)
+                .padding(.top, 10)
 
-            Divider().overlay(Color.secondarySeparator)
-
-            if let recentRecord = item.recentRecord {
-                VStack(alignment: .leading, spacing: 3) {
+            HStack(spacing: 4) {
+                if let recentRecord = item.recentRecord {
                     Text("home_development_goal_recent_record", bundle: PresentationResources.bundle)
-                        .font(.adaptive(.caption))
-                        .foregroundStyle(Color.tertiaryLabel)
+                    Text(verbatim: "·")
                     Text(recentRecord.title)
-                        .font(.adaptive(.subheadline).weight(.medium))
                         .foregroundStyle(Color.label)
-                        .lineLimit(1)
+                } else {
+                    Text("development_record_empty_title", bundle: PresentationResources.bundle)
                 }
-            } else {
-                Text("development_record_empty_title", bundle: PresentationResources.bundle)
-                    .font(.adaptive(.caption))
-                    .foregroundStyle(Color.tertiaryLabel)
             }
+            .font(.adaptive(.footnote))
+            .foregroundStyle(Color.secondaryLabel)
+            .lineLimit(1)
+            .padding(.top, 10)
         }
-        .padding(18)
-        .background(Color.secondaryBackground, in: .rect)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 14)
+        .padding(.trailing, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .overlay(alignment: .bottom) {
+            Rectangle()
+                .fill(Color.secondarySeparator)
+                .frame(height: 1)
+        }
         .contentShape(.rect)
     }
 }
@@ -159,10 +160,10 @@ struct DevelopmentTodoProgressView: View {
     var body: some View {
         if progress.isEmpty {
             Text("home_development_goal_todo_empty", bundle: PresentationResources.bundle)
-                .font(.adaptive(.caption))
-                .foregroundStyle(Color.tertiaryLabel)
+                .font(.adaptive(.footnote))
+                .foregroundStyle(Color.secondaryLabel)
         } else {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 8) {
                     Text(
                         String.localizedStringWithFormat(
@@ -174,8 +175,6 @@ struct DevelopmentTodoProgressView: View {
                             progress.totalCount
                         )
                     )
-                    .font(.adaptive(.caption).weight(.medium))
-                    .foregroundStyle(Color.secondaryLabel)
                     Spacer(minLength: 8)
                     Text(
                         String.localizedStringWithFormat(
@@ -186,36 +185,21 @@ struct DevelopmentTodoProgressView: View {
                             progress.percentage
                         )
                     )
-                    .font(.adaptive(.caption).weight(.semibold))
-                    .foregroundStyle(Color.accent)
                 }
+                .font(.adaptive(.footnote))
+                .foregroundStyle(Color.secondaryLabel)
 
                 GeometryReader { proxy in
                     Capsule()
-                        .fill(Color.separator.opacity(0.6))
+                        .fill(Color.separator)
                         .overlay(alignment: .leading) {
                             Capsule()
                                 .fill(Color.accent)
                                 .frame(width: proxy.size.width * progress.fraction)
                         }
                 }
-                .frame(height: 8)
+                .frame(height: 6)
             }
         }
-    }
-}
-
-private struct DevelopmentGoalStatusBadge: View {
-    var body: some View {
-        Label {
-            Text("development_goal_status_in_progress", bundle: PresentationResources.bundle)
-        } icon: {
-            Image(systemName: "clock")
-        }
-        .font(.adaptive(.caption).weight(.semibold))
-        .foregroundStyle(Color.accent)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.badge))
     }
 }

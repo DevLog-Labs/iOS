@@ -10,31 +10,41 @@ import SwiftUI
 import PresentationShared
 
 struct DevelopmentSummaryCard: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.deviceType) private var deviceType
+    @Environment(\.colorScheme) private var colorScheme
     let items: [DevelopmentGoalItem]
     let isLoading: Bool
     let hasLoaded: Bool
     let hasLoadFailure: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("home_development_summary_eyebrow", bundle: PresentationResources.bundle)
-                        .font(.adaptive(.subheadline))
-                        .foregroundStyle(Color.tertiaryLabel)
-                    summaryTitle
-                }
-                Spacer(minLength: 16)
-                Image(systemName: "flag.checkered")
-                    .font(.adaptive(.title2).weight(.semibold))
-                    .foregroundStyle(Color.accent)
-                    .frame(width: 64, height: 64)
-                    .background(Color.accent.opacity(0.1), in: .rect(cornerRadius: CornerRadius.control))
+        // iPhone·Duo 라이트는 바탕 없는 카드라 글자를 화면 여백에 맞춤
+        let horizontalPadding: CGFloat = if isiOSAppOnMac {
+            14 * AdaptiveSize.boardScale
+        } else if deviceType != .ipad && colorScheme == .light {
+            0
+        } else {
+            16
+        }
+
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 6) {
+                Image(systemName: "flag")
+                Text("home_development_summary_eyebrow", bundle: PresentationResources.bundle)
             }
+            .font(.adaptive(.footnote))
+            .foregroundStyle(Color.secondaryLabel)
+
+            summaryTitle
+                .padding(.top, 8)
+                .padding(.bottom, 12)
 
             summaryContent
         }
-        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.vertical, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .padding(.horizontal, horizontalPadding)
         .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
 
@@ -57,7 +67,7 @@ struct DevelopmentSummaryCard: View {
                 items.count
             )
         )
-        .font(.adaptive(.title2).weight(.semibold))
+        .font(.adaptive(isiOSAppOnMac ? .title2 : .title3).weight(.bold))
         .foregroundStyle(Color.label)
         .fixedSize(horizontal: false, vertical: true)
     }
@@ -77,25 +87,26 @@ struct DevelopmentSummaryCard: View {
                 .font(.adaptive(.subheadline))
                 .foregroundStyle(Color.secondaryLabel)
         } else {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 0) {
                 DevelopmentTodoProgressView(progress: todoProgress)
 
                 if let recentRecord {
-                    VStack(alignment: .leading, spacing: 8) {
+                    HStack(spacing: 8) {
                         Text("home_development_summary_recent_record", bundle: PresentationResources.bundle)
-                            .font(.adaptive(.caption).weight(.medium))
-                            .foregroundStyle(Color.tertiaryLabel)
-                        HStack(spacing: 12) {
-                            Text(recentRecord.title)
-                                .font(.adaptive(.subheadline).weight(.medium))
-                                .foregroundStyle(Color.label)
-                                .lineLimit(1)
-                            Spacer(minLength: 12)
-                            Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
-                                .font(.adaptive(.caption))
-                                .foregroundStyle(Color.tertiaryLabel)
-                        }
+                            .foregroundStyle(Color.secondaryLabel)
+                        Text(recentRecord.title)
+                            .foregroundStyle(Color.label)
+                            .lineLimit(1)
+                            .frame(maxWidth: .infinity, alignment: .trailing)
+                        Text(recentRecord.confirmedAt, format: .dateTime.month().day().hour().minute())
+                            .foregroundStyle(Color.secondaryLabel)
                     }
+                    .font(.adaptive(.footnote))
+                    .padding(.top, 12)
+                    .overlay(alignment: .top) {
+                        Divider().overlay(Color.secondarySeparator)
+                    }
+                    .padding(.top, 14)
                 }
             }
         }
