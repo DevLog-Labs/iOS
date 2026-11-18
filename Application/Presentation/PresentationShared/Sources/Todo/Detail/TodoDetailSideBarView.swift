@@ -177,7 +177,7 @@ private struct TodoInfoProperties: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(!isEditable)
-                .dueDatePicker(isPresented: $isDueDatePickerPresented, store: editorStore)
+                .modifier(DueDatePickerModifier(isPresented: $isDueDatePickerPresented, store: editorStore))
             }
             Divider().overlay(Color.separator)
             PropertyRow(String(localized: "todo_tags", bundle: PresentationResources.bundle)) {
@@ -266,7 +266,7 @@ struct TodoSideBarProperties: View {
                             dueDateLabel
                         }
                         .buttonStyle(.plain)
-                        .dueDatePicker(isPresented: $isDueDatePickerPresented, store: editorStore)
+                        .modifier(DueDatePickerModifier(isPresented: $isDueDatePickerPresented, store: editorStore))
                     } else {
                         dueDateLabel
                     }
@@ -404,17 +404,10 @@ private struct TagField: View {
     }
 }
 
-private extension View {
-    func dueDatePicker(isPresented: Binding<Bool>, store: StoreOf<TodoEditorFeature>) -> some View {
-        modifier(DueDatePickerModifier(isPresented: isPresented, store: store))
-    }
-}
-
 // 넓은 창은 팝오버, 좁은 창은 달력 높이만큼 여는 시트로 마감일 달력 표시
 private struct DueDatePickerModifier: ViewModifier {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isTabContentActive) private var isTabContentActive
-    @State private var height = CGFloat.zero
     @Binding var isPresented: Bool
     let store: StoreOf<TodoEditorFeature>
 
@@ -430,8 +423,10 @@ private struct DueDatePickerModifier: ViewModifier {
                 isPresented: (isRegular ? Binding.constant(false) : $isPresented).activePresentation(when: isTabContentActive)
             ) {
                 DueDatePopover(store: store)
-                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height = $0 }
-                    .sheetDetent(height == 0 ? .large : .height(height))
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                        store.send(.binding(.set(\.dueDatePickerHeight, $0)))
+                    }
+                    .sheetDetent(store.dueDatePickerHeight == 0 ? .large : .height(store.dueDatePickerHeight))
             }
     }
 }

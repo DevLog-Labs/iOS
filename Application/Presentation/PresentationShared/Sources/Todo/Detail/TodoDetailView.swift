@@ -279,8 +279,6 @@ public struct TodoDetailView: View {
 }
 
 private struct InfoSheetView: View {
-    @State private var contentHeight = CGFloat.zero
-    @State private var barHeight = CGFloat.zero
     let store: StoreOf<TodoDetailSideBarFeature>
     let onClose: () -> Void
 
@@ -289,12 +287,18 @@ private struct InfoSheetView: View {
         TodoDetailSideBarView(store: store, windowEvent: nil)
         .safeAreaInset(edge: .top, spacing: 0) {
             topBar
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { barHeight = $0 }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                    store.send(.binding(.set(\.sheetBarHeight, $0)))
+                }
         }
         .background(Color.background.ignoresSafeArea())
-        .onPreferenceChange(TodoInfoHeightPreferenceKey.self) { contentHeight = $0 }
+        .onPreferenceChange(TodoInfoHeightPreferenceKey.self) { height in
+            store.send(.binding(.set(\.sheetContentHeight, height)))
+        }
         // 속성을 불러오기 전에는 시트 높이를 바꾸지 않음
-        .sheetDetent(contentHeight == 0 ? .large : .height(barHeight + contentHeight))
+        .sheetDetent(
+            store.sheetContentHeight == 0 ? .large : .height(store.sheetBarHeight + store.sheetContentHeight)
+        )
     }
 
     private var topBar: some View {
