@@ -124,8 +124,7 @@ private struct PushNotificationListContent: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
-    @Environment(\.readableContentWidth) private var readableContentWidth
-    @ScaledMetric(relativeTo: .headline) private var iconSize = 36
+    @ScaledMetric(relativeTo: .body) private var iconSize = 32
     let store: StoreOf<PushNotificationListFeature>
     // 고른 알림을 옆 칸에 표시하는 동안 목록 행에 선택 표시
     let showsSelection: Bool
@@ -138,156 +137,160 @@ private struct PushNotificationListContent: View {
         let sections = store.query.sortOrder == .latest ? [recent, previous] : [previous, recent]
 
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 0) {
                 if notifications.isEmpty {
                     EmptyStateView(
                         String(localized: "push_notifications_empty", bundle: PresentationResources.bundle),
                         systemImage: "bell"
                     )
+                    .padding(.horizontal)
                 } else {
                     ForEach(sections.indices, id: \.self) { index in
                         let items = sections[index]
                         let isRecent = (index == 0) == (store.query.sortOrder == .latest)
                         if !items.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                    HStack(spacing: 8) {
-                                        Text(String(
-                                            localized: isRecent ? "push_notifications_new" : "push_notifications_previous",
-                                            bundle: PresentationResources.bundle
-                                        ))
-                                        .font(.adaptive(.title3).bold())
-                                        Text("\(items.count)")
-                                            .font(.adaptive(.callout).bold())
-                                            .foregroundStyle(Color.accent)
-                                        Spacer()
-                                    }
+                            HStack(spacing: 6) {
+                                Text(String(
+                                    localized: isRecent ? "push_notifications_new" : "push_notifications_previous",
+                                    bundle: PresentationResources.bundle
+                                ))
+                                .font(.system(size: isiOSAppOnMac ? 12.5 * AdaptiveSize.boardScale : 14, weight: .bold))
+                                Text("\(items.count)")
+                                    .font(.system(size: isiOSAppOnMac ? 12.5 * AdaptiveSize.boardScale : 14, weight: .medium))
+                                    .foregroundStyle(Color.secondaryLabel)
+                                Spacer()
+                            }
+                            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                            .padding(.top, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 20)
+                            .padding(.bottom, isiOSAppOnMac ? 6 * AdaptiveSize.boardScale : 10)
 
-                                    LazyVStack(spacing: 12) {
-                                        ForEach(items) { item in
-                                            let category = TodoCategoryItem(from: item.todoCategory)
-                                            let isSelected = showsSelection && item.id == store.selectedNotificationId
+                            LazyVStack(spacing: 0) {
+                                ForEach(items) { item in
+                                    let category = TodoCategoryItem(from: item.todoCategory)
+                                    let isSelected = showsSelection && item.id == store.selectedNotificationId
 
-                                            HStack(alignment: .top, spacing: 12) {
-                                                Image(systemName: category.symbolName)
-                                                    .font(.adaptive(.headline))
-                                                    .foregroundStyle(Color.white)
-                                                    .frame(width: iconSize, height: iconSize)
-                                                    .background(category.color, in: .rect(cornerRadius: CornerRadius.control))
-
-                                                VStack(alignment: .leading, spacing: 6) {
-                                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                                        Text(item.title)
-                                                            .font(.adaptive(.headline))
-                                                            .foregroundStyle(
-                                                                item.isRead ? Color.secondaryLabel : .label
-                                                            )
-                                                            .lineLimit(2)
-
-                                                        Spacer(minLength: 4)
-
-                                                        TimelineView(.periodic(from: .now, by: 1.0)) { context in
-                                                            Text(timeAgoText(from: item.receivedAt, now: context.date))
-                                                                .font(.adaptive(.caption))
-                                                                .foregroundStyle(Color.tertiaryLabel)
-                                                                .lineLimit(1)
-                                                        }
-
-                                                        if !item.isRead {
-                                                            Circle()
-                                                                .fill(Color.accent)
-                                                                .frame(width: 7, height: 7)
-                                                        }
-                                                    }
-
-                                                    Text(item.body)
-                                                        .font(.adaptive(.subheadline))
-                                                        .foregroundStyle(Color.secondaryLabel)
-                                                        .multilineTextAlignment(.leading)
-                                                        .lineLimit(3)
-                                                }
-                                            }
-                                            .padding(16)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
-                                            .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
-                                            // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
-                                            .background(
-                                                isSelected ? Color.fill : .clear,
-                                                in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+                                    HStack(alignment: .top, spacing: 10) {
+                                        // 테두리 있는 회색 사각형에 카테고리 색 기호
+                                        Image(systemName: category.symbolName)
+                                            .font(.adaptive(.body))
+                                            .foregroundStyle(category.color)
+                                            .frame(
+                                                width: isiOSAppOnMac ? 29 * AdaptiveSize.boardScale : iconSize,
+                                                height: isiOSAppOnMac ? 29 * AdaptiveSize.boardScale : iconSize
                                             )
-                                            .background(Color.secondaryBackground, in: .rect)
-                                            .contentShape(.rect)
-                                            .onTapGesture {
-                                                store.send(.view(.selectNotification(item.id)))
+                                            .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                                            .overlay {
+                                                RoundedRectangle(cornerRadius: CornerRadius.control)
+                                                    .strokeBorder(Color.secondarySeparator)
                                             }
-                                            .itemActions {
-                                                // Mac 우클릭 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
-                                                if isiOSAppOnMac {
-                                                    Button {
-                                                        store.send(.binding(.set(\.isDetailPanePresented, false)))
-                                                        store.send(.view(.selectNotification(item.id)))
-                                                    } label: {
-                                                        Label {
-                                                            Text("detail_panel_open", bundle: PresentationResources.bundle)
-                                                        } icon: {
-                                                            Image(systemName: "doc.text")
-                                                        }
-                                                    }
-                                                    Button {
-                                                        store.send(.binding(.set(\.isDetailPanePresented, true)))
-                                                        store.send(.view(.selectNotification(item.id)))
-                                                    } label: {
-                                                        Label {
-                                                            Text("detail_panel_open_in_pane", bundle: PresentationResources.bundle)
-                                                        } icon: {
-                                                            Image(systemName: "sidebar.left")
-                                                        }
-                                                    }
-                                                    Divider()
+
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            HStack(spacing: 6) {
+                                                Text(item.title)
+                                                    .font(.adaptive(isiOSAppOnMac ? .body : .callout).weight(item.isRead ? .medium : .bold))
+                                                    .foregroundStyle(item.isRead ? Color.secondaryLabel : .label)
+                                                    .lineLimit(2)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                                TimelineView(.periodic(from: .now, by: 1.0)) { context in
+                                                    Text(timeAgoText(from: item.receivedAt, now: context.date))
+                                                        .font(.system(size: isiOSAppOnMac ? 11 * AdaptiveSize.boardScale : 12.5))
+                                                        .foregroundStyle(Color.secondaryLabel)
+                                                        .lineLimit(1)
                                                 }
 
-                                                ItemActionButton(
-                                                    title: item.isRead
-                                                        ? String(localized: "push_mark_unread", bundle: PresentationResources.bundle) : String(localized: "push_mark_read", bundle: PresentationResources.bundle),
-                                                    color: Color.accent,
-                                                    image: Image(systemName: item.isRead
-                                                        ? "circle.badge.xmark" : "checkmark.circle")
-                                                ) {
-                                                    store.send(.view(.toggleRead(item)))
-                                                }
-
-                                                if isiOSAppOnMac {
-                                                    Divider()
-                                                }
-
-                                                ItemActionButton(
-                                                    title: String(localized: "common_delete", bundle: PresentationResources.bundle),
-                                                    color: Color.red,
-                                                    image: Image(systemName: "trash"),
-                                                    role: .destructive
-                                                ) {
-                                                    store.send(.view(.deleteNotification(item)))
-                                                    presentDeleteNotificationToast(item.id)
+                                                if !item.isRead {
+                                                    Circle()
+                                                        .fill(Color.accent)
+                                                        .frame(width: 8, height: 8)
                                                 }
                                             }
-                                            .clipShape(.rect)
-                                            .onAppear {
-                                                if item.id == notifications.last?.id, store.nextCursor != nil {
-                                                    store.send(.view(.loadNextPage))
-                                                }
-                                            }
+
+                                            Text(item.body)
+                                                .font(.adaptive(.footnote))
+                                                .foregroundStyle(Color.secondaryLabel)
+                                                .lineLimit(1)
                                         }
                                     }
+                                    .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+                                    .padding(.trailing, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                                    // 구분선은 아이콘 시작부터 행 오른쪽 끝까지 표시
+                                    .overlay(alignment: .bottom) {
+                                        Divider().overlay(Color.secondarySeparator)
+                                    }
+                                    .padding(.leading, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    // 선택 표시는 마우스 표시와 같은 회색으로 행 전체를 채움
+                                    .hoverHighlight(isEnabled: !isSelected)
+                                    // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
+                                    .background(isSelected ? Color.fill : .clear)
+                                    .background(Color.background)
+                                    .contentShape(.rect)
+                                    .onTapGesture {
+                                        store.send(.view(.selectNotification(item.id)))
+                                    }
+                                    .itemActions {
+                                        // Mac 우클릭 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
+                                        if isiOSAppOnMac {
+                                            Button {
+                                                store.send(.binding(.set(\.isDetailPanePresented, false)))
+                                                store.send(.view(.selectNotification(item.id)))
+                                            } label: {
+                                                Label {
+                                                    Text("detail_panel_open", bundle: PresentationResources.bundle)
+                                                } icon: {
+                                                    Image(systemName: "doc.text")
+                                                }
+                                            }
+                                            Button {
+                                                store.send(.binding(.set(\.isDetailPanePresented, true)))
+                                                store.send(.view(.selectNotification(item.id)))
+                                            } label: {
+                                                Label {
+                                                    Text("detail_panel_open_in_pane", bundle: PresentationResources.bundle)
+                                                } icon: {
+                                                    Image(systemName: "sidebar.left")
+                                                }
+                                            }
+                                            Divider()
+                                        }
+
+                                        ItemActionButton(
+                                            title: item.isRead
+                                                ? String(localized: "push_mark_unread", bundle: PresentationResources.bundle) : String(localized: "push_mark_read", bundle: PresentationResources.bundle),
+                                            color: Color.accent,
+                                            image: Image(systemName: item.isRead
+                                                ? "circle.badge.xmark" : "checkmark.circle")
+                                        ) {
+                                            store.send(.view(.toggleRead(item)))
+                                        }
+
+                                        if isiOSAppOnMac {
+                                            Divider()
+                                        }
+
+                                        ItemActionButton(
+                                            title: String(localized: "common_delete", bundle: PresentationResources.bundle),
+                                            color: Color.red,
+                                            image: Image(systemName: "trash"),
+                                            role: .destructive
+                                        ) {
+                                            store.send(.view(.deleteNotification(item)))
+                                            presentDeleteNotificationToast(item.id)
+                                        }
+                                    }
+                                    .clipShape(.rect)
+                                    .onAppear {
+                                        if item.id == notifications.last?.id, store.nextCursor != nil {
+                                            store.send(.view(.loadNextPage))
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            // 사이드바가 있으면 필터 줄 없이 제목 줄 바로 아래에서 시작
-            .padding(.top, usesDesktopLayout ? 16 * AdaptiveSize.boardScale : 0)
-            .frame(maxWidth: readableContentWidth)
-            .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             let title = Text(String(localized: "nav_push_notifications", bundle: PresentationResources.bundle))
@@ -313,7 +316,6 @@ private struct PushNotificationListContent: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
-                    .frame(maxWidth: readableContentWidth)
                     .padding(.top, windowControlsInset)
                     .padding(.bottom, 12)
 
