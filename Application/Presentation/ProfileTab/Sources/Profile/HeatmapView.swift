@@ -10,45 +10,28 @@ import Core
 import PresentationShared
 
 struct HeatmapView: View {
-    @State private var availableWidth = CGFloat.zero
     let quarter: HeatmapQuarter
     let selectedActivityKinds: Set<ActivityKind>
     let selectedDay: HeatmapDay?
     let onSelectDay: (HeatmapDay) -> Void
 
     var body: some View {
-        let layout = HeatmapLayout(
-            availableWidth: availableWidth,
-            weekCounts: quarter.months.map(\.weeks.count)
-        )
+        let layout = HeatmapLayout()
 
-        ScrollView(.horizontal) {
-            LazyHStack(alignment: .top, spacing: layout.monthSpacing) {
-                ForEach(quarter.months) { month in
-                    MonthCompactHeatmapView(
-                        month: month,
-                        maxCount: maxCount,
-                        layout: layout,
-                        selectedActivityKinds: selectedActivityKinds,
-                        selectedDay: selectedDay,
-                        onSelectDay: onSelectDay
-                    )
-                }
+        HStack(alignment: .top, spacing: layout.monthSpacing) {
+            ForEach(quarter.months) { month in
+                MonthCompactHeatmapView(
+                    month: month,
+                    maxCount: maxCount,
+                    layout: layout,
+                    selectedActivityKinds: selectedActivityKinds,
+                    selectedDay: selectedDay,
+                    onSelectDay: onSelectDay
+                )
             }
-            .padding(.vertical, 2)
-            .frame(width: layout.contentWidth, alignment: .leading)
-            .frame(minWidth: availableWidth)
         }
-        .scrollIndicators(.hidden)
-        .scrollDisabled(true)
+        .padding(.vertical, 2)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background {
-            GeometryReader { geometry in
-                Color.clear
-                    .onAppear { updateAvailableWidth(geometry.size.width) }
-                    .onChange(of: geometry.size.width) { updateAvailableWidth($1) }
-            }
-        }
     }
 
     private var maxCount: Int {
@@ -73,38 +56,15 @@ struct HeatmapView: View {
         }
         return value
     }
-
-    private func updateAvailableWidth(_ width: CGFloat) {
-        if availableWidth != width {
-            availableWidth = width
-        }
-    }
 }
 
+// 보드 크기 그대로 둔 잔디 칸
 private struct HeatmapLayout {
-    private static let minimumCellSize: CGFloat = 8
-    private static let maximumCellSize: CGFloat = 22
-    let cellSize: CGFloat
-    let cellSpacing: CGFloat = 4
-    let monthSpacing: CGFloat = 12
-    let monthTitleSpacing: CGFloat = 6
-    let contentWidth: CGFloat
-
-    init(availableWidth: CGFloat, weekCounts: [Int]) {
-        let totalColumns = max(weekCounts.reduce(0, +), 1)
-        let totalColumnSpacings = weekCounts.reduce(0) { partialResult, count in
-            partialResult + max(count - 1, 0)
-        }
-        let fixedWidth = monthSpacing * CGFloat(max(weekCounts.count - 1, 0))
-            + cellSpacing * CGFloat(totalColumnSpacings)
-        let fittingCellSize = max(0, availableWidth - fixedWidth) / CGFloat(totalColumns)
-        cellSize = min(max(fittingCellSize, Self.minimumCellSize), Self.maximumCellSize)
-        contentWidth = cellSize * CGFloat(totalColumns) + fixedWidth
-    }
-
-    var cellCornerRadius: CGFloat {
-        max(2, cellSize * 0.2)
-    }
+    let cellSize = 11 * AdaptiveSize.boardScale
+    let cellSpacing = 3 * AdaptiveSize.boardScale
+    let monthSpacing = 12 * AdaptiveSize.boardScale
+    let monthTitleSpacing = 4 * AdaptiveSize.boardScale
+    let cellCornerRadius = 2 * AdaptiveSize.boardScale
 
     var innerSelectionLineWidth: CGFloat {
         max(1.2, cellSize * 0.12)
@@ -124,7 +84,6 @@ private struct MonthCompactHeatmapView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: layout.monthTitleSpacing) {
             Text(month.monthStart.formatted(.dateTime.month(.abbreviated)))
-                .frame(height: layout.cellSize)
                 .font(.adaptive(.caption))
                 .foregroundStyle(Color.secondaryLabel)
 

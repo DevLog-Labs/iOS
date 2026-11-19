@@ -45,7 +45,8 @@ public struct ProfileView: View {
             // Mac은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
             PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoRoute != nil) {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16) {
+                    // 카드 없이 각 섹션이 페이지 여백을 가짐
+                    LazyVStack(alignment: .leading, spacing: 0) {
                         UserInfoCard(store: store, isSelected: isSelected)
                         ActivityCard(store: store) { todoId in
                             showTodo(.activity(todoId))
@@ -55,26 +56,21 @@ public struct ProfileView: View {
                             showTodo(.recentTodo(todoId))
                         }
                     }
-                    .padding(.horizontal, 16)
                     .padding(.bottom, 24)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
-                // 칸 제목 줄 구분선과 첫 카드 사이 여백
-                .contentMargins(.top, usesPaneLayout ? 12 : 0, for: .scrollContent)
                 .safeAreaInset(edge: .top, spacing: 0) { titleBar }
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
                 .toolbar {
                     if deviceType == .duo {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
-                            Button {
-                                router.push(.settings)
-                            } label: {
-                                Image(systemName: "gearshape")
-                            }
-                            .id(windowControlsInset)
+                        // 세로 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
+                        if #available(iOS 26.0, *) {
+                            duoToolbarItem
+                                .sharedBackgroundVisibility(.hidden)
+                        } else {
+                            duoToolbarItem
                         }
                     }
                 }
@@ -172,36 +168,53 @@ public struct ProfileView: View {
         }
     }
 
+    private var duoToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+            Button {
+                router.push(.settings)
+            } label: {
+                Image(systemName: "gearshape")
+            }
+            .id(windowControlsInset)
+        }
+    }
+
     @ViewBuilder
     private var titleBar: some View {
-        let settingsButton = Button {
+        let openSettings = {
             // Mac은 앱 화면과 분리한 설정 화면 표시
             if let presentSettings {
                 presentSettings()
             } else {
                 router.push(.settings)
             }
-        } label: {
-            Image(systemName: "gearshape")
         }
-        .topBarButtonStyle()
 
         if usesPaneLayout {
             PaneTitleBar(Text("nav_profile", bundle: PresentationResources.bundle)) {
-                settingsButton
+                Button(action: openSettings) {
+                    Image(systemName: "gearshape")
+                }
+                .topBarButtonStyle()
             }
         } else {
             VStack(alignment: .leading) {
-                HStack {
+                HStack(spacing: 0) {
                     Text("nav_profile", bundle: PresentationResources.bundle)
                         .font(.adaptive(.largeTitle).bold())
                     Spacer()
                     if deviceType != .duo {
-                        settingsButton
+                        // 리퀴드 글래스 없이 배경 없는 40pt 아이콘 버튼
+                        Button(action: openSettings) {
+                            Image(systemName: "gearshape")
+                        }
+                        .buttonStyle(ProfileTopBarIconButtonStyle())
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.leading, 16)
+            .padding(.trailing, 8)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 8)
@@ -265,6 +278,20 @@ public struct ProfileView: View {
         case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }
+    }
+}
+
+// 좁은 화면 위쪽 줄의 배경 없는 40pt 아이콘 버튼
+private struct ProfileTopBarIconButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.adaptive(.title3).weight(.medium))
+            .foregroundStyle(Color.label)
+            .opacity(isEnabled && !configuration.isPressed ? 1 : 0.4)
+            .frame(width: 40, height: 40)
+            .contentShape(.rect)
     }
 }
 

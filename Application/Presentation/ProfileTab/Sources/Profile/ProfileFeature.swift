@@ -48,6 +48,8 @@ struct ProfileFeature {
         var selectedQuarterStart: Date?
         var showQuarterPicker = false
         var selectedQuarterPickerYear = Calendar.current.component(.year, from: Date())
+        // 분기 선택 시트 내용 높이
+        var quarterPickerHeight: CGFloat = 0
         var activityQuarter: HeatmapQuarter?
         var dayActivitiesByDate: [Date: [HeatmapActivityItem]] = [:]
         var selectedActivityKinds: Set<ActivityKind> = [.created, .completed, .deleted]

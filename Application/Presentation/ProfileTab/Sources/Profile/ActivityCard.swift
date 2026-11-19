@@ -18,18 +18,16 @@ struct ActivityCard: View {
     let onSelectTodoID: (String) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
+        VStack(alignment: .leading, spacing: 0) {
+            ProfileSectionHeader(
                 Text(String(localized: "profile_quarterly_activity", bundle: PresentationResources.bundle))
-                    .font(.adaptive(.headline))
-                Spacer()
+            ) {
                 if !store.isViewingCurrentQuarter {
                     Button {
                         store.send(.moveToCurrentQuarter)
                     } label: {
                         Image(systemName: "arrow.uturn.backward")
-                            .bold()
-                            .foregroundStyle(Color.accent)
+                            .foregroundStyle(Color.tintLabel)
                     }
                     .buttonStyle(.plain)
                 }
@@ -51,70 +49,76 @@ struct ActivityCard: View {
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
-                        .bold()
-                        .foregroundStyle(Color.accent)
+                        .foregroundStyle(Color.tintLabel)
                 }
             }
 
-            HStack {
-                Button {
-                    store.send(.moveQuarter(-1))
-                } label: {
-                    Image(systemName: "chevron.left")
-                }
-                .tint(Color.accent)
-                .disabled(!store.canMoveToPreviousQuarter)
-                Spacer()
-                Button {
-                    store.send(.openQuarterPicker)
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(store.quarterTitle)
-                            .font(.adaptive(.subheadline))
-                        Image(systemName: "chevron.up.chevron.down")
-                            .font(.adaptive(.caption2))
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Button {
+                        store.send(.moveQuarter(-1))
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.adaptive(.body))
                     }
-                    .foregroundStyle(Color.secondaryLabel)
+                    .tint(Color.tintLabel)
+                    .disabled(!store.canMoveToPreviousQuarter)
+                    Spacer()
+                    Button {
+                        store.send(.openQuarterPicker)
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(store.quarterTitle)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.adaptive(.caption2))
+                        }
+                        .foregroundStyle(Color.label)
+                    }
+                    .buttonStyle(.plain)
+                    // 칸으로 나눈 화면은 분기 선택을 시트 대신 버튼 옆 팝오버로 표시
+                    .popover(
+                        isPresented: $store.showQuarterPicker
+                            .hiddenInPane(!usesPaneLayout)
+                            .activePresentation(when: isTabContentActive),
+                        // Mac은 분기 표시 아래로 표시
+                        arrowEdge: isiOSAppOnMac ? .top : nil
+                    ) {
+                        QuarterPickerSheet(store: store)
+                            .frame(width: 320 * AdaptiveSize.boardScale)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .presentationBackground(Color.secondaryBackground)
+                            .presentationCompactAdaptation(.popover)
+                    }
+                    Spacer()
+                    Button {
+                        store.send(.moveQuarter(1))
+                    } label: {
+                        Image(systemName: "chevron.right")
+                            .font(.adaptive(.body))
+                    }
+                    .tint(Color.tintLabel)
+                    .disabled(!store.canMoveToNextQuarter)
                 }
-                .buttonStyle(.plain)
-                // 칸으로 나눈 화면은 분기 선택을 시트 대신 버튼 옆 팝오버로 표시
-                .popover(
-                    isPresented: $store.showQuarterPicker
-                        .hiddenInPane(!usesPaneLayout)
-                        .activePresentation(when: isTabContentActive),
-                    // Mac은 분기 표시 아래로 표시
-                    arrowEdge: isiOSAppOnMac ? .top : nil
-                ) {
-                    QuarterPickerSheet(store: store)
-                        .frame(width: isiOSAppOnMac ? 320 * AdaptiveSize.boardScale : 360)
-                        .fixedSize(horizontal: false, vertical: true)
-                        .presentationBackground(Color.secondaryBackground)
-                        .presentationCompactAdaptation(.popover)
-                }
-                Spacer()
-                Button {
-                    store.send(.moveQuarter(1))
-                } label: {
-                    Image(systemName: "chevron.right")
-                }
-                .tint(Color.accent)
-                .disabled(!store.canMoveToNextQuarter)
-            }
+                .font(.adaptive(.footnote))
+                .padding(.bottom, 6)
 
-            if let quarter = store.activityQuarter {
-                HeatmapView(
-                    quarter: quarter,
-                    selectedActivityKinds: store.selectedActivityKinds,
-                    selectedDay: store.selectedDay,
-                    onSelectDay: { store.send(.selectDay($0)) }
-                )
-                if let selectedDay = store.selectedDay {
-                    selectedDayDetailSection(for: selectedDay)
+                if let quarter = store.activityQuarter {
+                    HeatmapView(
+                        quarter: quarter,
+                        selectedActivityKinds: store.selectedActivityKinds,
+                        selectedDay: store.selectedDay,
+                        onSelectDay: { store.send(.selectDay($0)) }
+                    )
+                    .padding(.top, 4)
+                    .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+                    if let selectedDay = store.selectedDay {
+                        selectedDayDetailSection(for: selectedDay)
+                            .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+                    }
                 }
             }
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
         }
-        .padding(16)
-        .background(Color.secondaryBackground, in: RoundedRectangle(cornerRadius: CornerRadius.group))
     }
 
     @ViewBuilder
@@ -171,10 +175,11 @@ struct ActivityCard: View {
                         }
                         .contentShape(.rect)
                         // 행 배치를 바꾸지 않고 선택한 행 배경만 바깥으로 넓힘
+                        // 선택 표시는 다른 목록 행과 같은 회색
                         .background {
                             if usesPaneLayout && store.selectedTodoRoute == .activity(activity.todoId) {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
-                                    .fill(Color.tintFill)
+                                    .fill(Color.fill)
                                     .padding(.horizontal, -8)
                                     .padding(.vertical, -2)
                             }
@@ -197,30 +202,32 @@ struct ActivityCard: View {
 
 struct QuarterPickerSheet: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Bindable var store: StoreOf<ProfileFeature>
 
     var body: some View {
-        if isiOSAppOnMac {
+        // 칸으로 나눈 iPad 화면의 팝오버도 Mac과 같은 배치, 크기만 손가락 기준
+        if isiOSAppOnMac || usesPaneLayout {
             desktopContent
         } else {
             mobileContent
         }
     }
 
-    // Mac 분기 선택 팝오버
-    // 위쪽 제목·완료 줄, 테두리 상자 안 연도 행, 1~4분기 두 줄 격자 배치
+    // Mac·iPad 넓은 화면 분기 선택 팝오버
+    // 위쪽 제목·완료 줄, 바탕 없는 연도 행, 1~4분기 두 줄 격자 배치
     private var desktopContent: some View {
         VStack(spacing: 0) {
             ZStack {
                 Text(String(localized: "profile_select_quarter", bundle: PresentationResources.bundle))
-                    .font(.system(size: 14 * AdaptiveSize.boardScale, weight: .bold))
+                    .font(.system(size: isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 17, weight: .bold))
                 HStack {
                     Spacer()
                     Button {
                         store.send(.setQuarterPickerPresented(false))
                     } label: {
                         Text(String(localized: "common_done", bundle: PresentationResources.bundle))
-                            .font(.adaptive(.body).bold())
+                            .font(.adaptive(isiOSAppOnMac ? .body : .callout).bold())
                             .foregroundStyle(Color.tintLabel)
                             .padding(.horizontal, 4 * AdaptiveSize.boardScale)
                             .contentShape(.rect)
@@ -229,7 +236,7 @@ struct QuarterPickerSheet: View {
                 }
             }
             .padding(.horizontal, 10 * AdaptiveSize.boardScale)
-            .frame(height: 44 * AdaptiveSize.boardScale)
+            .frame(height: isiOSAppOnMac ? 44 * AdaptiveSize.boardScale : 52)
             .overlay(alignment: .bottom) {
                 Rectangle()
                     .fill(Color.separator)
@@ -254,15 +261,13 @@ struct QuarterPickerSheet: View {
                         .font(.adaptive(.caption2))
                         .foregroundStyle(Color.secondaryLabel)
                 }
-                .font(.adaptive(.body))
-                .padding(.horizontal, 12 * AdaptiveSize.boardScale)
-                .frame(minHeight: 38 * AdaptiveSize.boardScale)
+                .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
+                .frame(minHeight: isiOSAppOnMac ? 38 * AdaptiveSize.boardScale : 50)
                 .contentShape(.rect)
-                .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, 14 * AdaptiveSize.boardScale)
-            .padding(.vertical, 8 * AdaptiveSize.boardScale)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
 
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: 8 * AdaptiveSize.boardScale), count: 2),
@@ -272,24 +277,41 @@ struct QuarterPickerSheet: View {
                     desktopQuarterButton(for: quarter)
                 }
             }
-            .padding(.horizontal, 14 * AdaptiveSize.boardScale)
-            .padding(.top, 8 * AdaptiveSize.boardScale)
-            .padding(.bottom, 14 * AdaptiveSize.boardScale)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            .padding(.top, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+            .padding(.bottom, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
         }
     }
 
     private var mobileContent: some View {
         // 팝오버가 Duo 상태 표시 영역과 겹치면 시스템 제목 줄이 그만큼 내려가므로 제목 줄을 직접 그림
+        // OS와 상관없이 같은 모양인 글자 완료 버튼과 가운데 제목, 아래 구분선
         VStack(spacing: 0) {
             ZStack {
                 Text(String(localized: "profile_select_quarter", bundle: PresentationResources.bundle))
-                    .font(.adaptive(.headline))
+                    .font(.adaptive(.callout).bold())
                 HStack {
                     Spacer()
-                    confirmButton
+                    Button {
+                        store.send(.setQuarterPickerPresented(false))
+                    } label: {
+                        Text(String(localized: "common_done", bundle: PresentationResources.bundle))
+                            .font(.adaptive(.callout).weight(.medium))
+                            .foregroundStyle(Color.tintLabel)
+                            .padding(.horizontal, 4)
+                            .frame(maxHeight: .infinity)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .padding([.horizontal, .top], 16)
+            .frame(height: 48)
+            .padding(.horizontal, 8)
+            .overlay(alignment: .bottom) {
+                Divider().overlay(Color.secondarySeparator)
+            }
+            // 손잡이 아래부터 위쪽 줄을 둠
+            .padding(.top, 11)
 
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
@@ -315,30 +337,15 @@ struct QuarterPickerSheet: View {
                         quarterSelectionButton(for: quarter)
                     }
                 }
-
-                Spacer(minLength: 0)
             }
             .padding(20)
         }
-        .sheetDetent(.fraction(0.3))
-    }
-
-    @ViewBuilder
-    private var confirmButton: some View {
-        if #available(iOS 26.0, *) {
-            Button(role: .confirm) {
-                store.send(.setQuarterPickerPresented(false))
-            }
-            .buttonStyle(.glassProminent)
-            .buttonBorderShape(.circle)
-        } else {
-            Button {
-                store.send(.setQuarterPickerPresented(false))
-            } label: {
-                Text(String(localized: "common_confirm", bundle: PresentationResources.bundle))
-            }
-            .tint(Color.accent)
+        // 낮은 화면에서도 잘리지 않도록 잰 내용 높이로 시트를 띄움
+        .fixedSize(horizontal: false, vertical: true)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+            store.send(.binding(.set(\.quarterPickerHeight, $0)))
         }
+        .sheetDetent(store.quarterPickerHeight == 0 ? .fraction(0.3) : .height(store.quarterPickerHeight))
     }
 
     // 고른 분기는 강조색 테두리와 옅은 바탕, 고를 수 없는 분기는 흐린 글자
@@ -358,7 +365,7 @@ struct QuarterPickerSheet: View {
                     Int64(quarter)
                 )
             )
-            .font(.adaptive(.body).weight(.semibold))
+            .font(.adaptive(isiOSAppOnMac ? .body : .subheadline).weight(.semibold))
             .foregroundStyle(isSelected ? Color.tintLabel : isEnabled ? .label : .tertiaryLabel)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14 * AdaptiveSize.boardScale)
