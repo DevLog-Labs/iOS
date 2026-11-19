@@ -369,8 +369,8 @@ private struct RecentSearchQuries: View {
                     Image(systemName: "trash")
                         .font(.adaptive(.subheadline))
                         .foregroundStyle(
-                            store.recentQueries.isEmpty ?
-                            Color.tertiaryLabel : .secondaryLabel
+                            store.recentQueries.isEmpty
+                                ? Color.tertiaryLabel : .secondaryLabel
                         )
                 }
                 .buttonStyle(.plain)
