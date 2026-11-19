@@ -13,7 +13,6 @@ import PresentationShared
 
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<TodoListFeature>
