@@ -220,6 +220,10 @@ public struct HomeView: View {
             }
             store.send(.view(.tapDevelopmentGoal(goalID)))
         case .createTodo:
+            // 쌓아 연 검색은 내리고 홈 작성 버튼과 같은 방식으로 작성
+            if router.root == .search {
+                router.path = []
+            }
             // 카테고리 목록이 보이면 그 목록이 자기 작성 버튼과 같은 방식으로 작성
             // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
             guard router.root == nil, store.isNetworkConnected else { break }
