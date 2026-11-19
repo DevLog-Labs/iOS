@@ -3456,6 +3456,23 @@
         }
       }
     },
+    "push_period_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Period: %1$@"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기간: %1$@"
+          }
+        }
+      }
+    },
     "push_settings_custom" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -3683,13 +3700,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last %1$lld days"
+            "value" : "%1$lld days"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "최근 %1$lld일"
+            "value" : "%1$lld일"
           }
         }
       }
@@ -3700,13 +3717,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Last %1$lld hours"
+            "value" : "%1$lld hours"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "최근 %1$lld시간"
+            "value" : "%1$lld시간"
           }
         }
       }

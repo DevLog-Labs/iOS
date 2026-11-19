@@ -298,7 +298,7 @@ private struct PushNotificationListContent: View {
                         PushNotificationPaneMenus(store: store)
                     }
                 } else {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading) {
                         title
                             .font(.adaptive(.largeTitle).bold())
                             .padding(.bottom, 8)
@@ -315,7 +315,10 @@ private struct PushNotificationListContent: View {
                     .padding(.horizontal, 16)
                     .frame(maxWidth: readableContentWidth)
                     .padding(.top, windowControlsInset)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 12)
+
+                    // 칩 줄 아래 구분선으로 목록과 나눔
+                    Divider().overlay(Color.secondarySeparator)
                 }
             }
             .background(Color.background)
@@ -372,41 +375,35 @@ private struct PushNotificationFilterBar: View {
     @Bindable var store: StoreOf<PushNotificationListFeature>
 
     var body: some View {
-        LazyHStack(spacing: 8) {
+        LazyHStack(spacing: 6) {
             Button {
                 if 0 < store.appliedFilterCount {
                     store.send(.view(.resetFilters))
                 }
             } label: {
-                HStack(spacing: 6) {
+                // 전체 칩은 다른 조건을 골라도 강조한 채 표시
+                PushNotificationFilterChip(isSelected: true) {
                     Text(String(localized: "push_timefilter_all", bundle: PresentationResources.bundle))
-                    if 0 < store.appliedFilterCount {
-                        filterBadge
-                    }
                 }
-                .font(.adaptive(.callout))
-                .foregroundStyle(store.appliedFilterCount == 0 ? Color.tintLabel : .fillLabel)
-                .adaptiveButtonStyle(
-                    color: store.appliedFilterCount == 0 ? .tintFill : .fill
-                )
             }
+            .buttonStyle(.plain)
 
             Button {
                 DispatchQueue.main.async {
                     store.send(.view(.toggleSortOption))
                 }
             } label: {
-                let condition = store.query.sortOrder == .oldest
-                Text(
-                    String.localizedStringWithFormat(
-                        String(localized: "push_sort_format", bundle: PresentationResources.bundle),
-                        store.query.sortOrder.title
+                PushNotificationFilterChip(isSelected: store.query.sortOrder == .oldest) {
+                    Text(
+                        String.localizedStringWithFormat(
+                            String(localized: "push_sort_format", bundle: PresentationResources.bundle),
+                            store.query.sortOrder.title
+                        )
                     )
-                )
-                .font(.adaptive(.callout))
-                .foregroundStyle(condition ? Color.tintLabel : .fillLabel)
-                .adaptiveButtonStyle(color: condition ? .tintFill : .fill)
+                    Image(systemName: "chevron.down")
+                }
             }
+            .buttonStyle(.plain)
 
             DropdownMenu(sections: [
                 DropdownMenuSection(
@@ -418,14 +415,18 @@ private struct PushNotificationFilterBar: View {
                     }
                 )
             ]) {
-                let condition = store.query.timeFilter == .none
-                HStack {
-                    Text(String(localized: "push_period", bundle: PresentationResources.bundle))
+                let timeFilter = store.query.timeFilter
+                // 고른 기간은 칩 제목 뒤에 함께 표시
+                PushNotificationFilterChip(isSelected: timeFilter != .none) {
+                    Text(
+                        timeFilter == .none
+                            ? String(localized: "push_period", bundle: PresentationResources.bundle) : String.localizedStringWithFormat(
+                                String(localized: "push_period_format", bundle: PresentationResources.bundle),
+                                timeFilter.title
+                            )
+                    )
                     Image(systemName: "chevron.down")
                 }
-                .font(.adaptive(.callout))
-                .foregroundStyle(condition ? Color.fillLabel : .tintLabel)
-                .adaptiveButtonStyle(color: condition ? .fill : .tintFill)
             }
 
             Button {
@@ -433,23 +434,34 @@ private struct PushNotificationFilterBar: View {
                     store.send(.view(.toggleUnreadOnly))
                 }
             } label: {
-                let condition = store.query.unreadOnly
-                Text(String(localized: "push_unread", bundle: PresentationResources.bundle))
-                    .font(.adaptive(.callout))
-                    .foregroundStyle(condition ? Color.tintLabel : .fillLabel)
-                    .adaptiveButtonStyle(color: condition ? .tintFill : .fill)
+                PushNotificationFilterChip(isSelected: store.query.unreadOnly) {
+                    Text(String(localized: "push_unread", bundle: PresentationResources.bundle))
+                }
             }
+            .buttonStyle(.plain)
         }
     }
+}
 
-    private var filterBadge: some View {
-        Text("\(store.appliedFilterCount)")
-            .font(.adaptive(.caption2).weight(.bold))
-            .foregroundStyle(Color.accent)
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-            .frame(width: 20, height: 20)
-            .background(Circle().fill(Color.accent.opacity(0.1)))
+// 고른 조건은 강조색 바탕과 테두리, 나머지는 테두리만 있는 칩
+private struct PushNotificationFilterChip<Content: View>: View {
+    let isSelected: Bool
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(spacing: 5) {
+            content
+        }
+        .font(.adaptive(.footnote))
+        .imageScale(.small)
+        .foregroundStyle(isSelected ? Color.tintLabel : .label)
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(isSelected ? Color.tintFill : .clear, in: .rect(cornerRadius: CornerRadius.control))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.control)
+                .strokeBorder(isSelected ? Color.accent.opacity(0.6) : .separator)
+        }
     }
 }
 
