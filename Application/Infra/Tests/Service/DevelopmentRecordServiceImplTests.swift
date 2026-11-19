@@ -109,6 +109,40 @@ struct DevelopmentRecordServiceImplTests {
         #expect(initialData?[DevelopmentRecordDraftFieldKey.baseVersionId.rawValue] == nil)
     }
 
+    @Test("초안이 없는 확정 기록의 정정 Draft 저장은 데이터를 만든다")
+    func 초안이_없는_확정_기록의_정정_Draft_저장은_데이터를_만든다() {
+        let recordData = makeRecordData(
+            currentVersionId: "version-1",
+            currentVersionNumber: 1,
+            draftBaseVersionId: nil,
+            includesDraft: false
+        )
+        let data = DevelopmentRecordServiceImpl.makeDraftData(
+            recordData: recordData,
+            request: .init(
+                title: "정정 기록",
+                markdownContent: "정정 본문",
+                baseVersionId: "version-1",
+                revisionId: "revision-1",
+                expectedRevisionId: nil
+            )
+        )
+        let staleData = DevelopmentRecordServiceImpl.makeDraftData(
+            recordData: recordData,
+            request: .init(
+                title: "정정 기록",
+                markdownContent: "정정 본문",
+                baseVersionId: "version-1",
+                revisionId: "revision-2",
+                expectedRevisionId: "revision-1"
+            )
+        )
+
+        #expect(data?[DevelopmentRecordDraftFieldKey.baseVersionId.rawValue] as? String == "version-1")
+        #expect(data?[DevelopmentRecordDraftFieldKey.revisionId.rawValue] as? String == "revision-1")
+        #expect(staleData == nil)
+    }
+
     @Test("기준 버전이 바뀐 Draft 저장은 데이터를 만들지 않는다")
     func 기준_버전이_바뀐_Draft_저장은_데이터를_만들지_않는다() {
         let staleDraft = DevelopmentRecordServiceImpl.makeDraftData(

@@ -93,11 +93,11 @@ extension DevelopmentRecordServiceImpl {
         recordData: [String: Any],
         request: DevelopmentRecordDraftRequest
     ) -> [String: Any]? {
+        let draftData = recordData[DevelopmentRecordFieldKey.draft.rawValue] as? [String: Any]
         guard
             (recordData[DevelopmentRecordFieldKey.currentVersionId.rawValue] as? String) ==
                 request.baseVersionId,
-            let draftData = recordData[DevelopmentRecordFieldKey.draft.rawValue] as? [String: Any],
-            (draftData[DevelopmentRecordDraftFieldKey.revisionId.rawValue] as? String) ==
+            (draftData?[DevelopmentRecordDraftFieldKey.revisionId.rawValue] as? String) ==
                 request.expectedRevisionId else {
             return nil
         }
