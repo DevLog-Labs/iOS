@@ -90,7 +90,8 @@ public struct ProfileView: View {
                 }
             }
             .detailSideBarTarget(store.selectedTodoRoute?.detailSideBarTarget)
-            .detailPanel(item: $store.panelTodoRoute.activePresentation(when: isSelected)) { route in
+            // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
+            .detailPanel(item: $store.panelTodoRoute.activePresentation(when: isSelected && usesDesktopLayout)) { route in
                 if case .todo(let todoId, let isEditable, _)? = route.detailSideBarTarget {
                     TodoDetailPanel(
                         todoId: todoId,

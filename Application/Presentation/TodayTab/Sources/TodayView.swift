@@ -146,7 +146,8 @@ public struct TodayView: View {
                 // 인스펙터 등에서 목록 행이 바뀌면 상세 칸도 다시 조회
                 .id(store.detailPaneRevision)
             }
-            .detailPanel(item: $store.panelTodo.activePresentation(when: isSelected)) { item in
+            // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
+            .detailPanel(item: $store.panelTodo.activePresentation(when: isSelected && usesDesktopLayout)) { item in
                 // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 판 메뉴에서 오른쪽 칸으로 옮기기 생략
                 let isListed = sections.flatMap(\.items).contains { $0.id == item.id }
 

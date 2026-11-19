@@ -63,7 +63,8 @@ struct TodoListView: View {
                 .id(store.detailRevision)
             }
         }
-        .detailPanel(item: $store.panelTodo.activePresentation(when: isTabContentActive)) { item in
+        // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
+        .detailPanel(item: $store.panelTodo.activePresentation(when: isTabContentActive && usesDesktopLayout)) { item in
             // 목록에서 빠진 Todo는 지울 경로가 없어 판 메뉴에서 삭제 생략
             let todo = store.todos.first { $0.id == item.id }
 
