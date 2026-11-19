@@ -53,7 +53,7 @@ struct PushNotificationSettingsView: View {
             }
         }
         .background(Color.background)
-        .duoToolbarVisibility()
+        .duoToolbarVisibility(showsBackButton: true)
         .onAppear { store.send(.fetchSettings) }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(

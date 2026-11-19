@@ -17,8 +17,9 @@ public extension View {
         modifier(TopBarButtonStyleModifier(tint: nil, isInteractive: false))
     }
 
-    func duoToolbarVisibility() -> some View {
-        modifier(DuoToolbarVisibilityModifier())
+    // showsBackButton: 내비게이션에 쌓인 화면이면 Duo에서 리퀴드 글래스 없는 뒤로 버튼 표시
+    func duoToolbarVisibility(showsBackButton: Bool = false) -> some View {
+        modifier(DuoToolbarVisibilityModifier(showsBackButton: showsBackButton))
     }
 
     func toolbarBackground(_ color: Color) -> some View {
@@ -150,15 +151,32 @@ public extension ToolbarContent {
 
 private struct DuoToolbarVisibilityModifier: ViewModifier {
     @Environment(\.deviceType) private var deviceType
+    @Environment(\.dismiss) private var dismiss
+    let showsBackButton: Bool
 
     func body(content: Content) -> some View {
         // 세로 막대가 있는 Duo는 시스템 막대 버튼을 세로 막대에 표시하고, 그 밖은 직접 그린 위쪽 막대 사용
         let showsNavigationBar = deviceType == .duo
+        // 쌓인 화면은 시스템 뒤로 버튼 대신 리퀴드 글래스 없는 뒤로 버튼 표시, 밀어서 뒤로 가기는 쌓은 곳의 설정을 따름
+        let showsBackButton = showsNavigationBar && showsBackButton
 
         content
             .toolbarTitleDisplayMode(showsNavigationBar ? .inline : .automatic)
             .toolbarBackgroundVisibility(showsNavigationBar ? .hidden : .automatic, for: .navigationBar)
             .toolbarVisibility(showsNavigationBar ? .visible : .hidden, for: .navigationBar)
+            .navigationBarBackButtonHidden(showsBackButton)
+            .toolbar {
+                if showsBackButton {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image(systemName: "chevron.left")
+                        }
+                    }
+                    .sharedBackgroundHidden()
+                }
+            }
     }
 }
 

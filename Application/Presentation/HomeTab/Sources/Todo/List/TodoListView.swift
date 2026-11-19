@@ -256,7 +256,7 @@ private struct TodoListContent: View {
             .safeAreaInset(edge: .top, spacing: 0) { TodoListTopBar(store: store) }
             .refreshable { await store.send(.view(.refresh)).finish() }
             .scrollDisabled(visibleTodos.isEmpty || store.state.isLoading)
-            .duoToolbarVisibility()
+            .duoToolbarVisibility(showsBackButton: true)
             .toolbar {
                 if deviceType == .duo {
                     ToolbarItemGroup(placement: .topBarTrailing) {

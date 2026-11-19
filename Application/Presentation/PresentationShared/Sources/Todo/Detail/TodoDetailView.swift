@@ -112,7 +112,7 @@ public struct TodoDetailView: View {
                 TodoEditorView(store: editorStore, onClose: { store.send(.fullScreenCover(.dismiss)) })
             }
         }
-        .duoToolbarVisibility()
+        .duoToolbarVisibility(showsBackButton: true)
         .toolbar {
             if deviceType == .duo {
                 ToolbarItemGroup(placement: .topBarTrailing) {

@@ -61,7 +61,7 @@ struct SettingsView: View {
         .contentMargins(.top, showsPaneTitleBar ? 12 : 0, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background)
-        .duoToolbarVisibility()
+        .duoToolbarVisibility(showsBackButton: true)
         .prominentAlert(store, state: \.alert, action: \.alert)
     }
 

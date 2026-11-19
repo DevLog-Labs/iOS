@@ -74,7 +74,7 @@ struct ThemeView: View {
             }
         }
         .background(Color.background)
-        .duoToolbarVisibility()
+        .duoToolbarVisibility(showsBackButton: true)
     }
 
     private static let themes: [SystemTheme] = [.automatic, .light, .dark]
