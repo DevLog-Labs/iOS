@@ -9,7 +9,7 @@ import SwiftUI
 import PresentationShared
 
 // Mac 설정 화면 묶음
-// 위쪽 작은 제목, 행 사이 구분선이 있는 테두리 상자, 아래쪽 안내 순서로 배치
+// 위쪽 작은 제목, 바탕·테두리 없이 행 사이 구분선으로 나눈 행, 아래쪽 안내 순서로 같은 왼쪽 선에 배치
 struct DesktopSettingsSection<Content: View>: View {
     var header: Text?
     var footer: Text?
@@ -21,7 +21,6 @@ struct DesktopSettingsSection<Content: View>: View {
                 header
                     .font(.adaptive(.footnote))
                     .foregroundStyle(Color.secondaryLabel)
-                    .padding(.horizontal, 4 * AdaptiveSize.boardScale)
                     .padding(.bottom, 6 * AdaptiveSize.boardScale)
             }
 
@@ -38,14 +37,12 @@ struct DesktopSettingsSection<Content: View>: View {
                     }
                 }
             }
-            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
 
             if let footer {
                 footer
                     .font(.adaptive(.caption))
                     .foregroundStyle(Color.secondaryLabel)
                     .lineSpacing(5.5 * AdaptiveSize.boardScale)
-                    .padding(.horizontal, 4 * AdaptiveSize.boardScale)
                     .padding(.top, 6 * AdaptiveSize.boardScale)
             }
         }
@@ -116,7 +113,6 @@ struct DesktopSettingsRow<Trailing: View>: View {
         }
         .font(.adaptive(.body))
         .foregroundStyle(Color.label)
-        .padding(.horizontal, 12 * AdaptiveSize.boardScale)
         .frame(minHeight: 38 * AdaptiveSize.boardScale)
         .contentShape(.rect)
     }
