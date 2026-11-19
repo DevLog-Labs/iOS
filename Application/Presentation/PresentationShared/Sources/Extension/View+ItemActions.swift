@@ -69,79 +69,79 @@ private struct ItemActionsModifier<Actions: View>: ViewModifier {
         } else {
             let trayWidth = store.trayWidth
 
-            ZStack(alignment: .trailing) {
-                Group(subviews: actions) { subviews in
-                    HStack(spacing: 8) {
-                        ForEach(subviews) { subview in
-                            subview
-                                .background {
-                                    GeometryReader { geometry in
-                                        Color.clear.preference(
-                                            key: ItemActionWidthsPreferenceKey.self,
-                                            value: [geometry.size.width]
-                                        )
+            content
+                .offset(x: max(
+                    -trayWidth,
+                    min(0, (store.isRevealed ? -trayWidth : 0) + store.dragTranslation)
+                ))
+                .highPriorityGesture(
+                    TapGesture().onEnded {
+                        withAnimation(.snappy) {
+                            store.send(.view(.close))
+                        }
+                    },
+                    including: store.isRevealed ? .all : .none
+                )
+                .simultaneousGesture(
+                    DragGesture(minimumDistance: 12)
+                        .onChanged { value in
+                            store.send(.view(.changed(value.translation)))
+                        }
+                        .onEnded { value in
+                            withAnimation(.snappy) {
+                                store.send(.view(.ended(value.translation.width)))
+                            }
+                        }
+                )
+                // 동작 사각형이 행 높이를 채우도록 행 뒤쪽 오른쪽 끝에 붙여 배치
+                .background(alignment: .trailing) {
+                    Group(subviews: actions) { subviews in
+                        HStack(spacing: 0) {
+                            ForEach(subviews) { subview in
+                                subview
+                                    .background {
+                                        GeometryReader { geometry in
+                                            Color.clear.preference(
+                                                key: ItemActionWidthsPreferenceKey.self,
+                                                value: [geometry.size.width]
+                                            )
+                                        }
                                     }
-                                }
+                            }
                         }
                     }
-                }
-                .padding(.leading, 12)
-                .padding(.trailing, ItemActionsFeature.trailingPadding)
-                .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
-                    store.send(.view(.setTrayWidth(width)))
-                }
-                .onPreferenceChange(ItemActionWidthsPreferenceKey.self) { widths in
-                    store.send(.view(.setViewWidths(widths)))
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                .allowsHitTesting(store.isRevealed && !store.isDragging)
-                .simultaneousGesture(TapGesture().onEnded {
-                    withAnimation(.snappy) {
-                        store.send(.view(.close))
+                    .onGeometryChange(for: CGFloat.self) { $0.size.width } action: { width in
+                        store.send(.view(.setTrayWidth(width)))
                     }
-                })
-
-                content
-                    .offset(x: max(
-                        -trayWidth,
-                        min(0, (store.isRevealed ? -trayWidth : 0) + store.dragTranslation)
-                    ))
-                    .highPriorityGesture(
-                        TapGesture().onEnded {
-                            withAnimation(.snappy) {
-                                store.send(.view(.close))
-                            }
-                        },
-                        including: store.isRevealed ? .all : .none
-                    )
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 12)
-                            .onChanged { value in
-                                store.send(.view(.changed(value.translation)))
-                            }
-                            .onEnded { value in
-                                withAnimation(.snappy) {
-                                    store.send(.view(.ended(value.translation.width)))
-                                }
-                            }
-                    )
-            }
-            .clipped()
+                    .onPreferenceChange(ItemActionWidthsPreferenceKey.self) { widths in
+                        store.send(.view(.setViewWidths(widths)))
+                    }
+                    .allowsHitTesting(store.isRevealed && !store.isDragging)
+                    .simultaneousGesture(TapGesture().onEnded {
+                        withAnimation(.snappy) {
+                            store.send(.view(.close))
+                        }
+                    })
+                }
+                .clipped()
         }
     }
 }
 
+// 행 높이를 채우는 사각형, 바탕은 동작 색을 옅게, 아이콘은 동작 색
 private struct ItemActionButtonStyle: ButtonStyle {
-    @ScaledMetric(relativeTo: .body) private var size = 44
+    @ScaledMetric(relativeTo: .body) private var width = 64
 
     let color: Color
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.adaptive(.callout))
-            .foregroundStyle(Color.white)
-            .frame(width: size, height: size)
-            .background(color, in: .circle)
+            .foregroundStyle(color)
+            .frame(width: width)
+            .frame(maxHeight: .infinity)
+            .background(color.opacity(0.16))
+            .contentShape(.rect)
     }
 }
 
@@ -155,8 +155,6 @@ private struct ItemActionWidthsPreferenceKey: PreferenceKey {
 
 @Reducer
 private struct ItemActionsFeature {
-    static let trailingPadding = CGFloat(16)
-
     @ObservableState
     struct State: Equatable {
         var trayWidth = CGFloat.zero
@@ -205,7 +203,7 @@ private struct ItemActionsFeature {
                 let wasRevealed = state.isRevealed
                 let base = wasRevealed ? -state.trayWidth : 0
                 let releasedOffset = max(-state.trayWidth, min(0, base + translation))
-                let revealedWidth = max(0, -releasedOffset - Self.trailingPadding)
+                let revealedWidth = -releasedOffset
                 if wasRevealed {
                     var fullyHiddenCount = 0
                     var trailingDistance = CGFloat.zero
@@ -213,7 +211,7 @@ private struct ItemActionsFeature {
                         if revealedWidth <= trailingDistance {
                             fullyHiddenCount += 1
                         }
-                        trailingDistance += width + 8
+                        trailingDistance += width
                     }
                     let requiredHiddenCount = (state.viewWidths.count + 1) / 2
                     state.isRevealed = !state.viewWidths.isEmpty
