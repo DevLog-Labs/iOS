@@ -522,7 +522,7 @@ private struct TodoListFilterHeader: View {
                         .foregroundStyle(Color.tintLabel)
                         .padding(.horizontal, 12)
                         .frame(height: 34)
-                        .background(Color.tintFill, in: .capsule)
+                        .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.control))
                     }
                 }
 
@@ -603,9 +603,9 @@ private struct TodoListFilterChip: View {
         .foregroundStyle(isActive ? Color.tintLabel : .label)
         .padding(.horizontal, 12)
         .frame(height: 34)
-        .background(isActive ? Color.tintFill : .clear, in: .capsule)
+        .background(isActive ? Color.tintFill : .clear, in: .rect(cornerRadius: CornerRadius.control))
         .overlay {
-            Capsule().strokeBorder(isActive ? Color.clear : .separator)
+            RoundedRectangle(cornerRadius: CornerRadius.control).strokeBorder(isActive ? Color.clear : .separator)
         }
     }
 }
