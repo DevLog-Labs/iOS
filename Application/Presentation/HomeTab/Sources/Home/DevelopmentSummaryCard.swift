@@ -11,23 +11,13 @@ import PresentationShared
 
 struct DevelopmentSummaryCard: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @Environment(\.deviceType) private var deviceType
-    @Environment(\.colorScheme) private var colorScheme
     let items: [DevelopmentGoalItem]
     let isLoading: Bool
     let hasLoaded: Bool
     let hasLoadFailure: Bool
 
     var body: some View {
-        // iPhone·Duo 라이트는 바탕 없는 카드라 글자를 화면 여백에 맞춤
-        let horizontalPadding: CGFloat = if isiOSAppOnMac {
-            14 * AdaptiveSize.boardScale
-        } else if deviceType != .ipad && colorScheme == .light {
-            0
-        } else {
-            16
-        }
-
+        // 카드 없이 글자를 화면 여백에 맞추고 아래 구분선으로 나눔
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
                 Image(systemName: "flag")
@@ -43,9 +33,11 @@ struct DevelopmentSummaryCard: View {
             summaryContent
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.vertical, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
-        .padding(.horizontal, horizontalPadding)
-        .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+        .padding(.top, isiOSAppOnMac ? 4 * AdaptiveSize.boardScale : 8)
+        .padding(.bottom, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .overlay(alignment: .bottom) {
+            Divider().overlay(Color.secondarySeparator)
+        }
     }
 
     @ViewBuilder
