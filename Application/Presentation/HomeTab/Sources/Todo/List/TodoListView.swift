@@ -14,6 +14,7 @@ import PresentationShared
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
@@ -30,11 +31,11 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        // Mac은 목록을 창 전체 폭으로 두고 오른쪽 칸에서 연 Todo나 작성 화면이 있을 때만 두 칸으로 나눔
-        PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoId != nil || store.fullScreenCover != nil) {
+        // 사이드바가 있는 창은 목록을 창 전체 폭으로 두고 오른쪽 칸에서 연 Todo나 작성 화면이 있을 때만 두 칸으로 나눔
+        PaneSplitView(splitsOnDesktop: store.selectedTodoId != nil || store.fullScreenCover != nil) {
             TodoListContent(store: store) { todoId in
-                // Mac은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
-                if isiOSAppOnMac && store.selectedTodoId == nil {
+                // 사이드바가 있는 창은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
+                if usesDesktopLayout && store.selectedTodoId == nil {
                     store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todoId))))
                     return
                 }
@@ -57,7 +58,7 @@ struct TodoListView: View {
                     todoId: store.selectedTodoId,
                     showEditButton: true,
                     windowEvent: windowEvent,
-                    onClose: isiOSAppOnMac ? { store.send(.binding(.set(\.selectedTodoId, nil))) } : nil
+                    onClose: usesDesktopLayout ? { store.send(.binding(.set(\.selectedTodoId, nil))) } : nil
                 )
                 .id(store.detailRevision)
             }
@@ -101,6 +102,12 @@ struct TodoListView: View {
         }
         .background(Color.background.ignoresSafeArea())
         .task { store.send(.view(.onAppear)) }
+        // 좁은 창에서 쌓아 연 상세를 내리면 넓어져도 오른쪽 칸으로 다시 열지 않음
+        .onAppear {
+            if !usesDesktopLayout {
+                store.send(.binding(.set(\.selectedTodoId, nil)))
+            }
+        }
     }
 
     private var windowSubmits: AnyPublisher<TodoEditorWindowSubmit, Never> {
@@ -124,6 +131,7 @@ struct TodoListView: View {
 
 private struct TodoListContent: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
@@ -183,8 +191,8 @@ private struct TodoListContent: View {
                                     onSelectTodo(todo.id)
                                 }
                                 .itemActions {
-                                    // Mac 우클릭 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
-                                    if isiOSAppOnMac {
+                                    // 사이드바가 있는 창의 우클릭과 길게 누른 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
+                                    if usesDesktopLayout {
                                         Button {
                                             store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todo.id))))
                                         } label: {
@@ -225,7 +233,7 @@ private struct TodoListContent: View {
                                         store.send(.view(.tapToggleCompleted(todo)))
                                     }
 
-                                    if isiOSAppOnMac {
+                                    if usesDesktopLayout {
                                         Divider()
                                     }
 
