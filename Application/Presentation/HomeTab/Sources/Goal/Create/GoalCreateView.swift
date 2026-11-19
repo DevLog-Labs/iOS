@@ -103,11 +103,7 @@ private struct GoalCreateTopBar: View {
 
             HStack {
                 Button(action: onClose) {
-                    if #available(iOS 26.0, *) {
-                        Image(systemName: "xmark")
-                    } else {
-                        Text(RecordPresentation.text("common_close"))
-                    }
+                    Image(systemName: "xmark")
                 }
                 .topBarButtonStyle(tint: Color.accent)
                 .disabled(isSaving)

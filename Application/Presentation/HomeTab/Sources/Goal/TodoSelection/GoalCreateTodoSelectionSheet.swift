@@ -87,23 +87,14 @@ struct GoalCreateTodoSelectionSheet: View {
                     Button {
                         store.send(.view(.close))
                     } label: {
-                        if #available(iOS 26.0, *) {
-                            Image(systemName: "xmark")
-                        } else {
-                            Text(RecordPresentation.text("common_close"))
-                        }
+                        Image(systemName: "xmark")
                     }
                     .topBarButtonStyle()
                     Spacer()
                     Button {
                         store.send(.view(.save))
                     } label: {
-                        if #available(iOS 26.0, *) {
-                            Image(systemName: "checkmark")
-                        } else {
-                            Text(RecordPresentation.text("development_goal_todo_done"))
-                                .foregroundStyle(Color.accent)
-                        }
+                        Image(systemName: "checkmark")
                     }
                     .topBarButtonStyle()
                 }

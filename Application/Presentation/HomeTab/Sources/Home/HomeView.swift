@@ -250,12 +250,8 @@ public struct HomeView: View {
             .toolbar {
                 if deviceType == .duo {
                     // 세로 막대와 위쪽 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
-                    if #available(iOS 26.0, *) {
-                        duoToolbarItems
-                            .sharedBackgroundVisibility(.hidden)
-                    } else {
-                        duoToolbarItems
-                    }
+                    duoToolbarItems
+                        .sharedBackgroundHidden()
                 }
             }
     }
@@ -341,22 +337,11 @@ public struct HomeView: View {
                 Image(systemName: "magnifyingglass")
             }
             .buttonStyle(HomeTopBarIconButtonStyle())
-        } else if #available(iOS 26.0, *) {
+        } else {
             Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
             }
             .topBarButtonStyle()
-        } else {
-            Button(action: openSearch) {
-                Image(systemName: "magnifyingglass")
-                    .font(.adaptive(.title3).weight(.semibold))
-                    .frame(width: 28, height: 28)
-            }
-            .adaptiveButtonStyle(
-                shape: .circle,
-                color: .secondaryBackground,
-                glassEffect: .enabled
-            )
         }
     }
 
@@ -451,27 +436,13 @@ private struct HomeCreateButton: View {
             }
             .buttonStyle(HomeTopBarIconButtonStyle())
             .disabled(!store.isNetworkConnected)
-        } else if #available(iOS 26.0, *) {
+        } else {
             Button {
                 store.send(.store(.setPresentation(.contentPicker, true)))
             } label: {
                 Image(systemName: "plus")
             }
             .topBarButtonStyle()
-            .disabled(!store.isNetworkConnected)
-        } else {
-            Button {
-                store.send(.store(.setPresentation(.contentPicker, true)))
-            } label: {
-                Image(systemName: "plus")
-                    .font(.adaptive(.title3).weight(.semibold))
-                    .frame(width: 28, height: 28)
-            }
-            .adaptiveButtonStyle(
-                shape: .circle,
-                color: .secondaryBackground,
-                glassEffect: .enabled
-            )
             .disabled(!store.isNetworkConnected)
         }
     }

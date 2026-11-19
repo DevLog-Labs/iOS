@@ -133,6 +133,7 @@ public struct TodoDetailView: View {
                     }
                     .id(windowControlsInset)
                 }
+                .sharedBackgroundHidden()
             }
         }
     }
@@ -203,38 +204,20 @@ public struct TodoDetailView: View {
         }
     }
 
-    @ViewBuilder
     private var infoButton: some View {
-        if #available(iOS 26.0, *) {
-            Button {
-                store.send(.setSheet(.info))
-            } label: {
-                Image(systemName: "info.circle")
-            }
-            .topBarButtonStyle()
-        } else {
-            Button {
-                store.send(.setSheet(.info))
-            } label: {
-                Image(systemName: "info.circle")
-                    .font(.adaptive(.title3).weight(.semibold))
-                    .frame(width: 28, height: 28)
-            }
-            .adaptiveButtonStyle(shape: .circle, color: .secondaryBackground, glassEffect: .enabled)
+        Button {
+            store.send(.setSheet(.info))
+        } label: {
+            Image(systemName: "info.circle")
         }
+        .topBarButtonStyle()
     }
 
-    @ViewBuilder
     private var editButton: some View {
         Button {
             store.send(.setFullScreenCover(.editor))
         } label: {
-            if #available(iOS 26.0, *) {
-                Image(systemName: "pencil")
-            } else {
-                Text(String(localized: "todo_edit", bundle: PresentationResources.bundle))
-                    .foregroundStyle(Color.accent)
-            }
+            Image(systemName: "pencil")
         }
         .topBarButtonStyle()
     }

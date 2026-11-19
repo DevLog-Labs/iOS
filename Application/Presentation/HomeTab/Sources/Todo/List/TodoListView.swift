@@ -279,6 +279,7 @@ private struct TodoListContent: View {
                         }
                         .id(windowControlsInset)
                     }
+                    .sharedBackgroundHidden()
                 }
             }
 
@@ -377,56 +378,23 @@ private struct TodoListTopBar: View {
     @ViewBuilder
     private var actions: some View {
         if !store.isSearching {
-            if #available(iOS 26.0, *) {
-                Button {
-                    withAnimation(.smooth(duration: 0.3)) {
-                        store.send(.view(.setSearching(true)))
-                    }
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                }
-                .topBarButtonStyle()
-                .matchedGeometryEffect(id: "todo-search", in: searchTransition)
-            } else {
-                Button {
-                    withAnimation(.smooth(duration: 0.3)) {
-                        store.send(.view(.setSearching(true)))
-                    }
-                } label: {
-                    Image(systemName: "magnifyingglass")
-                        .font(.adaptive(.title3).weight(.semibold))
-                        .frame(width: 28, height: 28)
-                }
-                .adaptiveButtonStyle(
-                    shape: .circle,
-                    color: .secondaryBackground,
-                    glassEffect: .enabled
-                )
-                .matchedGeometryEffect(id: "todo-search", in: searchTransition)
-            }
-        }
-
-        if #available(iOS 26.0, *) {
             Button {
-                store.send(.store(.setFullScreenCover(.editor)))
+                withAnimation(.smooth(duration: 0.3)) {
+                    store.send(.view(.setSearching(true)))
+                }
             } label: {
-                Image(systemName: "plus")
+                Image(systemName: "magnifyingglass")
             }
             .topBarButtonStyle()
-        } else {
-            Button {
-                store.send(.store(.setFullScreenCover(.editor)))
-            } label: {
-                Image(systemName: "plus")
-                    .font(.adaptive(.title3).weight(.semibold))
-                    .frame(width: 28, height: 28)
-            }
-            .adaptiveButtonStyle(
-                shape: .circle,
-                color: .secondaryBackground,
-                glassEffect: .enabled
-            )
+            .matchedGeometryEffect(id: "todo-search", in: searchTransition)
         }
+
+        Button {
+            store.send(.store(.setFullScreenCover(.editor)))
+        } label: {
+            Image(systemName: "plus")
+        }
+        .topBarButtonStyle()
     }
 }
 
@@ -467,8 +435,7 @@ private struct TodoListSearchBar: View {
             .frame(maxWidth: .infinity)
             .adaptiveButtonStyle(
                 shape: RoundedRectangle(cornerRadius: CornerRadius.control),
-                color: .secondaryBackground,
-                glassEffect: .enabled
+                color: .secondaryBackground
             )
             .matchedGeometryEffect(id: "todo-search", in: searchTransition)
 

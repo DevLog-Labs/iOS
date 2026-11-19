@@ -7,22 +7,12 @@
 
 import SwiftUI
 
-public enum AdaptiveButtonGlassEffect {
-    case enabled
-    case disabled
-}
-
 public extension View {
-    @ViewBuilder
+    // iOS 버전과 상관없이 리퀴드 글래스 없이 아이콘만 표시
     func topBarButtonStyle(tint: Color? = nil) -> some View {
-        if #available(iOS 26.0, *) {
-            modifier(TopBarButtonStyleModifier(tint: tint, isInteractive: true))
-        } else {
-            modifier(LegacyTopBarButtonStyleModifier(tint: tint ?? .label))
-        }
+        modifier(TopBarButtonStyleModifier(tint: tint, isInteractive: true))
     }
 
-    @available(iOS 26.0, *)
     func topBarProgressStyle() -> some View {
         modifier(TopBarButtonStyleModifier(tint: nil, isInteractive: false))
     }
@@ -127,37 +117,9 @@ private struct ScrollViewOffsetTracker: UIViewRepresentable {
 }
 
 public extension View {
-    @ViewBuilder
     func adaptiveButtonStyle<S: InsettableShape>(
         shape: S = Capsule(),
-        color: Color = .clear,
-        glassEffect: AdaptiveButtonGlassEffect = .disabled
-    ) -> some View {
-        if #available(iOS 26.0, *) {
-            switch glassEffect {
-            case .enabled:
-                if ProcessInfo.processInfo.isiOSAppOnMac {
-                    // Mac에서는 리퀴드 글래스 대신 같은 색의 불투명 배경 표시
-                    self.foregroundStyle(Color(.label))
-                        .padding(8)
-                        .background(color, in: shape)
-                } else {
-                    self.foregroundStyle(Color(.label))
-                        .padding(8)
-                        .glassEffect(.regular.tint(color), in: shape)
-                        .clipShape(shape)
-                }
-            case .disabled:
-                opaqueButtonStyle(shape: shape, color: color)
-            }
-        } else {
-            opaqueButtonStyle(shape: shape, color: color)
-        }
-    }
-
-    private func opaqueButtonStyle<S: InsettableShape>(
-        shape: S,
-        color: Color
+        color: Color = .clear
     ) -> some View {
         self.foregroundStyle(Color(.label))
             .padding(8)
@@ -171,6 +133,18 @@ public extension View {
                         .strokeBorder(Color.white.opacity(0.2), lineWidth: 1)
                 }
             }
+    }
+}
+
+public extension ToolbarContent {
+    // 툴바 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
+    @ToolbarContentBuilder
+    func sharedBackgroundHidden() -> some ToolbarContent {
+        if #available(iOS 26.0, *) {
+            sharedBackgroundVisibility(.hidden)
+        } else {
+            self
+        }
     }
 }
 
@@ -188,25 +162,9 @@ private struct DuoToolbarVisibilityModifier: ViewModifier {
     }
 }
 
-private struct LegacyTopBarButtonStyleModifier: ViewModifier {
-    let tint: Color
-
-    func body(content: Content) -> some View {
-        content
-            .foregroundStyle(tint)
-            .padding(8)
-            .background {
-                Capsule()
-                    .fill(Color.secondaryBackground)
-            }
-    }
-}
-
-@available(iOS 26.0, *)
 private struct TopBarButtonStyleModifier: ViewModifier {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @Environment(\.isInPaneTitleBar) private var isInPaneTitleBar
     @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
         forTextStyle: .title2,
         compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
@@ -225,8 +183,7 @@ private struct TopBarButtonStyleModifier: ViewModifier {
     @ViewBuilder
     func body(content: Content) -> some View {
         if usesDesktopLayout {
-            // 사이드바가 있으면 리퀴드 글래스 없이 제목 줄에 맞는 아이콘만 표시
-            // Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
+            // 사이드바가 있으면 Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
             // 아이콘 둘레 여백까지 버튼이 채워 마우스 반응 채움 전체를 누를 수 있게 함
             let size = isiOSAppOnMac ? macIconSize + 12 : padIconSize + 16
 
@@ -237,31 +194,14 @@ private struct TopBarButtonStyleModifier: ViewModifier {
                 .frame(width: size, height: size)
                 .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: isInteractive)
                 .contentShape(.rect)
-        } else if isInPaneTitleBar && tint == nil {
-            // 칸 제목 줄에서는 리퀴드 글래스 없이 손가락으로 누르는 크기의 아이콘만 표시
+        } else {
+            // 좁은 화면은 손가락으로 누르는 크기
             content
                 .font(.title3.weight(.medium))
-                .foregroundStyle(Color.label)
+                .foregroundStyle(tint ?? Color.label)
                 .buttonStyle(FillButtonStyle())
                 .frame(width: iconSize + 12, height: iconSize + 12)
                 .contentShape(.rect)
-        } else if let tint {
-            content
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(Color.white)
-                .frame(width: iconSize, height: iconSize)
-                .padding(9)
-                .glassEffect(
-                    .regular.tint(tint).interactive(isInteractive),
-                    in: .circle
-                )
-        } else {
-            content
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(Color.label)
-                .frame(width: iconSize, height: iconSize)
-                .padding(9)
-                .glassEffect(.regular.interactive(isInteractive), in: .circle)
         }
     }
 }

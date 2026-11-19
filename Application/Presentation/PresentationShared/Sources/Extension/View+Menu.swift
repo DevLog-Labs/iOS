@@ -51,41 +51,26 @@ private struct ProminentMenu<Label: View, Action: Hashable>: View {
     let isEnabled: Bool
     let onSelect: (Action) -> Void
 
-    @ViewBuilder
+    // iOS 버전과 상관없이 리퀴드 글래스 없는 직접 그린 메뉴 표시
     var body: some View {
-        if #available(iOS 26.0, *) {
-            Menu {
-                ForEach(items) { item in
-                    Button(role: item.role) {
-                        onSelect(item.action)
-                    } label: {
-                        menuItemLabel(item)
-                    }
-                }
-            } label: {
-                // 바깥에서 정한 버튼 크기 전체를 누를 수 있게 함
-                label
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .contentShape(.rect)
-            }
-            .disabled(!isEnabled)
-        } else {
-            Button {
-                isPresented.toggle()
-            } label: {
-                label
-            }
-            .buttonStyle(.plain)
-            .disabled(!isEnabled)
-            .popover(
-                isPresented: $isPresented,
-                attachmentAnchor: .point(.bottomTrailing),
-                arrowEdge: .top
-            ) {
-                customMenu
-                    .presentationCompactAdaptation(.popover)
-                    .presentationBackground(Color.secondaryBackground)
-            }
+        Button {
+            isPresented.toggle()
+        } label: {
+            // 바깥에서 정한 버튼 크기 전체를 누를 수 있게 함
+            label
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+        .popover(
+            isPresented: $isPresented,
+            attachmentAnchor: .point(.bottomTrailing),
+            arrowEdge: .top
+        ) {
+            customMenu
+                .presentationCompactAdaptation(.popover)
+                .presentationBackground(Color.secondaryBackground)
         }
     }
 

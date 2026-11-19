@@ -15,20 +15,17 @@ public struct ToolbarLeadingButton: ToolbarContent {
         self.action = action
     }
 
+    // iOS 버전과 상관없이 리퀴드 글래스 없이 아이콘만 표시
     public var body: some ToolbarContent {
         ToolbarItem(placement: .topBarLeading) {
-            if #available(iOS 26.0, *) {
-                Button(role: .cancel) {
-                    action?()
-                }
-            } else {
-                Button {
-                    action?()
-                } label: {
-                    Text(String(localized: "common_cancel", bundle: PresentationResources.bundle))
-                }
+            Button {
+                action?()
+            } label: {
+                Image(systemName: "xmark")
             }
+            .topBarButtonStyle()
         }
+        .sharedBackgroundHidden()
     }
 }
 
@@ -46,22 +43,17 @@ public struct ToolbarTrailingButton: ToolbarContent {
         return copy
     }
 
+    // iOS 버전과 상관없이 리퀴드 글래스 없이 아이콘만 표시
     public var body: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            if #available(iOS 26.0, *) {
-                Button(role: .confirm) {
-                    action?()
-                }
-                .disabled(isDisabled)
-            } else {
-                Button {
-                    action?()
-                } label: {
-                    Text(String(localized: "common_confirm", bundle: PresentationResources.bundle))
-                        .bold()
-                }
-                .disabled(isDisabled)
+            Button {
+                action?()
+            } label: {
+                Image(systemName: "checkmark")
             }
+            .topBarButtonStyle(tint: Color.accent)
+            .disabled(isDisabled)
         }
+        .sharedBackgroundHidden()
     }
 }

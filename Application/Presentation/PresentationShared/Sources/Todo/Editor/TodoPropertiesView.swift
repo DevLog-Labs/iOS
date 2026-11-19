@@ -44,27 +44,12 @@ public struct TodoPropertiesView: View {
             }
             HStack {
                 if !showsEditorActions || showsCloseButton {
-                    if #available(iOS 26.0, *) {
-                        Button {
-                            onClose()
-                        } label: {
-                            Image(systemName: "xmark")
-                        }
-                        .topBarButtonStyle()
-                    } else {
-                        Button {
-                            onClose()
-                        } label: {
-                            // 저장 버튼과 함께 둘 때는 저장 없이 닫는 버튼
-                            Text(
-                                String(
-                                    localized: showsEditorActions ? "common_close" : "common_done",
-                                    bundle: PresentationResources.bundle
-                                )
-                            )
-                        }
-                        .topBarButtonStyle(tint: showsEditorActions ? nil : Color.accent)
+                    Button {
+                        onClose()
+                    } label: {
+                        Image(systemName: "xmark")
                     }
+                    .topBarButtonStyle()
                 }
                 Spacer()
                 if showsEditorActions {

@@ -141,11 +141,7 @@ public struct RecordEditorView: View {
             Button {
                 dismiss()
             } label: {
-                if #available(iOS 26.0, *) {
-                    Image(systemName: "xmark")
-                } else {
-                    Text(RecordPresentation.text("common_close"))
-                }
+                Image(systemName: "xmark")
             }
             .topBarButtonStyle()
             .disabled(store.isLoading)
@@ -157,12 +153,7 @@ public struct RecordEditorView: View {
                 focusedField = nil
                 store.send(.view(.save))
             } label: {
-                if #available(iOS 26.0, *) {
-                    Image(systemName: "checkmark")
-                } else {
-                    Text(RecordPresentation.text("development_record_save"))
-                        .foregroundStyle(Color.accent)
-                }
+                Image(systemName: "checkmark")
             }
             .topBarButtonStyle()
             .disabled(!store.isReadyToSave)

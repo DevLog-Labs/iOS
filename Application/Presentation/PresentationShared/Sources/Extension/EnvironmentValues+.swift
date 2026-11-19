@@ -104,12 +104,6 @@ public extension EnvironmentValues {
         set { self[UsesPaneLayoutKey.self] = newValue }
     }
 
-    // 칸 제목 줄 안의 버튼인지 여부
-    internal var isInPaneTitleBar: Bool {
-        get { self[IsInPaneTitleBarKey.self] }
-        set { self[IsInPaneTitleBarKey.self] = newValue }
-    }
-
     var deviceType: DeviceType {
         get { self[DeviceTypeKey.self] }
         set { self[DeviceTypeKey.self] = newValue }
@@ -201,10 +195,6 @@ public extension EnvironmentValues {
         static var defaultValue: Bool {
             ProcessInfo.processInfo.isiOSAppOnMac
         }
-    }
-
-    private struct IsInPaneTitleBarKey: EnvironmentKey {
-        static let defaultValue = false
     }
 
     private struct DeviceTypeKey: EnvironmentKey {
