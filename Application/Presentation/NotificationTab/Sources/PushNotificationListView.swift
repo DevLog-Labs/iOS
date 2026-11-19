@@ -10,7 +10,7 @@ import Core
 import PresentationShared
 
 public struct PushNotificationListView: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var store: StoreOf<PushNotificationListFeature>
     private let isSelected: Bool
 
@@ -27,12 +27,13 @@ public struct PushNotificationListView: View {
     }
 
     public var body: some View {
-        // Mac에서 오른쪽 칸을 열었을 때만 목록 | 상세 두 칸으로 나눔
-        let showsMacPane = isiOSAppOnMac && store.isDetailPanePresented
+        // 사이드바가 있는 창에서 오른쪽 칸을 열었을 때만 목록 | 상세 두 칸으로 나눔
+        let showsPane = usesDesktopLayout && store.isDetailPanePresented
 
         NavigationStack {
-            PaneSplitView(splitsOnDesktop: showsMacPane) {
-                PushNotificationListContent(store: store, showsSelection: showsMacPane)
+            PaneSplitView(splitsOnDesktop: showsPane) {
+                // 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 연 알림을 목록에 선택 표시
+                PushNotificationListContent(store: store, showsSelection: usesDesktopLayout)
                     .background(Color.background)
                     .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
                         let task = store.send(.view(.refresh))
@@ -44,19 +45,19 @@ public struct PushNotificationListView: View {
                 TodoDetailPane(
                     todoId: store.selectedTodoId?.id,
                     showEditButton: false,
-                    onClose: isiOSAppOnMac ? closeDetailPane : nil
+                    onClose: usesDesktopLayout ? closeDetailPane : nil
                 )
             }
-            // Mac 오른쪽 칸은 칸 제목 줄 정보 버튼 대신 창 오른쪽 세부 정보 사이드바에 속성 표시
+            // 오른쪽 칸은 칸 제목 줄 정보 버튼 대신 창 오른쪽 세부 정보 사이드바에 속성 표시
             .detailSideBarTarget(
-                showsMacPane ? store.selectedTodoId.map { .todo(id: $0.id, isEditable: false) } : nil
+                showsPane ? store.selectedTodoId.map { .todo(id: $0.id, isEditable: false) } : nil
             )
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .prominentSheet(item: sheetStore.activePresentation(when: isSelected && !isiOSAppOnMac)) { store in
+        .prominentSheet(item: sheetStore.activePresentation(when: isSelected && !usesDesktopLayout)) { store in
             sheetContent(store)
         }
-        .detailPanel(item: sheetStore.activePresentation(when: isSelected && isiOSAppOnMac)) { sheetStore in
+        .detailPanel(item: sheetStore.activePresentation(when: isSelected && usesDesktopLayout)) { sheetStore in
             TodoDetailPanel(
                 todoId: sheetStore.todoId,
                 location: Text("nav_push_notifications", bundle: PresentationResources.bundle),
@@ -72,13 +73,13 @@ public struct PushNotificationListView: View {
             }
         }
         .onChange(of: store.selectedTodoId?.id, initial: true) {
-            if !showsMacPane {
+            if !showsPane {
                 store.send(.view(.syncSheetPresentation))
             }
         }
-        // Mac 오른쪽 칸을 열면 상세 판만 닫고, 오른쪽 칸을 닫으면 고른 Todo를 상세 판으로 표시
-        .onChange(of: showsMacPane) { _, showsMacPane in
-            store.send(.view(showsMacPane ? .hideSheet : .syncSheetPresentation))
+        // 오른쪽 칸을 열면 상세 판만 닫고, 오른쪽 칸을 닫으면 고른 Todo를 상세 판이나 시트로 표시
+        .onChange(of: showsPane) { _, showsPane in
+            store.send(.view(showsPane ? .hideSheet : .syncSheetPresentation))
         }
         .overlay {
             if store.isLoading {
@@ -126,7 +127,7 @@ private struct PushNotificationListContent: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @ScaledMetric(relativeTo: .body) private var iconSize = 32
     let store: StoreOf<PushNotificationListFeature>
-    // 고른 알림을 옆 칸에 표시하는 동안 목록 행에 선택 표시
+    // 고른 알림을 상세 판이나 옆 칸에 표시하는 동안 목록 행에 선택 표시
     let showsSelection: Bool
 
     @ViewBuilder
@@ -230,8 +231,8 @@ private struct PushNotificationListContent: View {
                                         store.send(.view(.selectNotification(item.id)))
                                     }
                                     .itemActions {
-                                        // Mac 우클릭 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
-                                        if isiOSAppOnMac {
+                                        // 우클릭과 길게 누른 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
+                                        if usesDesktopLayout {
                                             Button {
                                                 store.send(.binding(.set(\.isDetailPanePresented, false)))
                                                 store.send(.view(.selectNotification(item.id)))
@@ -265,7 +266,7 @@ private struct PushNotificationListContent: View {
                                             store.send(.view(.toggleRead(item)))
                                         }
 
-                                        if isiOSAppOnMac {
+                                        if usesDesktopLayout {
                                             Divider()
                                         }
 
