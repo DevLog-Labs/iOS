@@ -16,7 +16,6 @@ public struct TodoDetailView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.windowControlsInset) private var windowControlsInset
-    @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
@@ -175,10 +174,11 @@ public struct TodoDetailView: View {
                 }
             }
         } else {
+            // 검색 위쪽 줄과 같은 높이 48, 가로 여백 8, 붙은 아이콘 버튼과 아래 구분선
             ZStack {
                 Text(verbatim: "Todo")
-                    .font(.adaptive(.headline))
-                HStack(spacing: 12) {
+                    .font(.adaptive(.callout).bold())
+                HStack(spacing: 0) {
                     NavigationBackButton(action: back)
                     Spacer()
                     infoButton
@@ -187,10 +187,11 @@ public struct TodoDetailView: View {
                     }
                 }
             }
-            .padding(.horizontal)
-            .frame(maxWidth: readableContentWidth)
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
+            .frame(height: 48)
+            .padding(.horizontal, 8)
+            .overlay(alignment: .bottom) {
+                Divider().overlay(Color.secondarySeparator)
+            }
             .padding(.top, windowControlsInset)
             .background(Color.background, ignoresSafeAreaEdges: .top)
         }
