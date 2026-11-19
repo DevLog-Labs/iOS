@@ -48,6 +48,8 @@ public struct HomeView: View {
             .developmentGoal(goalDetailID)
         } else if usesDesktopLayout && store.sheet?.categoryManageState != nil {
             .todoCategoryManagement
+        } else if router.path.last == .search {
+            .search
         } else if case .category(let item)? = router.root {
             .todoCategory(item.id)
         } else {

@@ -58,7 +58,7 @@ public enum MainTab: Hashable, CaseIterable {
 extension SideBarLocation {
     var tab: MainTab {
         switch self {
-        case .home, .todoCategory, .todoCategoryManagement, .developmentGoal:
+        case .home, .todoCategory, .todoCategoryManagement, .developmentGoal, .search:
             .home
         case .today:
             .today
