@@ -60,7 +60,7 @@ struct TodoDetailContentView: View {
                     .padding(.horizontal, -16)
                 }
             }
-            .padding(.horizontal, isiOSAppOnMac ? 22 * AdaptiveSize.boardScale : 24)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
             .padding(.vertical, isiOSAppOnMac ? 18 * AdaptiveSize.boardScale : 20)
             .frame(maxWidth: readableContentWidth, alignment: .leading)
             .frame(maxWidth: .infinity)
