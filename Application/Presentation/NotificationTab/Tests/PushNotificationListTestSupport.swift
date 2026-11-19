@@ -48,6 +48,7 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
     var selectedTodoId: TodoIdItem? { store.state.selectedTodoId }
     var appliedFilterCount: Int { store.state.appliedFilterCount }
     var sheetTodoId: String? { store.state.sheet?.todoId }
+    var isDetailPanePresented: Bool { store.state.isDetailPanePresented }
 
     init(
         fetchUseCase: FetchPushNotificationsUseCase = PushNotificationListFetchUseCaseSpy(),
@@ -153,6 +154,10 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
 
     func dismissSheet() async {
         await store.send(.sheet(.dismiss))
+    }
+
+    func setDetailPanePresented(_ isPresented: Bool) async {
+        await store.send(.binding(.set(\.isDetailPanePresented, isPresented)))
     }
 
     func hideSheet() async {
