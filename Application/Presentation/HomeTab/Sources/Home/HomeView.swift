@@ -107,6 +107,7 @@ public struct HomeView: View {
                     switch $0 {
                     case .category: true
                     case .todo: true
+                    case .search: true
                     }
                 },
                 destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
@@ -261,7 +262,7 @@ public struct HomeView: View {
             // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
             Group {
                 Button {
-                    store.send(.store(.setPresentation(.searchView, true)))
+                    router.push(.search)
                 } label: {
                     Image(systemName: "magnifyingglass")
                 }
@@ -325,12 +326,8 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var searchButton: some View {
-        // 사이드바가 있는 창은 검색 화면을 아래에서 올리지 않고 바로 표시
-        let openSearch: () -> Void = {
-            withTransaction(\.disablesAnimations, usesDesktopLayout) {
-                store.send(.store(.setPresentation(.searchView, true)))
-            }
-        }
+        // 모든 기기에서 덮는 화면 대신 홈 내비게이션에 쌓아 열고, 사이드바가 있는 창은 사이드바 옆에 표시
+        let openSearch = { router.push(.search) }
 
         if !usesPaneLayout {
             Button(action: openSearch) {
@@ -379,16 +376,6 @@ public struct HomeView: View {
             if let todoEditorStore = coverStore.scope(state: \.todoEditor, action: \.todoEditor) {
                 TodoEditorView(store: todoEditorStore)
             }
-        case .search:
-            // 덮는 화면은 좁은 화면 배치로 그려 Duo를 펼쳐도 검색에서 연 상세의 위쪽 줄 유지
-            SearchView(store: searchStore)
-                .environment(\.usesPaneLayout, false)
-                .environment(\.windowControlsInset, store.searchInset)
-                .onGeometryChange(for: CGFloat.self) { proxy in
-                    proxy.windowControlsInset
-                } action: { inset in
-                    store.send(.binding(.set(\.searchInset, inset)))
-                }
         }
     }
 
@@ -414,6 +401,8 @@ public struct HomeView: View {
                 windowEvent: windowEvent
             )
             .id(item.id)
+        case .search:
+            SearchView(store: searchStore) { router.push(.todo(TodoIdItem(id: $0))) }
         }
     }
 }
@@ -421,6 +410,7 @@ public struct HomeView: View {
 public enum HomeRoute: Hashable {
     case category(TodoCategoryItem)
     case todo(TodoIdItem)
+    case search
 }
 
 private struct HomeCreateButton: View {

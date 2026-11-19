@@ -4085,23 +4085,6 @@
         }
       }
     },
-    "search_scope_instruction" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Only Todos are searched.\nDocuments and other content aren't included."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Todo만 검색됩니다.\n문서나 다른 콘텐츠는 검색되지 않아요."
-          }
-        }
-      }
-    },
     "search_show_more" : {
       "extractionState" : "manual",
       "localizations" : {

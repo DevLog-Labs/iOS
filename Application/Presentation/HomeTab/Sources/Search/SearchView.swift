@@ -15,140 +15,132 @@ struct SearchView: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
-    @State private var router = NavigationRouter<Path>()
+    @Environment(\.deviceType) private var deviceType
     @State var store: StoreOf<SearchFeature>
+    // 홈 내비게이션에 쌓아 연 검색에서 Todo 상세를 홈 내비게이션에 쌓는 동작
+    let onSelectTodo: (String) -> Void
 
     var body: some View {
-        NavigationStack(path: $router.path) {
-            ScrollView {
-                LazyVStack(alignment: .leading, spacing: 16) {
-                    SearchResults(
-                        store: store,
-                        onSelectTodo: { todoId in
-                            // Mac은 사이드바까지 덮는 상세 판으로 열기
-                            if isiOSAppOnMac {
-                                store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todoId))))
-                            } else {
-                                router.push(.todo(todoId))
-                            }
-                        }
-                    )
-                    RecentSearchQuries(store: store)
-                        .padding(.bottom, 8)
-                    instruction
-                }
-                .padding(.horizontal)
-                .frame(maxWidth: readableContentWidth)
-                .frame(maxWidth: .infinity)
-            }
-            .safeAreaInset(edge: .top, spacing: 0) {
-                VStack(spacing: 0) {
-                    topBar
-                    tipCard
-                        .padding(.horizontal)
-                        .frame(maxWidth: readableContentWidth)
-                        .padding(.bottom, 8)
-                }
-                .background(Color.background)
-            }
-            .background(Color.background.ignoresSafeArea())
-            .prominentAlert(store, state: \.alert, action: \.alert)
-            .detailPanel(item: $store.panelTodo) { item in
-                TodoDetailPanel(
-                    todoId: item.id,
-                    location: Text("search_title", bundle: PresentationResources.bundle),
-                    isEditable: true
-                )
-            }
-            .navigationDestination(for: Path.self, interactivePop: { _ in true }) { path in
-                switch path {
-                case .todo(let todoId):
-                    TodoDetailView(store: Store(
-                        initialState: TodoDetailFeature.State(todoId: todoId, showEditButton: true)
-                    ) {
-                        TodoDetailFeature()
-                    })
-                }
+        content { todoId in
+            // 사이드바가 있는 창은 사이드바까지 덮는 상세 판으로 열기
+            if usesDesktopLayout {
+                store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todoId))))
+            } else {
+                onSelectTodo(todoId)
             }
         }
-        .desktopNavigationTransition()
+        .duoToolbarVisibility(showsBackButton: true)
     }
 
+    private func content(onSelectTodo: @escaping (String) -> Void) -> some View {
+        // 결과가 없으면 안내와 최근 검색 대신 빈 화면만 표시
+        let isEmptyResult = !store.searchQuery.isEmpty
+            && !store.isHashOnlyQuery
+            && !store.isLoading
+            && store.visibleTodos.isEmpty
+
+        return ScrollView {
+            LazyVStack(alignment: .leading, spacing: 0) {
+                if isEmptyResult {
+                    EmptyStateView(
+                        String(localized: "todo_list_search_empty", bundle: PresentationResources.bundle),
+                        systemImage: "magnifyingglass"
+                    )
+                } else {
+                    tip
+                    RecentSearchQuries(store: store)
+                    SearchResults(store: store, onSelectTodo: onSelectTodo)
+                }
+            }
+            .frame(maxWidth: readableContentWidth)
+            .frame(maxWidth: .infinity)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            VStack(spacing: 0) {
+                topBar
+                SearchField(store: store)
+                    .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                    .padding(.vertical, isiOSAppOnMac ? 4 * AdaptiveSize.boardScale : 8)
+                    .frame(maxWidth: readableContentWidth)
+            }
+            .background(Color.background)
+        }
+        .background(Color.background.ignoresSafeArea())
+        .prominentAlert(store, state: \.alert, action: \.alert)
+        // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
+        .detailPanel(item: $store.panelTodo.activePresentation(when: usesDesktopLayout)) { item in
+            TodoDetailPanel(
+                todoId: item.id,
+                location: Text("search_title", bundle: PresentationResources.bundle),
+                isEditable: true
+            )
+        }
+    }
+
+    @ViewBuilder
     private var topBar: some View {
         let close = {
             store.send(.binding(.set(\.isSearching, false)))
-            // 사이드바가 있는 창은 검색 화면을 아래로 내리지 않고 바로 닫음
-            withTransaction(\.disablesAnimations, usesDesktopLayout) {
-                dismiss()
-            }
+            dismiss()
         }
+        let title = Text(String(localized: "search_title", bundle: PresentationResources.bundle))
 
-        return VStack(alignment: .leading) {
-            if #available(iOS 26.0, *) {
-                Button(action: close) {
-                    Image(systemName: "xmark")
+        // 사이드바가 있는 창은 사이드바 옆 칸 제목 줄과 같은 모양, 세부 정보가 없어 세부 정보 버튼 생략
+        if usesDesktopLayout {
+            PaneTitleBar(title, onClose: close) { EmptyView() }
+                .environment(\.showDetailSideBar, nil)
+        } else {
+            // OS와 상관없이 같은 모양인 가운데 제목과 아래 구분선
+            ZStack {
+                title
+                    .font(.adaptive(.callout).bold())
+                HStack {
+                    // Duo는 세로 막대의 뒤로 버튼 사용
+                    if deviceType != .duo {
+                        NavigationBackButton(action: close)
+                    }
+                    Spacer()
                 }
-                .topBarButtonStyle(tint: Color.accent)
-            } else {
-                Button(action: close) {
-                    Text(String(localized: "common_close", bundle: PresentationResources.bundle))
-                }
-                .topBarButtonStyle(tint: Color.accent)
             }
-            SearchField(store: store)
+            .frame(height: 48)
+            .padding(.horizontal, 8)
+            .overlay(alignment: .bottom) {
+                Divider().overlay(Color.secondarySeparator)
+            }
+            .padding(.top, windowControlsInset)
+            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal)
-        .frame(maxWidth: readableContentWidth)
-        .padding(.top, windowControlsInset)
-        .padding(.bottom, 8)
-        .background(Color.background, ignoresSafeAreaEdges: .top)
     }
 
-    private var tipCard: some View {
-        HStack(alignment: .top) {
-            Image(systemName: "info.circle.fill")
-                .font(.adaptive(.title))
-            VStack(alignment: .leading) {
+    private var tip: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "info.circle")
+                .font(.adaptive(.body))
+                .foregroundStyle(Color.tintLabel)
+            VStack(alignment: .leading, spacing: 0) {
                 Text(String(
                     localized: "search_todo_number_tip_title",
                     bundle: PresentationResources.bundle
                 ))
-                    .bold()
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Color.label)
                 Text(String(
                     localized: "search_todo_number_tip_message",
                     bundle: PresentationResources.bundle
                 ))
                     .foregroundStyle(Color.secondaryLabel)
-                    .font(.adaptive(.caption))
             }
-            Spacer()
+            Spacer(minLength: 0)
         }
-        .foregroundStyle(Color.tintLabel)
-        .padding()
-        .background {
-            Rectangle()
-                .fill(Color.background)
-            RoundedRectangle(cornerRadius: CornerRadius.group)
-                .fill(Color.tintFill)
-        }
-    }
-
-    private var instruction: some View {
-        HStack {
-            Spacer()
-            Text(String(
-                localized: "search_scope_instruction",
-                bundle: PresentationResources.bundle
-            ))
-                .foregroundStyle(Color.secondaryLabel)
-                .multilineTextAlignment(.center)
-            Spacer()
-        }
+        .font(.adaptive(.footnote))
+        .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
     }
 }
 
 private struct SearchField: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     let store: StoreOf<SearchFeature>
     @FocusState private var isFocused: Bool
 
@@ -163,9 +155,7 @@ private struct SearchField: View {
     }
 
     var body: some View {
-        HStack {
-            Image(systemName: "magnifyingglass")
-                .foregroundStyle(Color.secondaryLabel)
+        let field = HStack(spacing: 8) {
             TextField(
                 "",
                 text: searchQuery,
@@ -183,21 +173,56 @@ private struct SearchField: View {
                 Button {
                     store.send(.binding(.set(\.searchQuery, "")))
                 } label: {
-                    Image(systemName: "xmark.circle.fill")
+                    Image(systemName: "xmark")
                         .foregroundStyle(Color.secondaryLabel)
                 }
                 .buttonStyle(.plain)
             }
         }
-        .font(.adaptive(.title3))
-        .padding()
-        .background {
-            RoundedRectangle(cornerRadius: CornerRadius.control)
-                .fill(Color.secondaryBackground)
+        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
+        .padding(.horizontal, 12 * AdaptiveSize.boardScale)
+        // Mac은 Orca 한 줄 입력칸 높이 32
+        .frame(minHeight: (isiOSAppOnMac ? 32 : 44) * AdaptiveSize.boardScale)
+
+        Group {
+            if usesDesktopLayout {
+                field.inputBackground(isFocused: isFocused)
+            } else {
+                // 좁은 화면은 라이트에서도 보이도록 옅은 회색 바탕과 테두리
+                let shape = RoundedRectangle(cornerRadius: CornerRadius.control)
+                field
+                    .background(Color.tertiaryBackground, in: shape)
+                    .overlay { shape.strokeBorder(Color.secondarySeparator) }
+            }
         }
         .onAppear {
             isFocused = true
         }
+    }
+}
+
+// 최근 검색과 검색 결과의 머리줄
+private struct SearchSectionHeader<Trailing: View>: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    let title: String
+    var count: String?
+    @ViewBuilder let trailing: Trailing
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(title)
+                .font(.adaptive(.subheadline).bold())
+            if let count {
+                Text(count)
+                    .font(.adaptive(.subheadline).weight(.medium))
+                    .foregroundStyle(Color.secondaryLabel)
+            }
+            Spacer()
+            trailing
+        }
+        .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .padding(.top, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 20)
+        .padding(.bottom, isiOSAppOnMac ? 6 * AdaptiveSize.boardScale : 10)
     }
 }
 
@@ -209,28 +234,17 @@ private struct SearchResults: View {
         if !store.searchQuery.isEmpty {
             let todos = store.visibleTodos
 
-            VStack(spacing: 8) {
-                HStack(spacing: 12) {
-                    Text(String(
-                        localized: "search_results_title",
-                        bundle: PresentationResources.bundle
-                    ))
-                        .font(.adaptive(.title3))
-                        .bold()
-                    Spacer()
-                    Text(String.localizedStringWithFormat(
+            VStack(spacing: 0) {
+                SearchSectionHeader(
+                    title: String(localized: "search_results_title", bundle: PresentationResources.bundle),
+                    count: String.localizedStringWithFormat(
                         String(
                             localized: "search_result_count_format",
                             bundle: PresentationResources.bundle
                         ),
                         Int64(store.todos.count)
-                    ))
-                    .font(.adaptive(.callout).bold())
-                    .foregroundStyle(Color.tintLabel)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color.tintFill, in: .capsule)
-                }
+                    )
+                ) { EmptyView() }
                 if store.isHashOnlyQuery {
                     VStack(spacing: 8) {
                         Text(String(
@@ -250,14 +264,9 @@ private struct SearchResults: View {
                     .padding(.vertical, 32)
                 } else if store.isLoading && todos.isEmpty {
                     ProgressView()
-                } else if todos.isEmpty {
-                    EmptyStateView(
-                        String(localized: "todo_list_search_empty", bundle: PresentationResources.bundle),
-                        systemImage: "magnifyingglass"
-                    )
                 } else {
                     LazyVStack(spacing: 0) {
-                        ForEach(Array(zip(todos.indices, todos)), id: \.1.id) { index, item in
+                        ForEach(todos) { item in
                             Button {
                                 onSelectTodo(item.id)
                             } label: {
@@ -265,12 +274,7 @@ private struct SearchResults: View {
                                     .todoDetailPreview(todoId: item.id)
                             }
                             .buttonStyle(.plain)
-                            if index < todos.count - 1 { Divider().overlay(Color.secondarySeparator) }
                         }
-                    }
-                    .background {
-                        Rectangle()
-                            .fill(Color.secondaryBackground)
                     }
                     if store.shouldShowMoreTodos {
                         Button {
@@ -284,6 +288,8 @@ private struct SearchResults: View {
                             .font(.adaptive(.callout).bold())
                         }
                         .adaptiveButtonStyle(color: .tintFill)
+                        .padding(.top, 8)
+                        .padding(.horizontal)
                     }
                 }
             }
@@ -294,78 +300,70 @@ private struct SearchResults: View {
 }
 
 private struct SearchResultRow: View {
-    @ScaledMetric(relativeTo: .title2) private var iconSize = CGFloat(48)
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let item: SearchTodoItem
 
     var body: some View {
         let category = TodoCategoryItem(from: item.category)
 
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: CornerRadius.control)
-                .fill(category.color.opacity(0.2))
-                .frame(width: iconSize, height: iconSize)
-                .overlay {
-                    Image(systemName: category.symbolName)
-                        .font(.adaptive(.title3).bold())
-                        .foregroundStyle(category.color)
+        // 구분선은 아이콘 시작부터 행 오른쪽 끝까지 표시
+        VStack(spacing: 0) {
+            HStack(spacing: 10) {
+                Image(systemName: category.symbolName)
+                    .font(.adaptive(.body))
+                    .foregroundStyle(category.color)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(item.title)
+                        .font(.adaptive(.callout).weight(.semibold))
+                        .lineLimit(1)
+                    Text("#\(item.number) · \(item.createdAt.formatted(.dateTime.month().day().weekday(.abbreviated)))")
+                        .font(.adaptive(.footnote))
+                        .foregroundStyle(Color.secondaryLabel)
+                        .lineLimit(1)
                 }
-            VStack(alignment: .leading, spacing: 4) {
-                Text(item.title)
-                    .font(.adaptive(.headline))
-                    .lineLimit(1)
-                HStack(spacing: 4) {
-                    Text("#\(item.number)")
-                        .foregroundStyle(Color.accent)
-                    Text("·")
-                    Text(item.createdAt.formatted(.dateTime.month().day().weekday(.abbreviated)))
-                }
-                .font(.adaptive(.subheadline))
-                .foregroundStyle(Color.secondaryLabel)
-                .lineLimit(1)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                Image(systemName: "chevron.right")
+                    .font(.adaptive(.footnote).weight(.medium))
+                    .foregroundStyle(Color.secondaryLabel)
             }
-            Spacer(minLength: 8)
-            Image(systemName: item.isPinned ? "star.fill" : "star")
-                .font(.adaptive(.title3))
-                .foregroundStyle(item.isPinned ? Color.orange : .tertiaryLabel)
-            Image(systemName: "chevron.right")
-                .font(.adaptive(.callout).bold())
-                .foregroundStyle(Color.secondaryLabel)
+            .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+            .padding(.trailing, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            Rectangle()
+                .fill(Color.secondarySeparator)
+                .frame(height: 1)
         }
-        .padding()
+        .padding(.leading, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .contentShape(.rect)
     }
 }
 
 private struct RecentSearchQuries: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<SearchFeature>
 
     var body: some View {
-        VStack(spacing: 8) {
-            HStack {
-                Text(String(localized: "search_recent", bundle: PresentationResources.bundle))
-                    .font(.adaptive(.title3))
-                    .bold()
-                Spacer()
+        VStack(spacing: 0) {
+            SearchSectionHeader(
+                title: String(localized: "search_recent", bundle: PresentationResources.bundle)
+            ) {
                 Button {
                     store.send(.clearRecentQueries)
                 } label: {
                     Image(systemName: "trash")
-                        .font(.adaptive(.callout))
+                        .font(.adaptive(.subheadline))
                         .foregroundStyle(
                             store.recentQueries.isEmpty ?
-                            Color.secondaryLabel : .tintLabel
+                            Color.tertiaryLabel : .secondaryLabel
                         )
                 }
+                .buttonStyle(.plain)
                 .disabled(store.recentQueries.isEmpty)
-                .padding(.trailing)
             }
             LazyVStack(spacing: 0) {
-                ForEach(Array(zip(
-                    store.recentQueries.indices,
-                    store.recentQueries)), id: \.1
-                ) { idx, query in
+                ForEach(store.recentQueries, id: \.self) { query in
                     VStack(spacing: 0) {
-                        HStack {
-                            HStack {
+                        HStack(spacing: 10) {
+                            HStack(spacing: 10) {
                                 Image(systemName: "magnifyingglass")
                                     .foregroundStyle(Color.secondaryLabel)
                                 Text(query)
@@ -380,23 +378,22 @@ private struct RecentSearchQuries: View {
                                 store.send(.removeRecentQuery(query))
                             } label: {
                                 Image(systemName: "xmark")
+                                    .font(.adaptive(.footnote))
                                     .foregroundStyle(Color.secondaryLabel)
                             }
+                            .buttonStyle(.plain)
                         }
-                        .padding()
-                        if idx < store.recentQueries.count - 1 { Divider().overlay(Color.secondarySeparator) }
+                        .font(.adaptive(.subheadline))
+                        .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+                        .padding(.trailing, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                        Rectangle()
+                            .fill(Color.secondarySeparator)
+                            .frame(height: 1)
                     }
+                    .padding(.leading, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
                 }
-            }
-            .background {
-                Rectangle()
-                    .fill(Color.secondaryBackground)
             }
         }
         .frame(maxWidth: .infinity)
     }
-}
-
-private enum Path: Hashable {
-    case todo(String)
 }
