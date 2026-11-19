@@ -25,7 +25,7 @@ struct TodoListFeature {
         var loading = LoadingFeature.State()
         var searchQuery = ""
         var selectedTodoId: String?
-        // Mac에서 사이드바까지 덮는 상세 판에 연 Todo
+        // 사이드바가 있는 창에서 사이드바까지 덮는 상세 판에 연 Todo
         var panelTodo: TodoIdItem?
         // Mac에서 마우스를 올린 행, 선택 행처럼 둥글게 표시하고 맞닿는 구분선을 숨김
         var hoveredTodoId: String?
