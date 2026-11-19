@@ -176,16 +176,19 @@ public struct TodayView: View {
         }
         .desktopNavigationTransition()
         // 오른쪽 칸에 연 Todo가 목록에서 빠지면 닫기 버튼 없는 선택 안내 대신 오른쪽 칸을 닫음
+        // 좁은 창에서 빠져도 닫아 넓어진 뒤 다른 Todo의 세부 정보만 바꿀 때 오른쪽 칸이 열리지 않게 함
         .onChange(of: store.sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }) { _, isListed in
-            if usesDesktopLayout && store.isDetailPanePresented && !isListed {
+            if store.isDetailPanePresented && !isListed {
                 store.send(.binding(.set(\.isDetailPanePresented, false)))
             }
         }
         // 사이드바 구조로 바뀌면 쌓아 연 상세 화면은 내리고 같은 Todo를 옆 칸에 표시
         .closesPushedDetail {
             guard case .todo(let item)? = router.path.last else { return }
+            // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 오른쪽 칸을 열지 않음
+            let isListed = store.sections.flatMap(\.items).contains { $0.id == item.id }
             store.send(.binding(.set(\.selectedTodoId, item.id)))
-            store.send(.binding(.set(\.isDetailPanePresented, true)))
+            store.send(.binding(.set(\.isDetailPanePresented, isListed)))
             router.path = []
         }
         // 사이드바가 있으면 창 오른쪽 세부 정보 사이드바, 좁은 화면과 Duo 펼침은 직접 그린 시트로 표시
