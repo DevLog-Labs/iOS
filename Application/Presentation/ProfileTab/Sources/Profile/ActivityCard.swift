@@ -236,7 +236,7 @@ struct QuarterPickerSheet: View {
                 }
             }
             .padding(.horizontal, 10 * AdaptiveSize.boardScale)
-            .frame(height: 44 * AdaptiveSize.boardScale)
+            .frame(height: isiOSAppOnMac ? 44 * AdaptiveSize.boardScale : 52)
             .overlay(alignment: .bottom) {
                 Rectangle()
                     .fill(Color.separator)
@@ -261,15 +261,13 @@ struct QuarterPickerSheet: View {
                         .font(.adaptive(.caption2))
                         .foregroundStyle(Color.secondaryLabel)
                 }
-                .font(.adaptive(.body))
-                .padding(.horizontal, 12 * AdaptiveSize.boardScale)
-                .frame(minHeight: 38 * AdaptiveSize.boardScale)
+                .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
+                .frame(minHeight: isiOSAppOnMac ? 38 * AdaptiveSize.boardScale : 50)
                 .contentShape(.rect)
-                .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             }
             .buttonStyle(.plain)
-            .padding(.horizontal, 14 * AdaptiveSize.boardScale)
-            .padding(.vertical, 8 * AdaptiveSize.boardScale)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
 
             LazyVGrid(
                 columns: Array(repeating: GridItem(.flexible(), spacing: 8 * AdaptiveSize.boardScale), count: 2),
@@ -279,24 +277,41 @@ struct QuarterPickerSheet: View {
                     desktopQuarterButton(for: quarter)
                 }
             }
-            .padding(.horizontal, 14 * AdaptiveSize.boardScale)
-            .padding(.top, 8 * AdaptiveSize.boardScale)
-            .padding(.bottom, 14 * AdaptiveSize.boardScale)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            .padding(.top, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+            .padding(.bottom, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
         }
     }
 
     private var mobileContent: some View {
         // 팝오버가 Duo 상태 표시 영역과 겹치면 시스템 제목 줄이 그만큼 내려가므로 제목 줄을 직접 그림
+        // OS와 상관없이 같은 모양인 글자 완료 버튼과 가운데 제목, 아래 구분선
         VStack(spacing: 0) {
             ZStack {
                 Text(String(localized: "profile_select_quarter", bundle: PresentationResources.bundle))
-                    .font(.adaptive(.headline))
+                    .font(.adaptive(.callout).bold())
                 HStack {
                     Spacer()
-                    confirmButton
+                    Button {
+                        store.send(.setQuarterPickerPresented(false))
+                    } label: {
+                        Text(String(localized: "common_done", bundle: PresentationResources.bundle))
+                            .font(.adaptive(.callout).weight(.medium))
+                            .foregroundStyle(Color.tintLabel)
+                            .padding(.horizontal, 4)
+                            .frame(maxHeight: .infinity)
+                            .contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
                 }
             }
-            .padding([.horizontal, .top], 16)
+            .frame(height: 48)
+            .padding(.horizontal, 8)
+            .overlay(alignment: .bottom) {
+                Divider().overlay(Color.secondarySeparator)
+            }
+            // 손잡이 아래부터 위쪽 줄을 둠
+            .padding(.top, 11)
 
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
@@ -330,24 +345,6 @@ struct QuarterPickerSheet: View {
         .sheetDetent(.fraction(0.3))
     }
 
-    @ViewBuilder
-    private var confirmButton: some View {
-        if #available(iOS 26.0, *) {
-            Button(role: .confirm) {
-                store.send(.setQuarterPickerPresented(false))
-            }
-            .buttonStyle(.glassProminent)
-            .buttonBorderShape(.circle)
-        } else {
-            Button {
-                store.send(.setQuarterPickerPresented(false))
-            } label: {
-                Text(String(localized: "common_confirm", bundle: PresentationResources.bundle))
-            }
-            .tint(Color.accent)
-        }
-    }
-
     // 고른 분기는 강조색 테두리와 옅은 바탕, 고를 수 없는 분기는 흐린 글자
     private func desktopQuarterButton(for quarter: Int) -> some View {
         let quarterStart = store.state.quarterStartForPicker(quarter: quarter)
@@ -365,7 +362,7 @@ struct QuarterPickerSheet: View {
                     Int64(quarter)
                 )
             )
-            .font(.adaptive(.body).weight(.semibold))
+            .font(.adaptive(isiOSAppOnMac ? .body : .subheadline).weight(.semibold))
             .foregroundStyle(isSelected ? Color.tintLabel : isEnabled ? .label : .tertiaryLabel)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14 * AdaptiveSize.boardScale)
