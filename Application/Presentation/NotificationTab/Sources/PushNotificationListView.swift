@@ -10,7 +10,7 @@ import Core
 import PresentationShared
 
 public struct PushNotificationListView: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var store: StoreOf<PushNotificationListFeature>
     private let isSelected: Bool
 
@@ -27,12 +27,13 @@ public struct PushNotificationListView: View {
     }
 
     public var body: some View {
-        // Mac에서 오른쪽 칸을 열었을 때만 목록 | 상세 두 칸으로 나눔
-        let showsMacPane = isiOSAppOnMac && store.isDetailPanePresented
+        // 사이드바가 있는 창에서 오른쪽 칸을 열었을 때만 목록 | 상세 두 칸으로 나눔
+        let showsPane = usesDesktopLayout && store.isDetailPanePresented
 
         NavigationStack {
-            PaneSplitView(splitsOnDesktop: showsMacPane) {
-                PushNotificationListContent(store: store, showsSelection: showsMacPane)
+            PaneSplitView(splitsOnDesktop: showsPane) {
+                // 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 연 알림을 목록에 선택 표시
+                PushNotificationListContent(store: store, showsSelection: usesDesktopLayout)
                     .background(Color.background)
                     .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
                         let task = store.send(.view(.refresh))
@@ -44,19 +45,19 @@ public struct PushNotificationListView: View {
                 TodoDetailPane(
                     todoId: store.selectedTodoId?.id,
                     showEditButton: false,
-                    onClose: isiOSAppOnMac ? closeDetailPane : nil
+                    onClose: usesDesktopLayout ? closeDetailPane : nil
                 )
             }
-            // Mac 오른쪽 칸은 칸 제목 줄 정보 버튼 대신 창 오른쪽 세부 정보 사이드바에 속성 표시
+            // 오른쪽 칸은 칸 제목 줄 정보 버튼 대신 창 오른쪽 세부 정보 사이드바에 속성 표시
             .detailSideBarTarget(
-                showsMacPane ? store.selectedTodoId.map { .todo(id: $0.id, isEditable: false) } : nil
+                showsPane ? store.selectedTodoId.map { .todo(id: $0.id, isEditable: false) } : nil
             )
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .prominentSheet(item: sheetStore.activePresentation(when: isSelected && !isiOSAppOnMac)) { store in
+        .prominentSheet(item: sheetStore.activePresentation(when: isSelected && !usesDesktopLayout)) { store in
             sheetContent(store)
         }
-        .detailPanel(item: sheetStore.activePresentation(when: isSelected && isiOSAppOnMac)) { sheetStore in
+        .detailPanel(item: sheetStore.activePresentation(when: isSelected && usesDesktopLayout)) { sheetStore in
             TodoDetailPanel(
                 todoId: sheetStore.todoId,
                 location: Text("nav_push_notifications", bundle: PresentationResources.bundle),
@@ -72,13 +73,13 @@ public struct PushNotificationListView: View {
             }
         }
         .onChange(of: store.selectedTodoId?.id, initial: true) {
-            if !showsMacPane {
+            if !showsPane {
                 store.send(.view(.syncSheetPresentation))
             }
         }
-        // Mac 오른쪽 칸을 열면 상세 판만 닫고, 오른쪽 칸을 닫으면 고른 Todo를 상세 판으로 표시
-        .onChange(of: showsMacPane) { _, showsMacPane in
-            store.send(.view(showsMacPane ? .hideSheet : .syncSheetPresentation))
+        // 오른쪽 칸을 열면 상세 판만 닫고, 오른쪽 칸을 닫으면 고른 Todo를 상세 판이나 시트로 표시
+        .onChange(of: showsPane) { _, showsPane in
+            store.send(.view(showsPane ? .hideSheet : .syncSheetPresentation))
         }
         .overlay {
             if store.isLoading {
@@ -124,10 +125,9 @@ private struct PushNotificationListContent: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
-    @Environment(\.readableContentWidth) private var readableContentWidth
-    @ScaledMetric(relativeTo: .headline) private var iconSize = 36
+    @ScaledMetric(relativeTo: .body) private var iconSize = 32
     let store: StoreOf<PushNotificationListFeature>
-    // 고른 알림을 옆 칸에 표시하는 동안 목록 행에 선택 표시
+    // 고른 알림을 상세 판이나 옆 칸에 표시하는 동안 목록 행에 선택 표시
     let showsSelection: Bool
 
     @ViewBuilder
@@ -138,155 +138,160 @@ private struct PushNotificationListContent: View {
         let sections = store.query.sortOrder == .latest ? [recent, previous] : [previous, recent]
 
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
+            LazyVStack(alignment: .leading, spacing: 0) {
                 if notifications.isEmpty {
                     EmptyStateView(
                         String(localized: "push_notifications_empty", bundle: PresentationResources.bundle),
                         systemImage: "bell"
                     )
+                    .padding(.horizontal)
                 } else {
                     ForEach(sections.indices, id: \.self) { index in
                         let items = sections[index]
                         let isRecent = (index == 0) == (store.query.sortOrder == .latest)
                         if !items.isEmpty {
-                            VStack(alignment: .leading, spacing: 12) {
-                                    HStack(spacing: 8) {
-                                        Text(String(
-                                            localized: isRecent ? "push_notifications_new" : "push_notifications_previous",
-                                            bundle: PresentationResources.bundle
-                                        ))
-                                        .font(.adaptive(.title3).bold())
-                                        Text("\(items.count)")
-                                            .font(.adaptive(.callout).bold())
-                                            .foregroundStyle(Color.accent)
-                                        Spacer()
-                                    }
+                            HStack(spacing: 6) {
+                                Text(String(
+                                    localized: isRecent ? "push_notifications_new" : "push_notifications_previous",
+                                    bundle: PresentationResources.bundle
+                                ))
+                                .font(.system(size: isiOSAppOnMac ? 12.5 * AdaptiveSize.boardScale : 14, weight: .bold))
+                                Text("\(items.count)")
+                                    .font(.system(size: isiOSAppOnMac ? 12.5 * AdaptiveSize.boardScale : 14, weight: .medium))
+                                    .foregroundStyle(Color.secondaryLabel)
+                                Spacer()
+                            }
+                            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                            .padding(.top, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 20)
+                            .padding(.bottom, isiOSAppOnMac ? 6 * AdaptiveSize.boardScale : 10)
 
-                                    LazyVStack(spacing: 12) {
-                                        ForEach(items) { item in
-                                            let category = TodoCategoryItem(from: item.todoCategory)
-                                            let isSelected = showsSelection && item.id == store.selectedNotificationId
+                            LazyVStack(spacing: 0) {
+                                ForEach(items) { item in
+                                    let category = TodoCategoryItem(from: item.todoCategory)
+                                    let isSelected = showsSelection && item.id == store.selectedNotificationId
 
-                                            HStack(alignment: .top, spacing: 12) {
-                                                Image(systemName: category.symbolName)
-                                                    .font(.adaptive(.headline))
-                                                    .foregroundStyle(Color.white)
-                                                    .frame(width: iconSize, height: iconSize)
-                                                    .background(category.color, in: .rect(cornerRadius: CornerRadius.control))
-
-                                                VStack(alignment: .leading, spacing: 6) {
-                                                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                                        Text(item.title)
-                                                            .font(.adaptive(.headline))
-                                                            .foregroundStyle(
-                                                                item.isRead ? Color.secondaryLabel : .label
-                                                            )
-                                                            .lineLimit(2)
-
-                                                        Spacer(minLength: 4)
-
-                                                        TimelineView(.periodic(from: .now, by: 1.0)) { context in
-                                                            Text(timeAgoText(from: item.receivedAt, now: context.date))
-                                                                .font(.adaptive(.caption))
-                                                                .foregroundStyle(Color.tertiaryLabel)
-                                                                .lineLimit(1)
-                                                        }
-
-                                                        if !item.isRead {
-                                                            Circle()
-                                                                .fill(Color.accent)
-                                                                .frame(width: 7, height: 7)
-                                                        }
-                                                    }
-
-                                                    Text(item.body)
-                                                        .font(.adaptive(.subheadline))
-                                                        .foregroundStyle(Color.secondaryLabel)
-                                                        .multilineTextAlignment(.leading)
-                                                        .lineLimit(3)
-                                                }
-                                            }
-                                            .padding(16)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
-                                            // 선택 표시는 마우스 표시와 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
-                                            .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
-                                            // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
-                                            .background(
-                                                isSelected ? Color.fill : .clear,
-                                                in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+                                    HStack(alignment: .top, spacing: 10) {
+                                        // 테두리 있는 회색 사각형에 카테고리 색 기호
+                                        Image(systemName: category.symbolName)
+                                            .font(.adaptive(.body))
+                                            .foregroundStyle(category.color)
+                                            .frame(
+                                                width: isiOSAppOnMac ? 29 * AdaptiveSize.boardScale : iconSize,
+                                                height: isiOSAppOnMac ? 29 * AdaptiveSize.boardScale : iconSize
                                             )
-                                            .background(Color.secondaryBackground, in: .rect)
-                                            .contentShape(.rect)
-                                            .onTapGesture {
-                                                store.send(.view(.selectNotification(item.id)))
+                                            .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                                            .overlay {
+                                                RoundedRectangle(cornerRadius: CornerRadius.control)
+                                                    .strokeBorder(Color.secondarySeparator)
                                             }
-                                            .itemActions {
-                                                // Mac 우클릭 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
-                                                if isiOSAppOnMac {
-                                                    Button {
-                                                        store.send(.binding(.set(\.isDetailPanePresented, false)))
-                                                        store.send(.view(.selectNotification(item.id)))
-                                                    } label: {
-                                                        Label {
-                                                            Text("detail_panel_open", bundle: PresentationResources.bundle)
-                                                        } icon: {
-                                                            Image(systemName: "doc.text")
-                                                        }
-                                                    }
-                                                    Button {
-                                                        store.send(.binding(.set(\.isDetailPanePresented, true)))
-                                                        store.send(.view(.selectNotification(item.id)))
-                                                    } label: {
-                                                        Label {
-                                                            Text("detail_panel_open_in_pane", bundle: PresentationResources.bundle)
-                                                        } icon: {
-                                                            Image(systemName: "sidebar.left")
-                                                        }
-                                                    }
-                                                    Divider()
+
+                                        VStack(alignment: .leading, spacing: 3) {
+                                            HStack(spacing: 6) {
+                                                Text(item.title)
+                                                    .font(.adaptive(isiOSAppOnMac ? .body : .callout).weight(item.isRead ? .medium : .bold))
+                                                    .foregroundStyle(item.isRead ? Color.secondaryLabel : .label)
+                                                    .lineLimit(2)
+                                                    .frame(maxWidth: .infinity, alignment: .leading)
+
+                                                TimelineView(.periodic(from: .now, by: 1.0)) { context in
+                                                    Text(timeAgoText(from: item.receivedAt, now: context.date))
+                                                        .font(.system(size: isiOSAppOnMac ? 11 * AdaptiveSize.boardScale : 12.5))
+                                                        .foregroundStyle(Color.secondaryLabel)
+                                                        .lineLimit(1)
                                                 }
 
-                                                ItemActionButton(
-                                                    title: item.isRead
-                                                        ? String(localized: "push_mark_unread", bundle: PresentationResources.bundle) : String(localized: "push_mark_read", bundle: PresentationResources.bundle),
-                                                    color: Color.accent,
-                                                    image: Image(systemName: item.isRead
-                                                        ? "circle.badge.xmark" : "checkmark.circle")
-                                                ) {
-                                                    store.send(.view(.toggleRead(item)))
-                                                }
-
-                                                if isiOSAppOnMac {
-                                                    Divider()
-                                                }
-
-                                                ItemActionButton(
-                                                    title: String(localized: "common_delete", bundle: PresentationResources.bundle),
-                                                    color: Color.red,
-                                                    image: Image(systemName: "trash")
-                                                ) {
-                                                    store.send(.view(.deleteNotification(item)))
-                                                    presentDeleteNotificationToast(item.id)
+                                                if !item.isRead {
+                                                    Circle()
+                                                        .fill(Color.accent)
+                                                        .frame(width: 8, height: 8)
                                                 }
                                             }
-                                            .clipShape(.rect)
-                                            .onAppear {
-                                                if item.id == notifications.last?.id, store.nextCursor != nil {
-                                                    store.send(.view(.loadNextPage))
-                                                }
-                                            }
+
+                                            Text(item.body)
+                                                .font(.adaptive(.footnote))
+                                                .foregroundStyle(Color.secondaryLabel)
+                                                .lineLimit(1)
                                         }
                                     }
+                                    .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+                                    .padding(.trailing, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                                    // 구분선은 아이콘 시작부터 행 오른쪽 끝까지 표시
+                                    .overlay(alignment: .bottom) {
+                                        Divider().overlay(Color.secondarySeparator)
+                                    }
+                                    .padding(.leading, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    // 선택 표시는 마우스 표시와 같은 회색으로 행 전체를 채움
+                                    .hoverHighlight(isEnabled: !isSelected)
+                                    // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
+                                    .background(isSelected ? Color.fill : .clear)
+                                    .background(Color.background)
+                                    .contentShape(.rect)
+                                    .onTapGesture {
+                                        store.send(.view(.selectNotification(item.id)))
+                                    }
+                                    .itemActions {
+                                        // 우클릭과 길게 누른 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
+                                        if usesDesktopLayout {
+                                            Button {
+                                                store.send(.binding(.set(\.isDetailPanePresented, false)))
+                                                store.send(.view(.selectNotification(item.id)))
+                                            } label: {
+                                                Label {
+                                                    Text("detail_panel_open", bundle: PresentationResources.bundle)
+                                                } icon: {
+                                                    Image(systemName: "doc.text")
+                                                }
+                                            }
+                                            Button {
+                                                store.send(.binding(.set(\.isDetailPanePresented, true)))
+                                                store.send(.view(.selectNotification(item.id)))
+                                            } label: {
+                                                Label {
+                                                    Text("detail_panel_open_in_pane", bundle: PresentationResources.bundle)
+                                                } icon: {
+                                                    Image(systemName: "sidebar.left")
+                                                }
+                                            }
+                                            Divider()
+                                        }
+
+                                        ItemActionButton(
+                                            title: item.isRead
+                                                ? String(localized: "push_mark_unread", bundle: PresentationResources.bundle) : String(localized: "push_mark_read", bundle: PresentationResources.bundle),
+                                            color: Color.accent,
+                                            image: Image(systemName: item.isRead
+                                                ? "circle.badge.xmark" : "checkmark.circle")
+                                        ) {
+                                            store.send(.view(.toggleRead(item)))
+                                        }
+
+                                        if usesDesktopLayout {
+                                            Divider()
+                                        }
+
+                                        ItemActionButton(
+                                            title: String(localized: "common_delete", bundle: PresentationResources.bundle),
+                                            color: Color.red,
+                                            image: Image(systemName: "trash"),
+                                            role: .destructive
+                                        ) {
+                                            store.send(.view(.deleteNotification(item)))
+                                            presentDeleteNotificationToast(item.id)
+                                        }
+                                    }
+                                    .clipShape(.rect)
+                                    .onAppear {
+                                        if item.id == notifications.last?.id, store.nextCursor != nil {
+                                            store.send(.view(.loadNextPage))
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
                 }
             }
-            .padding(.horizontal, 16)
-            // 사이드바가 있으면 필터 줄 없이 제목 줄 바로 아래에서 시작
-            .padding(.top, usesDesktopLayout ? 16 * AdaptiveSize.boardScale : 0)
-            .frame(maxWidth: readableContentWidth)
-            .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             let title = Text(String(localized: "nav_push_notifications", bundle: PresentationResources.bundle))
@@ -297,7 +302,7 @@ private struct PushNotificationListContent: View {
                         PushNotificationPaneMenus(store: store)
                     }
                 } else {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading) {
                         title
                             .font(.adaptive(.largeTitle).bold())
                             .padding(.bottom, 8)
@@ -312,9 +317,11 @@ private struct PushNotificationListContent: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(.horizontal, 16)
-                    .frame(maxWidth: readableContentWidth)
                     .padding(.top, windowControlsInset)
-                    .padding(.bottom, 8)
+                    .padding(.bottom, 12)
+
+                    // 칩 줄 아래 구분선으로 목록과 나눔
+                    Divider().overlay(Color.secondarySeparator)
                 }
             }
             .background(Color.background)
@@ -371,41 +378,35 @@ private struct PushNotificationFilterBar: View {
     @Bindable var store: StoreOf<PushNotificationListFeature>
 
     var body: some View {
-        LazyHStack(spacing: 8) {
+        LazyHStack(spacing: 6) {
             Button {
                 if 0 < store.appliedFilterCount {
                     store.send(.view(.resetFilters))
                 }
             } label: {
-                HStack(spacing: 6) {
+                // 전체 칩은 다른 조건을 골라도 강조한 채 표시
+                PushNotificationFilterChip(isSelected: true) {
                     Text(String(localized: "push_timefilter_all", bundle: PresentationResources.bundle))
-                    if 0 < store.appliedFilterCount {
-                        filterBadge
-                    }
                 }
-                .font(.adaptive(.callout))
-                .foregroundStyle(store.appliedFilterCount == 0 ? Color.tintLabel : .fillLabel)
-                .adaptiveButtonStyle(
-                    color: store.appliedFilterCount == 0 ? .tintFill : .fill
-                )
             }
+            .buttonStyle(.plain)
 
             Button {
                 DispatchQueue.main.async {
                     store.send(.view(.toggleSortOption))
                 }
             } label: {
-                let condition = store.query.sortOrder == .oldest
-                Text(
-                    String.localizedStringWithFormat(
-                        String(localized: "push_sort_format", bundle: PresentationResources.bundle),
-                        store.query.sortOrder.title
+                PushNotificationFilterChip(isSelected: store.query.sortOrder == .oldest) {
+                    Text(
+                        String.localizedStringWithFormat(
+                            String(localized: "push_sort_format", bundle: PresentationResources.bundle),
+                            store.query.sortOrder.title
+                        )
                     )
-                )
-                .font(.adaptive(.callout))
-                .foregroundStyle(condition ? Color.tintLabel : .fillLabel)
-                .adaptiveButtonStyle(color: condition ? .tintFill : .fill)
+                    Image(systemName: "chevron.down")
+                }
             }
+            .buttonStyle(.plain)
 
             DropdownMenu(sections: [
                 DropdownMenuSection(
@@ -417,14 +418,18 @@ private struct PushNotificationFilterBar: View {
                     }
                 )
             ]) {
-                let condition = store.query.timeFilter == .none
-                HStack {
-                    Text(String(localized: "push_period", bundle: PresentationResources.bundle))
+                let timeFilter = store.query.timeFilter
+                // 고른 기간은 칩 제목 뒤에 함께 표시
+                PushNotificationFilterChip(isSelected: timeFilter != .none) {
+                    Text(
+                        timeFilter == .none
+                            ? String(localized: "push_period", bundle: PresentationResources.bundle) : String.localizedStringWithFormat(
+                                String(localized: "push_period_format", bundle: PresentationResources.bundle),
+                                timeFilter.title
+                            )
+                    )
                     Image(systemName: "chevron.down")
                 }
-                .font(.adaptive(.callout))
-                .foregroundStyle(condition ? Color.fillLabel : .tintLabel)
-                .adaptiveButtonStyle(color: condition ? .fill : .tintFill)
             }
 
             Button {
@@ -432,23 +437,34 @@ private struct PushNotificationFilterBar: View {
                     store.send(.view(.toggleUnreadOnly))
                 }
             } label: {
-                let condition = store.query.unreadOnly
-                Text(String(localized: "push_unread", bundle: PresentationResources.bundle))
-                    .font(.adaptive(.callout))
-                    .foregroundStyle(condition ? Color.tintLabel : .fillLabel)
-                    .adaptiveButtonStyle(color: condition ? .tintFill : .fill)
+                PushNotificationFilterChip(isSelected: store.query.unreadOnly) {
+                    Text(String(localized: "push_unread", bundle: PresentationResources.bundle))
+                }
             }
+            .buttonStyle(.plain)
         }
     }
+}
 
-    private var filterBadge: some View {
-        Text("\(store.appliedFilterCount)")
-            .font(.adaptive(.caption2).weight(.bold))
-            .foregroundStyle(Color.accent)
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-            .frame(width: 20, height: 20)
-            .background(Circle().fill(Color.accent.opacity(0.1)))
+// 고른 조건은 강조색 바탕과 테두리, 나머지는 테두리만 있는 칩
+private struct PushNotificationFilterChip<Content: View>: View {
+    let isSelected: Bool
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(spacing: 5) {
+            content
+        }
+        .font(.adaptive(.footnote))
+        .imageScale(.small)
+        .foregroundStyle(isSelected ? Color.tintLabel : .label)
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(isSelected ? Color.tintFill : .clear, in: .rect(cornerRadius: CornerRadius.control))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.control)
+                .strokeBorder(isSelected ? Color.accent.opacity(0.6) : .separator)
+        }
     }
 }
 

@@ -22,7 +22,7 @@ struct PushNotificationListFeature {
         var query: PushNotificationQuery
         var selectedNotificationId: String?
         var selectedTodoId: TodoIdItem?
-        // Mac에서 목록 오른쪽 칸을 연 상태, 닫혀 있으면 고른 Todo를 상세 판으로 표시
+        // 사이드바가 있는 창에서 목록 오른쪽 칸을 연 상태, 닫혀 있으면 고른 Todo를 상세 판으로 표시
         var isDetailPanePresented = false
         var loading = LoadingFeature.State()
         var undoNotificationId: String?
@@ -116,6 +116,8 @@ struct PushNotificationListFeature {
                 state.sheet = nil
                 state.selectedNotificationId = nil
                 state.selectedTodoId = nil
+                // 오른쪽 칸에서 연 알림을 좁은 창의 시트로 닫으면 다시 넓혀도 빈 오른쪽 칸을 열지 않음
+                state.isDetailPanePresented = false
             case .sheet:
                 break
             case .binding(\.query.timeFilter):

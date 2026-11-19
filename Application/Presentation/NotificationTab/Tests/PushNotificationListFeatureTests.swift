@@ -335,6 +335,30 @@ struct PushNotificationListFeatureTests {
         #expect(adapter.selectedTodoId == nil)
     }
 
+    @Test("오른쪽 칸에서 연 알림을 시트로 옮긴 뒤 닫으면 오른쪽 칸 상태도 닫는다")
+    func 오른쪽_칸에서_연_알림을_시트로_옮긴_뒤_닫으면_오른쪽_칸_상태도_닫는다() async throws {
+        let fetchSpy = PushNotificationListFetchUseCaseSpy(pages: [
+            PushNotificationPage(
+                items: [
+                    makePushNotification(id: "notification-1", number: 1, isRead: true)
+                ],
+                nextCursor: nil
+            )
+        ])
+        let adapter = PushNotificationListStoreTestAdapter(fetchUseCase: fetchSpy)
+
+        await adapter.fetchNotifications()
+        await adapter.setDetailPanePresented(true)
+        await adapter.selectNotification("notification-1")
+        // 창이 좁아져 오른쪽 칸 대신 시트로 표시
+        await adapter.syncSheetPresentation()
+
+        await adapter.dismissSheet()
+
+        #expect(adapter.selectedTodoId == nil)
+        #expect(!adapter.isDetailPanePresented)
+    }
+
     @Test("hideSheet은 시트만 닫고 선택한 알림과 Todo를 유지한다")
     func hideSheet은_시트만_닫고_선택한_알림과_Todo를_유지한다() async throws {
         let fetchSpy = PushNotificationListFetchUseCaseSpy(pages: [
