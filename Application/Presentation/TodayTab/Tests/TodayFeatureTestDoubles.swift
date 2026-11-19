@@ -44,7 +44,7 @@ protocol TodayStateDriving {
     var selectedCategoryID: String? { get }
     var isCategoryFilterPresented: Bool { get }
     var isTodoInspectorPresented: Bool { get }
-    var todoEditorTitle: String? { get }
+    var todoInfoTitle: String? { get }
     var visibleCategoryIDs: [String] { get }
     var showAlert: Bool { get }
     var isLoading: Bool { get }
@@ -59,7 +59,7 @@ protocol TodayStateDriving {
     func completeTodo(_ item: TodayTodoItem) async
     func showTodoInspector(_ item: TodayTodoItem) async
     func setTodoInspectorPresented(_ isPresented: Bool) async
-    func updateTodoFromInspector(_ todo: Todo) async
+    func receiveTodoInfoSaved(_ todo: Todo) async
 }
 
 @MainActor
@@ -76,7 +76,7 @@ struct TodayStoreTestAdapter: TodayStateDriving {
     var selectedCategoryID: String? { store.state.selectedCategoryID }
     var isCategoryFilterPresented: Bool { store.state.isCategoryFilterPresented }
     var isTodoInspectorPresented: Bool { store.state.isTodoInspectorPresented }
-    var todoEditorTitle: String? { store.state.todoEditor?.title }
+    var todoInfoTitle: String? { store.state.todoInfo?.editor?.title }
     var selectedTodoId: String? { store.state.selectedTodoId }
     var detailPaneRevision: Int { store.state.detailPaneRevision }
     var visibleCategoryIDs: [String] { store.state.visibleCategories.map(\.id) }
@@ -172,6 +172,7 @@ struct TodayStoreTestAdapter: TodayStateDriving {
 
     func showTodoInspector(_ item: TodayTodoItem) async {
         await store.send(.showTodoInspector(item))
+        await drainReceivedActions()
     }
 
     func setTodoInspectorPresented(_ isPresented: Bool) async {
@@ -182,8 +183,9 @@ struct TodayStoreTestAdapter: TodayStateDriving {
         await store.send(.binding(.set(\.selectedTodoId, id)))
     }
 
-    func setTodoEditorTitle(_ title: String) async {
-        await store.send(.todoEditor(.binding(.set(\.title, title))))
+    func setTodoInfoPinned(_ isPinned: Bool) async {
+        await store.send(.todoInfo(.editor(.binding(.set(\.isPinned, isPinned)))))
+        await drainReceivedActions()
     }
 
     func moveTodoInspectorToSideBar() async {
@@ -191,11 +193,13 @@ struct TodayStoreTestAdapter: TodayStateDriving {
         await drainReceivedActions()
     }
 
-    func updateTodoFromInspector(_ todo: Todo) async {
-        await store.send(.todoEditor(.delegate(.updated(todo))))
+    func receiveTodoInfoSaved(_ todo: Todo) async {
+        await store.send(.todoInfo(.editor(.updateSucceeded(todo))))
         await drainReceivedActions()
-        await store.send(.todoEditor(.loading(.end(target: .default, mode: .immediate))))
-        await drainReceivedActions()
+    }
+
+    func receiveTodoInfoSaveFailed() async {
+        await store.send(.todoInfo(.editor(.saveFailed)))
     }
 
     private func drainReceivedActions() async {

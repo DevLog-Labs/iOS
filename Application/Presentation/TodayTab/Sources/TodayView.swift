@@ -46,19 +46,28 @@ public struct TodayView: View {
 
             PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || showsMacPane) {
                 ScrollView {
+                    // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
+                    let highlightedTodoIds = (
+                        [store.hoveredTodoId] + (usesPaneLayout ? [store.selectedTodoId, store.panelTodo?.id] : [])
+                    ).compactMap { $0 }
+
                     LazyVStack(alignment: .leading, spacing: 0) {
-                        TodayAchievementCard(store: store)
-                            .padding(.bottom, 8)
+                        // 필터에 맞는 Todo가 없으면 요약 카드 없이 빈 화면만 표시
+                        if !sections.isEmpty || !store.hasActiveFilters {
+                            TodayAchievementCard(store: store)
+                                .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                                .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+                        }
 
                         if sections.isEmpty, !store.isLoading {
                             TodayEmptyContent(store: store)
+                                .padding(.horizontal)
                         } else {
                             ForEach(sections) { section in
                                 TodoSection(
                                     section: section,
                                     isNavigationEnabled: !store.isTodoInspectorPresented,
-                                    // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
-                                    selectedTodoId: usesPaneLayout ? store.selectedTodoId : nil,
+                                    highlightedTodoIds: highlightedTodoIds,
                                     onSelect: { item in
                                         // Mac은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
                                         if isiOSAppOnMac && !showsMacPane {
@@ -77,16 +86,22 @@ public struct TodayView: View {
                                         } else {
                                             store.send(.showTodoInspector(item))
                                         }
+                                    },
+                                    onHover: { item, isHovering in
+                                        guard isiOSAppOnMac else { return }
+                                        // 다른 행으로 옮겨 간 뒤에 온 벗어남은 무시
+                                        if isHovering {
+                                            store.send(.binding(.set(\.hoveredTodoId, item.id)))
+                                        } else if store.hoveredTodoId == item.id {
+                                            store.send(.binding(.set(\.hoveredTodoId, nil)))
+                                        }
                                     }
                                 )
-                                .padding(.bottom, section.id == sections.last?.id ? 0 : 8)
                             }
                             .padding(.bottom, 12)
                         }
                     }
-                    .padding(.horizontal)
-                    // 사이드바가 있으면 필터 줄 없이 제목 줄 바로 아래에서 시작
-                    .padding(.top, usesDesktopLayout ? 4 * AdaptiveSize.boardScale : 0)
+                    .padding(.top, 4 * AdaptiveSize.boardScale)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
@@ -110,7 +125,7 @@ public struct TodayView: View {
                             .padding(.horizontal)
                             .frame(maxWidth: readableContentWidth)
                             .padding(.top, windowControlsInset)
-                            .padding(.bottom, 8)
+                            .padding(.bottom, 12)
                         }
                     }
                     .background(Color.background)
@@ -175,9 +190,12 @@ public struct TodayView: View {
         .prominentSheet(
             isPresented: usesDesktopLayout ? .constant(false) : $store.isTodoInspectorPresented
         ) {
-            TodayTodoInspector(store: store, showsCloseButton: true)
+            // 넓은 창의 세부 정보 사이드바와 같은 속성 칸, 고친 값은 바로 저장
+            if let infoStore = store.scope(state: \.todoInfo, action: \.todoInfo) {
+                InfoSheetView(store: infoStore, onClose: { store.send(.dismissTodoInspector) })
+            }
         }
-        // 사이드바 구조로 바뀌면 가려진 세부 정보 시트는 고친 값을 저장하고 닫아 같은 Todo를 세부 정보 사이드바에 표시
+        // 사이드바 구조로 바뀌면 가려진 세부 정보 시트는 닫고 같은 Todo를 세부 정보 사이드바에 표시
         .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
             if usesDesktopLayout && store.isTodoInspectorPresented {
                 store.send(.moveTodoInspectorToSideBar)
@@ -244,68 +262,86 @@ public struct TodayView: View {
     }
 }
 
+// 카드 바탕 없이 페이지 여백에 맞추고 아래 구분선으로 목록과 나눔
 private struct TodayAchievementCard: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<TodayFeature>
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // 좁은 칸에서 한 줄에 들어가지 않으면 작은 상태 칩으로 줄바꿈 없이 표시
+        VStack(alignment: .leading, spacing: 10) {
+            // 좁은 칸에서 한 줄에 들어가지 않으면 간격을 줄여 줄바꿈 없이 표시
             ViewThatFits(in: .horizontal) {
                 header(isCompact: false)
                 header(isCompact: true)
             }
 
-            ProgressView(value: store.todayAchievement?.progress ?? 0)
+            // 채운 막대 오른쪽 끝은 각지게 두고 바깥 막대만 둥글게 자름
+            Rectangle()
+                .fill(Color.separator)
+                .overlay(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.accent)
+                        .scaleEffect(x: store.todayAchievement?.progress ?? 0, anchor: .leading)
+                }
+                .frame(height: 6)
+                .clipShape(.capsule)
         }
-        .padding(20)
-        .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+        .padding(.top, isiOSAppOnMac ? 4 * AdaptiveSize.boardScale : 8)
+        .padding(.bottom, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .overlay(alignment: .bottom) {
+            Divider().overlay(Color.secondarySeparator)
+        }
     }
 
     private func header(isCompact: Bool) -> some View {
-        HStack(spacing: isCompact ? 8 : 10) {
+        HStack(alignment: .firstTextBaseline, spacing: isCompact ? 6 : 8) {
             Text(String(
                 localized: "today_achievement_title",
                 bundle: PresentationResources.bundle)
             )
-            .font(.adaptive(.title3).bold())
+            .font(.adaptive(.callout).bold())
             .lineLimit(1)
 
             Text(achievementStatusTitle)
-                .font(.adaptive(isCompact ? .caption : .callout).weight(.semibold))
+                .font(.adaptive(.caption).weight(.semibold))
                 .foregroundStyle(Color.tintLabel)
                 .lineLimit(1)
-                .padding(.horizontal, isCompact ? 6 : 12)
-                .padding(.vertical, isCompact ? 3 : 6)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 2)
                 .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
 
             Spacer(minLength: isCompact ? 4 : 8)
 
-            progressCount
-        }
-    }
-
-    @ViewBuilder
-    private var progressCount: some View {
-        if let achievement = store.todayAchievement {
-            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                Text("\(achievement.completedCount)")
-                    .font(.adaptive(.title2).bold())
-                    .foregroundStyle(Color.accent)
-                Text("/")
-                Text("\(achievement.totalCount)")
+            if let achievement = store.todayAchievement {
+                Text(verbatim: "\(achievement.completedCount)")
+                    .font(.adaptive(.title2).weight(.heavy))
+                    .foregroundStyle(Color.tintLabel)
+                Text(verbatim: "/ \(achievement.totalCount)")
+                    .font(.adaptive(.footnote))
+                    .foregroundStyle(Color.secondaryLabel)
+            } else {
+                Text(verbatim: "-- / --")
+                    .font(.adaptive(.footnote))
+                    .foregroundStyle(Color.secondaryLabel)
             }
-            .font(.adaptive(.callout).weight(.semibold))
-            .foregroundStyle(Color.secondaryLabel)
-        } else {
-            Text("-- / --")
-                .font(.adaptive(.callout).weight(.semibold))
-                .foregroundStyle(Color.secondaryLabel)
         }
     }
 
     private var achievementStatusTitle: String {
-        store.todayAchievement?.status.title
-            ?? String(localized: "today_achievement_status_loading", bundle: PresentationResources.bundle)
+        guard let achievement = store.todayAchievement else {
+            return String(localized: "today_achievement_status_loading", bundle: PresentationResources.bundle)
+        }
+        switch achievement.status {
+        case .empty:
+            return String(localized: "today_achievement_status_empty", bundle: PresentationResources.bundle)
+        case .inProgress:
+            return String.localizedStringWithFormat(
+                String(localized: "today_achievement_remaining_format", bundle: PresentationResources.bundle),
+                Int64(achievement.totalCount - achievement.completedCount)
+            )
+        case .completed:
+            return String(localized: "today_achievement_status_completed", bundle: PresentationResources.bundle)
+        }
     }
 }
 
@@ -314,27 +350,23 @@ private struct TodayFilterBar: View {
 
     var body: some View {
         ScrollView(.horizontal) {
-            LazyHStack(spacing: 8) {
+            LazyHStack(spacing: 6) {
                 ForEach(TodayFeature.TodoScope.allCases, id: \.self) { scope in
-                    let isSelected = store.selectedTodoScope == scope
                     Button {
                         withAnimation(.easeInOut) {
                             _ = store.send(.setTodoScope(scope))
                         }
                     } label: {
-                        HStack(spacing: 6) {
+                        TodayFilterChip(isSelected: store.selectedTodoScope == scope) {
                             Text(scope.title)
                             Text("\(store.summaryCounts[scope, default: 0])")
                                 .fontWeight(.bold)
                         }
-                        .font(.adaptive(.callout))
-                        .foregroundStyle(isSelected ? Color.tintLabel : .fillLabel)
                     }
-                    .adaptiveButtonStyle(color: isSelected ? Color.tintFill : .fill)
+                    .buttonStyle(.plain)
                 }
 
                 let category = store.selectedCategory
-                let isSelected = category != nil
                 DropdownMenu(
                     isPresented: $store.isCategoryFilterPresented,
                     sections: [
@@ -359,9 +391,9 @@ private struct TodayFilterBar: View {
                         })
                     ]
                 ) {
-                    HStack(spacing: 6) {
-                        Image(systemName: category?.symbolName ?? "tray.2")
-                            .foregroundStyle(category?.color ?? Color.fillLabel)
+                    TodayFilterChip(isSelected: category != nil) {
+                        // 아이콘도 칩 글자색을 따름
+                        Image(systemName: category?.symbolName ?? "tray")
                         Text(
                             category?.localizedName
                                 ?? String(
@@ -370,15 +402,33 @@ private struct TodayFilterBar: View {
                                 )
                         )
                     }
-                    .font(.adaptive(.callout))
-                    .foregroundStyle(isSelected ? Color.tintLabel : .fillLabel)
-                    .adaptiveButtonStyle(color: isSelected ? Color.tintFill : .fill)
                 }
             }
         }
         .scrollIndicators(.hidden)
         .padding(.horizontal, -16)
         .contentMargins(.horizontal, 16, for: .scrollContent)
+    }
+}
+
+// 고른 조건은 강조색 바탕과 테두리, 나머지는 테두리만 있는 칩
+private struct TodayFilterChip<Content: View>: View {
+    let isSelected: Bool
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(spacing: 5) {
+            content
+        }
+        .font(.adaptive(.footnote))
+        .foregroundStyle(isSelected ? Color.tintLabel : .label)
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(isSelected ? Color.tintFill : .clear, in: .rect(cornerRadius: CornerRadius.control))
+        .overlay {
+            RoundedRectangle(cornerRadius: CornerRadius.control)
+                .strokeBorder(isSelected ? Color.accent.opacity(0.6) : .separator)
+        }
     }
 }
 
@@ -483,37 +533,6 @@ private struct TodayEmptyContent: View {
         let title: String
         let message: String
         let systemImage: String
-    }
-}
-
-private struct TodayTodoInspector: View {
-    let store: StoreOf<TodayFeature>
-    var showsCloseButton = false
-
-    @ViewBuilder
-    var body: some View {
-        if let editorStore = store.scope(state: \.todoEditor, action: \.todoEditor) {
-            TodoPropertiesView(
-                store: editorStore,
-                showsEditorActions: true,
-                showsCloseButton: showsCloseButton,
-                onSubmit: { editorStore.send(.upsertTodo) },
-                onClose: { store.send(.dismissTodoInspector) }
-            )
-            .onAppear { editorStore.send(.onAppear) }
-            .prominentAlert(editorStore, state: \.alert, action: \.alert)
-        }
-    }
-}
-
-private extension TodayFeature.TodayAchievement.Status {
-    var title: String {
-        let key = switch self {
-        case .empty: "today_achievement_status_empty"
-        case .inProgress: "today_achievement_status_in_progress"
-        case .completed: "today_achievement_status_completed"
-        }
-        return String(localized: String.LocalizationValue(key), bundle: PresentationResources.bundle)
     }
 }
 

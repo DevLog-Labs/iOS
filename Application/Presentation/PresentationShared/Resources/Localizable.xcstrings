@@ -4561,6 +4561,23 @@
         }
       }
     },
+    "today_achievement_remaining_format" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld left"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld개 남음"
+          }
+        }
+      }
+    },
     "today_achievement_status_completed" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -4591,23 +4608,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "예정 없음"
-          }
-        }
-      }
-    },
-    "today_achievement_status_in_progress" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "In Progress"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "진행 중"
           }
         }
       }

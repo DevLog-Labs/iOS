@@ -60,8 +60,8 @@ struct TodayFeatureTests {
         #expect(filtered.map(\.id) == ["match"])
     }
 
-    @Test("TodayFeature는 선택한 Todo로 Inspector 편집 상태를 구성하고 닫는다")
-    func todayFeature는_선택한_Todo로_Inspector_편집_상태를_구성하고_닫는다() async throws {
+    @Test("TodayFeature는 선택한 Todo로 세부 정보 시트를 열고 닫는다")
+    func todayFeature는_선택한_Todo로_세부_정보_시트를_열고_닫는다() async throws {
         let todo = makeTodayTodo(id: "inspector", title: "수정 전")
         let item = try #require(TodayTodoItem(from: todo))
         let adapter = TodayStoreTestAdapter()
@@ -70,28 +70,43 @@ struct TodayFeatureTests {
         await adapter.showTodoInspector(item)
 
         #expect(adapter.isTodoInspectorPresented)
-        #expect(adapter.todoEditorTitle == "수정 전")
+        #expect(adapter.todoInfoTitle == "수정 전")
 
         await adapter.setTodoInspectorPresented(false)
 
         #expect(!adapter.isTodoInspectorPresented)
-        #expect(adapter.todoEditorTitle == nil)
     }
 
-    @Test("TodayFeature는 Inspector에서 수정한 Todo를 목록에 반영하고 닫는다")
-    func todayFeature는_Inspector에서_수정한_Todo를_목록에_반영하고_닫는다() async throws {
+    @Test("TodayFeature는 세부 정보에서 저장한 Todo를 시트를 연 채 목록에 반영한다")
+    func todayFeature는_세부_정보에서_저장한_Todo를_시트를_연_채_목록에_반영한다() async throws {
         var todo = makeTodayTodo(id: "inspector", title: "수정 전")
         let item = try #require(TodayTodoItem(from: todo))
         let adapter = TodayStoreTestAdapter()
         await adapter.receiveUpdatedTodo(item)
         await adapter.showTodoInspector(item)
-        todo.title = "수정 후"
+        todo.isPinned = true
 
-        await adapter.updateTodoFromInspector(todo)
+        await adapter.receiveTodoInfoSaved(todo)
 
-        #expect(adapter.todos.first?.title == "수정 후")
-        #expect(!adapter.isTodoInspectorPresented)
-        #expect(adapter.todoEditorTitle == nil)
+        #expect(adapter.todos.first?.isPinned == true)
+        #expect(adapter.isTodoInspectorPresented)
+    }
+
+    @Test("시트를 닫은 뒤 실패한 세부 정보 저장은 오늘 화면에서 알린다")
+    func 시트를_닫은_뒤_실패한_세부_정보_저장은_오늘_화면에서_알린다() async throws {
+        let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))
+        let adapter = TodayStoreTestAdapter()
+        await adapter.receiveUpdatedTodo(item)
+        await adapter.showTodoInspector(item)
+
+        await adapter.receiveTodoInfoSaveFailed()
+
+        #expect(!adapter.showAlert)
+
+        await adapter.setTodoInspectorPresented(false)
+        await adapter.receiveTodoInfoSaveFailed()
+
+        #expect(adapter.showAlert)
     }
 
     @Test("상세 칸이 저장해 보낸 Todo는 목록 행만 바꾸고 상세 칸은 다시 만들지 않는다")
@@ -115,59 +130,8 @@ struct TodayFeatureTests {
         #expect(adapter.detailPaneRevision == revision + 1)
     }
 
-    @Test("넓은 창으로 바뀌면 세부 정보에서 고친 값을 저장하고 닫은 뒤 같은 Todo를 고른다")
-    func 넓은_창으로_바뀌면_세부_정보에서_고친_값을_저장하고_닫은_뒤_같은_Todo를_고른다() async throws {
-        let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))
-        let upsertSpy = TodayUpsertTodoUseCaseSpy()
-        let adapter = TodayStoreTestAdapter(upsertUseCase: upsertSpy)
-        await adapter.receiveUpdatedTodo(item)
-        await adapter.showTodoInspector(item)
-        await adapter.setTodoEditorTitle("수정 후")
-
-        await adapter.moveTodoInspectorToSideBar()
-
-        #expect(upsertSpy.todos.map(\.title) == ["수정 후"])
-        #expect(adapter.todos.first?.title == "수정 후")
-        #expect(!adapter.isTodoInspectorPresented)
-        #expect(adapter.selectedTodoId == item.id)
-        #expect(!adapter.showAlert)
-    }
-
-    @Test("넓은 창으로 바뀌어 세부 정보를 저장하는 동안에는 고른 Todo를 비워 둔다")
-    func 넓은_창으로_바뀌어_세부_정보를_저장하는_동안에는_고른_Todo를_비워_둔다() async throws {
-        let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))
-        let adapter = TodayStoreTestAdapter(upsertUseCase: TodayPendingUpsertTodoUseCase())
-        await adapter.receiveUpdatedTodo(item)
-        await adapter.selectTodo(item.id)
-        await adapter.showTodoInspector(item)
-        await adapter.setTodoEditorTitle("수정 후")
-
-        await adapter.moveTodoInspectorToSideBar()
-
-        #expect(adapter.selectedTodoId == nil)
-        #expect(adapter.isTodoInspectorPresented)
-    }
-
-    @Test("넓은 창으로 바뀔 때 세부 정보 저장에 실패하면 알림을 띄우고 닫은 뒤 같은 Todo를 고른다")
-    func 넓은_창으로_바뀔_때_세부_정보_저장에_실패하면_알림을_띄우고_닫은_뒤_같은_Todo를_고른다() async throws {
-        let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))
-        let upsertSpy = TodayUpsertTodoUseCaseSpy()
-        upsertSpy.error = TodayTestError.failure
-        let adapter = TodayStoreTestAdapter(upsertUseCase: upsertSpy)
-        await adapter.receiveUpdatedTodo(item)
-        await adapter.showTodoInspector(item)
-        await adapter.setTodoEditorTitle("수정 후")
-
-        await adapter.moveTodoInspectorToSideBar()
-
-        #expect(adapter.todos.first?.title == "수정 전")
-        #expect(!adapter.isTodoInspectorPresented)
-        #expect(adapter.selectedTodoId == item.id)
-        #expect(adapter.showAlert)
-    }
-
-    @Test("넓은 창으로 바뀔 때 세부 정보에서 고친 값이 없으면 저장하지 않고 닫은 뒤 같은 Todo를 고른다")
-    func 넓은_창으로_바뀔_때_세부_정보에서_고친_값이_없으면_저장하지_않고_닫은_뒤_같은_Todo를_고른다() async throws {
+    @Test("넓은 창으로 바뀌면 세부 정보 시트를 저장 없이 닫고 같은 Todo를 고른다")
+    func 넓은_창으로_바뀌면_세부_정보_시트를_저장_없이_닫고_같은_Todo를_고른다() async throws {
         let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))
         let upsertSpy = TodayUpsertTodoUseCaseSpy()
         let adapter = TodayStoreTestAdapter(upsertUseCase: upsertSpy)
@@ -179,6 +143,21 @@ struct TodayFeatureTests {
         #expect(upsertSpy.todos.isEmpty)
         #expect(!adapter.isTodoInspectorPresented)
         #expect(adapter.selectedTodoId == item.id)
+    }
+
+    @Test("넓은 창으로 바뀔 때 세부 정보를 저장하는 중이면 저장이 끝날 때까지 고른 Todo를 비워 둔다")
+    func 넓은_창으로_바뀔_때_세부_정보를_저장하는_중이면_저장이_끝날_때까지_고른_Todo를_비워_둔다() async throws {
+        let item = try #require(TodayTodoItem(from: makeTodayTodo(id: "inspector", title: "수정 전")))
+        let adapter = TodayStoreTestAdapter(upsertUseCase: TodayPendingUpsertTodoUseCase())
+        await adapter.receiveUpdatedTodo(item)
+        await adapter.selectTodo(item.id)
+        await adapter.showTodoInspector(item)
+        await adapter.setTodoInfoPinned(true)
+
+        await adapter.moveTodoInspectorToSideBar()
+
+        #expect(adapter.selectedTodoId == nil)
+        #expect(!adapter.isTodoInspectorPresented)
     }
 
     @Test("TodayFeature fetchData는 요약과 섹션 상태를 갱신한다")

@@ -201,7 +201,6 @@ private struct TodoInfoProperties: View {
                 }
             }
         }
-        .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
         .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
     }
@@ -259,7 +258,6 @@ struct TodoSideBarProperties: View {
                     .modifier(DueDatePickerModifier(isPresented: $isDueDatePickerPresented, store: editorStore))
                 }
             }
-            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
             .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
             .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
 
@@ -311,7 +309,7 @@ struct TodoSideBarProperties: View {
     }
 }
 
-// 카드 안 속성 한 줄
+// 카드 바탕 없이 페이지 여백에 맞춘 속성 한 줄
 private struct PropertyRow<Value: View>: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     private let title: String
@@ -331,7 +329,6 @@ private struct PropertyRow<Value: View>: View {
             value
         }
         .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
-        .padding(.horizontal, 12 * AdaptiveSize.boardScale)
         .frame(minHeight: isiOSAppOnMac ? 38 * AdaptiveSize.boardScale : 50)
     }
 }
