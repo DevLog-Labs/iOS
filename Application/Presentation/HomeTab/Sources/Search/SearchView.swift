@@ -19,10 +19,12 @@ struct SearchView: View {
     @State private var store: StoreOf<SearchFeature>
     // 홈 내비게이션에 쌓아 연 검색에서 Todo 상세를 홈 내비게이션에 쌓는 동작
     private let onSelectTodo: (String) -> Void
+    // 홈 내비게이션 맨 위에 있는지 여부, 아래에 깔린 동안은 상세 판을 띄우지 않음
+    private let isOnTop: Bool
 
     // 열 때마다 빈 입력칸으로 시작하고 최근 검색은 열 때 읽음
     // 닫으면 Store와 함께 진행 중인 검색 요청과 상세 판도 사라짐
-    init(onSelectTodo: @escaping (String) -> Void) {
+    init(isOnTop: Bool, onSelectTodo: @escaping (String) -> Void) {
         @Dependency(\.homeFetchRecentSearchQueriesUseCase) var fetchRecentSearchQueriesUseCase
         self._store = State(initialValue: Store(
             initialState: SearchFeature.State(
@@ -32,6 +34,7 @@ struct SearchView: View {
             SearchFeature()
         })
         self.onSelectTodo = onSelectTodo
+        self.isOnTop = isOnTop
     }
 
     var body: some View {
@@ -88,7 +91,8 @@ struct SearchView: View {
         .background(Color.background.ignoresSafeArea())
         .prominentAlert(store, state: \.alert, action: \.alert)
         // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
-        .detailPanel(item: $store.panelTodo.activePresentation(when: usesDesktopLayout)) { item in
+        // 쌓아 연 상세를 편집하는 중에 넓어지면 편집을 마치고 상세가 내려간 뒤 표시
+        .detailPanel(item: $store.panelTodo.activePresentation(when: usesDesktopLayout && isOnTop)) { item in
             TodoDetailPanel(
                 todoId: item.id,
                 location: Text("search_title", bundle: PresentationResources.bundle),

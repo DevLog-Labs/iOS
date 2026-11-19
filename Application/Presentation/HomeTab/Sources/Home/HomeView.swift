@@ -400,7 +400,7 @@ public struct HomeView: View {
             )
             .id(item.id)
         case .search:
-            SearchView { router.push(.todo(TodoIdItem(id: $0))) }
+            SearchView(isOnTop: router.path.last == .search) { router.push(.todo(TodoIdItem(id: $0))) }
         }
     }
 }
