@@ -218,12 +218,11 @@ private struct ToastOverlayView: View {
         let padding = isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 18
         let buttonSize = isiOSAppOnMac ? 24 * AdaptiveSize.boardScale : 30
         let buttonPadding = isiOSAppOnMac ? 5 * AdaptiveSize.boardScale : 6
-        // 모바일은 높이의 절반인 알약, Mac은 반경 10
-        let shape = RoundedRectangle(cornerRadius: isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : height / 2)
+        let shape = RoundedRectangle(cornerRadius: CornerRadius.dialog)
 
         return Button(action: performAction) {
             HStack(spacing: 8 * AdaptiveSize.boardScale) {
-                // 인포 토스트는 문구 앞 아이콘, 인터랙션 토스트는 문구 뒤 강조색 원 버튼
+                // 인포 토스트는 문구 앞 아이콘, 인터랙션 토스트는 문구 뒤 강조색 사각 버튼
                 if action == nil {
                     Image(systemName: systemImage)
                         .foregroundStyle(Color.accent)
@@ -236,7 +235,7 @@ private struct ToastOverlayView: View {
                     Image(systemName: systemImage)
                         .foregroundStyle(Color.white)
                         .frame(width: buttonSize, height: buttonSize)
-                        .background(Color.accent, in: .circle)
+                        .background(Color.accent, in: .rect(cornerRadius: CornerRadius.control))
                 }
             }
             .font(isiOSAppOnMac ? .system(size: 13 * AdaptiveSize.boardScale) : .subheadline)
