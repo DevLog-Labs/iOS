@@ -84,9 +84,9 @@ struct DesktopSettingsRow<Trailing: View>: View {
                 Image(systemName: symbolName)
                     .foregroundStyle(symbolColor)
                     .frame(width: 25 * AdaptiveSize.boardScale, height: 25 * AdaptiveSize.boardScale)
-                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.segment))
+                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                     .overlay {
-                        RoundedRectangle(cornerRadius: CornerRadius.segment)
+                        RoundedRectangle(cornerRadius: CornerRadius.control)
                             .strokeBorder(Color.secondarySeparator)
                     }
             }

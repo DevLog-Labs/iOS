@@ -249,9 +249,9 @@ private struct CategoryManageRowContent: View {
                     .font(.adaptive(.body))
                     .foregroundStyle(item.color)
                     .frame(width: 25 * AdaptiveSize.boardScale, height: 25 * AdaptiveSize.boardScale)
-                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.segment))
+                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                     .overlay {
-                        RoundedRectangle(cornerRadius: CornerRadius.segment)
+                        RoundedRectangle(cornerRadius: CornerRadius.control)
                             .strokeBorder(Color.secondarySeparator)
                     }
             } else {
