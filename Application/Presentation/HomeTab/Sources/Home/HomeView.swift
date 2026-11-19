@@ -766,7 +766,7 @@ private struct HomeContentPickerLabel: View {
 }
 
 // Mac 새로 만들기 팝오버
-// 위쪽 닫기·제목 줄, 작은 제목과 테두리 상자로 묶은 TODO 카테고리와 새 개발 목표 배치
+// 위쪽 닫기·제목 줄, 작은 제목 아래 구분선으로 나눈 TODO 카테고리와 새 개발 목표 배치
 private struct HomeDesktopContentPicker: View {
     let store: StoreOf<HomeFeature>
     let onSelect: (TodoCategory) -> Void
@@ -830,13 +830,12 @@ private struct HomeDesktopContentPicker: View {
         }
     }
 
-    // 작은 제목 아래 행 사이 구분선이 있는 테두리 상자
+    // 작은 제목 아래 바탕·테두리 없이 행 사이 구분선으로 나눈 묶음
     private func section<Content: View>(_ header: Text, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             header
                 .font(.adaptive(.footnote))
                 .foregroundStyle(Color.secondaryLabel)
-                .padding(.horizontal, 4 * AdaptiveSize.boardScale)
                 .padding(.bottom, 6 * AdaptiveSize.boardScale)
 
             VStack(spacing: 0) {
@@ -852,8 +851,6 @@ private struct HomeDesktopContentPicker: View {
                     }
                 }
             }
-            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
-            .clipShape(.rect(cornerRadius: CornerRadius.group))
         }
     }
 
@@ -864,9 +861,9 @@ private struct HomeDesktopContentPicker: View {
                 Image(systemName: symbolName)
                     .foregroundStyle(color)
                     .frame(width: 25 * AdaptiveSize.boardScale, height: 25 * AdaptiveSize.boardScale)
-                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.segment))
+                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                     .overlay {
-                        RoundedRectangle(cornerRadius: CornerRadius.segment)
+                        RoundedRectangle(cornerRadius: CornerRadius.control)
                             .strokeBorder(Color.secondarySeparator)
                     }
                 title
@@ -874,7 +871,6 @@ private struct HomeDesktopContentPicker: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .font(.adaptive(.body))
-            .padding(.horizontal, 12 * AdaptiveSize.boardScale)
             .frame(minHeight: 38 * AdaptiveSize.boardScale)
             .hoverHighlight()
         }

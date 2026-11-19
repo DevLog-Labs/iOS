@@ -324,7 +324,7 @@ private struct DropdownMenuRow: View {
             .padding(.horizontal, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 14)
             .contentShape(.rect)
         }
-        .buttonStyle(DropdownMenuRowStyle(radius: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10))
+        .buttonStyle(DropdownMenuRowStyle(radius: CornerRadius.control))
     }
 }
 
