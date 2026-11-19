@@ -20,7 +20,7 @@ public extension EnvironmentValues {
 }
 
 public extension View {
-    // Mac에서 항목을 열면 사이드바까지 창 전체를 덮는 상세 판
+    // 사이드바가 있는 창에서 항목을 열면 사이드바까지 창 전체를 덮는 상세 판
     // 위치와 크기는 고정하고 위쪽 막대는 내용이 DetailPanelBar로 그림
     func detailPanel<Item: Identifiable, Content: View>(
         item: Binding<Item?>,

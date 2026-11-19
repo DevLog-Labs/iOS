@@ -55,7 +55,7 @@ struct ProfileFeature {
         var selectedActivityKinds: Set<ActivityKind> = [.created, .completed, .deleted]
         var selectedDay: HeatmapDay?
         var selectedTodoRoute: ProfileRoute?
-        // Mac에서 사이드바까지 덮는 상세 판에 연 Todo
+        // 사이드바가 있는 창에서 사이드바까지 덮는 상세 판에 연 Todo
         var panelTodoRoute: ProfileRoute?
         var showDoneButton = false
         var loading = LoadingFeature.State()

@@ -11,7 +11,7 @@ import Domain
 import PresentationShared
 
 public struct ProfileView: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.usesPaneLayout) private var usesPaneLayout
@@ -42,8 +42,8 @@ public struct ProfileView: View {
 
     public var body: some View {
         NavigationStack(path: $router.path) {
-            // Mac은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
-            PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoRoute != nil) {
+            // 사이드바가 있는 창은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
+            PaneSplitView(splitsOnDesktop: store.selectedTodoRoute != nil) {
                 ScrollView {
                     // 카드 없이 각 섹션이 페이지 여백을 가짐
                     LazyVStack(alignment: .leading, spacing: 0) {
@@ -72,7 +72,7 @@ public struct ProfileView: View {
                 }
                 .background(Color.background)
             } detail: {
-                let closeDetailPane: (() -> Void)? = isiOSAppOnMac
+                let closeDetailPane: (() -> Void)? = usesDesktopLayout
                     ? { store.send(.binding(.set(\.selectedTodoRoute, nil))) } : nil
 
                 switch store.selectedTodoRoute {
@@ -90,7 +90,8 @@ public struct ProfileView: View {
                 }
             }
             .detailSideBarTarget(store.selectedTodoRoute?.detailSideBarTarget)
-            .detailPanel(item: $store.panelTodoRoute.activePresentation(when: isSelected)) { route in
+            // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
+            .detailPanel(item: $store.panelTodoRoute.activePresentation(when: isSelected && usesDesktopLayout)) { route in
                 if case .todo(let todoId, let isEditable, _)? = route.detailSideBarTarget {
                     TodoDetailPanel(
                         todoId: todoId,
@@ -220,9 +221,9 @@ public struct ProfileView: View {
     }
 
     // 칸 화면은 옆 칸에 상세를 열고 나머지는 화면 이동
-    // Mac은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
+    // 사이드바가 있는 창은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
     private func showTodo(_ route: ProfileRoute) {
-        if isiOSAppOnMac && store.selectedTodoRoute == nil {
+        if usesDesktopLayout && store.selectedTodoRoute == nil {
             store.send(.binding(.set(\.panelTodoRoute, route)))
         } else if usesPaneLayout {
             store.send(.binding(.set(\.selectedTodoRoute, route)))

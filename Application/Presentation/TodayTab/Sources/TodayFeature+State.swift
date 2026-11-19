@@ -43,11 +43,11 @@ extension TodayFeature {
         var selectedTodoId: String?
         // 오른쪽 칸 상세가 모르는 곳에서 고른 Todo가 바뀌면 올려 상세를 다시 만듦
         var detailPaneRevision = 0
-        // Mac에서 사이드바까지 덮는 상세 판에 연 Todo
+        // 사이드바가 있는 창에서 사이드바까지 덮는 상세 판에 연 Todo
         var panelTodo: TodoIdItem?
         // Mac에서 마우스를 올린 행, 선택 행처럼 둥글게 표시하고 맞닿는 구분선을 숨김
         var hoveredTodoId: String?
-        // Mac에서 목록 오른쪽 칸을 연 상태, 세부 정보 사이드바만 쓰는 선택과 구분
+        // 사이드바가 있는 창에서 목록 오른쪽 칸을 연 상태, 세부 정보 사이드바만 쓰는 선택과 구분
         var isDetailPanePresented = false
         // 좁은 창 세부 정보 시트의 속성
         // 시트를 닫아도 저장 결과를 받도록 시트 밖에서 소유

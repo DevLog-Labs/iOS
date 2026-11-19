@@ -40,11 +40,11 @@ public struct TodayView: View {
     public var body: some View {
         NavigationStack(path: $router.path) {
             let sections = store.sections
-            // Mac은 목록을 창 전체 폭으로 두고 오른쪽 칸을 열었고 그 Todo가 목록에 있을 때만 두 칸으로 나눔
-            let showsMacPane = store.isDetailPanePresented
+            // 사이드바가 있는 창은 목록을 창 전체 폭으로 두고 오른쪽 칸을 열었고 그 Todo가 목록에 있을 때만 두 칸으로 나눔
+            let showsPane = store.isDetailPanePresented
                 && sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }
 
-            PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || showsMacPane) {
+            PaneSplitView(splitsOnDesktop: showsPane) {
                 ScrollView {
                     // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
                     let highlightedTodoIds = (
@@ -69,8 +69,8 @@ public struct TodayView: View {
                                     isNavigationEnabled: !store.isTodoInspectorPresented,
                                     highlightedTodoIds: highlightedTodoIds,
                                     onSelect: { item in
-                                        // Mac은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
-                                        if isiOSAppOnMac && !showsMacPane {
+                                        // 사이드바가 있는 창은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
+                                        if usesDesktopLayout && !showsPane {
                                             store.send(.binding(.set(\.panelTodo, TodoIdItem(id: item.id))))
                                         } else if usesPaneLayout {
                                             store.send(.binding(.set(\.selectedTodoId, item.id)))
@@ -141,12 +141,13 @@ public struct TodayView: View {
                     todoId: item?.id,
                     showEditButton: true,
                     windowEvent: windowEvent,
-                    onClose: isiOSAppOnMac ? { store.send(.binding(.set(\.isDetailPanePresented, false))) } : nil
+                    onClose: usesDesktopLayout ? { store.send(.binding(.set(\.isDetailPanePresented, false))) } : nil
                 )
                 // 인스펙터 등에서 목록 행이 바뀌면 상세 칸도 다시 조회
                 .id(store.detailPaneRevision)
             }
-            .detailPanel(item: $store.panelTodo.activePresentation(when: isSelected)) { item in
+            // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
+            .detailPanel(item: $store.panelTodo.activePresentation(when: isSelected && usesDesktopLayout)) { item in
                 // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 판 메뉴에서 오른쪽 칸으로 옮기기 생략
                 let isListed = sections.flatMap(\.items).contains { $0.id == item.id }
 
@@ -174,16 +175,20 @@ public struct TodayView: View {
             )
         }
         .desktopNavigationTransition()
-        // Mac 오른쪽 칸에 연 Todo가 목록에서 빠지면 닫기 버튼 없는 선택 안내 대신 오른쪽 칸을 닫음
+        // 오른쪽 칸에 연 Todo가 목록에서 빠지면 닫기 버튼 없는 선택 안내 대신 오른쪽 칸을 닫음
+        // 좁은 창에서 빠져도 닫아 넓어진 뒤 다른 Todo의 세부 정보만 바꿀 때 오른쪽 칸이 열리지 않게 함
         .onChange(of: store.sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }) { _, isListed in
-            if isiOSAppOnMac && store.isDetailPanePresented && !isListed {
+            if store.isDetailPanePresented && !isListed {
                 store.send(.binding(.set(\.isDetailPanePresented, false)))
             }
         }
         // 사이드바 구조로 바뀌면 쌓아 연 상세 화면은 내리고 같은 Todo를 옆 칸에 표시
         .closesPushedDetail {
             guard case .todo(let item)? = router.path.last else { return }
+            // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 오른쪽 칸을 열지 않음
+            let isListed = store.sections.flatMap(\.items).contains { $0.id == item.id }
             store.send(.binding(.set(\.selectedTodoId, item.id)))
+            store.send(.binding(.set(\.isDetailPanePresented, isListed)))
             router.path = []
         }
         // 사이드바가 있으면 창 오른쪽 세부 정보 사이드바, 좁은 화면과 Duo 펼침은 직접 그린 시트로 표시

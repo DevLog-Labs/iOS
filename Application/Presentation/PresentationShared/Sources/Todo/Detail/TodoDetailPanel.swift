@@ -9,7 +9,7 @@ import SwiftUI
 import Combine
 import ComposableArchitecture
 
-// Mac 상세 판에 연 보기 전용 Todo
+// 사이드바가 있는 창의 상세 판에 연 보기 전용 Todo
 // 위쪽 막대의 버튼으로 판 안 오른쪽 세부 정보 열을 열고 닫음
 public struct TodoDetailPanel: View {
     @Environment(\.dismiss) private var dismiss
