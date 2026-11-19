@@ -18,7 +18,6 @@ public struct HomeView: View {
     @Environment(\.sideBarRequest) private var sideBarRequest
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var router = NavigationRouter<HomeRoute>()
-    @State private var searchStore: StoreOf<SearchFeature>
     @State private var store: StoreOf<HomeFeature>
     private let isSelected: Bool
     private let windowEvent: TodoEditorWindowEvent
@@ -27,16 +26,8 @@ public struct HomeView: View {
         isSelected: Bool,
         windowEvent: TodoEditorWindowEvent
     ) {
-        @Dependency(\.homeFetchRecentSearchQueriesUseCase) var fetchRecentSearchQueriesUseCase
         self._store = State(initialValue: Store(initialState: HomeFeature.State()) {
             HomeFeature()
-        })
-        self._searchStore = State(initialValue: Store(
-            initialState: SearchFeature.State(
-                recentQueries: fetchRecentSearchQueriesUseCase.execute()
-            )
-        ) {
-            SearchFeature()
         })
         self.isSelected = isSelected
         self.windowEvent = windowEvent
@@ -408,7 +399,7 @@ public struct HomeView: View {
             )
             .id(item.id)
         case .search:
-            SearchView(store: searchStore) { router.push(.todo(TodoIdItem(id: $0))) }
+            SearchView { router.push(.todo(TodoIdItem(id: $0))) }
         }
     }
 }

@@ -16,20 +16,40 @@ struct SearchView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
-    @State var store: StoreOf<SearchFeature>
+    @State private var store: StoreOf<SearchFeature>
     // 홈 내비게이션에 쌓아 연 검색에서 Todo 상세를 홈 내비게이션에 쌓는 동작
-    let onSelectTodo: (String) -> Void
+    private let onSelectTodo: (String) -> Void
+
+    // 열 때마다 빈 입력칸으로 시작하고 최근 검색은 열 때 읽음
+    // 닫으면 Store와 함께 진행 중인 검색 요청과 상세 판도 사라짐
+    init(onSelectTodo: @escaping (String) -> Void) {
+        @Dependency(\.homeFetchRecentSearchQueriesUseCase) var fetchRecentSearchQueriesUseCase
+        self._store = State(initialValue: Store(
+            initialState: SearchFeature.State(
+                recentQueries: fetchRecentSearchQueriesUseCase.execute()
+            )
+        ) {
+            SearchFeature()
+        })
+        self.onSelectTodo = onSelectTodo
+    }
 
     var body: some View {
         content { todoId in
             // 사이드바가 있는 창은 사이드바까지 덮는 상세 판으로 열기
-            if usesDesktopLayout {
-                store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todoId))))
-            } else {
+            // 좁은 창에서 쌓아 연 상세도 기억해 넓어지면 같은 Todo를 상세 판으로 표시
+            store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todoId))))
+            if !usesDesktopLayout {
                 onSelectTodo(todoId)
             }
         }
         .duoToolbarVisibility(showsBackButton: true)
+        // 좁은 창에서 쌓아 연 결과 상세를 내리면 넓어져도 상세 판으로 다시 열지 않음
+        .onAppear {
+            if !usesDesktopLayout {
+                store.send(.binding(.set(\.panelTodo, nil)))
+            }
+        }
     }
 
     private func content(onSelectTodo: @escaping (String) -> Void) -> some View {
@@ -79,10 +99,7 @@ struct SearchView: View {
 
     @ViewBuilder
     private var topBar: some View {
-        let close = {
-            store.send(.binding(.set(\.isSearching, false)))
-            dismiss()
-        }
+        let close = { dismiss() }
         let title = Text(String(localized: "search_title", bundle: PresentationResources.bundle))
 
         // 사이드바가 있는 창은 사이드바 옆 칸 제목 줄과 같은 모양, 세부 정보가 없어 세부 정보 버튼 생략
