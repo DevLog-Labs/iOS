@@ -65,14 +65,12 @@ public struct ProfileView: View {
                 .duoToolbarVisibility()
                 .toolbar {
                     if deviceType == .duo {
-                        ToolbarItem(placement: .topBarTrailing) {
-                            // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
-                            Button {
-                                router.push(.settings)
-                            } label: {
-                                Image(systemName: "gearshape")
-                            }
-                            .id(windowControlsInset)
+                        // 세로 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
+                        if #available(iOS 26.0, *) {
+                            duoToolbarItem
+                                .sharedBackgroundVisibility(.hidden)
+                        } else {
+                            duoToolbarItem
                         }
                     }
                 }
@@ -170,36 +168,53 @@ public struct ProfileView: View {
         }
     }
 
+    private var duoToolbarItem: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+            Button {
+                router.push(.settings)
+            } label: {
+                Image(systemName: "gearshape")
+            }
+            .id(windowControlsInset)
+        }
+    }
+
     @ViewBuilder
     private var titleBar: some View {
-        let settingsButton = Button {
+        let openSettings = {
             // Mac은 앱 화면과 분리한 설정 화면 표시
             if let presentSettings {
                 presentSettings()
             } else {
                 router.push(.settings)
             }
-        } label: {
-            Image(systemName: "gearshape")
         }
-        .topBarButtonStyle()
 
         if usesPaneLayout {
             PaneTitleBar(Text("nav_profile", bundle: PresentationResources.bundle)) {
-                settingsButton
+                Button(action: openSettings) {
+                    Image(systemName: "gearshape")
+                }
+                .topBarButtonStyle()
             }
         } else {
             VStack(alignment: .leading) {
-                HStack {
+                HStack(spacing: 0) {
                     Text("nav_profile", bundle: PresentationResources.bundle)
                         .font(.adaptive(.largeTitle).bold())
                     Spacer()
                     if deviceType != .duo {
-                        settingsButton
+                        // 리퀴드 글래스 없이 배경 없는 40pt 아이콘 버튼
+                        Button(action: openSettings) {
+                            Image(systemName: "gearshape")
+                        }
+                        .buttonStyle(ProfileTopBarIconButtonStyle())
                     }
                 }
             }
-            .padding(.horizontal, 16)
+            .padding(.leading, 16)
+            .padding(.trailing, 8)
             .frame(maxWidth: readableContentWidth)
             .padding(.top, windowControlsInset)
             .padding(.bottom, 8)
@@ -263,6 +278,20 @@ public struct ProfileView: View {
         case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }
+    }
+}
+
+// 좁은 화면 위쪽 줄의 배경 없는 40pt 아이콘 버튼
+private struct ProfileTopBarIconButtonStyle: ButtonStyle {
+    @Environment(\.isEnabled) private var isEnabled
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(.adaptive(.title3).weight(.medium))
+            .foregroundStyle(Color.label)
+            .opacity(isEnabled && !configuration.isPressed ? 1 : 0.4)
+            .frame(width: 40, height: 40)
+            .contentShape(.rect)
     }
 }
 
