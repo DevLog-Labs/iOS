@@ -45,7 +45,8 @@ public struct ProfileView: View {
             // Mac은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
             PaneSplitView(splitsOnDesktop: !isiOSAppOnMac || store.selectedTodoRoute != nil) {
                 ScrollView {
-                    LazyVStack(alignment: .leading, spacing: 16) {
+                    // 카드 없이 각 섹션이 페이지 여백을 가짐
+                    LazyVStack(alignment: .leading, spacing: 0) {
                         UserInfoCard(store: store, isSelected: isSelected)
                         ActivityCard(store: store) { todoId in
                             showTodo(.activity(todoId))
@@ -55,13 +56,10 @@ public struct ProfileView: View {
                             showTodo(.recentTodo(todoId))
                         }
                     }
-                    .padding(.horizontal, 16)
                     .padding(.bottom, 24)
                     .frame(maxWidth: readableContentWidth)
                     .frame(maxWidth: .infinity)
                 }
-                // 칸 제목 줄 구분선과 첫 카드 사이 여백
-                .contentMargins(.top, usesPaneLayout ? 12 : 0, for: .scrollContent)
                 .safeAreaInset(edge: .top, spacing: 0) { titleBar }
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
