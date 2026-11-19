@@ -162,21 +162,12 @@ struct CategoryManageView: View {
                 .font(.adaptive(.headline))
             HStack {
                 Spacer()
-                if #available(iOS 26.0, *) {
-                    Button {
-                        store.send(.tapDoneButton, animation: .default)
-                    } label: {
-                        Image(systemName: "checkmark")
-                    }
-                    .topBarButtonStyle()
-                } else {
-                    Button {
-                        store.send(.tapDoneButton, animation: .default)
-                    } label: {
-                        Text(String(localized: "profile_done", bundle: PresentationResources.bundle))
-                    }
-                    .topBarButtonStyle(tint: Color.accent)
+                Button {
+                    store.send(.tapDoneButton, animation: .default)
+                } label: {
+                    Image(systemName: "checkmark")
                 }
+                .topBarButtonStyle()
             }
         }
         .padding(.horizontal, 16)
@@ -326,11 +317,7 @@ private struct CategoryManageSheet: View {
                 Button {
                     store.send(.tapCloseButton)
                 } label: {
-                    if #available(iOS 26.0, *) {
-                        Image(systemName: "xmark")
-                    } else {
-                        Text(String(localized: "common_close", bundle: PresentationResources.bundle))
-                    }
+                    Image(systemName: "xmark")
                 }
                 .topBarButtonStyle()
 

@@ -223,21 +223,12 @@ private struct ToolBar: View {
 
     var body: some View {
         HStack {
-            if #available(iOS 26.0, *) {
-                Button {
-                    onClose()
-                } label: {
-                    Image(systemName: "xmark")
-                }
-                .topBarButtonStyle(tint: showsActions ? nil : Color.accent)
-            } else {
-                Button {
-                    onClose()
-                } label: {
-                    Text(String(localized: "common_close", bundle: PresentationResources.bundle))
-                }
-                .topBarButtonStyle(tint: showsActions ? nil : Color.accent)
+            Button {
+                onClose()
+            } label: {
+                Image(systemName: "xmark")
             }
+            .topBarButtonStyle(tint: showsActions ? nil : Color.accent)
             Spacer()
             Text(store.navigationTitle)
                 .font(.adaptive(.title3).bold())
@@ -253,66 +244,31 @@ private struct ToolBar: View {
 }
 
 struct EditorToolbarActions: View {
-    @ScaledMetric(relativeTo: .title) private var iconSize = UIFont.preferredFont(
-        forTextStyle: .title1,
-        compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
-    ).lineHeight
     let store: StoreOf<TodoEditorFeature>
     let onSubmit: () -> Void
 
     var body: some View {
         HStack {
-            if #available(iOS 26.0, *) {
-                Button {
-                    store.send(.showInspector(.options))
-                } label: {
-                    Image(systemName: "info.circle")
-                }
-                .topBarButtonStyle()
-            } else {
-                Button {
-                    store.send(.showInspector(.options))
-                } label: {
-                    Image(systemName: "info.circle")
-                        .frame(width: iconSize, height: iconSize)
-                        .foregroundStyle(Color.label)
-                }
-                .font(.adaptive(.title))
-                .adaptiveButtonStyle(shape: .circle, color: Color.secondaryBackground, glassEffect: .enabled)
+            Button {
+                store.send(.showInspector(.options))
+            } label: {
+                Image(systemName: "info.circle")
             }
+            .topBarButtonStyle()
             if store.isLoading {
-                if #available(iOS 26.0, *) {
-                    ProgressView()
-                        .topBarProgressStyle()
-                } else {
-                    ProgressView()
-                        .frame(width: iconSize, height: iconSize)
-                        .adaptiveButtonStyle(shape: .circle, color: Color.secondaryBackground, glassEffect: .enabled)
-                }
+                ProgressView()
+                    .topBarProgressStyle()
             } else {
-                if #available(iOS 26.0, *) {
-                    Button {
-                        onSubmit()
-                    } label: {
-                        Image(systemName: "checkmark")
-                    }
-                    .topBarButtonStyle(
-                        tint: store.isReadyToSubmit ? Color.accent : nil
-                    )
-                    .disabled(!store.isReadyToSubmit)
-                    .opacity(store.isReadyToSubmit ? 1 : 0.4)
-                } else {
-                    Button {
-                        onSubmit()
-                    } label: {
-                        Text(String(localized: "todo_manage_save", bundle: PresentationResources.bundle))
-                    }
-                    .topBarButtonStyle(
-                        tint: store.isReadyToSubmit ? Color.accent : nil
-                    )
-                    .disabled(!store.isReadyToSubmit)
-                    .opacity(store.isReadyToSubmit ? 1 : 0.4)
+                Button {
+                    onSubmit()
+                } label: {
+                    Image(systemName: "checkmark")
                 }
+                .topBarButtonStyle(
+                    tint: store.isReadyToSubmit ? Color.accent : nil
+                )
+                .disabled(!store.isReadyToSubmit)
+                .opacity(store.isReadyToSubmit ? 1 : 0.4)
             }
         }
     }

@@ -53,7 +53,7 @@ struct PushNotificationSettingsView: View {
             }
         }
         .background(Color.background)
-        .duoToolbarVisibility()
+        .duoToolbarVisibility(showsBackButton: true)
         .onAppear { store.send(.fetchSettings) }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(
@@ -348,12 +348,11 @@ private struct TimePickerView: View {
                     store.send(.tapCloseButton)
                 }
                 if showsProgressView {
-                    if #available(iOS 26.0, *) {
-                        ToolbarSpacer(.fixed, placement: .topBarTrailing)
-                    }
                     ToolbarItem(placement: .topBarTrailing) {
                         ProgressView()
+                            .topBarProgressStyle()
                     }
+                    .sharedBackgroundHidden()
                 } else {
                     ToolbarTrailingButton {
                         store.send(.tapDoneButton)

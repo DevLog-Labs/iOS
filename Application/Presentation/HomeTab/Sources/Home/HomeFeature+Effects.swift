@@ -143,8 +143,6 @@ extension HomeFeature {
             }
         case .contentPicker:
             state.sheet = isPresented ? .contentPicker : state.showContentPicker ? nil : state.sheet
-        case .searchView:
-            state.fullScreenCover = isPresented ? .search : nil
         }
     }
 

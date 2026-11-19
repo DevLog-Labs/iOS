@@ -167,46 +167,21 @@ public struct GoalDetailView: View {
 
     private var sheetTopBar: some View {
         HStack {
-            if #available(iOS 26.0, *) {
-                Button(action: { dismiss() }) {
-                    Image(systemName: "xmark")
-                }
-                .topBarButtonStyle(tint: Color.accent)
-                .disabled(store.isTransitioning)
-            } else {
-                Button(action: { dismiss() }) {
-                    Text(RecordPresentation.text("common_close"))
-                }
-                .topBarButtonStyle(tint: Color.accent)
-                .disabled(store.isTransitioning)
+            Button(action: { dismiss() }) {
+                Image(systemName: "xmark")
             }
+            .topBarButtonStyle(tint: Color.accent)
+            .disabled(store.isTransitioning)
             Spacer()
             if let status = store.goalStatus {
-                if #available(iOS 26.0, *) {
-                    Image(systemName: "ellipsis")
-                        .prominentMenu(
-                            items: statusMenuItems(status),
-                            isEnabled: !store.isLoading && !store.isTransitioning
-                        ) { status in
-                            store.send(.view(.selectStatus(status)))
-                        }
-                        .topBarButtonStyle()
-                } else {
-                    Image(systemName: "ellipsis")
-                        .font(.adaptive(.title3).weight(.semibold))
-                        .frame(width: 28, height: 28)
-                        .prominentMenu(
-                            items: statusMenuItems(status),
-                            isEnabled: !store.isLoading && !store.isTransitioning
-                        ) { status in
-                            store.send(.view(.selectStatus(status)))
-                        }
-                        .adaptiveButtonStyle(
-                            shape: .circle,
-                            color: .secondaryBackground,
-                            glassEffect: .enabled
-                        )
-                }
+                Image(systemName: "ellipsis")
+                    .prominentMenu(
+                        items: statusMenuItems(status),
+                        isEnabled: !store.isLoading && !store.isTransitioning
+                    ) { status in
+                        store.send(.view(.selectStatus(status)))
+                    }
+                    .topBarButtonStyle()
             }
         }
         .padding(.horizontal)

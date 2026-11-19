@@ -66,12 +66,8 @@ public struct ProfileView: View {
                 .toolbar {
                     if deviceType == .duo {
                         // 세로 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
-                        if #available(iOS 26.0, *) {
-                            duoToolbarItem
-                                .sharedBackgroundVisibility(.hidden)
-                        } else {
-                            duoToolbarItem
-                        }
+                        duoToolbarItem
+                            .sharedBackgroundHidden()
                     }
                 }
                 .background(Color.background)

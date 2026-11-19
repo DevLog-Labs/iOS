@@ -73,7 +73,6 @@ public struct PaneTitleBar<Title: View, Actions: View>: View {
                 }
             }
         }
-        .environment(\.isInPaneTitleBar, true)
         // 사이드바를 접어 창 왼쪽 위에 놓인 제목 줄은 창 버튼 자리만큼 비움
         .padding(.leading, windowControlsWidth)
         .padding(.horizontal, 16)

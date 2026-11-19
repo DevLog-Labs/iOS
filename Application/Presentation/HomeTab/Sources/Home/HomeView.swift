@@ -18,7 +18,6 @@ public struct HomeView: View {
     @Environment(\.sideBarRequest) private var sideBarRequest
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var router = NavigationRouter<HomeRoute>()
-    @State private var searchStore: StoreOf<SearchFeature>
     @State private var store: StoreOf<HomeFeature>
     private let isSelected: Bool
     private let windowEvent: TodoEditorWindowEvent
@@ -27,16 +26,8 @@ public struct HomeView: View {
         isSelected: Bool,
         windowEvent: TodoEditorWindowEvent
     ) {
-        @Dependency(\.homeFetchRecentSearchQueriesUseCase) var fetchRecentSearchQueriesUseCase
         self._store = State(initialValue: Store(initialState: HomeFeature.State()) {
             HomeFeature()
-        })
-        self._searchStore = State(initialValue: Store(
-            initialState: SearchFeature.State(
-                recentQueries: fetchRecentSearchQueriesUseCase.execute()
-            )
-        ) {
-            SearchFeature()
         })
         self.isSelected = isSelected
         self.windowEvent = windowEvent
@@ -48,6 +39,8 @@ public struct HomeView: View {
             .developmentGoal(goalDetailID)
         } else if usesDesktopLayout && store.sheet?.categoryManageState != nil {
             .todoCategoryManagement
+        } else if router.path.last == .search {
+            .search
         } else if case .category(let item)? = router.root {
             .todoCategory(item.id)
         } else {
@@ -107,6 +100,7 @@ public struct HomeView: View {
                     switch $0 {
                     case .category: true
                     case .todo: true
+                    case .search: true
                     }
                 },
                 destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
@@ -217,9 +211,14 @@ public struct HomeView: View {
             }
             store.send(.view(.tapDevelopmentGoal(goalID)))
         case .createTodo:
+            // 홈 작성 버튼처럼 연결이 끊기면 열지 않고 쌓아 연 검색도 그대로 둠
+            guard store.isNetworkConnected else { break }
+            // 쌓아 연 검색은 내리고 홈 작성 버튼과 같은 방식으로 작성
+            if router.root == .search {
+                router.path = []
+            }
             // 카테고리 목록이 보이면 그 목록이 자기 작성 버튼과 같은 방식으로 작성
-            // 홈 작성 버튼처럼 연결이 끊기면 열지 않음
-            guard router.root == nil, store.isNetworkConnected else { break }
+            guard router.root == nil else { break }
             store.send(.store(.setPresentation(.contentPicker, true)))
         case .manageTodoCategory:
             // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
@@ -250,12 +249,8 @@ public struct HomeView: View {
             .toolbar {
                 if deviceType == .duo {
                     // 세로 막대와 위쪽 막대 버튼을 리퀴드 글래스 묶음 없이 아이콘만 표시
-                    if #available(iOS 26.0, *) {
-                        duoToolbarItems
-                            .sharedBackgroundVisibility(.hidden)
-                    } else {
-                        duoToolbarItems
-                    }
+                    duoToolbarItems
+                        .sharedBackgroundHidden()
                 }
             }
     }
@@ -265,7 +260,7 @@ public struct HomeView: View {
             // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
             Group {
                 Button {
-                    store.send(.store(.setPresentation(.searchView, true)))
+                    router.push(.search)
                 } label: {
                     Image(systemName: "magnifyingglass")
                 }
@@ -329,34 +324,19 @@ public struct HomeView: View {
 
     @ViewBuilder
     private var searchButton: some View {
-        // 사이드바가 있는 창은 검색 화면을 아래에서 올리지 않고 바로 표시
-        let openSearch: () -> Void = {
-            withTransaction(\.disablesAnimations, usesDesktopLayout) {
-                store.send(.store(.setPresentation(.searchView, true)))
-            }
-        }
+        // 모든 기기에서 덮는 화면 대신 홈 내비게이션에 쌓아 열고, 사이드바가 있는 창은 사이드바 옆에 표시
+        let openSearch = { router.push(.search) }
 
         if !usesPaneLayout {
             Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
             }
             .buttonStyle(HomeTopBarIconButtonStyle())
-        } else if #available(iOS 26.0, *) {
+        } else {
             Button(action: openSearch) {
                 Image(systemName: "magnifyingglass")
             }
             .topBarButtonStyle()
-        } else {
-            Button(action: openSearch) {
-                Image(systemName: "magnifyingglass")
-                    .font(.adaptive(.title3).weight(.semibold))
-                    .frame(width: 28, height: 28)
-            }
-            .adaptiveButtonStyle(
-                shape: .circle,
-                color: .secondaryBackground,
-                glassEffect: .enabled
-            )
         }
     }
 
@@ -394,16 +374,6 @@ public struct HomeView: View {
             if let todoEditorStore = coverStore.scope(state: \.todoEditor, action: \.todoEditor) {
                 TodoEditorView(store: todoEditorStore)
             }
-        case .search:
-            // 덮는 화면은 좁은 화면 배치로 그려 Duo를 펼쳐도 검색에서 연 상세의 위쪽 줄 유지
-            SearchView(store: searchStore)
-                .environment(\.usesPaneLayout, false)
-                .environment(\.windowControlsInset, store.searchInset)
-                .onGeometryChange(for: CGFloat.self) { proxy in
-                    proxy.windowControlsInset
-                } action: { inset in
-                    store.send(.binding(.set(\.searchInset, inset)))
-                }
         }
     }
 
@@ -429,6 +399,8 @@ public struct HomeView: View {
                 windowEvent: windowEvent
             )
             .id(item.id)
+        case .search:
+            SearchView(isOnTop: router.path.last == .search) { router.push(.todo(TodoIdItem(id: $0))) }
         }
     }
 }
@@ -436,6 +408,7 @@ public struct HomeView: View {
 public enum HomeRoute: Hashable {
     case category(TodoCategoryItem)
     case todo(TodoIdItem)
+    case search
 }
 
 private struct HomeCreateButton: View {
@@ -451,27 +424,13 @@ private struct HomeCreateButton: View {
             }
             .buttonStyle(HomeTopBarIconButtonStyle())
             .disabled(!store.isNetworkConnected)
-        } else if #available(iOS 26.0, *) {
+        } else {
             Button {
                 store.send(.store(.setPresentation(.contentPicker, true)))
             } label: {
                 Image(systemName: "plus")
             }
             .topBarButtonStyle()
-            .disabled(!store.isNetworkConnected)
-        } else {
-            Button {
-                store.send(.store(.setPresentation(.contentPicker, true)))
-            } label: {
-                Image(systemName: "plus")
-                    .font(.adaptive(.title3).weight(.semibold))
-                    .frame(width: 28, height: 28)
-            }
-            .adaptiveButtonStyle(
-                shape: .circle,
-                color: .secondaryBackground,
-                glassEffect: .enabled
-            )
             .disabled(!store.isNetworkConnected)
         }
     }

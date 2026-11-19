@@ -70,7 +70,7 @@ struct AccountView<Accessory: View, Footer: View>: View {
             }
         }
         .background(Color.background)
-        .duoToolbarVisibility()
+        .duoToolbarVisibility(showsBackButton: true)
         .onAppear { store.send(.onAppear) }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .background {

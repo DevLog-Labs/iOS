@@ -31,21 +31,10 @@ public struct NavigationBackButton: View {
             }
         }
 
-        Group {
-            if #available(iOS 26.0, *) {
-                Button(action: back) {
-                    Image(systemName: "chevron.left")
-                }
-                .topBarButtonStyle()
-            } else {
-                Button(action: back) {
-                    Image(systemName: "chevron.left")
-                        .font(.adaptive(.title3).weight(.semibold))
-                        .frame(width: 28, height: 28)
-                }
-                .adaptiveButtonStyle(shape: .circle, color: .secondaryBackground, glassEffect: .enabled)
-            }
+        Button(action: back) {
+            Image(systemName: "chevron.left")
         }
+        .topBarButtonStyle()
         .background {
             NavigationReader.composable { reader in
                 reader.reference = navigation

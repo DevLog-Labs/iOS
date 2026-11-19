@@ -16,6 +16,8 @@ public enum SideBarLocation: Hashable {
     // 사이드바 트리의 Todo 묶음에서 연 카테고리 관리
     case todoCategoryManagement
     case developmentGoal(String)
+    // 사이드바 항목이 아닌 홈 검색, 사이드바에서 아무 항목도 고르지 않은 상태
+    case search
     case profile
     case settings
 }

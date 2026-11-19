@@ -27,7 +27,6 @@ struct HomeFeature {
         var isTodoCategoryExpanded = false
         var isNetworkConnected = true
         var selectedTodoCategory: TodoCategory?
-        var searchInset = CGFloat.zero
         // 홈 제목 줄 아래 보이는 높이, 새로 만들기 팝오버가 화면 밖으로 넘치지 않게 사용
         var visibleHeight = CGFloat.infinity
         var loading = LoadingFeature.State()
@@ -156,7 +155,6 @@ struct HomeFeature {
 
         enum Destination: Equatable {
             case todoEditor
-            case search
         }
 
         static func todoEditor(_ category: TodoCategory) -> Self {
@@ -165,8 +163,6 @@ struct HomeFeature {
                 todoEditor: TodoEditorFeature.State(category: category)
             )
         }
-
-        static let search = Self(destination: .search)
     }
 
     @CasePathable
@@ -177,7 +173,6 @@ struct HomeFeature {
     enum Presentation: Equatable {
         case todoEditor
         case contentPicker
-        case searchView
     }
 
     enum LoadingTarget: Hashable {
