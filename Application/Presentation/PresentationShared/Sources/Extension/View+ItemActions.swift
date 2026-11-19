@@ -20,24 +20,28 @@ public struct ItemActionButton: View {
     private let title: String
     private let color: Color
     private let image: Image
+    // 우클릭과 길게 누르기 메뉴 항목의 역할, 삭제는 빨간 글자로 표시
+    private let role: ButtonRole?
     private let action: () -> Void
 
     public init(
         title: String,
         color: Color,
         image: Image,
+        role: ButtonRole? = nil,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.color = color
         self.image = image
+        self.role = role
         self.action = action
     }
 
     public var body: some View {
         if usesDesktopLayout {
             // 우클릭과 길게 누르기 메뉴 항목은 아이콘과 제목 함께 표시
-            Button(action: action) {
+            Button(role: role, action: action) {
                 Label {
                     Text(title)
                 } icon: {

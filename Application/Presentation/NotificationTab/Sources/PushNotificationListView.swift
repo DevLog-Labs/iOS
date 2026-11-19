@@ -263,7 +263,8 @@ private struct PushNotificationListContent: View {
                                                 ItemActionButton(
                                                     title: String(localized: "common_delete", bundle: PresentationResources.bundle),
                                                     color: Color.red,
-                                                    image: Image(systemName: "trash")
+                                                    image: Image(systemName: "trash"),
+                                                    role: .destructive
                                                 ) {
                                                     store.send(.view(.deleteNotification(item)))
                                                     presentDeleteNotificationToast(item.id)
