@@ -1314,23 +1314,6 @@
         }
       }
     },
-    "development_goal_todo_done" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Done"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "완료"
-          }
-        }
-      }
-    },
     "development_goal_todo_empty_message" : {
       "extractionState" : "manual",
       "localizations" : {
