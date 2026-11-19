@@ -337,12 +337,15 @@ struct QuarterPickerSheet: View {
                         quarterSelectionButton(for: quarter)
                     }
                 }
-
-                Spacer(minLength: 0)
             }
             .padding(20)
         }
-        .sheetDetent(.fraction(0.3))
+        // 낮은 화면에서도 잘리지 않도록 잰 내용 높이로 시트를 띄움
+        .fixedSize(horizontal: false, vertical: true)
+        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+            store.send(.binding(.set(\.quarterPickerHeight, $0)))
+        }
+        .sheetDetent(store.quarterPickerHeight == 0 ? .fraction(0.3) : .height(store.quarterPickerHeight))
     }
 
     // 고른 분기는 강조색 테두리와 옅은 바탕, 고를 수 없는 분기는 흐린 글자
