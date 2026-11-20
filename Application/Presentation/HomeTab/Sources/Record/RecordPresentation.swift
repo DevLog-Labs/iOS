@@ -20,7 +20,7 @@ enum RecordPresentation {
 }
 
 // 좁은 창 화면 맨 위의 높이 48 줄
-// 가운데 제목과 양쪽 버튼을 세 칸으로 나누고 아래 구분선 표시
+// 양쪽 칸은 둘 중 넓은 버튼 폭으로 맞추고 가운데 제목이 남은 폭을 모두 쓰며 아래 구분선 표시
 struct RecordTopBar<Leading: View, Trailing: View>: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     private let title: String
@@ -42,18 +42,19 @@ struct RecordTopBar<Leading: View, Trailing: View>: View {
 
     var body: some View {
         HStack(spacing: 0) {
-            HStack(spacing: 0) {
-                leading
+            // 반대쪽 버튼을 숨겨 겹쳐 두어 양쪽 칸 폭을 같게 맞춤
+            ZStack(alignment: .leading) {
+                HStack(spacing: 0) { trailing }.hidden()
+                HStack(spacing: 0) { leading }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
             Text(title)
                 .font(.adaptive(.callout).bold())
                 .lineLimit(1)
                 .frame(maxWidth: .infinity)
-            HStack(spacing: 0) {
-                trailing
+            ZStack(alignment: .trailing) {
+                HStack(spacing: 0) { leading }.hidden()
+                HStack(spacing: 0) { trailing }
             }
-            .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .frame(height: 48)
         .padding(.horizontal, 8)
