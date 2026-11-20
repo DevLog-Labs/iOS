@@ -92,10 +92,12 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
     // 다음 표시가 시스템 표시 순서를 기다리도록 닫힘은 바로 시작
     private func hide(isAnimated: Bool) {
         guard isCovered else { return }
+        // 화면에 나타난 덮개만 시스템 닫힘을 기다림
+        // 나타나기 전에 닫으면 onDismiss가 오지 않아 다음 표시가 계속 막히므로 기다리지 않음
+        isDismissing = isShown
         withAnimation(isAnimated ? .easeIn(duration: 0.2) : nil) {
             isShown = false
         }
-        isDismissing = true
         guard !isAnimated else {
             isCovered = false
             return
