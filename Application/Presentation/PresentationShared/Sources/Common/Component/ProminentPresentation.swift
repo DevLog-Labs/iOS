@@ -92,9 +92,10 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
         }
     }
 
-    // 다음 표시가 시스템 표시 순서를 기다리도록 닫힘은 바로 시작
+    // 다음 표시가 시스템 표시 순서를 기다리도록 시스템 닫힘은 닫힘 효과가 끝나기를 기다리지 않고 시작
     private func hide(isAnimated: Bool) {
-        guard isCovered else { return }
+        // 시스템 닫힘을 미뤄 둔 사이에 다시 닫으면 그 닫힘을 그대로 이어감
+        guard isCovered, !isDismissing else { return }
         // 화면에 나타난 덮개만 시스템 닫힘을 기다림
         // 나타나기 전에 닫으면 onDismiss가 오지 않아 다음 표시가 계속 막히므로 기다리지 않음
         isDismissing = isShown
@@ -102,8 +103,13 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
             isShown = false
         }
         guard !isAnimated else {
-            // 덮개 안 내용이 닫힘 효과를 시작한 뒤 시스템 닫힘을 시작
-            DispatchQueue.main.async {
+            // 시스템 닫힘이 시작되면 덮개 안 내용이 더 그려지지 않아 나타난 덮개는 닫힘 효과를 시작한 다음 메인 큐에서 시스템 닫힘 시작
+            // 나타나기 전 덮개는 미루는 사이 다시 띄우면 그 표시까지 걷히므로 바로 걷음
+            if isDismissing {
+                DispatchQueue.main.async {
+                    isCovered = false
+                }
+            } else {
                 isCovered = false
             }
             return
