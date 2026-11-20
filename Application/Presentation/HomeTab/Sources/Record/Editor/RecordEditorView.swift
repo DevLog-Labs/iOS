@@ -294,6 +294,8 @@ public struct RecordEditorView: View {
                 }
             }
             .buttonStyle(RecordButtonStyle())
+            // 안내 문구가 길어도 확정 버튼 글자는 줄이지 않음
+            .fixedSize()
             .disabled(!store.canConfirmVersion)
         }
     }
