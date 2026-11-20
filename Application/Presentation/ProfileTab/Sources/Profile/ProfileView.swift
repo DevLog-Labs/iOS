@@ -137,7 +137,10 @@ public struct ProfileView: View {
         .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
             if usesDesktopLayout, router.root == .settings, let presentSettings {
                 router.path = []
-                presentSettings()
+                // 다른 탭을 보던 중이면 쌓아 연 설정만 내리고 창 전체 설정 화면은 띄우지 않음
+                if isSelected {
+                    presentSettings()
+                }
             }
         }
         // 설정 아래 화면도 사이드바에서는 설정으로 표시
