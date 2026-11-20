@@ -855,23 +855,6 @@
         }
       }
     },
-    "development_goal_create_status" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Status"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "상태"
-          }
-        }
-      }
-    },
     "development_goal_create_title" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -974,23 +957,6 @@
         }
       }
     },
-    "development_goal_create_todo_optional" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Optional"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "선택"
-          }
-        }
-      }
-    },
     "development_goal_create_todo_select" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1021,40 +987,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$lld개 선택됨"
-          }
-        }
-      }
-    },
-    "development_goal_description_empty_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "No goal description has been written."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "작성된 목표 설명이 없어요."
-          }
-        }
-      }
-    },
-    "development_goal_description_title" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Goal Description"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "목표 설명"
           }
         }
       }
@@ -1922,40 +1854,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "아직 개발 기록이 없어요"
-          }
-        }
-      }
-    },
-    "development_record_history_footer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Select an earlier version to review it and restore its content as a new version."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이전 버전을 선택하면 내용을 확인하고 새 버전으로 되돌릴 수 있어요."
-          }
-        }
-      }
-    },
-    "development_record_history_read_only_footer" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Move the goal back to in progress to restore an earlier version."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "이전 버전으로 되돌리려면 목표를 진행 중으로 되돌려주세요."
           }
         }
       }
