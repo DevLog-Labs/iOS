@@ -41,6 +41,8 @@ struct MainFeature {
         var isDetailSideBarPresented = false
         // 앱 화면과 분리해 창 전체에 표시하는 Mac 설정 화면
         var isSettingsPresented = false
+        // 창 전체 설정 화면에서 로그아웃, 회원 탈퇴나 그 알림창이 끝나지 않은 상태
+        var isSettingsBusy = false
         // 탭마다 세부 정보 사이드바 대상을 고르는 화면, 대상이 없어도 나타난 순서대로 위치
         var detailSideBarSelections: [MainTab: [DetailSideBarSelection]] = [:]
 

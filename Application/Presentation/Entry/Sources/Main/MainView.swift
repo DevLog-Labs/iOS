@@ -205,9 +205,12 @@ struct MainView: View {
             }
         }
         // 사이드바가 있는 창의 설정은 앱 화면을 덮어 창 전체에 표시하고 닫으면 보던 화면으로 돌아감
+        // 창이 좁아져도 진행 중인 로그아웃, 회원 탈퇴나 그 알림창이 끝날 때까지 표시
         .overlay {
-            if store.isSettingsPresented && showsSideBar {
-                DesktopSettingsView {
+            if store.isSettingsPresented && (showsSideBar || store.isSettingsBusy) {
+                DesktopSettingsView { isBusy in
+                    store.send(.binding(.set(\.isSettingsBusy, isBusy)))
+                } onClose: {
                     store.send(.binding(.set(\.isSettingsPresented, false)))
                 }
                 .environment(\.readableContentWidth, readableContentWidth)
@@ -296,9 +299,9 @@ struct MainView: View {
         .onChange(of: selectedTab, initial: true) { _, tab in
             store.send(.view(.selectedTabChanged(tab)))
         }
-        // iPad 창이 좁아져 사이드바가 없어지면 창 전체 설정 화면을 닫고 보던 화면으로 돌아감
-        .onChange(of: showsSideBar) { _, showsSideBar in
-            if !showsSideBar {
+        // iPad 창이 좁아져 사이드바가 없어지면 진행 중인 요청과 알림창이 끝난 뒤 창 전체 설정 화면을 닫고 보던 화면으로 돌아감
+        .onChange(of: showsSideBar || store.isSettingsBusy) { _, keepsSettings in
+            if !keepsSettings {
                 store.send(.binding(.set(\.isSettingsPresented, false)))
             }
         }

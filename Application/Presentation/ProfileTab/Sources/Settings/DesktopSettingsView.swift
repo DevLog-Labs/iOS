@@ -21,9 +21,11 @@ public struct DesktopSettingsView: View {
     @State private var accountStore = Store(initialState: AccountFeature.State()) {
         AccountFeature()
     }
+    private let onBusyChange: (Bool) -> Void
     private let onClose: () -> Void
 
-    public init(onClose: @escaping () -> Void) {
+    public init(onBusyChange: @escaping (Bool) -> Void, onClose: @escaping () -> Void) {
+        self.onBusyChange = onBusyChange
         self.onClose = onClose
     }
 
@@ -38,6 +40,10 @@ public struct DesktopSettingsView: View {
         }
         // 화면을 닫으면 Store가 해제되어 진행 중인 로그아웃, 회원 탈퇴가 취소되므로 끝날 때까지 화면 전체 비활성화
         .disabled(accountStore.activeLoadingRow != nil)
+        // 진행 중인 로그아웃, 회원 탈퇴나 계정 화면 알림창이 남아 있으면 창이 좁아져도 화면을 닫지 않게 알림
+        .onChange(of: accountStore.activeLoadingRow != nil || accountStore.alert != nil, initial: true) { _, isBusy in
+            onBusyChange(isBusy)
+        }
         .onAppear { store.send(.startObserving) }
     }
 
