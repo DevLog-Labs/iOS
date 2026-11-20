@@ -75,6 +75,8 @@ where State: ObservableState {
                             }
                             .padding(.horizontal, 20)
                             .transition(.scale(scale: 0.96).combined(with: .opacity))
+                            // 사라지는 동안 어두운 배경이 알림창 위로 올라오지 않도록 순서 고정
+                            .zIndex(1)
                         }
                     }
                 }
