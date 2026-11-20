@@ -91,6 +91,8 @@ struct GoalCreateView: View {
                 }
                 .padding(.top, 11)
                 .background(Color.secondaryBackground, ignoresSafeAreaEdges: .top)
+                // 아래에서 올라온 시트라 창 컨트롤 여백을 더하지 않음
+                .environment(\.windowControlsInset, 0)
             }
         }
         .background((usesDesktopLayout ? Color.background : .secondaryBackground).ignoresSafeArea())
