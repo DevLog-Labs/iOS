@@ -187,16 +187,9 @@ public struct GoalDetailView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
             } else if let description = store.goal?.description, !description.isEmpty {
-                // 설명의 Markdown은 굵게·링크 같은 줄 안 문법만 반영
-                Text((try? AttributedString(
-                    markdown: description,
-                    options: AttributedString.MarkdownParsingOptions(
-                        interpretedSyntax: .inlineOnlyPreservingWhitespace
-                    )
-                )) ?? AttributedString(description))
-                .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
-                .foregroundStyle(Color.secondaryLabel)
-                .lineSpacing(4)
+                MarkdownContentView(content: description, isScrollEnabled: false)
+                    // MarkdownRenderer 내부의 좌우 여백을 상쇄해 제목과 정렬
+                    .padding(.horizontal, -16)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
