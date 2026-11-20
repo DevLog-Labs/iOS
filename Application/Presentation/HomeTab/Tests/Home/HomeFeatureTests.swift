@@ -222,15 +222,17 @@ struct HomeFeatureTests {
         #expect(adapter.developmentGoalItems.map(\.id) == [goal.id])
     }
 
-    @Test("카테고리 관리가 열려 있으면 다시 열어도 바로 저장 상태를 유지한다")
-    func 카테고리_관리가_열려_있으면_다시_열어도_바로_저장_상태를_유지한다() async {
+    @Test("카테고리 관리가 열려 있으면 다시 열어도 고르던 카테고리를 유지한다")
+    func 카테고리_관리가_열려_있으면_다시_열어도_고르던_카테고리를_유지한다() async {
         let adapter = StoreTestAdapter()
 
         await adapter.tapManageTodoCategory()
-        await adapter.setCategoryManageSavesImmediately()
+        await adapter.tapAddCategoryManageItem()
+        let id = adapter.sheet?.categoryManageState?.categorySheet?.category.id
         await adapter.tapManageTodoCategory()
 
-        #expect(adapter.sheet?.categoryManageState?.savesImmediately == true)
+        #expect(id != nil)
+        #expect(adapter.sheet?.categoryManageState?.categorySheet?.category.id == id)
     }
 
     @Test("카테고리 관리에서 바로 저장한 변경은 마지막 값만 저장한다")
@@ -250,8 +252,25 @@ struct HomeFeatureTests {
         #expect(adapter.preferences == [feature, issue])
     }
 
-    @Test("시트에서 고친 카테고리 설정은 바로 저장하는 칸으로 바뀔 때 저장한다")
-    func 시트에서_고친_카테고리_설정은_바로_저장하는_칸으로_바뀔_때_저장한다() async {
+    @Test("카테고리 관리 시트를 닫은 직후에도 마지막 변경을 저장한다")
+    func 카테고리_관리_시트를_닫은_직후에도_마지막_변경을_저장한다() async {
+        let updateSpy = UpdateTodoCategoryPreferencesUseCaseSpy()
+        let adapter = StoreTestAdapter(updatePreferencesUseCase: updateSpy)
+        let issue = TodoCategoryItem(from: .system(.issue))
+        let feature = TodoCategoryItem(from: .system(.feature))
+
+        await adapter.tapManageTodoCategory()
+        await adapter.changeCategoryPreferences([feature, issue])
+        await adapter.dismissSheet()
+        await adapter.advanceClock(by: .seconds(1))
+        await waitUntil { !updateSpy.updates.isEmpty }
+
+        #expect(!adapter.showCategoryManage)
+        #expect(updateSpy.updates == [[feature.preference, issue.preference]])
+    }
+
+    @Test("카테고리 관리에서 고친 카테고리 설정은 바로 저장한다")
+    func 카테고리_관리에서_고친_카테고리_설정은_바로_저장한다() async {
         let context = makeHomeFetchDataContext()
         let updateSpy = UpdateTodoCategoryPreferencesUseCaseSpy()
         let adapter = StoreTestAdapter(
@@ -263,7 +282,6 @@ struct HomeFeatureTests {
         await adapter.fetchData()
         await adapter.tapManageTodoCategory()
         await adapter.tapCategoryManageItem(feature)
-        await adapter.setCategoryManageSavesImmediately()
         await adapter.advanceClock(by: .seconds(1))
         await waitUntil { !updateSpy.updates.isEmpty }
 
@@ -289,20 +307,6 @@ struct HomeFeatureTests {
         }
 
         #expect(!adapter.showTodoEditor)
-    }
-
-    @Test("HomeFeature orderTodoCategory는 카테고리 설정을 저장한다")
-    func HomeFeature_orderTodoCategory는_카테고리_설정을_저장한다() async throws {
-        let context = makeHomeOrderContext()
-        let adapter = StoreTestAdapter(
-            fetchPreferencesUseCase: context.fetchPreferencesUseCaseSpy,
-            updatePreferencesUseCase: context.updatePreferencesUseCaseSpy
-        )
-
-        try await verifyHomeOrderTodoCategory(
-            adapter: adapter,
-            updatePreferencesUseCaseSpy: context.updatePreferencesUseCaseSpy
-        )
     }
 
     @Test("HomeFeature startObserving은 네트워크 연결 상태를 반영한다")

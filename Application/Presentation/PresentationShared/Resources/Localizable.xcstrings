@@ -4997,23 +4997,6 @@
         }
       }
     },
-    "todo_add" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Add"
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "추가"
-          }
-        }
-      }
-    },
     "todo_category" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -5800,23 +5783,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "이미 사용 중인 카테고리 이름이에요."
-          }
-        }
-      }
-    },
-    "todo_manage_name_hint" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Enter a category name."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "카테고리 이름을 입력하세요."
           }
         }
       }

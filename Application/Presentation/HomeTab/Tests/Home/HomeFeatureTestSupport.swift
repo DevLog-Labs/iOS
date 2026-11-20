@@ -103,8 +103,8 @@ struct StoreTestAdapter {
         await store.send(.store(.setSheet(sheet)))
     }
 
-    func setCategoryManageSavesImmediately() async {
-        await store.send(.sheet(.presented(.categoryManage(.setSavesImmediately(true)))))
+    func tapAddCategoryManageItem() async {
+        await store.send(.sheet(.presented(.categoryManage(.tapAddUserCategory))))
     }
 
     func tapCategoryManageItem(_ item: TodoCategoryItem) async {
@@ -153,11 +153,6 @@ struct StoreTestAdapter {
 
     func tapTodoCategoryExpansionButton() async {
         await store.send(.view(.tapTodoCategoryExpansionButton))
-    }
-
-    func orderTodoCategory(_ items: [TodoCategoryItem]) async {
-        await store.send(.sheet(.presented(.categoryManage(.delegate(.done(items))))))
-        await drainReceivedActions()
     }
 
     func drainReceivedActions() async {

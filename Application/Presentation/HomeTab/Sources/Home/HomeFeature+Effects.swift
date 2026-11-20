@@ -87,16 +87,6 @@ extension HomeFeature {
         }
     }
 
-    func updateTodoCategoryPreferencesEffect(_ items: [TodoCategoryItem]) -> Effect<Action> {
-        .run { [updatePreferencesUseCase] send in
-            do {
-                try await updatePreferencesUseCase.execute(items.map(\.preference))
-            } catch {
-                await send(.store(.setAlert(isPresented: true)))
-            }
-        }
-    }
-
     // 이름을 입력하는 동안 글자마다 저장하지 않도록 마지막 변경만 저장
     func delayedTodoCategoryPreferencesUpdateEffect(_ items: [TodoCategoryItem]) -> Effect<Action> {
         .run { [clock, updatePreferencesUseCase] send in

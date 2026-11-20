@@ -1,5 +1,5 @@
 //
-//  CardCollectionView.swift
+//  ReorderableListView.swift
 //  PresentationShared
 //
 //  Created by opfic on 10/5/26.
@@ -8,11 +8,11 @@
 import SwiftUI
 import UIComposable
 
-private let cardBackgroundElementKind = "CardCollectionView.cardBackground"
-private let headerElementKind = "CardCollectionView.header"
-private let footerElementKind = "CardCollectionView.footer"
+private let headerElementKind = "ReorderableListView.header"
+private let footerElementKind = "ReorderableListView.footer"
 
-public final class CardCollectionView<
+// 바탕 없이 페이지 여백에 맞추고 구분선으로 나눈 순서 바꾸기 목록
+public final class ReorderableListView<
     Item: Identifiable & Equatable
 >: UICollectionView, UICoordinatedComposable where Item.ID: Sendable {
     private var items: [Item] = []
@@ -20,6 +20,9 @@ public final class CardCollectionView<
     private var footerContent: (any UIContentConfiguration)?
     private var rowContent: (Item) -> any UIContentConfiguration = { _ in UIListContentConfiguration.cell() }
     private var onMove: (IndexSet, Int) -> Void = { _, _ in }
+    private var selectedID: Item.ID?
+    private var separatorLeadingInset = CGFloat.zero
+    private var separatorColor = UIColor.separator
 
     public init() {
         super.init(frame: .zero, collectionViewLayout: UICollectionViewFlowLayout())
@@ -51,13 +54,19 @@ public final class CardCollectionView<
         header: any UIContentConfiguration,
         footer: any UIContentConfiguration,
         row: @escaping (Item) -> any UIContentConfiguration,
-        onMove: @escaping (IndexSet, Int) -> Void
+        onMove: @escaping (IndexSet, Int) -> Void,
+        selectedID: Item.ID? = nil,
+        separatorLeadingInset: CGFloat = 0,
+        separatorColor: Color
     ) {
         self.items = items
         headerContent = header
         footerContent = footer
         rowContent = row
         self.onMove = onMove
+        self.selectedID = selectedID
+        self.separatorLeadingInset = separatorLeadingInset
+        self.separatorColor = UIColor(separatorColor)
     }
 
     /// 드래그 결과(제거 위치와 삽입 위치)를 `Array.move(fromOffsets:toOffset:)`의 목적지 의미로 변환한다.
@@ -67,13 +76,15 @@ public final class CardCollectionView<
 
     @MainActor
     public final class Coordinator {
-        private weak var collectionView: CardCollectionView?
+        private weak var collectionView: ReorderableListView?
         private var dataSource: UICollectionViewDiffableDataSource<Int, Item.ID>?
         private var itemIDs: [Item.ID] = []
         private var itemsByID: [Item.ID: Item] = [:]
         private var hasAppliedInitialSnapshot = false
+        private var selectedID: Item.ID?
+        private var separatorLeadingInset = CGFloat.zero
 
-        func connect(_ collectionView: CardCollectionView) {
+        func connect(_ collectionView: ReorderableListView) {
             self.collectionView = collectionView
             collectionView.backgroundColor = .clear
             collectionView.allowsSelection = false
@@ -98,11 +109,25 @@ public final class CardCollectionView<
                 collectionView.items.map { ($0.id, $0) },
                 uniquingKeysWith: { _, latest in latest }
             )
-            let changedIDs = newIDs.filter { id in
+            var changedIDs = newIDs.filter { id in
                 guard let oldItem = itemsByID[id], let newItem = newItemsByID[id] else { return false }
                 return oldItem != newItem
             }
             let isOrderChanged = newIDs != itemIDs
+
+            // 고른 행이 바뀌면 이전 행과 새 행의 바탕을 다시 그림
+            if selectedID != collectionView.selectedID {
+                changedIDs += [selectedID, collectionView.selectedID].compactMap { $0 }.filter {
+                    newItemsByID[$0] != nil && itemsByID[$0] != nil && !changedIDs.contains($0)
+                }
+                selectedID = collectionView.selectedID
+            }
+
+            // 창 폭이 바뀌어 구분선 시작 위치가 바뀌면 목록 배치를 다시 계산
+            if separatorLeadingInset != collectionView.separatorLeadingInset {
+                separatorLeadingInset = collectionView.separatorLeadingInset
+                collectionView.collectionViewLayout.invalidateLayout()
+            }
 
             itemIDs = newIDs
             itemsByID = newItemsByID
@@ -114,7 +139,6 @@ public final class CardCollectionView<
                 snapshot.reconfigureItems(changedIDs)
                 dataSource.apply(snapshot, animatingDifferences: hasAppliedInitialSnapshot)
                 hasAppliedInitialSnapshot = true
-                updateCornerMasks()
             } else if !changedIDs.isEmpty {
                 var snapshot = dataSource.snapshot()
                 snapshot.reconfigureItems(changedIDs)
@@ -129,26 +153,21 @@ public final class CardCollectionView<
                 boundaryItem(kind: footerElementKind, alignment: .bottom)
             ]
 
-            let isiOSAppOnMac = ProcessInfo.processInfo.isiOSAppOnMac
-            // Mac은 설정 묶음처럼 카드 좌우 여백이 작고 행이 카드 끝까지 이어짐
-            let cardInset = isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16
+            // Mac은 Orca 데스크톱처럼 좌우 페이지 여백이 작음
+            let margin = ProcessInfo.processInfo.isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16
             let layout = UICollectionViewCompositionalLayout(
                 sectionProvider: { [weak self] _, environment in
                     var listConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
                     listConfiguration.backgroundColor = .clear
-                    listConfiguration.separatorConfiguration.color = UIColor(
-                        named: isiOSAppOnMac ? "SecondarySeparator" : "Separator",
-                        in: PresentationResources.bundle,
-                        compatibleWith: nil
-                    ) ?? .separator
-                    // 시스템 reorder 핸들의 trailing 여백이 카드 안쪽 여백(16pt)보다 커서 셀을 그만큼 카드 밖으로 늘린다.
+                    listConfiguration.separatorConfiguration.color = self?.collectionView?.separatorColor ?? .separator
+                    // 시스템 reorder 핸들의 trailing 여백이 페이지 여백(16pt)보다 커서 셀을 그만큼 여백 밖으로 늘림
                     let handleOverhang: CGFloat = 7
-                    // Mac 구분선은 카드 왼쪽 끝부터 오른쪽 끝까지 이어짐
+                    // 구분선은 목록 오른쪽 끝까지 이어짐
                     let separatorInsets = NSDirectionalEdgeInsets(
                         top: 0,
-                        leading: 0,
+                        leading: self?.collectionView?.separatorLeadingInset ?? 0,
                         bottom: 0,
-                        trailing: isiOSAppOnMac ? handleOverhang : 16 + handleOverhang
+                        trailing: handleOverhang
                     )
                     listConfiguration.itemSeparatorHandler = { indexPath, separatorConfiguration in
                         var separatorConfiguration = separatorConfiguration
@@ -168,31 +187,16 @@ public final class CardCollectionView<
                         layoutEnvironment: environment
                     )
                     section.contentInsetsReference = .none
-                    // Mac 행은 카드 테두리 두께만큼 안쪽에 두어 행 바탕이 테두리를 덮지 않게 함
-                    if isiOSAppOnMac {
-                        section.contentInsets = NSDirectionalEdgeInsets(
-                            top: 1,
-                            leading: cardInset + 1,
-                            bottom: 1,
-                            trailing: cardInset - handleOverhang
-                        )
-                    } else {
-                        section.contentInsets = NSDirectionalEdgeInsets(
-                            top: 8,
-                            leading: 32,
-                            bottom: 8,
-                            trailing: 16 - handleOverhang
-                        )
-                    }
-
-                    let background = NSCollectionLayoutDecorationItem.background(elementKind: cardBackgroundElementKind)
-                    background.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: cardInset, bottom: 0, trailing: cardInset)
-                    section.decorationItems = [background]
+                    section.contentInsets = NSDirectionalEdgeInsets(
+                        top: 0,
+                        leading: margin,
+                        bottom: 0,
+                        trailing: margin - handleOverhang
+                    )
                     return section
                 },
                 configuration: layoutConfiguration
             )
-            layout.register(CardBackgroundView.self, forDecorationViewOfKind: cardBackgroundElementKind)
             return layout
         }
 
@@ -211,25 +215,30 @@ public final class CardCollectionView<
         }
 
         private func makeDataSource(
-            for collectionView: CardCollectionView
+            for collectionView: ReorderableListView
         ) -> UICollectionViewDiffableDataSource<Int, Item.ID> {
             let secondaryBackground = UIColor(named: "SecondaryBackground", in: PresentationResources.bundle, compatibleWith: nil)
                 ?? .secondarySystemGroupedBackground
+            let fill = UIColor(named: "Fill", in: PresentationResources.bundle, compatibleWith: nil)
+                ?? .systemFill
             let handle = UIColor(named: "TertiaryLabel", in: PresentationResources.bundle, compatibleWith: nil)
                 ?? .tertiaryLabel
 
             let cellRegistration = UICollectionView.CellRegistration<UICollectionViewListCell, Item.ID> {
-                [weak self] cell, indexPath, id in
+                [weak self] cell, _, id in
                 guard let collectionView = self?.collectionView, let item = self?.itemsByID[id] else { return }
 
                 cell.contentConfiguration = collectionView.rowContent(item)
-                self?.maskCorners(of: cell, at: indexPath.item)
+                // 고른 행은 reorder 핸들까지 행 전체를 회색으로 채움
+                let isSelected = id == collectionView.selectedID
 
                 cell.configurationUpdateHandler = { cell, state in
                     var background = UIBackgroundConfiguration.clear()
                     if state.cellDragState != .none {
                         background.backgroundColor = secondaryBackground
                         background.cornerRadius = CornerRadius.group
+                    } else if isSelected {
+                        background.backgroundColor = fill
                     }
                     cell.backgroundConfiguration = background
                 }
@@ -278,7 +287,7 @@ public final class CardCollectionView<
 
         private func supplementaryRegistration(
             kind: String,
-            content: @escaping (CardCollectionView) -> (any UIContentConfiguration)?
+            content: @escaping (ReorderableListView) -> (any UIContentConfiguration)?
         ) -> UICollectionView.SupplementaryRegistration<UICollectionViewListCell> {
             UICollectionView.SupplementaryRegistration<UICollectionViewListCell>(
                 elementKind: kind
@@ -290,77 +299,16 @@ public final class CardCollectionView<
             }
         }
 
-        // Mac은 첫 행과 마지막 행 내용을 카드 왼쪽 모서리에 맞춰 잘라 행 바탕이 둥근 모서리 밖으로 나오지 않게 함
-        // 오른쪽은 행 바탕이 없는 reorder 핸들 자리라 자르지 않음
-        private func maskCorners(of cell: UICollectionViewCell, at index: Int) {
-            guard ProcessInfo.processInfo.isiOSAppOnMac else { return }
-
-            var corners = CACornerMask()
-            if index == 0 {
-                corners.insert(.layerMinXMinYCorner)
-            }
-            if index == itemIDs.count - 1 {
-                corners.insert(.layerMinXMaxYCorner)
-            }
-            cell.contentView.layer.cornerRadius = CornerRadius.group - 1
-            cell.contentView.layer.cornerCurve = .continuous
-            cell.contentView.layer.maskedCorners = corners
-            cell.contentView.clipsToBounds = !corners.isEmpty
-        }
-
-        // 순서가 바뀌면 보이는 행의 모서리 자르기를 새 위치에 맞춤
-        private func updateCornerMasks() {
-            guard let collectionView else { return }
-
-            for indexPath in collectionView.indexPathsForVisibleItems {
-                guard let cell = collectionView.cellForItem(at: indexPath) else { continue }
-                maskCorners(of: cell, at: indexPath.item)
-            }
-        }
-
         private func didReorder(_ transaction: NSDiffableDataSourceTransaction<Int, Item.ID>) {
             guard let collectionView,
                   case .remove(let source, _, _)? = transaction.difference.removals.first,
                   case .insert(let target, _, _)? = transaction.difference.insertions.first else { return }
 
             itemIDs = transaction.finalSnapshot.itemIdentifiers
-            updateCornerMasks()
             collectionView.onMove(
                 IndexSet(integer: source),
-                CardCollectionView.moveDestination(from: source, to: target)
+                ReorderableListView.moveDestination(from: source, to: target)
             )
         }
-    }
-}
-
-private final class CardBackgroundView: UICollectionReusableView {
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        backgroundColor = UIColor(named: "SecondaryBackground", in: PresentationResources.bundle, compatibleWith: nil)
-            ?? .secondarySystemGroupedBackground
-        layer.cornerRadius = CornerRadius.group
-        layer.cornerCurve = .continuous
-        // Mac은 설정 묶음처럼 옅은 테두리 표시
-        // 테마가 바뀌면 테두리 색도 맞춤
-        if ProcessInfo.processInfo.isiOSAppOnMac {
-            layer.borderWidth = 1
-            layer.borderColor = UIColor(named: "SecondarySeparator", in: PresentationResources.bundle, compatibleWith: traitCollection)?
-                .resolvedColor(with: traitCollection)
-                .cgColor
-            registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (view: CardBackgroundView, _) in
-                view.layer.borderColor = UIColor(
-                    named: "SecondarySeparator",
-                    in: PresentationResources.bundle,
-                    compatibleWith: view.traitCollection
-                )?
-                .resolvedColor(with: view.traitCollection)
-                .cgColor
-            }
-        }
-    }
-
-    @available(*, unavailable)
-    required init?(coder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
     }
 }
