@@ -19,6 +19,8 @@ public struct ProfileView: View {
     @Environment(\.sideBarRequest) private var sideBarRequest
     @Environment(\.presentSettings) private var presentSettings
     @State private var settingsStore: StoreOf<SettingsFeature>
+    // 계정 화면에서 뒤로 가도 진행 중인 로그아웃, 회원 탈퇴가 취소되지 않게 프로필 화면이 보관
+    @State private var accountStore: StoreOf<AccountFeature>
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
     private let isSelected: Bool
@@ -34,8 +36,12 @@ public struct ProfileView: View {
         let settingsStore = Store(initialState: SettingsFeature.State()) {
             SettingsFeature()
         }
+        let accountStore = Store(initialState: AccountFeature.State()) {
+            AccountFeature()
+        }
         self._store = State(initialValue: store)
         self._settingsStore = State(initialValue: settingsStore)
+        self._accountStore = State(initialValue: accountStore)
         self.isSelected = isSelected
         self.windowEvent = windowEvent
     }
@@ -274,15 +280,7 @@ public struct ProfileView: View {
                 PushNotificationSettingsFeature()
             })
         case .account:
-            AccountView(store: Store(initialState: AccountFeature.State()) {
-                AccountFeature()
-            }) {
-                SignOutButton(store: settingsStore)
-            } footer: {
-                DeleteAccountSection(store: settingsStore)
-            }
-            // 로그아웃, 회원 탈퇴 확인은 계정 화면에서 띄움
-            .prominentAlert(settingsStore, state: \.alert, action: \.alert)
+            AccountView(store: accountStore, isNetworkConnected: settingsStore.isNetworkConnected)
         case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }

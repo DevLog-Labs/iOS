@@ -10,7 +10,7 @@ import Core
 import PresentationShared
 import Domain
 
-struct AccountView<Accessory: View, Footer: View>: View {
+struct AccountView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
@@ -22,23 +22,19 @@ struct AccountView<Accessory: View, Footer: View>: View {
     let isPaneDetail: Bool
     // 앱 화면과 분리한 Mac 설정 화면은 위쪽 줄을 직접 그려 화면 제목 줄 생략
     let showsTopBar: Bool
-    // 현재 계정 행 오른쪽에 두는 로그아웃 버튼
-    let accessory: Accessory
-    // 계정 연동 아래에 두는 회원 탈퇴
-    let footer: Footer
+    // 오프라인이면 로그아웃, 회원 탈퇴 비활성화
+    let isNetworkConnected: Bool
 
     init(
         store: StoreOf<AccountFeature>,
+        isNetworkConnected: Bool,
         isPaneDetail: Bool = false,
-        showsTopBar: Bool = true,
-        @ViewBuilder accessory: () -> Accessory,
-        @ViewBuilder footer: () -> Footer
+        showsTopBar: Bool = true
     ) {
         self._store = State(initialValue: store)
+        self.isNetworkConnected = isNetworkConnected
         self.isPaneDetail = isPaneDetail
         self.showsTopBar = showsTopBar
-        self.accessory = accessory()
-        self.footer = footer()
     }
 
     var body: some View {
@@ -47,9 +43,13 @@ struct AccountView<Accessory: View, Footer: View>: View {
 
         ScrollView {
             LazyVStack(alignment: .leading, spacing: isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 24) {
-                AccountCurrentSection(store: store, accessory: accessory.disabled(isProviderLoading))
+                AccountCurrentSection(
+                    store: store,
+                    accessory: SignOutButton(store: store, isNetworkConnected: isNetworkConnected)
+                        .disabled(isProviderLoading)
+                )
                 AccountSocialSection(store: store)
-                footer
+                DeleteAccountSection(store: store, isNetworkConnected: isNetworkConnected)
                     .disabled(isProviderLoading)
             }
             // Mac 설정 화면은 묶음마다 보드의 위아래 8, 좌우 14 여백
@@ -154,7 +154,10 @@ private struct AccountSocialSection: View {
             provider: provider,
             isConnected: isConnected,
             showsProgress: store.isLoading && store.activeLoadingProvider == provider,
-            isDisabled: store.isLoading || (!isConnected && store.presentationContext == nil),
+            // 로그아웃, 회원 탈퇴 중에도 공급자 연결 비활성화
+            isDisabled: store.isLoading
+                || store.activeLoadingRow != nil
+                || (!isConnected && store.presentationContext == nil),
             action: {
                 if isConnected {
                     store.send(.unlinkFromProvider(provider))
@@ -163,6 +166,47 @@ private struct AccountSocialSection: View {
                 }
             }
         )
+    }
+}
+
+// 현재 계정 행 오른쪽 로그아웃 버튼
+private struct SignOutButton: View {
+    let store: StoreOf<AccountFeature>
+    let isNetworkConnected: Bool
+
+    var body: some View {
+        DesktopSettingsButton(
+            title: String(localized: "settings_sign_out", bundle: PresentationResources.bundle),
+            showsProgress: store.activeLoadingRow == .signOut
+        ) {
+            store.send(.setAlert(.signOut))
+        }
+        .disabled(!isNetworkConnected || store.isLoading)
+    }
+}
+
+// 계정 연동 아래 회원 탈퇴 안내와 빨간 탈퇴 버튼
+// GitHub 위험 구역처럼 설명 행 오른쪽 버튼으로 실행
+private struct DeleteAccountSection: View {
+    let store: StoreOf<AccountFeature>
+    let isNetworkConnected: Bool
+
+    var body: some View {
+        DesktopSettingsSection {
+            DesktopSettingsRow(
+                title: Text(String(localized: "settings_delete_account", bundle: PresentationResources.bundle)),
+                subtitle: Text("settings_delete_account_subtitle", bundle: PresentationResources.bundle)
+            ) {
+                DesktopSettingsButton(
+                    title: String(localized: "settings_delete_account_action", bundle: PresentationResources.bundle),
+                    role: .destructive,
+                    showsProgress: store.activeLoadingRow == .deleteAuth
+                ) {
+                    store.send(.setAlert(.deleteAuth))
+                }
+                .disabled(!isNetworkConnected || store.isLoading)
+            }
+        }
     }
 }
 

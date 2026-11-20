@@ -271,6 +271,54 @@ struct AccountFeatureTests {
 
         #expect(driver.alert == nil)
     }
+
+    @Test("로그아웃 성공 후에도 LoginView 전환 전까지 로딩 상태를 유지한다")
+    func 로그아웃_성공_후에도_LoginView_전환_전까지_로딩_상태를_유지한다() async {
+        let signOutSpy = SignOutUseCaseSpy()
+        signOutSpy.shouldSuspend = true
+        let adapter = AccountStoreTestAdapter(signOutUseCase: signOutSpy)
+
+        await adapter.tapSignOutButton()
+
+        #expect(!adapter.isLoading)
+
+        await adapter.advanceDelayedLoading()
+
+        #expect(adapter.isLoading)
+        #expect(adapter.activeLoadingRow == .signOut)
+
+        signOutSpy.resume()
+        await adapter.drainReceivedActions()
+
+        #expect(adapter.isLoading)
+        #expect(adapter.activeLoadingRow == .signOut)
+    }
+
+    @Test("로그아웃 실패 시 로딩 row 상태를 해제한다")
+    func 로그아웃_실패_시_로딩_row_상태를_해제한다() async {
+        let signOutSpy = SignOutUseCaseSpy()
+        signOutSpy.error = AccountTestError.failure
+        let adapter = AccountStoreTestAdapter(signOutUseCase: signOutSpy)
+
+        await adapter.tapSignOutButton()
+
+        #expect(adapter.showAlert)
+        #expect(adapter.activeLoadingRow == nil)
+    }
+
+    @Test("회원 탈퇴 실패 시 공통 에러 알림을 표시한다")
+    func 회원_탈퇴_실패_시_공통_에러_알림을_표시한다() async {
+        let deleteSpy = DeleteAuthUseCaseSpy()
+        deleteSpy.error = AccountTestError.failure
+        let adapter = AccountStoreTestAdapter(deleteAuthUseCase: deleteSpy)
+
+        await adapter.tapDeleteAuthButton()
+
+        #expect(deleteSpy.executeCallCount == 1)
+        #expect(adapter.showAlert)
+        #expect(adapter.alertTitle == String(localized: "common_error_title", bundle: PresentationResources.bundle))
+        #expect(adapter.activeLoadingRow == nil)
+    }
 }
 
 @MainActor
@@ -293,7 +341,7 @@ private struct AccountTestDriver {
         feature.state.isLoading
     }
 
-    var alert: AlertState<Never>? {
+    var alert: AlertState<AccountFeature.Action.Alert>? {
         feature.state.alert
     }
 
@@ -328,6 +376,76 @@ private struct AccountTestDriver {
 
     func dismissAlert() {
         feature.send(.alert(.dismiss))
+    }
+}
+
+@MainActor
+private struct AccountStoreTestAdapter {
+    private let store: TestStoreOf<AccountFeature>
+    private let clock: TestClock<Duration>
+
+    var isLoading: Bool { store.state.isLoading }
+    var activeLoadingRow: AccountFeature.ActiveLoadingRow? { store.state.activeLoadingRow }
+    var showAlert: Bool { store.state.alert != nil }
+    var alertTitle: String {
+        guard let alert = store.state.alert else { return "" }
+        return String(state: alert.title)
+    }
+
+    init(
+        deleteAuthUseCase: DeleteAuthUseCase = DeleteAuthUseCaseSpy(),
+        signOutUseCase: SignOutUseCase = SignOutUseCaseSpy()
+    ) {
+        let clock = TestClock()
+        self.clock = clock
+        store = TestStore(initialState: AccountFeature.State()) {
+            AccountFeature()
+        } withDependencies: {
+            $0.deleteAuthUseCase = deleteAuthUseCase
+            $0.signOutUseCase = signOutUseCase
+            $0.continuousClock = clock
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+    }
+
+    func tapSignOutButton() async {
+        await store.send(.setAlert(.signOut)) {
+            $0.alert = expectedConfirmAlert(for: .signOut)
+        }
+        await store.send(.alert(.presented(.tapSignOutButton))) {
+            $0.alert = nil
+            $0.activeLoadingRow = .signOut
+        }
+        await drainReceivedActions()
+    }
+
+    func tapDeleteAuthButton() async {
+        await store.send(.setAlert(.deleteAuth)) {
+            $0.alert = expectedConfirmAlert(for: .deleteAuth)
+        }
+        await store.send(.alert(.presented(.tapDeleteAuthButton))) {
+            $0.alert = nil
+            $0.activeLoadingRow = .deleteAuth
+        }
+        await drainReceivedActions()
+    }
+
+    func advanceDelayedLoading() async {
+        let target = LoadingFeature.Target.default
+        await clock.advance(by: .milliseconds(300))
+        await store.receive(\.loading.delayedLoadingDidBecomeVisible, target) {
+            $0.loading.scheduledDelayedTargets = []
+            $0.loading.visibleDelayedTargets = [target]
+            $0.loading.visibleTargets = [target]
+            $0.loading.isLoading = true
+        }
+    }
+
+    func drainReceivedActions() async {
+        await store.skipReceivedActions(strict: false)
+        await store.skipReceivedActions(strict: false)
+        await store.skipReceivedActions(strict: false)
+        await store.skipReceivedActions(strict: false)
     }
 }
 
@@ -426,7 +544,7 @@ private enum AccountTestError: Error {
 private func expectedAlert(
     title: String,
     message: String
-) -> AlertState<Never> {
+) -> AlertState<AccountFeature.Action.Alert> {
     AlertState {
         TextState(title)
     } actions: {
@@ -435,5 +553,40 @@ private func expectedAlert(
         }
     } message: {
         TextState(message)
+    }
+}
+
+private func expectedConfirmAlert(
+    for type: AccountFeature.AlertType
+) -> AlertState<AccountFeature.Action.Alert>? {
+    switch type {
+    case .signOut:
+        return AlertState {
+            TextState(String(localized: "settings_alert_sign_out_title", bundle: PresentationResources.bundle))
+        } actions: {
+            ButtonState(role: .cancel) {
+                TextState(String(localized: "common_cancel", bundle: PresentationResources.bundle))
+            }
+            ButtonState(role: .destructive, action: .tapSignOutButton) {
+                TextState(String(localized: "common_confirm", bundle: PresentationResources.bundle))
+            }
+        } message: {
+            TextState(String(localized: "settings_alert_sign_out_message", bundle: PresentationResources.bundle))
+        }
+    case .deleteAuth:
+        return AlertState {
+            TextState(String(localized: "settings_alert_delete_account_title", bundle: PresentationResources.bundle))
+        } actions: {
+            ButtonState(role: .cancel) {
+                TextState(String(localized: "common_cancel", bundle: PresentationResources.bundle))
+            }
+            ButtonState(role: .destructive, action: .tapDeleteAuthButton) {
+                TextState(String(localized: "settings_delete_account_action", bundle: PresentationResources.bundle))
+            }
+        } message: {
+            TextState(String(localized: "settings_alert_delete_account_message", bundle: PresentationResources.bundle))
+        }
+    default:
+        return nil
     }
 }

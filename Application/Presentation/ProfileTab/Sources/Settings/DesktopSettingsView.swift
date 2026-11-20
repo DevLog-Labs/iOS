@@ -17,6 +17,10 @@ public struct DesktopSettingsView: View {
     @State private var store = Store(initialState: SettingsFeature.State()) {
         SettingsFeature()
     }
+    // 목차에서 다른 항목을 골라도 진행 중인 로그아웃, 회원 탈퇴가 취소되지 않게 설정 화면이 보관
+    @State private var accountStore = Store(initialState: AccountFeature.State()) {
+        AccountFeature()
+    }
     private let onClose: () -> Void
 
     public init(onClose: @escaping () -> Void) {
@@ -33,10 +37,8 @@ public struct DesktopSettingsView: View {
                 .environment(\.showsPaneTitleBar, true)
         }
         // 화면을 닫으면 Store가 해제되어 진행 중인 로그아웃, 회원 탈퇴가 취소되므로 끝날 때까지 화면 전체 비활성화
-        // 같은 화면의 공급자 연결 요청과 겹치지 않는 효과도 있음
-        .disabled(store.activeLoadingRow != nil)
+        .disabled(accountStore.activeLoadingRow != nil)
         .onAppear { store.send(.startObserving) }
-        .prominentAlert(store, state: \.alert, action: \.alert)
     }
 
     private var tableOfContents: some View {
@@ -137,13 +139,12 @@ public struct DesktopSettingsView: View {
                 PushNotificationSettingsFeature()
             }, isPaneDetail: true, showsTopBar: false)
         case .account:
-            AccountView(store: Store(initialState: AccountFeature.State()) {
-                AccountFeature()
-            }, isPaneDetail: true, showsTopBar: false) {
-                SignOutButton(store: store)
-            } footer: {
-                DeleteAccountSection(store: store)
-            }
+            AccountView(
+                store: accountStore,
+                isNetworkConnected: store.isNetworkConnected,
+                isPaneDetail: true,
+                showsTopBar: false
+            )
         case .information:
             ScrollView {
                 AppInformationCard(
