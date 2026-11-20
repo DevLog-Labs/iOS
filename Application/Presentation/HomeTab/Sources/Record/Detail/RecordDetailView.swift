@@ -198,30 +198,37 @@ public struct RecordDetailView: View {
         .background(Color.secondaryBackground, in: .rect)
     }
 
-    // 기록 정정과 버전 이력 버튼, 목표가 진행 중이 아니면 버전 이력만 표시
+    // 기록 정정과 버전 이력 버튼, 한 줄에 들어가지 않으면 세로로 표시
     private var actionSection: some View {
-        HStack(spacing: 8) {
-            if store.allowsMutation {
-                Button {
-                    store.send(.view(.tapCorrection))
-                } label: {
-                    RecordButtonLabel(
-                        RecordPresentation.text("development_record_correct"),
-                        systemImage: "pencil"
-                    )
-                }
-            }
-            Button {
-                store.send(.view(.tapHistory))
-            } label: {
-                RecordButtonLabel(
-                    RecordPresentation.text("development_record_history_title"),
-                    systemImage: "clock.arrow.circlepath"
-                )
-            }
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 8) { actionButtons }
+            VStack(alignment: .leading, spacing: 8) { actionButtons }
         }
         .buttonStyle(RecordButtonStyle(isProminent: false))
         .padding(.top, isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : 26)
+    }
+
+    // 목표가 진행 중이 아니면 버전 이력만 표시
+    @ViewBuilder
+    private var actionButtons: some View {
+        if store.allowsMutation {
+            Button {
+                store.send(.view(.tapCorrection))
+            } label: {
+                RecordButtonLabel(
+                    RecordPresentation.text("development_record_correct"),
+                    systemImage: "pencil"
+                )
+            }
+        }
+        Button {
+            store.send(.view(.tapHistory))
+        } label: {
+            RecordButtonLabel(
+                RecordPresentation.text("development_record_history_title"),
+                systemImage: "clock.arrow.circlepath"
+            )
+        }
     }
 
     private func finishEditing() {
