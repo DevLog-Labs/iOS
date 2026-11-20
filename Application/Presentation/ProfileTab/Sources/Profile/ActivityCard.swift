@@ -332,7 +332,8 @@ struct QuarterPickerSheet: View {
                     .labelsHidden()
                 }
 
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 4), spacing: 12) {
+                // 시트가 닫히며 사라지는 동안에도 버튼 줄을 그리도록 지연 그리기 없는 한 줄 배치
+                HStack(spacing: 12) {
                     ForEach(1...4, id: \.self) { quarter in
                         quarterSelectionButton(for: quarter)
                     }
