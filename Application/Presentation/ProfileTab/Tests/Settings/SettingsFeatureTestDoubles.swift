@@ -96,7 +96,3 @@ final class UpdateSystemThemeUseCaseSpy: UpdateSystemThemeUseCase {
         themes.append(theme)
     }
 }
-
-enum SettingsTestError: Error {
-    case failure
-}
