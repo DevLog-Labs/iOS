@@ -19,15 +19,6 @@ enum RecordPresentation {
     }
 }
 
-enum RecordTimelineLayout {
-    static let rowHeight: CGFloat = 88
-    static let markerSize: CGFloat = 13
-    static let lineWidth: CGFloat = 2
-    static let markerTopPadding: CGFloat = 3
-    static let lineXOffset = (markerSize - lineWidth) / 2
-    static let lineYOffset = markerTopPadding + markerSize / 2
-}
-
 // 좁은 창 화면 맨 위의 높이 48 줄
 // 가운데 제목과 양쪽 버튼을 세 칸으로 나누고 아래 구분선 표시
 struct RecordTopBar<Leading: View, Trailing: View>: View {
