@@ -252,6 +252,23 @@ struct HomeFeatureTests {
         #expect(adapter.preferences == [feature, issue])
     }
 
+    @Test("카테고리 관리 시트를 닫은 직후에도 마지막 변경을 저장한다")
+    func 카테고리_관리_시트를_닫은_직후에도_마지막_변경을_저장한다() async {
+        let updateSpy = UpdateTodoCategoryPreferencesUseCaseSpy()
+        let adapter = StoreTestAdapter(updatePreferencesUseCase: updateSpy)
+        let issue = TodoCategoryItem(from: .system(.issue))
+        let feature = TodoCategoryItem(from: .system(.feature))
+
+        await adapter.tapManageTodoCategory()
+        await adapter.changeCategoryPreferences([feature, issue])
+        await adapter.dismissSheet()
+        await adapter.advanceClock(by: .seconds(1))
+        await waitUntil { !updateSpy.updates.isEmpty }
+
+        #expect(!adapter.showCategoryManage)
+        #expect(updateSpy.updates == [[feature.preference, issue.preference]])
+    }
+
     @Test("카테고리 관리에서 고친 카테고리 설정은 바로 저장한다")
     func 카테고리_관리에서_고친_카테고리_설정은_바로_저장한다() async {
         let context = makeHomeFetchDataContext()
