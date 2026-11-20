@@ -11,22 +11,13 @@ import PresentationShared
 
 public struct GoalDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.deviceType) private var deviceType
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<GoalDetailFeature>
 
     public var body: some View {
-        // 사이드바가 있으면 홈 내비게이션 안의 칸이라 시트용 내비게이션을 겹치지 않음
-        if usesDesktopLayout {
-            transitionContent
-        } else {
-            NavigationStack {
-                transitionContent
-            }
-        }
-    }
-
-    private var transitionContent: some View {
+        // 좁은 창은 홈 내비게이션에 쌓고, 사이드바가 있으면 홈 내비게이션 안의 칸으로 표시
         presentedContent
             .overlay {
                 if store.isTransitioning {
@@ -37,13 +28,8 @@ public struct GoalDetailView: View {
 
     private var mainContent: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                titleBar
-                GoalDescriptionCard(
-                    description: store.goal?.description ?? "",
-                    isLoading: !store.hasLoaded && store.isLoading
-                )
-                timelineCard
+            LazyVStack(alignment: .leading, spacing: 0) {
+                header
                 GoalLinkedTodoCard(
                     todos: store.linkedTodos,
                     isLoading: store.isTodoLoading,
@@ -53,15 +39,13 @@ public struct GoalDetailView: View {
                     onRetry: { store.send(.view(.retryTodos)) },
                     onSelect: { store.send(.view(.selectTodo($0))) }
                 )
+                recordSection
+                recordActionButton
             }
-            .padding(.horizontal)
-            // 칸 제목 줄 구분선과 큰 제목 사이 여백
-            .padding(.top, usesDesktopLayout ? 12 : 0)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .safeAreaInset(edge: .bottom, spacing: 0) { recordActionBar }
         .background(Color.background.ignoresSafeArea())
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .duoToolbarVisibility(showsBackButton: true)
         .onAppear { store.send(.view(.fetch)) }
         .prominentAlert(store, state: \.alert, action: \.alert)
     }
@@ -83,7 +67,8 @@ public struct GoalDetailView: View {
                 )
             }
         }
-        .prominentSheet(
+        // 좁은 창은 닫기·저장·확정 버튼으로만 닫는 전체 화면
+        .fullScreenCover(
             item: $store.scope(state: \.recordEditor, action: \.recordEditor)
                 .hiddenInPane(usesDesktopLayout)
         ) { editorStore in
@@ -99,7 +84,7 @@ public struct GoalDetailView: View {
         }
         .navigationDestination(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .activePresentation(when: !isiOSAppOnMac),
+                .activePresentation(when: !usesDesktopLayout),
             interactivePop: true
         ) { destination in
             RecordDetailView(
@@ -109,10 +94,10 @@ public struct GoalDetailView: View {
                 onUpdate: { store.send(.view(.refresh)) }
             )
         }
-        // Mac은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
+        // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
         .detailPanel(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .activePresentation(when: isiOSAppOnMac)
+                .activePresentation(when: usesDesktopLayout)
         ) { destination in
             NavigationStack {
                 RecordDetailView(
@@ -149,75 +134,90 @@ public struct GoalDetailView: View {
     private var topBar: some View {
         if usesDesktopLayout {
             PaneTitleBar(Text(RecordPresentation.text("development_goal_title"))) {
-                if let status = store.goalStatus {
-                    Image(systemName: "ellipsis")
-                        .prominentMenu(
-                            items: statusMenuItems(status),
-                            isEnabled: !store.isLoading && !store.isTransitioning
-                        ) { status in
-                            store.send(.view(.selectStatus(status)))
-                        }
-                        .topBarButtonStyle()
-                }
+                statusMenu
             }
         } else {
-            sheetTopBar
-        }
-    }
-
-    private var sheetTopBar: some View {
-        HStack {
-            Button(action: { dismiss() }) {
-                Image(systemName: "xmark")
-            }
-            .topBarButtonStyle(tint: Color.accent)
-            .disabled(store.isTransitioning)
-            Spacer()
-            if let status = store.goalStatus {
-                Image(systemName: "ellipsis")
-                    .prominentMenu(
-                        items: statusMenuItems(status),
-                        isEnabled: !store.isLoading && !store.isTransitioning
-                    ) { status in
-                        store.send(.view(.selectStatus(status)))
-                    }
-                    .topBarButtonStyle()
-            }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(Color.background, ignoresSafeAreaEdges: .top)
-    }
-
-    private var titleBar: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(RecordPresentation.text("development_goal_title"))
-                .font(.adaptive(.largeTitle).bold())
-
-            if !store.goalTitle.isEmpty {
-                ScrollView(.horizontal) {
-                    Text(store.goalTitle)
-                        .font(.adaptive(.headline))
-                        .foregroundStyle(Color.secondaryLabel)
-                        .lineLimit(1)
+            // Duo는 뒤로 버튼을 오른쪽 세로 막대에 표시
+            // 상태 메뉴는 직접 그린 팝오버라 세로 막대에 넣지 않고 제목 줄에 표시
+            RecordTopBar(RecordPresentation.text("development_goal_title")) {
+                if deviceType != .duo {
+                    NavigationBackButton(action: { dismiss() })
+                        .disabled(store.isTransitioning)
                 }
-                .scrollIndicators(.hidden)
-                .contentMargins(.horizontal, 16, for: .scrollContent)
-                .padding(.horizontal, -16)
-            }
-
-            if let status = store.goalStatus {
-                GoalStatusBadge(status: status)
+            } trailing: {
+                statusMenu
             }
         }
-        .padding(.bottom, 8)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.background)
     }
 
     @ViewBuilder
-    private var timelineCard: some View {
-        VStack(spacing: 18) {
+    private var statusMenu: some View {
+        if let status = store.goalStatus {
+            Image(systemName: "ellipsis")
+                .prominentMenu(
+                    items: statusMenuItems(status),
+                    isEnabled: !store.isLoading && !store.isTransitioning
+                ) { status in
+                    store.send(.view(.selectStatus(status)))
+                }
+                .topBarButtonStyle()
+        }
+    }
+
+    // "개발 목표" 표시와 상태 배지, 큰 제목, 설명
+    private var header: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Text(RecordPresentation.text("development_goal_title"))
+                    .font(.adaptive(.footnote))
+                    .foregroundStyle(Color.secondaryLabel)
+                if let status = store.goalStatus {
+                    GoalStatusBadge(status: status)
+                }
+            }
+
+            Text(store.goalTitle)
+                .font(.system(size: isiOSAppOnMac ? 19 * AdaptiveSize.boardScale : 26, weight: .heavy))
+                .foregroundStyle(Color.label)
+                .padding(.top, 8)
+                .padding(.bottom, 6)
+
+            if !store.hasLoaded && store.isLoading {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+            } else if let description = store.goal?.description, !description.isEmpty {
+                // 설명의 Markdown은 굵게·링크 같은 줄 안 문법만 반영
+                Text((try? AttributedString(
+                    markdown: description,
+                    options: AttributedString.MarkdownParsingOptions(
+                        interpretedSyntax: .inlineOnlyPreservingWhitespace
+                    )
+                )) ?? AttributedString(description))
+                .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
+                .foregroundStyle(Color.secondaryLabel)
+                .lineSpacing(4)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 18)
+        .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+        .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
+    }
+
+    private var recordSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HomeSectionHeader {
+                Text(RecordPresentation.text("development_record_list_title"))
+                if store.hasLoaded {
+                    Text(verbatim: "\(store.items.count)")
+                        .fontWeight(.medium)
+                        .foregroundStyle(Color.secondaryLabel)
+                }
+            } trailing: {
+                EmptyView()
+            }
+
             if !store.hasLoaded, store.hasLoadFailure {
                 ContentUnavailableView {
                     Label(
@@ -246,41 +246,35 @@ public struct GoalDetailView: View {
                 )
             } else {
                 LazyVStack(spacing: 0) {
-                    ForEach(Array(store.items.enumerated()), id: \.element.id) { index, item in
-                        TimelineRow(
-                            item: item,
-                            isFirst: index == 0,
-                            isLast: index == store.items.count - 1,
-                            onSelect: { store.send(.view(.selectRecord(item))) }
-                        )
+                    ForEach(store.items) { item in
+                        RecordRow(item: item) {
+                            store.send(.view(.selectRecord(item)))
+                        }
                     }
                 }
             }
         }
-        .padding([.horizontal, .top])   // TimelineView 자체의 하단 패딩과 겹치기 때문에 .bottom은 제외
-        .background {
-            Rectangle()
-                .fill(Color.secondaryBackground)
-        }
     }
 
-    private var draftRecord: DevelopmentRecord? {
-        store.items.first(where: \.hasDraft)?.record
-    }
-
+    // 작성 중인 기록이 있으면 이어서 작성, 없으면 새 기록 추가
+    // 좁은 창은 칸 폭을 채우고 넓은 창은 글자 폭
     @ViewBuilder
-    private var recordActionBar: some View {
+    private var recordActionButton: some View {
         if store.hasLoaded, store.allowsRecordMutation {
-            GoalDetailRecordActionBar(
-                hasDraft: draftRecord != nil,
-                isDisabled: store.isLoading || store.isTransitioning,
-                onAddRecord: {
-                    store.send(.view(.addRecord))
-                },
-                onContinueRecord: {
-                    store.send(.view(.continueRecord))
-                }
-            )
+            let hasDraft = store.items.contains(where: \.hasDraft)
+
+            Button {
+                store.send(.view(hasDraft ? .continueRecord : .addRecord))
+            } label: {
+                RecordButtonLabel(
+                    RecordPresentation.text(hasDraft ? "development_record_continue" : "development_record_add"),
+                    systemImage: hasDraft ? "pencil" : "plus"
+                )
+            }
+            .buttonStyle(RecordButtonStyle(fillsWidth: !usesDesktopLayout))
+            .disabled(store.isLoading || store.isTransitioning)
+            .padding(.vertical, isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 16)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
         }
     }
 

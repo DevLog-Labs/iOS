@@ -10,6 +10,7 @@ import Domain
 import PresentationShared
 
 struct GoalLinkedTodoCard: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let todos: [Todo]
     let isLoading: Bool
     let hasLoadFailure: Bool
@@ -23,25 +24,25 @@ struct GoalLinkedTodoCard: View {
             header
             content
         }
-        .padding([.horizontal, .top])
-        .background(Color.secondaryBackground, in: .rect)
     }
 
     private var header: some View {
-        HStack(spacing: 10) {
+        HomeSectionHeader {
             Text(RecordPresentation.text("development_goal_linked_todos"))
-                .font(.adaptive(.title3).bold())
-            Spacer(minLength: 12)
+            if !isLoading {
+                Text(verbatim: "\(todos.count)")
+                    .fontWeight(.medium)
+                    .foregroundStyle(Color.secondaryLabel)
+            }
+        } trailing: {
             if allowsManagement {
                 Button(
                     RecordPresentation.text("development_goal_todo_manage"),
                     action: onManage
                 )
-                .font(.adaptive(.callout).weight(.semibold))
-                .foregroundStyle(Color.accent)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 9)
-                .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.control))
+                .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote).weight(.semibold))
+                .foregroundStyle(Color.tintLabel)
+                .buttonStyle(.plain)
                 .disabled(isLoading)
             }
         }
@@ -82,37 +83,32 @@ struct GoalLinkedTodoCard: View {
                     GoalLinkedTodoRow(todo: todo) {
                         onSelect(todo.id)
                     }
-                    if todo.id != todos.last?.id {
-                        Divider().overlay(Color.secondarySeparator)
-                    }
                 }
             }
         }
     }
 }
 
+// 완료 원과 제목을 표시하는 연결된 Todo 행
 private struct GoalLinkedTodoRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let todo: Todo
     let onSelect: () -> Void
 
     var body: some View {
         Button(action: onSelect) {
-            HStack(spacing: 14) {
-                Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
-                    .font(.adaptive(.title2))
-                    .foregroundStyle(todo.isCompleted ? Color.accent : Color.separator)
-                Text(todo.title)
-                    .font(.adaptive(.body))
-                    .foregroundStyle(Color.label)
-                    .multilineTextAlignment(.leading)
-                    .lineLimit(2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.right")
-                    .font(.adaptive(.callout).weight(.semibold))
-                    .foregroundStyle(Color.separator)
+            RecordListRow {
+                HStack(spacing: 10) {
+                    Image(systemName: todo.isCompleted ? "checkmark.circle.fill" : "circle")
+                        .font(.adaptive(isiOSAppOnMac ? .body : .callout))
+                        .foregroundStyle(todo.isCompleted ? Color.accent : .secondaryLabel)
+                    Text(todo.title)
+                        .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
+                        .foregroundStyle(Color.label)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                }
             }
-            .padding(.vertical, 12)
-            .contentShape(.rect)
         }
         .buttonStyle(.plain)
     }

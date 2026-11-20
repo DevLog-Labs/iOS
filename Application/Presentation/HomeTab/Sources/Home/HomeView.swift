@@ -103,6 +103,14 @@ public struct HomeView: View {
                 },
                 destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
             )
+            // 좁은 창은 개발 목표를 홈 내비게이션에 쌓고, 넓어지면 같은 상태를 홈 자리에 표시
+            .navigationDestination(
+                item: $store.scope(state: \.sheet?.goalDetailState, action: \.sheet.goalDetail)
+                    .hiddenInPane(usesDesktopLayout),
+                interactivePop: true
+            ) { goalStore in
+                GoalDetailView(store: goalStore)
+            }
         }
         .desktopNavigationTransition()
         // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 카테고리 목록 옆 칸에 표시
@@ -152,9 +160,14 @@ public struct HomeView: View {
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(
             item: Binding(
-                get: { showsSheetAsPane || showsPickerAsPopover ? nil : sheetBinding.wrappedValue },
+                get: {
+                    showsSheetAsPane || showsPickerAsPopover || goalDetailID != nil
+                        ? nil : sheetBinding.wrappedValue
+                },
                 // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸이나 팝오버로 연 화면을 지우지 않도록 지금 상태로 판단
                 set: { sheet in
+                    // 내비게이션에 쌓은 개발 목표는 시트 닫힘으로 지우지 않음
+                    guard store.sheet?.goalDetailState == nil else { return }
                     guard !usesDesktopLayout
                         || store.sheet?.categoryManageState == nil
                         && store.sheet?.goalCreateState == nil
@@ -358,10 +371,8 @@ public struct HomeView: View {
                 }
             }
         case .goalDetail:
-            if let goalStore = sheetStore.scope(state: \.goalDetailState, action: \.goalDetail) {
-                GoalDetailView(store: goalStore)
-                    .environment(\.windowControlsInset, 0)
-            }
+            // 개발 목표는 시트 대신 홈 내비게이션에 쌓음
+            EmptyView()
         }
     }
 

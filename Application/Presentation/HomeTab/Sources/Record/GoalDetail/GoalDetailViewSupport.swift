@@ -9,69 +9,39 @@ import SwiftUI
 import Domain
 import PresentationShared
 
-struct TimelineRow: View {
+// 제목과 상태·버전 배지, 날짜를 표시하는 개발 기록 행
+struct RecordRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let item: RecordTimelineItem
-    let isFirst: Bool
-    let isLast: Bool
     let onSelect: () -> Void
 
     var body: some View {
-        Button {
-            onSelect()
-        } label: {
-            HStack(spacing: 8) {
-                HStack(alignment: .top, spacing: 16) {
-                    timelineIndicator
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(item.title)
-                            .font(.adaptive(.body).weight(.semibold))
-                            .foregroundStyle(Color.label)
-                            .lineLimit(2)
-                        status
+        Button(action: onSelect) {
+            RecordListRow {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(item.title)
+                        .font(.adaptive(isiOSAppOnMac ? .body : .callout).weight(.semibold))
+                        .foregroundStyle(Color.label)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(2)
+                    HStack(spacing: 8) {
+                        TodoBadge(statusText, color: item.hasDraft ? .warning : .tintLabel)
                         if item.hasDraft {
                             RelativeTimeText(
                                 date: item.date,
-                                bodyFont: .adaptive(.caption),
-                                bodyColor: .tertiaryLabel
+                                bodyFont: .adaptive(.footnote),
+                                bodyColor: .secondaryLabel
                             )
                         } else {
                             Text(item.date, format: .dateTime.month().day())
-                                .font(.adaptive(.caption))
-                                .foregroundStyle(Color.tertiaryLabel)
+                                .font(.adaptive(.footnote))
+                                .foregroundStyle(Color.secondaryLabel)
                         }
                     }
                 }
-                Spacer(minLength: 8)
-                Image(systemName: "chevron.right")
-                    .font(.adaptive(.callout).weight(.semibold))
-                    .foregroundStyle(Color.separator)
-            }
-            .contentShape(.rect)
-            .frame(minHeight: RecordTimelineLayout.rowHeight, alignment: .top)
-            .background(alignment: .topLeading) {
-                RecordTimelineConnector(isFirst: isFirst, isLast: isLast)
             }
         }
         .buttonStyle(.plain)
-    }
-
-    private var timelineIndicator: some View {
-        Circle()
-            .fill(item.hasDraft ? Color.warning : .accent)
-            .frame(width: RecordTimelineLayout.markerSize, height: RecordTimelineLayout.markerSize)
-            .padding(.top, RecordTimelineLayout.markerTopPadding)
-    }
-
-    private var status: some View {
-        Text(statusText)
-            .font(.adaptive(.caption))
-            .foregroundStyle(item.hasDraft ? Color.warning : .accent)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 4)
-            .background(
-                item.hasDraft ? Color.warning.opacity(0.12) : Color.tintFill,
-                in: .rect(cornerRadius: CornerRadius.badge)
-            )
     }
 
     private var statusText: String {
@@ -89,44 +59,13 @@ struct GoalStatusBadge: View {
     let status: DevelopmentGoal.Status
 
     var body: some View {
-        Label(status.title, systemImage: systemImage)
-        .font(.adaptive(.caption).weight(.semibold))
-        .foregroundStyle(foreground)
-        .padding(.horizontal, 11)
-        .padding(.vertical, 6)
-        .background(background, in: .rect(cornerRadius: CornerRadius.badge))
-    }
-
-    private var systemImage: String {
         switch status {
         case .inProgress:
-            "clock"
+            TodoBadge(status.title, color: .tintLabel)
         case .completed:
-            "checkmark.circle.fill"
+            TodoBadge(status.title, color: .success)
         case .archived:
-            "archivebox.fill"
-        }
-    }
-
-    private var foreground: Color {
-        switch status {
-        case .inProgress:
-            .accent
-        case .completed:
-            .white
-        case .archived:
-            .secondaryLabel
-        }
-    }
-
-    private var background: Color {
-        switch status {
-        case .inProgress:
-            .tintFill
-        case .completed:
-            .accent
-        case .archived:
-            .tertiaryBackground
+            TodoBadge(status.title, color: .secondaryLabel)
         }
     }
 }

@@ -1960,6 +1960,23 @@
         }
       }
     },
+    "development_record_list_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Development Records"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개발 기록"
+          }
+        }
+      }
+    },
     "development_record_markdown_hint" : {
       "extractionState" : "manual",
       "localizations" : {
