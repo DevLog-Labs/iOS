@@ -33,6 +33,11 @@ struct SettingsView: View {
                     onNotifications: { onNavigate(.pushNotification) }
                 )
 
+                AccountCard(
+                    isNetworkConnected: store.isNetworkConnected,
+                    onAccount: { onNavigate(.account) }
+                )
+
                 if store.appVersion != nil || privacyPolicyURL != nil || store.betaTestURL != nil {
                     AppInformationCard(
                         appVersion: store.appVersion,
@@ -40,29 +45,17 @@ struct SettingsView: View {
                         betaTestURL: store.betaTestURL
                     )
                 }
-
-                AccountCard(
-                    isNetworkConnected: store.isNetworkConnected,
-                    isLoading: store.isLoading,
-                    showsSignOutProgress: store.activeLoadingRow == .signOut,
-                    onAccount: { onNavigate(.account) },
-                    onSignOut: { store.send(.setAlert(.signOut)) }
-                )
-
-                DeleteAccountSection(store: store)
-                    .padding(.top, 24)
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
-        // Mac 제목 줄 구분선과 첫 항목 사이 여백
-        .contentMargins(.top, showsPaneTitleBar ? 12 : 0, for: .scrollContent)
+        // 위쪽 줄 구분선과 첫 묶음 사이 여백
+        .contentMargins(.top, 12, for: .scrollContent)
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background)
         .duoToolbarVisibility(showsBackButton: true)
-        .prominentAlert(store, state: \.alert, action: \.alert)
     }
 
     @ViewBuilder
@@ -72,23 +65,25 @@ struct SettingsView: View {
         if showsPaneTitleBar {
             PaneTitleBar(title, onBack: { dismiss() })
         } else {
+            // OS와 상관없이 같은 모양인 가운데 제목과 아래 구분선
             ZStack {
                 title
-                    .font(.adaptive(.headline))
-
-                if deviceType != .duo {
-                    HStack {
+                    .font(.adaptive(.callout).bold())
+                HStack {
+                    // Duo는 세로 막대의 뒤로 버튼 사용
+                    if deviceType != .duo {
                         NavigationBackButton(action: { dismiss() })
-                        Spacer()
                     }
+                    Spacer()
                 }
             }
-            .padding(.horizontal, 16)
-            .frame(maxWidth: readableContentWidth)
+            .frame(height: 48)
+            .padding(.horizontal, 8)
+            .overlay(alignment: .bottom) {
+                Divider().overlay(Color.secondarySeparator)
+            }
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12)
-            .background(Color.background)
-            .toolbarBackground(Color.background)
+            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
     }
 }
