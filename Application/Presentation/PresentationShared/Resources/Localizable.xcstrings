@@ -1564,7 +1564,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "확정하기"
+            "value" : "확정"
           }
         }
       }
@@ -1881,13 +1881,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Development Record"
+            "value" : "Write Record"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "개발 기록 작성"
+            "value" : "기록 작성"
           }
         }
       }
