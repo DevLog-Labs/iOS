@@ -8,10 +8,12 @@
 import SwiftUI
 import PresentationShared
 
-// Mac에서 앱 화면과 분리해 창 전체에 표시하는 설정 화면
+// Mac과 사이드바가 있는 iPad 창에서 앱 화면과 분리해 창 전체에 표시하는 설정 화면
 // 앱 사이드바 자리에 설정 목차, 나머지 자리에 고른 항목 화면 배치
+// Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
 public struct DesktopSettingsView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State private var store = Store(initialState: SettingsFeature.State()) {
         SettingsFeature()
     }
@@ -46,7 +48,7 @@ public struct DesktopSettingsView: View {
                         Image(systemName: "arrow.left")
                         Text("settings_back_to_app", bundle: PresentationResources.bundle)
                     }
-                    .font(.adaptive(.body))
+                    .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                     .foregroundStyle(Color.secondaryLabel)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
@@ -56,7 +58,7 @@ public struct DesktopSettingsView: View {
                 EmptyView()
             }
 
-            VStack(spacing: AdaptiveSize.boardScale) {
+            VStack(spacing: isiOSAppOnMac ? AdaptiveSize.boardScale : 2) {
                 ForEach(ProfileRoute.settingsPages, id: \.self) { route in
                     let isSelected = store.selectedRoute == route
                     let isDisabled = !store.isNetworkConnected && (route == .pushNotification || route == .account)
@@ -64,17 +66,17 @@ public struct DesktopSettingsView: View {
                     Button {
                         store.send(.binding(.set(\.selectedRoute, route)))
                     } label: {
-                        HStack(spacing: 8 * AdaptiveSize.boardScale) {
+                        HStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10) {
                             Image(systemName: route.settingsSymbolName)
                                 .foregroundStyle(Color.secondaryLabel)
-                                .frame(width: 16 * AdaptiveSize.boardScale)
+                                .frame(width: isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 18)
                             Text(route.settingsTitle)
                         }
-                        .font(.adaptive(.body).weight(.medium))
+                        .font(isiOSAppOnMac ? .adaptive(.body).weight(.medium) : .subheadline.weight(.semibold))
                         .foregroundStyle(Color.label)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 10 * AdaptiveSize.boardScale)
-                        .frame(minHeight: 28 * AdaptiveSize.boardScale)
+                        .frame(minHeight: isiOSAppOnMac ? 28 * AdaptiveSize.boardScale : 44)
                         .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
                         // 선택 표시는 마우스 표시와 같은 회색
                         .background {
@@ -88,13 +90,13 @@ public struct DesktopSettingsView: View {
                     .disabled(isDisabled)
                 }
             }
-            .padding(.horizontal, 8 * AdaptiveSize.boardScale)
+            .padding(.horizontal, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
             .padding(.vertical, 10 * AdaptiveSize.boardScale)
 
             Spacer(minLength: 0)
         }
         // 앱 사이드바 기본 폭
-        .frame(width: 220 * AdaptiveSize.boardScale)
+        .frame(width: isiOSAppOnMac ? 220 * AdaptiveSize.boardScale : 250)
         .background(Color.secondaryBackground)
         .overlay(alignment: .trailing) {
             Rectangle()
@@ -106,7 +108,7 @@ public struct DesktopSettingsView: View {
     // 설정 / 항목 경로와 닫기 버튼
     private var titleBar: some View {
         PaneTitleBar {
-            HStack(spacing: 8 * AdaptiveSize.boardScale) {
+            HStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10) {
                 Text("nav_settings", bundle: PresentationResources.bundle)
                     .fontWeight(.medium)
                     .foregroundStyle(Color.secondaryLabel)
@@ -149,14 +151,14 @@ public struct DesktopSettingsView: View {
                     privacyPolicyURL: store.policyURL.flatMap { URL(string: $0) },
                     betaTestURL: store.betaTestURL
                 )
-                // 보드의 묶음 위아래 8, 좌우 14 여백
-                .padding(.horizontal, 14 * AdaptiveSize.boardScale)
-                .padding(.bottom, 8 * AdaptiveSize.boardScale)
+                // Mac 보드의 묶음 위아래 8, 좌우 14 여백
+                .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 24)
                 .frame(maxWidth: readableContentWidth)
                 .frame(maxWidth: .infinity)
             }
             // 위쪽 줄 구분선과 첫 항목 사이 여백
-            .contentMargins(.top, 20 * AdaptiveSize.boardScale, for: .scrollContent)
+            .contentMargins(.top, isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : 24, for: .scrollContent)
             .background(Color.background)
         case .settings, .activity, .recentTodo:
             EmptyView()

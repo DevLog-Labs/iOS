@@ -178,7 +178,7 @@ struct MainView: View {
             )
             .environment(
                 \.presentSettings,
-                isiOSAppOnMac ? { store.send(.binding(.set(\.isSettingsPresented, true))) } : nil
+                showsSideBar ? { store.send(.binding(.set(\.isSettingsPresented, true))) } : nil
             )
             // 닫힌 세부 정보 사이드바는 화면 칸 제목 줄의 버튼으로 엶
             .environment(
@@ -204,9 +204,9 @@ struct MainView: View {
                 }
             }
         }
-        // Mac 설정은 앱 화면을 덮어 창 전체에 표시하고 닫으면 보던 화면으로 돌아감
+        // 사이드바가 있는 창의 설정은 앱 화면을 덮어 창 전체에 표시하고 닫으면 보던 화면으로 돌아감
         .overlay {
-            if store.isSettingsPresented {
+            if store.isSettingsPresented && showsSideBar {
                 DesktopSettingsView {
                     store.send(.binding(.set(\.isSettingsPresented, false)))
                 }
@@ -296,6 +296,12 @@ struct MainView: View {
         .onAppear { store.send(.view(.onAppear)) }
         .onChange(of: selectedTab, initial: true) { _, tab in
             store.send(.view(.selectedTabChanged(tab)))
+        }
+        // iPad 창이 좁아져 사이드바가 없어지면 창 전체 설정 화면을 닫고 보던 화면으로 돌아감
+        .onChange(of: showsSideBar) { _, showsSideBar in
+            if !showsSideBar {
+                store.send(.binding(.set(\.isSettingsPresented, false)))
+            }
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
     }
@@ -582,12 +588,8 @@ private struct TreeSideBar: View {
                         symbolName: "gearshape.fill",
                         isSelected: location == .settings
                     ) {
-                        // Mac은 앱 화면과 분리한 설정 화면 표시
-                        if isiOSAppOnMac {
-                            store.send(.binding(.set(\.isSettingsPresented, true)))
-                        } else {
-                            open(.settings)
-                        }
+                        // 앱 화면과 분리한 설정 화면 표시
+                        store.send(.binding(.set(\.isSettingsPresented, true)))
                     }
                 }
                 .padding(.horizontal, 8 * AdaptiveSize.boardScale)

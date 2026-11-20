@@ -127,6 +127,13 @@ public struct ProfileView: View {
                 break
             }
         }
+        // 사이드바가 있는 창으로 바뀌면 쌓아 연 설정은 내리고 창 전체 설정 화면으로 표시
+        .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
+            if usesDesktopLayout, router.root == .settings, let presentSettings {
+                router.path = []
+                presentSettings()
+            }
+        }
         // 설정 아래 화면도 사이드바에서는 설정으로 표시
         .preference(
             key: SideBarLocationPreferenceKey.self,
@@ -137,8 +144,6 @@ public struct ProfileView: View {
             switch request?.action {
             case .open(.profile):
                 router.path = []
-            case .open(.settings):
-                router.replace(with: .settings)
             default:
                 break
             }
@@ -180,7 +185,7 @@ public struct ProfileView: View {
     @ViewBuilder
     private var titleBar: some View {
         let openSettings = {
-            // Mac은 앱 화면과 분리한 설정 화면 표시
+            // 사이드바가 있는 창은 앱 화면과 분리한 설정 화면 표시
             if let presentSettings {
                 presentSettings()
             } else {

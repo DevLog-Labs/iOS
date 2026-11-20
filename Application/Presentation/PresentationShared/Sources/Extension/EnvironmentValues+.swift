@@ -45,7 +45,7 @@ public extension EnvironmentValues {
         set { self[ExpandSideBarKey.self] = newValue }
     }
 
-    // 앱 화면과 분리한 설정 화면을 여는 동작, Mac 메인 창 탭 화면 안에서만 있음
+    // 앱 화면과 분리한 설정 화면을 여는 동작, 사이드바가 있는 메인 창 탭 화면 안에서만 있음
     var presentSettings: (() -> Void)? {
         get { self[PresentSettingsKey.self] }
         set { self[PresentSettingsKey.self] = newValue }
