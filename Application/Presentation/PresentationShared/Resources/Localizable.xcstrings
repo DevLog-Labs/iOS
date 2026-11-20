@@ -1773,6 +1773,23 @@
         }
       }
     },
+    "development_record_detail_title" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Development Record"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "개발 기록"
+          }
+        }
+      }
+    },
     "development_record_draft" : {
       "extractionState" : "manual",
       "localizations" : {

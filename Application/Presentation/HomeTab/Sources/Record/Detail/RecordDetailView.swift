@@ -11,8 +11,11 @@ import PresentationShared
 
 public struct RecordDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.deviceType) private var deviceType
     @Environment(\.isInDetailPanel) private var isInDetailPanel
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     private let onUpdate: () -> Void
     @State private var store: StoreOf<RecordDetailFeature>
 
@@ -36,7 +39,7 @@ public struct RecordDetailView: View {
 
     public var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
+            VStack(alignment: .leading, spacing: 0) {
                 switch store.contentState {
                 case .draft(let draft):
                     recordContent(
@@ -51,11 +54,7 @@ public struct RecordDetailView: View {
                             markdownContent: version.markdownContent,
                             version: version
                         )
-                        if store.allowsMutation {
-                            actionSection
-                        } else {
-                            historyButton
-                        }
+                        actionSection
                     }
                 case .failed:
                     failureContent
@@ -63,21 +62,28 @@ public struct RecordDetailView: View {
                     Color.clear.frame(height: 1)
                 }
             }
-            .padding()
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 22)
+            .padding(.vertical, isiOSAppOnMac ? 18 * AdaptiveSize.boardScale : 20)
+            .frame(maxWidth: readableContentWidth, alignment: .leading)
+            .frame(maxWidth: .infinity)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background.ignoresSafeArea())
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .duoToolbarVisibility(showsBackButton: true)
         .onAppear { store.send(.view(.fetch)) }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .prominentSheet(item: $store.scope(state: \.sheet, action: \.sheet)) { _ in
-            RecordEditorView(
-                goalId: store.record.goalId,
-                goalTitle: store.goalTitle,
-                record: store.record,
-                baseVersion: store.currentVersion,
-                onCompletion: finishEditing
-            )
+        // 좁은 창의 기록 정정은 닫기·저장·확정 버튼으로만 닫는 전체 화면
+        .fullScreenCover(
+            item: $store.scope(state: \.sheet, action: \.sheet)
+                .activePresentation(when: !usesDesktopLayout)
+        ) { _ in
+            correctionEditor
+        }
+        .prominentSheet(
+            item: $store.scope(state: \.sheet, action: \.sheet)
+                .activePresentation(when: usesDesktopLayout)
+        ) { _ in
+            correctionEditor
         }
         .navigationDestination(
             item: $store.scope(state: \.history, action: \.history),
@@ -96,20 +102,31 @@ public struct RecordDetailView: View {
         }
     }
 
+    private var correctionEditor: some View {
+        RecordEditorView(
+            goalId: store.record.goalId,
+            goalTitle: store.goalTitle,
+            record: store.record,
+            baseVersion: store.currentVersion,
+            onCompletion: finishEditing
+        )
+    }
+
     @ViewBuilder
     private var topBar: some View {
         if isInDetailPanel {
             // 상세 판 위쪽 막대에 "개발 목표 / 기록" 경로 표시
             DetailPanelBar(location: Text(store.goalTitle), title: Text(panelTitle))
         } else {
-            HStack {
-                NavigationBackButton(action: { dismiss() })
-                    .disabled(store.isRestoring)
-                Spacer()
+            // Duo는 뒤로 버튼을 오른쪽 세로 막대에 표시
+            RecordTopBar(RecordPresentation.text("development_record_detail_title")) {
+                if deviceType != .duo {
+                    NavigationBackButton(action: { dismiss() })
+                        .disabled(store.isRestoring)
+                }
+            } trailing: {
+                EmptyView()
             }
-            .padding(.horizontal)
-            .padding(.vertical, 12)
-            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
     }
 
@@ -129,70 +146,35 @@ public struct RecordDetailView: View {
         markdownContent: String,
         version: DevelopmentRecord.Version?
     ) -> some View {
-        titleSection(title: title, version: version)
-        contentCard(markdownContent: markdownContent)
-    }
+        Text(title)
+            .font(.system(size: isiOSAppOnMac ? 19 * AdaptiveSize.boardScale : 26, weight: .heavy))
+            .foregroundStyle(Color.label)
 
-    private func titleSection(
-        title: String,
-        version: DevelopmentRecord.Version?
-    ) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            ScrollView(.horizontal) {
-                Text(title)
-                    .font(.adaptive(.title).bold())
-                    .lineLimit(1)
-            }
-            .scrollIndicators(.hidden)
-
-            HStack(spacing: 10) {
-                Text(
-                    version == nil
-                        ? RecordPresentation.text("development_record_draft")
-                        : RecordPresentation.text("development_record_confirmed")
-                )
-                    .font(.adaptive(.callout).weight(.semibold))
-                    .foregroundStyle(version == nil ? Color.warning : Color.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 7)
-                    .background(
-                        version == nil ? Color.warning.opacity(0.12) : Color.accent,
-                        in: .rect(cornerRadius: CornerRadius.badge)
-                    )
-
-                if let version {
-                    Text(RecordPresentation.versionLabel(version.number))
-                        .font(.adaptive(.callout).weight(.semibold))
-                        .foregroundStyle(Color.accent)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 7)
-                        .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.badge))
-
-                    Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
-                        .font(.adaptive(.callout))
-                        .foregroundStyle(Color.secondaryLabel)
-                }
-            }
-        }
-    }
-
-    private func contentCard(markdownContent: String) -> some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if markdownContent.isEmpty {
-                EmptyStateView(
-                    RecordPresentation.text("development_record_content_empty_title"),
-                    systemImage: "doc.text"
-                )
-                .padding(.bottom, 72)
+        // 확정·초안 배지, 버전 배지, 날짜
+        HStack(spacing: 8) {
+            if let version {
+                TodoBadge(RecordPresentation.text("development_record_confirmed"), color: .tintLabel)
+                TodoBadge(RecordPresentation.versionLabel(version.number))
+                Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
+                    .font(.adaptive(.footnote))
+                    .foregroundStyle(Color.secondaryLabel)
             } else {
-                MarkdownContentView(content: markdownContent)
-                    .frame(minHeight: 420)
+                TodoBadge(RecordPresentation.text("development_record_draft"), color: .warning)
             }
         }
-        .padding(.vertical, 16)
-        .background {
-            Rectangle()
-                .fill(Color.secondaryBackground)
+        .padding(.top, 10)
+        // 본문 첫 제목의 위쪽 여백은 Markdown 화면이 빼고 그려서 배지 아래에 둠
+        .padding(.bottom, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 20)
+
+        if markdownContent.isEmpty {
+            EmptyStateView(
+                RecordPresentation.text("development_record_content_empty_title"),
+                systemImage: "doc.text"
+            )
+        } else {
+            MarkdownContentView(content: markdownContent, isScrollEnabled: false)
+                // MarkdownRenderer 내부의 좌우 여백을 상쇄해 제목과 정렬
+                .padding(.horizontal, -16)
         }
     }
 
@@ -216,59 +198,30 @@ public struct RecordDetailView: View {
         .background(Color.secondaryBackground, in: .rect)
     }
 
+    // 기록 정정과 버전 이력 버튼, 목표가 진행 중이 아니면 버전 이력만 표시
     private var actionSection: some View {
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12) {
-                correctionButton
-                historyButton
+        HStack(spacing: 8) {
+            if store.allowsMutation {
+                Button {
+                    store.send(.view(.tapCorrection))
+                } label: {
+                    RecordButtonLabel(
+                        RecordPresentation.text("development_record_correct"),
+                        systemImage: "pencil"
+                    )
+                }
             }
-
-            VStack(spacing: 12) {
-                correctionButton
-                historyButton
+            Button {
+                store.send(.view(.tapHistory))
+            } label: {
+                RecordButtonLabel(
+                    RecordPresentation.text("development_record_history_title"),
+                    systemImage: "clock.arrow.circlepath"
+                )
             }
         }
-    }
-
-    private var correctionButton: some View {
-        Button {
-            store.send(.view(.tapCorrection))
-        } label: {
-            Label(
-                RecordPresentation.text("development_record_correct"),
-                systemImage: "pencil"
-            )
-            .font(.adaptive(.headline))
-            .foregroundStyle(Color.white)
-            // Mac은 글자 폭만큼, iPhone·iPad는 칸 너비만큼 채움
-            // Mac 크기는 버튼 스타일이 사방에 더하는 8을 뺀 디자인 캔버스 값
-            .frame(maxWidth: isiOSAppOnMac ? nil : .infinity)
-            .padding(.horizontal, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale - 8 : 0)
-            .padding(.vertical, isiOSAppOnMac ? 0 : 10)
-            .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale - 16 : nil)
-        }
-        .adaptiveButtonStyle(shape: RoundedRectangle(cornerRadius: CornerRadius.control), color: .accent)
-    }
-
-    private var historyButton: some View {
-        Button {
-            store.send(.view(.tapHistory))
-        } label: {
-            Label(
-                RecordPresentation.text("development_record_history_title"),
-                systemImage: "clock.arrow.circlepath"
-            )
-            .font(.adaptive(.headline))
-            .foregroundStyle(Color.tintLabel)
-            .frame(maxWidth: isiOSAppOnMac ? nil : .infinity)
-            .padding(.horizontal, isiOSAppOnMac ? 16 * AdaptiveSize.boardScale - 8 : 0)
-            .padding(.vertical, isiOSAppOnMac ? 0 : 10)
-            .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale - 16 : nil)
-        }
-        .adaptiveButtonStyle(
-            shape: RoundedRectangle(cornerRadius: CornerRadius.control),
-            color: .tintFill
-        )
+        .buttonStyle(RecordButtonStyle(isProminent: false))
+        .padding(.top, isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : 26)
     }
 
     private func finishEditing() {
