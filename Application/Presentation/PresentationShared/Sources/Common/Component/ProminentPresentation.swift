@@ -99,7 +99,10 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
             isShown = false
         }
         guard !isAnimated else {
-            isCovered = false
+            // 덮개 안 내용이 닫힘 효과를 시작한 뒤 시스템 닫힘을 시작
+            DispatchQueue.main.async {
+                isCovered = false
+            }
             return
         }
         // 효과 없이 닫으면 비어 있는 덮개도 바로 걷어 뒤 화면을 바로 누를 수 있게 함
@@ -132,13 +135,20 @@ private final class CoverDismissTransition: UIViewController, UIComposable, UIVi
     func animationController(
         forDismissed dismissed: UIViewController
     ) -> (any UIViewControllerAnimatedTransitioning)? {
-        isAnimated ? nil : ImmediateDismissTransition()
+        // 덮개는 내려가지 않고, 안에서 직접 그린 닫힘 효과가 끝날 때까지 제자리에 둠
+        InPlaceDismissTransition(duration: isAnimated ? 0.2 : 0)
     }
 }
 
-private final class ImmediateDismissTransition: NSObject, UIViewControllerAnimatedTransitioning {
+private final class InPlaceDismissTransition: NSObject, UIViewControllerAnimatedTransitioning {
+    let duration: TimeInterval
+
+    init(duration: TimeInterval) {
+        self.duration = duration
+    }
+
     func transitionDuration(using context: (any UIViewControllerContextTransitioning)?) -> TimeInterval {
-        0
+        duration
     }
 
     func animateTransition(using context: any UIViewControllerContextTransitioning) {
@@ -148,7 +158,11 @@ private final class ImmediateDismissTransition: NSObject, UIViewControllerAnimat
             toView.frame = context.finalFrame(for: toController)
             context.containerView.insertSubview(toView, at: 0)
         }
-        context.view(forKey: .from)?.removeFromSuperview()
-        context.completeTransition(!context.transitionWasCancelled)
+        let complete = {
+            context.view(forKey: .from)?.removeFromSuperview()
+            context.completeTransition(!context.transitionWasCancelled)
+        }
+        guard 0 < duration else { return complete() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: complete)
     }
 }
