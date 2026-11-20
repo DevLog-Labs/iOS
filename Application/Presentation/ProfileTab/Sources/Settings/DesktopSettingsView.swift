@@ -151,7 +151,7 @@ public struct DesktopSettingsView: View {
         case .account:
             AccountView(
                 store: accountStore,
-                isNetworkConnected: store.isNetworkConnected,
+                settingsStore: store,
                 isPaneDetail: true,
                 showsTopBar: false
             )

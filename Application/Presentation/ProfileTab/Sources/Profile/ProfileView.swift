@@ -283,7 +283,7 @@ public struct ProfileView: View {
                 PushNotificationSettingsFeature()
             })
         case .account:
-            AccountView(store: accountStore, isNetworkConnected: settingsStore.isNetworkConnected)
+            AccountView(store: accountStore, settingsStore: settingsStore)
         case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }

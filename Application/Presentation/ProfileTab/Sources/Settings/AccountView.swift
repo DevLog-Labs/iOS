@@ -23,16 +23,16 @@ struct AccountView: View {
     // 앱 화면과 분리한 Mac 설정 화면은 위쪽 줄을 직접 그려 화면 제목 줄 생략
     let showsTopBar: Bool
     // 오프라인이면 로그아웃, 회원 탈퇴 비활성화
-    let isNetworkConnected: Bool
+    let settingsStore: StoreOf<SettingsFeature>
 
     init(
         store: StoreOf<AccountFeature>,
-        isNetworkConnected: Bool,
+        settingsStore: StoreOf<SettingsFeature>,
         isPaneDetail: Bool = false,
         showsTopBar: Bool = true
     ) {
         self._store = State(initialValue: store)
-        self.isNetworkConnected = isNetworkConnected
+        self.settingsStore = settingsStore
         self.isPaneDetail = isPaneDetail
         self.showsTopBar = showsTopBar
     }
@@ -40,6 +40,8 @@ struct AccountView: View {
     var body: some View {
         // 인증 요청이 겹치지 않게 공급자 연결 중에는 로그아웃, 회원 탈퇴 비활성화
         let isProviderLoading = store.activeLoadingProvider != nil
+        // 화면을 띄운 채 네트워크 상태가 바뀌어도 바로 반영되게 이 화면에서 읽음
+        let isNetworkConnected = settingsStore.isNetworkConnected
 
         ScrollView {
             LazyVStack(alignment: .leading, spacing: isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 24) {
