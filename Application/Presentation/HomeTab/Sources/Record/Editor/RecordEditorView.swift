@@ -62,6 +62,7 @@ public struct RecordEditorView: View {
             NavigationStack {
                 content
             }
+            .sheetDismissDisabled(store.isLoading)
         }
     }
 
