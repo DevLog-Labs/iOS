@@ -282,7 +282,7 @@ private extension AccountFeature {
             await send(.loading(.begin(target: .default, mode: .delayed)))
             do {
                 try await deleteAuthUseCase.execute()
-                // 유스케이스 완료가 LoginView 전환 완료를 의미하지 않으므로 화면이 교체될 때까지 로딩을 유지한다.
+                // 유스케이스 완료가 LoginView 전환 완료를 의미하지 않으므로 화면이 교체될 때까지 로딩 유지
             } catch {
                 // 로딩보다 알림창을 먼저 띄워 좁아진 창의 설정 화면이 알림창 전에 닫히지 않게 함
                 await send(.setAlert(.error))
@@ -296,7 +296,7 @@ private extension AccountFeature {
             await send(.loading(.begin(target: .default, mode: .delayed)))
             do {
                 try await signOutUseCase.execute()
-                // 유스케이스 완료가 LoginView 전환 완료를 의미하지 않으므로 화면이 교체될 때까지 로딩을 유지한다.
+                // 유스케이스 완료가 LoginView 전환 완료를 의미하지 않으므로 화면이 교체될 때까지 로딩 유지
             } catch {
                 // 로딩보다 알림창을 먼저 띄워 좁아진 창의 설정 화면이 알림창 전에 닫히지 않게 함
                 await send(.setAlert(.error))
