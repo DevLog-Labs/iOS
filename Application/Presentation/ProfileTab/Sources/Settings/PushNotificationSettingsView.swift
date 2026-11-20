@@ -26,27 +26,20 @@ struct PushNotificationSettingsView: View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 24) {
                 EnableCard(store: store)
-
-                // Mac 설정 화면은 알림 시간 제목과 안내를 묶음 위아래에 표시
-                if isiOSAppOnMac {
-                    TimeCard(store: store)
-                } else {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("push_settings_time_section", bundle: PresentationResources.bundle)
-                            .font(.adaptive(.title3).weight(.semibold))
-                        TimeCard(store: store)
-                    }
-
-                    CustomTimeTipCard()
-                }
+                TimeCard(store: store)
             }
             // Mac 설정 화면은 묶음마다 보드의 위아래 8, 좌우 14 여백
             .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
-            .padding(.top, isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : 20)
             .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 24)
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
+        // 위쪽 줄 구분선과 첫 항목 사이 여백
+        .contentMargins(
+            .top,
+            isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : showsPaneTitleBar ? 24 : 12,
+            for: .scrollContent
+        )
         .safeAreaInset(edge: .top, spacing: 0) {
             if showsTopBar {
                 topBar
@@ -75,72 +68,42 @@ struct PushNotificationSettingsView: View {
             // 일반 화면에서 밀어 넣은 화면이 칸 화면으로 바뀌어도 뒤로 갈 수 있게 뒤로 버튼 표시
             PaneTitleBar(title, onBack: isPaneDetail ? nil : { dismiss() }, showsBackOnDesktop: true)
         } else {
+            // OS와 상관없이 같은 모양인 가운데 제목과 아래 구분선
             ZStack {
                 title
-                    .font(.adaptive(.headline))
-
-                if deviceType != .duo {
-                    HStack {
+                    .font(.adaptive(.callout).bold())
+                HStack {
+                    // Duo는 세로 막대의 뒤로 버튼 사용
+                    if deviceType != .duo {
                         NavigationBackButton(action: { dismiss() })
-                        Spacer()
                     }
+                    Spacer()
                 }
             }
-            .padding(.horizontal, 16)
-            .frame(maxWidth: readableContentWidth)
+            .frame(height: 48)
+            .padding(.horizontal, 8)
+            .overlay(alignment: .bottom) {
+                Divider().overlay(Color.secondarySeparator)
+            }
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12)
-            .background(Color.background)
-            .toolbarBackground(Color.background)
+            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
     }
 }
 
 private struct EnableCard: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<PushNotificationSettingsFeature>
 
     var body: some View {
-        if isiOSAppOnMac {
-            DesktopSettingsSection(footer: Text("push_settings_footer", bundle: PresentationResources.bundle)) {
-                DesktopSettingsRow(
-                    symbolName: "bell",
-                    symbolColor: .tintLabel,
-                    title: Text("push_settings_enable", bundle: PresentationResources.bundle)
-                ) {
-                    toggle
-                }
-            }
-        } else {
-            card
-        }
-    }
-
-    private var card: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(spacing: 12) {
-                Image(systemName: "bell")
-                    .font(.adaptive(.headline))
-                    .frame(width: 36, height: 36)
-                    .iconStyle(color: .accent, in: Circle())
-
-                Text("push_settings_enable", bundle: PresentationResources.bundle)
-                    .font(.adaptive(.title3))
-
-                Spacer(minLength: 8)
-
+        DesktopSettingsSection(footer: Text("push_settings_footer", bundle: PresentationResources.bundle)) {
+            DesktopSettingsRow(
+                symbolName: "bell",
+                symbolColor: .tintLabel,
+                title: Text("push_settings_enable", bundle: PresentationResources.bundle)
+            ) {
                 toggle
             }
-
-            Divider().overlay(Color.separator)
-
-            Text("push_settings_footer", bundle: PresentationResources.bundle)
-                .font(.adaptive(.footnote))
-                .foregroundStyle(Color.secondaryLabel)
         }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
     }
 
     @ViewBuilder
@@ -158,42 +121,22 @@ private struct EnableCard: View {
 
 private struct TimeCard: View {
     @Environment(\.locale) private var locale
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let store: StoreOf<PushNotificationSettingsFeature>
 
     private static let presetHours = [9, 15, 18, 21]
 
     var body: some View {
-        if isiOSAppOnMac {
-            DesktopSettingsSection(
-                header: Text("push_settings_time_section", bundle: PresentationResources.bundle),
-                footer: Text("push_settings_custom_hint", bundle: PresentationResources.bundle)
-            ) {
-                ForEach(Self.presetHours, id: \.self) { hour in
-                    if let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) {
-                        presetTimeButton(date, hour: hour)
-                    }
-                }
-                customTimeButton
-            }
-            .disabled(!store.pushNotificationEnable || store.activeLoadingRow != nil)
-            .opacity(store.pushNotificationEnable ? 1.0 : 0.7)
-        } else {
-            card
-        }
-    }
-
-    private var card: some View {
-        VStack(spacing: 0) {
+        DesktopSettingsSection(
+            header: Text("push_settings_time_section", bundle: PresentationResources.bundle),
+            footer: Text("push_settings_custom_hint", bundle: PresentationResources.bundle)
+        ) {
             ForEach(Self.presetHours, id: \.self) { hour in
                 if let date = Calendar.current.date(bySettingHour: hour, minute: 0, second: 0, of: Date()) {
                     presetTimeButton(date, hour: hour)
-                    Divider().overlay(Color.separator)
                 }
             }
             customTimeButton
         }
-        .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
         .disabled(!store.pushNotificationEnable || store.activeLoadingRow != nil)
         .opacity(store.pushNotificationEnable ? 1.0 : 0.7)
     }
@@ -207,31 +150,13 @@ private struct TimeCard: View {
         return Button {
             store.send(.selectPresetTime(date))
         } label: {
-            let indicator = Group {
+            DesktopSettingsRow(title: Text(formattedTimeString(date))) {
                 if let loadingRow,
                    store.isLoading && store.activeLoadingRow == loadingRow {
                     ProgressView()
-                } else if isiOSAppOnMac {
-                    SettingsCheck(isSelected: isSelected)
                 } else {
-                    selectionIndicator(isSelected: isSelected)
+                    SettingsCheck(isSelected: isSelected)
                 }
-            }
-
-            if isiOSAppOnMac {
-                DesktopSettingsRow(title: Text(formattedTimeString(date))) {
-                    indicator
-                }
-            } else {
-                HStack {
-                    Text(formattedTimeString(date))
-                        .foregroundStyle(Color.label)
-                    Spacer()
-                    indicator
-                }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
             }
         }
         .buttonStyle(.plain)
@@ -241,87 +166,25 @@ private struct TimeCard: View {
         Button {
             store.send(.tapCustomTime)
         } label: {
-            if isiOSAppOnMac {
-                // 사용자 설정 시간은 고른 경우에만 선택 원 표시
-                DesktopSettingsRow(title: Text("push_settings_custom", bundle: PresentationResources.bundle)) {
-                    if store.isLoading && store.activeLoadingRow == .customTime {
-                        ProgressView()
-                    } else if store.pushNotificationMinute != 0 {
-                        SettingsCheck(isSelected: true)
-                    }
-                    Text(formattedTimeString(store.viewPushNotificationTime))
-                        .foregroundStyle(Color.secondaryLabel)
-                    Image(systemName: "chevron.right")
-                        .font(.adaptive(.footnote).weight(.semibold))
-                        .foregroundStyle(Color.secondaryLabel)
+            // 사용자 설정 시간은 고른 경우에만 선택 원 표시
+            DesktopSettingsRow(title: Text("push_settings_custom", bundle: PresentationResources.bundle)) {
+                if store.isLoading && store.activeLoadingRow == .customTime {
+                    ProgressView()
+                } else if store.pushNotificationMinute != 0 {
+                    SettingsCheck(isSelected: true)
                 }
-            } else {
-                customTimeLabel
+                Text(formattedTimeString(store.viewPushNotificationTime))
+                    .foregroundStyle(Color.secondaryLabel)
+                Image(systemName: "chevron.right")
+                    .font(.adaptive(.footnote).weight(.semibold))
+                    .foregroundStyle(Color.secondaryLabel)
             }
         }
         .buttonStyle(.plain)
     }
 
-    private var customTimeLabel: some View {
-        HStack(spacing: 8) {
-            Text("push_settings_custom", bundle: PresentationResources.bundle)
-                .foregroundStyle(Color.label)
-            Spacer(minLength: 8)
-            if store.isLoading && store.activeLoadingRow == .customTime {
-                ProgressView()
-            } else {
-                selectionIndicator(isSelected: store.pushNotificationMinute != 0)
-            }
-            Text(formattedTimeString(store.viewPushNotificationTime))
-                .foregroundStyle(Color.secondaryLabel)
-            Image(systemName: "chevron.right")
-                .font(.adaptive(.footnote).weight(.semibold))
-                .foregroundStyle(Color.secondaryLabel)
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(Rectangle())
-    }
-
-    @ViewBuilder
-    private func selectionIndicator(isSelected: Bool) -> some View {
-        if isSelected {
-            ZStack {
-                Image(systemName: "circle.fill")
-                    .foregroundStyle(Color.accent)
-                Image(systemName: "checkmark")
-                    .font(.adaptive(.caption2).bold())
-                    .foregroundStyle(Color.white)
-            }
-            .font(.adaptive(.title2))
-        } else {
-            Image(systemName: "circle")
-                .font(.adaptive(.title2))
-                .foregroundStyle(Color.separator)
-        }
-    }
-
     private func formattedTimeString(_ date: Date) -> String {
         date.formatted(.dateTime.hour().minute().locale(locale))
-    }
-}
-
-private struct CustomTimeTipCard: View {
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "info")
-                .font(.adaptive(.caption).weight(.semibold))
-                .frame(width: 28, height: 28)
-                .background(Color.secondaryBackground, in: Circle())
-            Text("push_settings_custom_hint", bundle: PresentationResources.bundle)
-                .font(.adaptive(.footnote))
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        .foregroundStyle(Color.accent)
-        .padding(16)
-        .background(Color.accent.opacity(0.08), in: .rect(cornerRadius: CornerRadius.group))
-        .padding(.bottom, 16)
-        .background(Color.background)
     }
 }
 

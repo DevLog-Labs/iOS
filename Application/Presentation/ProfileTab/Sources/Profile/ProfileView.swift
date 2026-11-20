@@ -19,6 +19,8 @@ public struct ProfileView: View {
     @Environment(\.sideBarRequest) private var sideBarRequest
     @Environment(\.presentSettings) private var presentSettings
     @State private var settingsStore: StoreOf<SettingsFeature>
+    // 계정 화면에서 뒤로 가도 진행 중인 로그아웃, 회원 탈퇴가 취소되지 않게 프로필 화면이 보관
+    @State private var accountStore: StoreOf<AccountFeature>
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
     private let isSelected: Bool
@@ -34,8 +36,12 @@ public struct ProfileView: View {
         let settingsStore = Store(initialState: SettingsFeature.State()) {
             SettingsFeature()
         }
+        let accountStore = Store(initialState: AccountFeature.State()) {
+            AccountFeature()
+        }
         self._store = State(initialValue: store)
         self._settingsStore = State(initialValue: settingsStore)
+        self._accountStore = State(initialValue: accountStore)
         self.isSelected = isSelected
         self.windowEvent = windowEvent
     }
@@ -127,6 +133,16 @@ public struct ProfileView: View {
                 break
             }
         }
+        // 사이드바가 있는 창으로 바뀌면 쌓아 연 설정은 내리고 창 전체 설정 화면으로 표시
+        .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
+            if usesDesktopLayout, router.root == .settings, let presentSettings {
+                router.path = []
+                // 다른 탭을 보던 중이면 쌓아 연 설정만 내리고 창 전체 설정 화면은 띄우지 않음
+                if isSelected {
+                    presentSettings()
+                }
+            }
+        }
         // 설정 아래 화면도 사이드바에서는 설정으로 표시
         .preference(
             key: SideBarLocationPreferenceKey.self,
@@ -137,8 +153,6 @@ public struct ProfileView: View {
             switch request?.action {
             case .open(.profile):
                 router.path = []
-            case .open(.settings):
-                router.replace(with: .settings)
             default:
                 break
             }
@@ -180,7 +194,7 @@ public struct ProfileView: View {
     @ViewBuilder
     private var titleBar: some View {
         let openSettings = {
-            // Mac은 앱 화면과 분리한 설정 화면 표시
+            // 사이드바가 있는 창은 앱 화면과 분리한 설정 화면 표시
             if let presentSettings {
                 presentSettings()
             } else {
@@ -269,9 +283,7 @@ public struct ProfileView: View {
                 PushNotificationSettingsFeature()
             })
         case .account:
-            AccountView(store: Store(initialState: AccountFeature.State()) {
-                AccountFeature()
-            })
+            AccountView(store: accountStore, settingsStore: settingsStore)
         case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }

@@ -12,13 +12,19 @@ import PresentationShared
 
 @Reducer
 struct AccountFeature {
+    enum ActiveLoadingRow: Equatable {
+        case signOut
+        case deleteAuth
+    }
+
     @ObservableState
     struct State: Equatable {
-        @Presents var alert: AlertState<Never>?
+        @Presents var alert: AlertState<Action.Alert>?
         var currentProvider: AuthProvider?
         var connectedProviders: [AuthProvider] = []
         var disconnectedProviders: [AuthProvider] = []
         var activeLoadingProvider: AuthProvider?
+        var activeLoadingRow: ActiveLoadingRow?
         var loading = LoadingFeature.State()
         var presentationContext: AuthPresentationContext?
 
@@ -28,7 +34,7 @@ struct AccountFeature {
     }
 
     enum Action {
-        case alert(PresentationAction<Never>)
+        case alert(PresentationAction<Alert>)
         case onAppear
         case linkWithProvider(AuthProvider)
         case setPresentationContext(AuthPresentationContext?)
@@ -36,9 +42,16 @@ struct AccountFeature {
         case setAlert(AlertType)
         case setProviders(currentProvider: AuthProvider?, allProviders: [AuthProvider])
         case loading(LoadingFeature.Action)
+
+        enum Alert: Equatable {
+            case tapDeleteAuthButton
+            case tapSignOutButton
+        }
     }
 
     enum AlertType: Equatable {
+        case signOut
+        case deleteAuth
         case linkEmailNotFound
         case linkEmailMismatch
         case linkCredentialAlreadyInUse
@@ -49,6 +62,8 @@ struct AccountFeature {
     @Dependency(\.fetchAuthProvidersUseCase) var fetchProvidersUseCase
     @Dependency(\.linkAuthProviderUseCase) var linkProviderUseCase
     @Dependency(\.unlinkAuthProviderUseCase) var unlinkProviderUseCase
+    @Dependency(\.deleteAuthUseCase) var deleteAuthUseCase
+    @Dependency(\.signOutUseCase) var signOutUseCase
 
     var body: some ReducerOf<Self> {
         Scope(state: \.loading, action: \.loading) {
@@ -56,9 +71,19 @@ struct AccountFeature {
         }
         Reduce { state, action in
             switch action {
+            case .alert(.presented(.tapDeleteAuthButton)):
+                state.alert = nil
+                state.activeLoadingRow = .deleteAuth
+                return deleteAuthEffect()
+            case .alert(.presented(.tapSignOutButton)):
+                state.alert = nil
+                state.activeLoadingRow = .signOut
+                return signOutEffect()
             case .alert:
                 break
             case .onAppear:
+                // 화면을 떠난 뒤 실패한 요청의 알림창은 다시 들어올 때 띄우지 않음
+                state.alert = nil
                 return fetchProvidersEffect()
             case .linkWithProvider(let provider):
                 guard !state.isLoading,
@@ -87,6 +112,7 @@ struct AccountFeature {
             case .loading(.end):
                 if !state.isLoading {
                     state.activeLoadingProvider = nil
+                    state.activeLoadingRow = nil
                 }
             case .loading:
                 break
@@ -111,6 +137,16 @@ extension DependencyValues {
     var unlinkAuthProviderUseCase: UnlinkAuthProviderUseCase {
         get { self[UnlinkAuthProviderUseCaseKey.self] }
         set { self[UnlinkAuthProviderUseCaseKey.self] = newValue }
+    }
+
+    var deleteAuthUseCase: DeleteAuthUseCase {
+        get { self[DeleteAuthUseCaseKey.self] }
+        set { self[DeleteAuthUseCaseKey.self] = newValue }
+    }
+
+    var signOutUseCase: SignOutUseCase {
+        get { self[SignOutUseCaseKey.self] }
+        set { self[SignOutUseCaseKey.self] = newValue }
     }
 }
 
@@ -140,6 +176,26 @@ private enum UnlinkAuthProviderUseCaseKey: DependencyKey {
     }
 
     static var testValue: UnlinkAuthProviderUseCase {
+        liveValue
+    }
+}
+
+private enum DeleteAuthUseCaseKey: DependencyKey {
+    static var liveValue: DeleteAuthUseCase {
+        preconditionFailure("DeleteAuthUseCase must be provided.")
+    }
+
+    static var testValue: DeleteAuthUseCase {
+        liveValue
+    }
+}
+
+private enum SignOutUseCaseKey: DependencyKey {
+    static var liveValue: SignOutUseCase {
+        preconditionFailure("SignOutUseCase must be provided.")
+    }
+
+    static var testValue: SignOutUseCase {
         liveValue
     }
 }
@@ -221,6 +277,34 @@ private extension AccountFeature {
         }
     }
 
+    func deleteAuthEffect() -> Effect<Action> {
+        .run { [deleteAuthUseCase] send in
+            await send(.loading(.begin(target: .default, mode: .delayed)))
+            do {
+                try await deleteAuthUseCase.execute()
+                // 유스케이스 완료가 LoginView 전환 완료를 의미하지 않으므로 화면이 교체될 때까지 로딩 유지
+            } catch {
+                // 로딩보다 알림창을 먼저 띄워 좁아진 창의 설정 화면이 알림창 전에 닫히지 않게 함
+                await send(.setAlert(.error))
+                await send(.loading(.end(target: .default, mode: .delayed)))
+            }
+        }
+    }
+
+    func signOutEffect() -> Effect<Action> {
+        .run { [signOutUseCase] send in
+            await send(.loading(.begin(target: .default, mode: .delayed)))
+            do {
+                try await signOutUseCase.execute()
+                // 유스케이스 완료가 LoginView 전환 완료를 의미하지 않으므로 화면이 교체될 때까지 로딩 유지
+            } catch {
+                // 로딩보다 알림창을 먼저 띄워 좁아진 창의 설정 화면이 알림창 전에 닫히지 않게 함
+                await send(.setAlert(.error))
+                await send(.loading(.end(target: .default, mode: .delayed)))
+            }
+        }
+    }
+
     static func linkAlertType(for error: Error) -> AlertType {
         guard let authError = error as? AuthError else {
             return .error
@@ -240,11 +324,47 @@ private extension AccountFeature {
         }
     }
 
-    static func alertState(for type: AlertType) -> AlertState<Never> {
+    static func alertState(for type: AlertType) -> AlertState<Action.Alert> {
         let title: String
         let message: String
 
         switch type {
+        case .signOut:
+            return AlertState {
+                TextState(String(localized: "settings_alert_sign_out_title", bundle: PresentationResources.bundle))
+            } actions: {
+                ButtonState(role: .cancel) {
+                    TextState(String(localized: "common_cancel", bundle: PresentationResources.bundle))
+                }
+                ButtonState(role: .destructive, action: .tapSignOutButton) {
+                    TextState(String(localized: "common_confirm", bundle: PresentationResources.bundle))
+                }
+            } message: {
+                TextState(String(localized: "settings_alert_sign_out_message", bundle: PresentationResources.bundle))
+            }
+        case .deleteAuth:
+            return AlertState {
+                TextState(
+                    String(
+                        localized: "settings_alert_delete_account_title",
+                        bundle: PresentationResources.bundle
+                    )
+                )
+            } actions: {
+                ButtonState(role: .cancel) {
+                    TextState(String(localized: "common_cancel", bundle: PresentationResources.bundle))
+                }
+                ButtonState(role: .destructive, action: .tapDeleteAuthButton) {
+                    TextState(String(localized: "settings_delete_account_action", bundle: PresentationResources.bundle))
+                }
+            } message: {
+                TextState(
+                    String(
+                        localized: "settings_alert_delete_account_message",
+                        bundle: PresentationResources.bundle
+                    )
+                )
+            }
         case .linkEmailNotFound:
             title = String(localized: "account_alert_email_unavailable_title", bundle: PresentationResources.bundle)
             message = String(localized: "account_alert_email_unavailable_message", bundle: PresentationResources.bundle)

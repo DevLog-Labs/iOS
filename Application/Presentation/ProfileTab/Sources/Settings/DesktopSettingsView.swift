@@ -8,16 +8,24 @@
 import SwiftUI
 import PresentationShared
 
-// Mac에서 앱 화면과 분리해 창 전체에 표시하는 설정 화면
+// Mac과 사이드바가 있는 iPad 창에서 앱 화면과 분리해 창 전체에 표시하는 설정 화면
 // 앱 사이드바 자리에 설정 목차, 나머지 자리에 고른 항목 화면 배치
+// Mac은 Mac 화면 크기, iPad는 손가락으로 누르는 크기
 public struct DesktopSettingsView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State private var store = Store(initialState: SettingsFeature.State()) {
         SettingsFeature()
     }
+    // 목차에서 다른 항목을 골라도 진행 중인 로그아웃, 회원 탈퇴가 취소되지 않게 설정 화면이 보관
+    @State private var accountStore = Store(initialState: AccountFeature.State()) {
+        AccountFeature()
+    }
+    private let onBusyChange: (Bool) -> Void
     private let onClose: () -> Void
 
-    public init(onClose: @escaping () -> Void) {
+    public init(onBusyChange: @escaping (Bool) -> Void, onClose: @escaping () -> Void) {
+        self.onBusyChange = onBusyChange
         self.onClose = onClose
     }
 
@@ -31,10 +39,16 @@ public struct DesktopSettingsView: View {
                 .environment(\.showsPaneTitleBar, true)
         }
         // 화면을 닫으면 Store가 해제되어 진행 중인 로그아웃, 회원 탈퇴가 취소되므로 끝날 때까지 화면 전체 비활성화
-        // 같은 화면의 공급자 연결 요청과 겹치지 않는 효과도 있음
-        .disabled(store.activeLoadingRow != nil)
+        .disabled(accountStore.activeLoadingRow != nil)
+        // 진행 중인 로그아웃, 회원 탈퇴나 계정 화면에 떠 있는 알림창이 남아 있으면 창이 좁아져도 화면을 닫지 않게 알림
+        // 다른 항목으로 옮긴 뒤 실패한 요청의 알림창은 보이지 않아 제외
+        .onChange(
+            of: accountStore.activeLoadingRow != nil || (store.selectedRoute == .account && accountStore.alert != nil),
+            initial: true
+        ) { _, isBusy in
+            onBusyChange(isBusy)
+        }
         .onAppear { store.send(.startObserving) }
-        .prominentAlert(store, state: \.alert, action: \.alert)
     }
 
     private var tableOfContents: some View {
@@ -46,7 +60,7 @@ public struct DesktopSettingsView: View {
                         Image(systemName: "arrow.left")
                         Text("settings_back_to_app", bundle: PresentationResources.bundle)
                     }
-                    .font(.adaptive(.body))
+                    .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
                     .foregroundStyle(Color.secondaryLabel)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .contentShape(.rect)
@@ -56,7 +70,7 @@ public struct DesktopSettingsView: View {
                 EmptyView()
             }
 
-            VStack(spacing: AdaptiveSize.boardScale) {
+            VStack(spacing: isiOSAppOnMac ? AdaptiveSize.boardScale : 2) {
                 ForEach(ProfileRoute.settingsPages, id: \.self) { route in
                     let isSelected = store.selectedRoute == route
                     let isDisabled = !store.isNetworkConnected && (route == .pushNotification || route == .account)
@@ -64,17 +78,17 @@ public struct DesktopSettingsView: View {
                     Button {
                         store.send(.binding(.set(\.selectedRoute, route)))
                     } label: {
-                        HStack(spacing: 8 * AdaptiveSize.boardScale) {
+                        HStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10) {
                             Image(systemName: route.settingsSymbolName)
                                 .foregroundStyle(Color.secondaryLabel)
-                                .frame(width: 16 * AdaptiveSize.boardScale)
+                                .frame(width: isiOSAppOnMac ? 16 * AdaptiveSize.boardScale : 18)
                             Text(route.settingsTitle)
                         }
-                        .font(.adaptive(.body).weight(.medium))
+                        .font(isiOSAppOnMac ? .adaptive(.body).weight(.medium) : .subheadline.weight(.semibold))
                         .foregroundStyle(Color.label)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding(.horizontal, 10 * AdaptiveSize.boardScale)
-                        .frame(minHeight: 28 * AdaptiveSize.boardScale)
+                        .frame(minHeight: isiOSAppOnMac ? 28 * AdaptiveSize.boardScale : 44)
                         .hoverHighlight(in: RoundedRectangle(cornerRadius: CornerRadius.control), isEnabled: !isSelected)
                         // 선택 표시는 마우스 표시와 같은 회색
                         .background {
@@ -88,13 +102,13 @@ public struct DesktopSettingsView: View {
                     .disabled(isDisabled)
                 }
             }
-            .padding(.horizontal, 8 * AdaptiveSize.boardScale)
+            .padding(.horizontal, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
             .padding(.vertical, 10 * AdaptiveSize.boardScale)
 
             Spacer(minLength: 0)
         }
         // 앱 사이드바 기본 폭
-        .frame(width: 220 * AdaptiveSize.boardScale)
+        .frame(width: isiOSAppOnMac ? 220 * AdaptiveSize.boardScale : 250)
         .background(Color.secondaryBackground)
         .overlay(alignment: .trailing) {
             Rectangle()
@@ -106,7 +120,7 @@ public struct DesktopSettingsView: View {
     // 설정 / 항목 경로와 닫기 버튼
     private var titleBar: some View {
         PaneTitleBar {
-            HStack(spacing: 8 * AdaptiveSize.boardScale) {
+            HStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10) {
                 Text("nav_settings", bundle: PresentationResources.bundle)
                     .fontWeight(.medium)
                     .foregroundStyle(Color.secondaryLabel)
@@ -135,19 +149,12 @@ public struct DesktopSettingsView: View {
                 PushNotificationSettingsFeature()
             }, isPaneDetail: true, showsTopBar: false)
         case .account:
-            AccountView(store: Store(initialState: AccountFeature.State()) {
-                AccountFeature()
-            }, isPaneDetail: true, showsTopBar: false) {
-                DesktopSettingsButton(
-                    title: String(localized: "settings_sign_out", bundle: PresentationResources.bundle),
-                    showsProgress: store.activeLoadingRow == .signOut
-                ) {
-                    store.send(.setAlert(.signOut))
-                }
-                .disabled(!store.isNetworkConnected || store.isLoading)
-            } footer: {
-                DeleteAccountSection(store: store)
-            }
+            AccountView(
+                store: accountStore,
+                settingsStore: store,
+                isPaneDetail: true,
+                showsTopBar: false
+            )
         case .information:
             ScrollView {
                 AppInformationCard(
@@ -155,14 +162,14 @@ public struct DesktopSettingsView: View {
                     privacyPolicyURL: store.policyURL.flatMap { URL(string: $0) },
                     betaTestURL: store.betaTestURL
                 )
-                // 보드의 묶음 위아래 8, 좌우 14 여백
-                .padding(.horizontal, 14 * AdaptiveSize.boardScale)
-                .padding(.bottom, 8 * AdaptiveSize.boardScale)
+                // Mac 보드의 묶음 위아래 8, 좌우 14 여백
+                .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                .padding(.bottom, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 24)
                 .frame(maxWidth: readableContentWidth)
                 .frame(maxWidth: .infinity)
             }
             // 위쪽 줄 구분선과 첫 항목 사이 여백
-            .contentMargins(.top, 20 * AdaptiveSize.boardScale, for: .scrollContent)
+            .contentMargins(.top, isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : 24, for: .scrollContent)
             .background(Color.background)
         case .settings, .activity, .recentTodo:
             EmptyView()

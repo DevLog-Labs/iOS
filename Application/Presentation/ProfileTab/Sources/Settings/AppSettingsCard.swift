@@ -9,71 +9,44 @@ import SwiftUI
 import PresentationShared
 
 struct AppSettingsCard: View {
-    @ScaledMetric(relativeTo: .headline) private var iconSize = 36
     let themeName: String
     let isNetworkConnected: Bool
     let onTheme: () -> Void
     let onNotifications: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("settings_app_section", bundle: PresentationResources.bundle)
-                .font(.adaptive(.title3).bold())
-                .foregroundStyle(Color.label)
+        DesktopSettingsSection(header: Text("settings_app_section", bundle: PresentationResources.bundle)) {
+            Button(action: onTheme) {
+                DesktopSettingsRow(
+                    symbolName: "desktopcomputer",
+                    symbolColor: .tintLabel,
+                    title: Text(String(localized: "settings_theme", bundle: PresentationResources.bundle))
+                ) {
+                    Text(themeName)
+                        .foregroundStyle(Color.secondaryLabel)
+                        .multilineTextAlignment(.trailing)
 
-            VStack(spacing: 0) {
-                Button(action: onTheme) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "desktopcomputer")
-                            .font(.adaptive(.headline))
-                            .frame(width: iconSize, height: iconSize)
-                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
-                        Text(String(localized: "settings_theme", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.label)
-
-                        Spacer(minLength: 8)
-
-                        Text(themeName)
-                            .foregroundStyle(Color.secondaryLabel)
-                            .multilineTextAlignment(.trailing)
-
-                        Image(systemName: "chevron.right")
-                            .font(.adaptive(.footnote).weight(.semibold))
-                            .foregroundStyle(Color.secondaryLabel)
-                    }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
+                    Image(systemName: "chevron.right")
+                        .font(.adaptive(.footnote).weight(.semibold))
+                        .foregroundStyle(Color.secondaryLabel)
                 }
-                .buttonStyle(.plain)
-
-                Divider().overlay(Color.separator)
-                    .padding(.leading, 64)
-                    .padding(.trailing, 16)
-                Button(action: onNotifications) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "bell")
-                            .font(.adaptive(.headline))
-                            .frame(width: iconSize, height: iconSize)
-                            .iconStyle(color: .accent, in: RoundedRectangle(cornerRadius: CornerRadius.control))
-                        Text(String(localized: "settings_notifications", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.label)
-
-                        Spacer(minLength: 8)
-
-                        Image(systemName: "chevron.right")
-                            .font(.adaptive(.footnote).weight(.semibold))
-                            .foregroundStyle(Color.secondaryLabel)
-                    }
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                    .opacity(isNetworkConnected ? 1 : 0.5)
-                }
-                .buttonStyle(.plain)
-                .disabled(!isNetworkConnected)
             }
-            .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
+            .buttonStyle(.plain)
+
+            Button(action: onNotifications) {
+                DesktopSettingsRow(
+                    symbolName: "bell",
+                    symbolColor: .tintLabel,
+                    title: Text(String(localized: "settings_notifications", bundle: PresentationResources.bundle))
+                ) {
+                    Image(systemName: "chevron.right")
+                        .font(.adaptive(.footnote).weight(.semibold))
+                        .foregroundStyle(Color.secondaryLabel)
+                }
+                .opacity(isNetworkConnected ? 1 : 0.5)
+            }
+            .buttonStyle(.plain)
+            .disabled(!isNetworkConnected)
         }
     }
 }

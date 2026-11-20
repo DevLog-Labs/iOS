@@ -32,6 +32,7 @@ where State: ObservableState {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.isTabContentActive) private var isTabContentActive
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
 
     let store: Store<State, Action>
     let alertState: KeyPath<State, AlertState<AlertAction>?>
@@ -98,7 +99,12 @@ where State: ObservableState {
                     .padding(.top, 8 * AdaptiveSize.boardScale)
             }
 
+            // 좁은 화면은 버튼을 반씩 나누고, 사이드바가 있는 창은 글자 폭 버튼을 오른쪽에 모음
             HStack(spacing: 8 * AdaptiveSize.boardScale) {
+                if usesDesktopLayout {
+                    Spacer(minLength: 0)
+                }
+
                 ForEach(state.buttons) { button in
                     let usesDefaultAction = state.usesDefaultAction(for: button)
 
@@ -107,7 +113,11 @@ where State: ObservableState {
                     } label: {
                         Text(button.label)
                             .font(isiOSAppOnMac ? .system(size: 13 * AdaptiveSize.boardScale, weight: .semibold) : .subheadline.weight(.semibold))
-                            .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
+                            .padding(.horizontal, 16 * AdaptiveSize.boardScale)
+                            .frame(
+                                maxWidth: usesDesktopLayout ? nil : .infinity,
+                                minHeight: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44
+                            )
                             .background(
                                 usesDefaultAction ? Color.clear : .tertiaryBackground,
                                 in: .rect(cornerRadius: CornerRadius.control)
