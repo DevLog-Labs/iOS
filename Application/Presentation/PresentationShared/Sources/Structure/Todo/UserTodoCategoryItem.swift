@@ -26,7 +26,7 @@ public struct UserTodoCategoryItem: Identifiable, Hashable {
     // 카테고리 색상 원으로 고를 수 있는 다크 색
     public static let paletteHexValues = palette.map(\.dark)
 
-    // 색상 원의 다크 색과 짝이 되는 라이트 색
+    // 색상 원의 다크 색과 짝이 되는 라이트 색, 위젯 WidgetTodoCategoryStyle에도 같은 표가 있음
     private static let palette = [
         (dark: "#F87171", light: "#DC2626"),
         (dark: "#FB923C", light: "#EA580C"),
