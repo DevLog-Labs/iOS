@@ -67,9 +67,50 @@ struct GoalDetailDestinationTests {
         }
         await store.send(.recordDetail(.dismiss)) {
             $0.recordDetail = nil
+            $0.dismissedRecordDetail = RecordDetailDestination(record: record)
+        }
+        await store.receive(.store(.recordDetailDismissed)) {
+            $0.dismissedRecordDetail = nil
         }
         await store.send(.view(.selectRecord(item))) {
             $0.recordDetail = RecordDetailDestination(record: record)
         }
+    }
+
+    @Test("창 폭이 바뀌며 같은 차례에 닫힌 기록 상세는 새 자리에서 다시 표시한다")
+    func 창_폭이_바뀌며_같은_차례에_닫힌_기록_상세는_새_자리에서_다시_표시한다() async throws {
+        let goal = try makeDevelopmentGoal()
+        let record = try makeConfirmedDevelopmentRecord(id: "record")
+        let feature = GoalDetailFeature()
+        var state = GoalDetailFeature.State(goalId: goal.id)
+        state.shownOnDesktop = false
+        state.recordDetail = RecordDetailDestination(record: record)
+
+        // 빠지는 자리의 닫힘과 새 자리의 나타남이 정리 동작보다 먼저 들어오는 차례
+        _ = feature.reduce(into: &state, action: .recordDetail(.dismiss))
+        _ = feature.reduce(into: &state, action: .view(.appear(onDesktop: true)))
+
+        #expect(state.recordDetail == RecordDetailDestination(record: record))
+        #expect(state.shownOnDesktop == true)
+    }
+
+    @Test("같은 자리에서 닫은 기록 상세는 다시 표시하지 않는다")
+    func 같은_자리에서_닫은_기록_상세는_다시_표시하지_않는다() async throws {
+        let goal = try makeDevelopmentGoal()
+        let record = try makeConfirmedDevelopmentRecord(id: "record")
+        let feature = GoalDetailFeature()
+        var state = GoalDetailFeature.State(goalId: goal.id)
+        state.shownOnDesktop = false
+        state.recordDetail = RecordDetailDestination(record: record)
+
+        // 좁은 창에서 뒤로 가면 개발 목표가 같은 자리에 다시 나타남
+        _ = feature.reduce(into: &state, action: .recordDetail(.dismiss))
+        _ = feature.reduce(into: &state, action: .view(.appear(onDesktop: false)))
+        #expect(state.recordDetail == nil)
+
+        // 정리 동작이 지난 뒤 창 폭이 바뀌어도 닫은 기록 상세는 다시 표시하지 않음
+        _ = feature.reduce(into: &state, action: .store(.recordDetailDismissed))
+        _ = feature.reduce(into: &state, action: .view(.appear(onDesktop: true)))
+        #expect(state.recordDetail == nil)
     }
 }

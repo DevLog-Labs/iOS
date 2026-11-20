@@ -13,6 +13,7 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var isCovered = false
+    @State private var isDismissing = false
     @State private var isShown = false
     @State private var presented: Item?
     let item: Binding<Item?>
@@ -43,13 +44,18 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
                     }
                 ),
                 onDismiss: {
+                    isDismissing = false
                     if item.wrappedValue == nil {
                         presented = nil
+                    } else {
+                        // 닫히는 동안 들어온 표시는 닫힘이 끝난 뒤 다시 띄움
+                        show()
                     }
                 }
             ) {
                 ZStack {
-                    if let shown = item.wrappedValue ?? presented {
+                    // 닫히는 동안에는 내리는 내용을 그대로 그림
+                    if let shown = isDismissing ? presented : item.wrappedValue ?? presented {
                         overlay(shown, isShown) {
                             item.wrappedValue = nil
                         }
@@ -71,6 +77,8 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
     }
 
     private func show() {
+        // 시스템 닫힘이 끝나기 전에 다시 덮으면 표시되지 않고 화면 입력만 막혀 onDismiss까지 미룸
+        guard !isDismissing else { return }
         presented = item.wrappedValue
         guard !isCovered else { return }
         // 시스템 전체 화면 표시 애니메이션 없이 덮고, 나타나는 모양은 직접 그림
@@ -84,6 +92,9 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
     // 다음 표시가 시스템 표시 순서를 기다리도록 닫힘은 바로 시작
     private func hide(isAnimated: Bool) {
         guard isCovered else { return }
+        // 화면에 나타난 덮개만 시스템 닫힘을 기다림
+        // 나타나기 전에 닫으면 onDismiss가 오지 않아 다음 표시가 계속 막히므로 기다리지 않음
+        isDismissing = isShown
         withAnimation(isAnimated ? .easeIn(duration: 0.2) : nil) {
             isShown = false
         }

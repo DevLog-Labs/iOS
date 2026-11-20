@@ -48,10 +48,16 @@ public extension Binding where Value == Bool {
 public extension Binding {
     func hiddenInPane<Wrapped>(_ isInPane: Bool) -> Binding<Wrapped?>
     where Value == Wrapped? {
+        hiddenInPane { isInPane }
+    }
+
+    // 칸에 그리는지를 읽거나 쓸 때마다 다시 판단해, 그린 뒤에 바뀐 상태로 늦게 들어온 닫힘을 거름
+    func hiddenInPane<Wrapped>(_ isInPane: @escaping () -> Bool) -> Binding<Wrapped?>
+    where Value == Wrapped? {
         Binding<Wrapped?>(
-            get: { isInPane ? nil : wrappedValue },
+            get: { isInPane() ? nil : wrappedValue },
             set: { value in
-                if !isInPane {
+                if !isInPane() {
                     wrappedValue = value
                 }
             }

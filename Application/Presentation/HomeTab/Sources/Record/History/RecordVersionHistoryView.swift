@@ -11,7 +11,9 @@ import PresentationShared
 
 struct RecordVersionHistoryView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.deviceType) private var deviceType
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
 
     @Bindable var store: StoreOf<RecordDetailFeature>
 
@@ -19,27 +21,44 @@ struct RecordVersionHistoryView: View {
         store.versions.sorted { $1.number < $0.number }
     }
 
-    private var currentVersion: DevelopmentRecord.Version? {
-        store.currentVersion
-    }
-
     var body: some View {
         ScrollView {
-            LazyVStack(alignment: .leading, spacing: 24) {
-                titleSection
-                currentVersionCard
-                historyCard
+            LazyVStack(alignment: .leading, spacing: 0) {
+                currentVersionSection
+                HomeSectionHeader {
+                    Text(RecordPresentation.text("development_record_version"))
+                    Text(verbatim: "\(sortedVersions.count)")
+                        .fontWeight(.medium)
+                        .foregroundStyle(Color.secondaryLabel)
+                } trailing: {
+                    EmptyView()
+                }
+                ForEach(sortedVersions, id: \.id) { version in
+                    Button {
+                        if version.id == store.currentVersionID {
+                            dismiss()
+                        } else {
+                            store.send(.view(.selectVersion(version)))
+                        }
+                    } label: {
+                        VersionHistoryRow(
+                            version: version,
+                            isCurrent: version.id == store.currentVersionID,
+                            // 이전 버전을 상세 판으로 연 동안 그 행을 회색으로 표시
+                            isSelected: usesDesktopLayout && store.versionDetail?.version.id == version.id
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
             }
-            .padding(.horizontal)
             .padding(.bottom, 24)
         }
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
-        .safeAreaInset(edge: .bottom, spacing: 0) { footer }
-        .background(Color.background)
-        .toolbarVisibility(.hidden, for: .navigationBar)
+        .background(Color.background.ignoresSafeArea())
+        .duoToolbarVisibility(showsBackButton: true)
         .navigationDestination(
             item: $store.scope(state: \.versionDetail, action: \.versionDetail)
-                .activePresentation(when: !isiOSAppOnMac),
+                .activePresentation(when: !usesDesktopLayout),
             interactivePop: true
         ) { destination in
             RecordVersionDetailView(
@@ -47,10 +66,10 @@ struct RecordVersionHistoryView: View {
                 version: destination.version
             )
         }
-        // Mac은 이전 버전을 사이드바까지 덮는 상세 판으로 열기
+        // 사이드바가 있는 창은 이전 버전을 사이드바까지 덮는 상세 판으로 열기
         .detailPanel(
             item: $store.scope(state: \.versionDetail, action: \.versionDetail)
-                .activePresentation(when: isiOSAppOnMac)
+                .activePresentation(when: usesDesktopLayout)
         ) { destination in
             RecordVersionDetailView(
                 store: store,
@@ -59,221 +78,92 @@ struct RecordVersionHistoryView: View {
         }
     }
 
+    @ViewBuilder
     private var topBar: some View {
-        HStack {
-            NavigationBackButton(action: { dismiss() })
-            Spacer()
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 12)
-        .background(Color.background, ignoresSafeAreaEdges: .top)
-    }
-
-    private var titleSection: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(RecordPresentation.text("development_record_history_title"))
-                .font(.adaptive(.largeTitle).bold())
-
-            if let currentVersion {
-                Text(currentVersion.title)
-                    .font(.adaptive(.title3))
-                    .foregroundStyle(Color.secondaryLabel)
-                    .lineLimit(2)
+        if usesDesktopLayout {
+            PaneTitleBar(
+                Text(RecordPresentation.text("development_record_history_title")),
+                onBack: { dismiss() },
+                showsBackOnDesktop: true
+            )
+        } else {
+            // Duo는 뒤로 버튼을 오른쪽 세로 막대에 표시
+            RecordTopBar(RecordPresentation.text("development_record_history_title")) {
+                if deviceType != .duo {
+                    NavigationBackButton(action: { dismiss() })
+                }
+            } trailing: {
+                EmptyView()
             }
         }
     }
 
+    // 현재 버전 번호와 제목, 확정된 버전 안내
     @ViewBuilder
-    private var currentVersionCard: some View {
-        if let currentVersion {
-            HStack(alignment: .center, spacing: 16) {
-                Image(systemName: "doc.text")
-                    .font(.adaptive(.title2))
-                    .foregroundStyle(Color.accent)
-                    .frame(width: 56, height: 56)
-                    .background(Color.accent.opacity(0.12), in: .rect(cornerRadius: CornerRadius.control))
-
-                VStack(alignment: .leading, spacing: 6) {
-                    HStack(spacing: 8) {
-                        Text(RecordPresentation.text("development_record_current_version"))
-                            .font(.adaptive(.headline))
-
-                        RecordVersionBadge(number: currentVersion.number, isCurrent: false)
-                    }
-
-                    Text(RecordPresentation.text("development_record_current_version_message"))
-                        .font(.adaptive(.subheadline))
-                        .foregroundStyle(Color.secondaryLabel)
-                        .fixedSize(horizontal: false, vertical: true)
+    private var currentVersionSection: some View {
+        if let currentVersion = store.currentVersion {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 8) {
+                    Image(systemName: "clock")
+                    Text(RecordPresentation.text("development_record_current_version"))
+                    TodoBadge(RecordPresentation.versionLabel(currentVersion.number), color: .tintLabel)
                 }
+                .font(.adaptive(.footnote))
+                .foregroundStyle(Color.secondaryLabel)
+
+                Text(currentVersion.title)
+                    .font(.adaptive(isiOSAppOnMac ? .title3 : .headline).bold())
+                    .foregroundStyle(Color.label)
+                    .lineLimit(2)
+                    .padding(.top, 8)
+                    .padding(.bottom, 4)
+
+                Text(RecordPresentation.text("development_record_current_version_message"))
+                    .font(.adaptive(.footnote))
+                    .foregroundStyle(Color.secondaryLabel)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(20)
-            .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.group))
-        }
-    }
-
-    private var historyCard: some View {
-        LazyVStack(spacing: 0) {
-            ForEach(Array(sortedVersions.enumerated()), id: \.element.id) { index, version in
-                Button {
-                    if version.id == store.currentVersionID {
-                        dismiss()
-                    } else {
-                        store.send(.view(.selectVersion(version)))
-                    }
-                } label: {
-                    VersionHistoryRow(
-                        version: version,
-                        isCurrent: version.id == store.currentVersionID,
-                        isLast: index == sortedVersions.count - 1
-                    )
-                }
-                .buttonStyle(.plain)
+            .padding(.vertical, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 18)
+            .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+            .overlay(alignment: .bottom) {
+                Rectangle()
+                    .fill(Color.secondarySeparator)
+                    .frame(height: 1)
             }
         }
-        .padding(24)
-        .background(Color.secondaryBackground, in: .rect)
-    }
-
-    private var footer: some View {
-        Label(
-            RecordPresentation.text(
-                store.allowsMutation
-                    ? "development_record_history_footer"
-                    : "development_record_history_read_only_footer"
-            ),
-            systemImage: "lock"
-        )
-        .font(.adaptive(.caption))
-        .foregroundStyle(Color.secondaryLabel)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
-        .background(Color.background, ignoresSafeAreaEdges: .bottom)
     }
 }
 
+// 버전·종류·현재 배지와 제목, 날짜를 표시하는 버전 행
 private struct VersionHistoryRow: View {
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     let version: DevelopmentRecord.Version
     let isCurrent: Bool
-    let isLast: Bool
+    let isSelected: Bool
 
     var body: some View {
-        HStack(spacing: 8) {
-            HStack(alignment: .top, spacing: 16) {
-                timelineIndicator
-
-                VStack(alignment: .leading, spacing: 5) {
-                    HStack(spacing: 8) {
-                        RecordVersionBadge(number: version.number, isCurrent: false)
-
-                        if isCurrent {
-                            statusBadge(
-                                RecordPresentation.text("development_record_version_current"),
-                                foreground: .white,
-                                background: .accent
-                            )
-                        }
-
-                        kindBadge
+        RecordListRow(isSelected: isSelected) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 6) {
+                    TodoBadge(RecordPresentation.versionLabel(version.number))
+                    RecordVersionKindBadge(kind: version.kind)
+                    if isCurrent {
+                        TodoBadge(RecordPresentation.text("development_record_version_current"), color: .tintLabel)
                     }
-
-                    Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
-                        .font(.adaptive(.caption))
-                        .foregroundStyle(Color.tertiaryLabel)
-
-                    Text(version.title)
-                        .font(.adaptive(.body).weight(.semibold))
-                        .foregroundStyle(Color.label)
-                        .multilineTextAlignment(.leading)
-                        .lineLimit(2)
                 }
-            }
 
-            Spacer(minLength: 8)
+                Text(version.title)
+                    .font(.adaptive(isiOSAppOnMac ? .body : .callout).weight(.semibold))
+                    .foregroundStyle(Color.label)
+                    .multilineTextAlignment(.leading)
+                    .lineLimit(2)
+                    .padding(.top, 6)
 
-            Image(systemName: "chevron.right")
-                .font(.adaptive(.callout).weight(.semibold))
-                .foregroundStyle(Color.separator)
-        }
-        .contentShape(.rect)
-        .frame(minHeight: RecordTimelineLayout.rowHeight, alignment: .top)
-        .background(alignment: .topLeading) {
-            if !isLast {
-                Rectangle()
-                    .fill(Color.accent.opacity(0.45))
-                    .frame(width: RecordTimelineLayout.lineWidth)
-                    .frame(maxHeight: .infinity)
-                    .offset(
-                        x: RecordTimelineLayout.lineXOffset,
-                        y: RecordTimelineLayout.lineYOffset
-                    )
+                Text(version.confirmedAt, format: .dateTime.month().day().hour().minute())
+                    .font(.adaptive(.footnote))
+                    .foregroundStyle(Color.secondaryLabel)
+                    .padding(.top, 3)
             }
         }
-    }
-
-    private var timelineIndicator: some View {
-        Circle()
-            .fill(isCurrent ? Color.accent : Color.tertiaryLabel)
-            .frame(
-                width: RecordTimelineLayout.markerSize,
-                height: RecordTimelineLayout.markerSize
-            )
-            .padding(.top, RecordTimelineLayout.markerTopPadding)
-    }
-
-    @ViewBuilder
-    private var kindBadge: some View {
-        switch version.kind {
-        case .initial:
-            statusBadge(
-                RecordPresentation.text("development_record_version_initial"),
-                foreground: .secondaryLabel,
-                background: .tertiaryBackground
-            )
-        case .correction:
-            statusBadge(
-                RecordPresentation.text("development_record_version_correction"),
-                foreground: .accent,
-                background: .tintFill
-            )
-        case .rollback:
-            statusBadge(
-                RecordPresentation.text("development_record_version_rollback"),
-                foreground: .warning,
-                background: .warning.opacity(0.12)
-            )
-        }
-    }
-
-    private func statusBadge(
-        _ title: String,
-        foreground: Color,
-        background: Color
-    ) -> some View {
-        Text(title)
-            .font(.adaptive(.caption).weight(.semibold))
-            .foregroundStyle(foreground)
-            .padding(.horizontal, 9)
-            .padding(.vertical, 5)
-            .background(background, in: .rect(cornerRadius: CornerRadius.badge))
-    }
-}
-
-struct RecordVersionBadge: View {
-    let number: Int
-    let isCurrent: Bool
-
-    var body: some View {
-        Text(RecordPresentation.versionLabel(number))
-            .font(.adaptive(.caption).weight(.semibold))
-            .foregroundStyle(isCurrent ? Color.white : Color.accent)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 5)
-            .background(
-                isCurrent ? Color.accent : Color.tintFill,
-                in: .rect(cornerRadius: CornerRadius.badge)
-            )
     }
 }

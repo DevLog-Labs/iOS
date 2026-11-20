@@ -45,6 +45,10 @@ struct GoalDetailFeature {
         var hasLoadedTodos = false
         var hasLoadFailure = false
         var hasTodoLoadFailure = false
+        // 개발 목표 화면이 나타난 자리, 창 폭이 바뀌면 새 자리에 나타난 뒤에 기록 상세를 다시 띄움
+        var shownOnDesktop: Bool?
+        // 창 폭이 바뀌어 빠지는 자리가 먼저 닫은 기록 상세, 같은 차례에 새 자리가 나타나면 되살림
+        var dismissedRecordDetail: RecordDetailDestination?
 
         var goalTitle: String {
             goal?.title ?? ""
@@ -83,6 +87,7 @@ struct GoalDetailFeature {
 
         enum ViewAction: Equatable {
             case addRecord
+            case appear(onDesktop: Bool)
             case continueRecord
             case fetch
             case manageTodos
@@ -102,6 +107,7 @@ struct GoalDetailFeature {
             case failed
             case todosFailed
             case transitionFailed
+            case recordDetailDismissed
         }
     }
 
@@ -128,7 +134,11 @@ struct GoalDetailFeature {
             case .recordEditor:
                 break
             case .recordDetail(.dismiss):
+                state.dismissedRecordDetail = state.recordDetail
                 state.recordDetail = nil
+                return .run { send in
+                    await send(.store(.recordDetailDismissed))
+                }
             case .recordDetail:
                 break
             case .todoDetail(.dismiss):
@@ -158,6 +168,11 @@ struct GoalDetailFeature {
                     recordId: uuid().uuidString,
                     versionId: uuid().uuidString
                 )
+            case .view(.appear(let onDesktop)):
+                if state.shownOnDesktop != onDesktop, state.recordDetail == nil {
+                    state.recordDetail = state.dismissedRecordDetail
+                }
+                state.shownOnDesktop = onDesktop
             case .view(.continueRecord):
                 guard state.hasLoaded,
                       state.allowsRecordMutation,
@@ -262,6 +277,8 @@ struct GoalDetailFeature {
             case .store(.transitionFailed):
                 state.isTransitioning = false
                 state.alert = Self.transitionErrorAlert
+            case .store(.recordDetailDismissed):
+                state.dismissedRecordDetail = nil
             }
 
             return .none
