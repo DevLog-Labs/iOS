@@ -138,13 +138,7 @@ public struct DesktopSettingsView: View {
             AccountView(store: Store(initialState: AccountFeature.State()) {
                 AccountFeature()
             }, isPaneDetail: true, showsTopBar: false) {
-                DesktopSettingsButton(
-                    title: String(localized: "settings_sign_out", bundle: PresentationResources.bundle),
-                    showsProgress: store.activeLoadingRow == .signOut
-                ) {
-                    store.send(.setAlert(.signOut))
-                }
-                .disabled(!store.isNetworkConnected || store.isLoading)
+                SignOutButton(store: store)
             } footer: {
                 DeleteAccountSection(store: store)
             }

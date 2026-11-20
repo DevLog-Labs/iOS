@@ -271,7 +271,13 @@ public struct ProfileView: View {
         case .account:
             AccountView(store: Store(initialState: AccountFeature.State()) {
                 AccountFeature()
-            })
+            }) {
+                SignOutButton(store: settingsStore)
+            } footer: {
+                DeleteAccountSection(store: settingsStore)
+            }
+            // 로그아웃, 회원 탈퇴 확인은 계정 화면에서 띄움
+            .prominentAlert(settingsStore, state: \.alert, action: \.alert)
         case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }
