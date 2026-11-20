@@ -214,7 +214,6 @@ struct MainView: View {
                 .background(Color.background)
             }
         }
-        .environment(\.usesDesktopLayout, showsSideBar)
         // 세로로 펼친 Duo는 세로 막대가 없어 iPhone과 같은 화면 구성
         // 접힌 Duo는 세로 막대가 늘 있어 첫 화면이나 접는 중에도 바꾸지 않음
         .environment(
@@ -304,6 +303,8 @@ struct MainView: View {
             }
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
+        // 이 화면 알림창도 화면 안쪽 알림창과 같은 버튼 모양으로 표시
+        .environment(\.usesDesktopLayout, showsSideBar)
     }
 }
 
