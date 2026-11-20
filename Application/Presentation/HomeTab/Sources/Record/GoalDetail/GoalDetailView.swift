@@ -71,9 +71,10 @@ public struct GoalDetailView: View {
             }
         }
         // 좁은 창은 닫기·저장·확정 버튼으로만 닫는 전체 화면
+        // 넓은 창으로 바뀌어 칸에 옮겨 그린 뒤 늦게 닫히는 전체 화면은 작성 중인 기록을 지우지 않음
         .fullScreenCover(
             item: $store.scope(state: \.recordEditor, action: \.recordEditor)
-                .hiddenInPane(usesDesktopLayout)
+                .hiddenInPane { usesDesktopLayout || store.shownOnDesktop == true }
         ) { editorStore in
             RecordEditorView(
                 store: editorStore,
