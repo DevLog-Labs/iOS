@@ -35,38 +35,6 @@ func verifyHomeTapTodoCategory(
     #expect(adapter.showTodoEditor)
 }
 
-@MainActor
-func verifyHomeOrderTodoCategory(
-    adapter: StoreTestAdapter,
-    updatePreferencesUseCaseSpy: UpdateTodoCategoryPreferencesUseCaseSpy
-) async throws {
-    await adapter.fetchData()
-
-    let updatedCategory = TodoCategoryItem(
-        from: .user(
-            UserTodoCategory(
-                id: "custom",
-                name: "Updated",
-                colorHex: "#222222"
-            )
-        )
-    )
-    let items = [
-        updatedCategory,
-        TodoCategoryItem(from: .system(.feature))
-    ]
-
-    await adapter.tapManageTodoCategory()
-
-    #expect(adapter.showCategoryManage)
-
-    await adapter.orderTodoCategory(items)
-
-    #expect(adapter.preferences == items)
-    #expect(updatePreferencesUseCaseSpy.updates == [items.map(\.preference)])
-    #expect(!adapter.showCategoryManage)
-}
-
 struct FetchDataContext {
     let fetchPreferencesUseCaseSpy: FetchTodoCategoryPreferencesUseCaseSpy
 }
@@ -146,18 +114,5 @@ func makeHomeFetchDataContext() -> FetchDataContext {
 
     return FetchDataContext(
         fetchPreferencesUseCaseSpy: fetchPreferencesUseCaseSpy
-    )
-}
-
-struct OrderContext {
-    let fetchPreferencesUseCaseSpy: FetchTodoCategoryPreferencesUseCaseSpy
-    let updatePreferencesUseCaseSpy: UpdateTodoCategoryPreferencesUseCaseSpy
-}
-
-func makeHomeOrderContext() -> OrderContext {
-    let fetchContext = makeHomeFetchDataContext()
-    return OrderContext(
-        fetchPreferencesUseCaseSpy: fetchContext.fetchPreferencesUseCaseSpy,
-        updatePreferencesUseCaseSpy: UpdateTodoCategoryPreferencesUseCaseSpy()
     )
 }

@@ -252,16 +252,8 @@ struct HomeFeature {
                 }
             case .sheet(.presented(.tapCloseButton)):
                 state.sheet = nil
-            case .sheet(.presented(.categoryManage(.delegate(.done(let preferences))))):
-                return orderTodoCategory(preferences, state: &state)
             case .sheet(.presented(.categoryManage(.delegate(.changed(let preferences))))):
-                // 사이드바가 있는 창의 카테고리 관리 칸은 고친 값을 바로 저장
-                state.preferences = preferences
-                return delayedTodoCategoryPreferencesUpdateEffect(preferences)
-            case .sheet(.presented(.categoryManage(.setSavesImmediately(true)))):
-                // 시트에서 고친 값은 바로 저장하는 칸으로 바뀔 때 저장
-                guard let preferences = state.sheet?.categoryManageState?.preferences,
-                      preferences != state.preferences else { break }
+                // 카테고리 관리는 시트와 칸 모두 고친 값을 바로 저장
                 state.preferences = preferences
                 return delayedTodoCategoryPreferencesUpdateEffect(preferences)
             case .sheet(.presented(.goalCreate(.delegate(.saved)))):
@@ -332,7 +324,7 @@ private extension HomeFeature {
         case .tapDevelopmentGoal(let goalID):
             state.sheet = .goalDetail(GoalDetailFeature.State(goalId: goalID))
         case .tapManageTodoCategory:
-            // 이미 연 카테고리 관리 칸은 바로 저장하는 상태를 그대로 유지
+            // 이미 연 카테고리 관리는 고르던 카테고리를 그대로 유지
             guard state.sheet?.categoryManageState == nil else { break }
             state.sheet = .reorderTodo(CategoryManageFeature.State(preferences: state.preferences))
         case .tapTodoCategoryExpansionButton:
@@ -347,15 +339,6 @@ private extension HomeFeature {
         }
 
         return .none
-    }
-
-    func orderTodoCategory(
-        _ preferences: [TodoCategoryItem],
-        state: inout State
-    ) -> Effect<Action> {
-        state.preferences = preferences
-        state.sheet = nil
-        return updateTodoCategoryPreferencesEffect(preferences)
     }
 
     func reduce(

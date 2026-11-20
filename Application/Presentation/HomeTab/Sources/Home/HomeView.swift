@@ -58,9 +58,7 @@ public struct HomeView: View {
             Group {
                 if usesDesktopLayout,
                    let manageStore = store.scope(state: \.sheet?.categoryManageState, action: \.sheet.presented.categoryManage) {
-                    CategoryManageView(store: manageStore) {
-                        store.send(.sheet(.dismiss))
-                    }
+                    CategoryManageView(store: manageStore)
                 } else if usesDesktopLayout,
                           let goalStore = store.scope(state: \.sheet?.goalCreateState, action: \.sheet.presented.goalCreate) {
                     // 홈 오른쪽 칸에서 쓰고 연결된 Todo는 세부 정보 사이드바에 표시
@@ -346,10 +344,12 @@ public struct HomeView: View {
         case .contentPicker:
             HomeContentPicker(store: store) { store.send(.view(.tapTodoCategory($0))) }
         case .reorderTodo:
-            if let store = sheetStore.scope(state: \.categoryManageState, action: \.categoryManage) {
+            if let manageStore = sheetStore.scope(state: \.categoryManageState, action: \.categoryManage) {
                 // 넓은 창으로 바뀌어 닫히는 시트가 칸으로 연 화면의 세부 정보 사이드바를 가져가지 않음
-                CategoryManageView(store: store)
-                    .environment(\.selectDetailSideBarTarget, nil)
+                CategoryManageView(store: manageStore) {
+                    store.send(.sheet(.dismiss))
+                }
+                .environment(\.selectDetailSideBarTarget, nil)
             }
         case .goalCreate:
             if let goalStore = sheetStore.scope(state: \.goalCreateState, action: \.goalCreate) {

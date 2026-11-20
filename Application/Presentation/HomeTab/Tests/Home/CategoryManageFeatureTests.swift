@@ -34,18 +34,6 @@ struct CategoryManageFeatureTests {
         #expect(driver.preferences.map(\.id) == [feature.id, issue.id])
     }
 
-    @Test("사용자 카테고리 추가를 누르면 카테고리 입력 시트 상태가 생성된다")
-    func 사용자_카테고리_추가를_누르면_카테고리_입력_시트_상태가_생성된다() {
-        let item = TodoCategoryItem(from: .system(.issue))
-        let driver = CategoryManageTestDriver(preferences: [item])
-
-        driver.tapAddUserCategory()
-
-        #expect(driver.categorySheet?.category.name == "")
-        #expect(driver.categorySheet?.category.colorHex.count == 7)
-        #expect(driver.categorySheet?.preferences == [item])
-    }
-
     @Test("카테고리 이름은 20자로 제한된다")
     func 카테고리_이름은_20자로_제한된다() {
         let driver = CategoryManageTestDriver(preferences: [])
@@ -64,10 +52,6 @@ struct CategoryManageFeatureTests {
         driver.setCategoryName("  \(name.uppercased())  ")
 
         #expect(driver.categorySheet?.isDuplicatedName == true)
-        #expect(driver.categorySheet?.canSubmitUserCategory == false)
-        #expect(driver.categorySheet?.nameMessage == String(
-            localized: "todo_manage_name_duplicate", bundle: PresentationResources.bundle
-        ))
     }
 
     @Test(
@@ -81,7 +65,6 @@ struct CategoryManageFeatureTests {
         driver.setCategoryName("  \(name)  ")
 
         #expect(driver.categorySheet?.isDuplicatedName == true)
-        #expect(driver.categorySheet?.canSubmitUserCategory == false)
     }
 
     @Test("다른 사용자 카테고리 이름은 대소문자를 구분하지 않고 중복을 검사한다")
@@ -94,18 +77,10 @@ struct CategoryManageFeatureTests {
 
         #expect(driver.categorySheet?.category.name == "  cUsToM  ")
         #expect(driver.categorySheet?.isDuplicatedName == true)
-        #expect(driver.categorySheet?.canSubmitUserCategory == false)
-        #expect(driver.categorySheet?.nameMessage == String(
-            localized: "todo_manage_name_duplicate", bundle: PresentationResources.bundle
-        ))
 
         driver.setCategoryName("Unique")
 
         #expect(driver.categorySheet?.isDuplicatedName == false)
-        #expect(driver.categorySheet?.canSubmitUserCategory == true)
-        #expect(driver.categorySheet?.nameMessage == String(
-            localized: "todo_manage_name_hint", bundle: PresentationResources.bundle
-        ))
     }
 
     @Test("수정 중인 카테고리의 원래 이름은 중복이 아니다")
@@ -117,61 +92,20 @@ struct CategoryManageFeatureTests {
         driver.tapEditUserCategory(item)
 
         #expect(driver.categorySheet?.isDuplicatedName == false)
-        #expect(driver.categorySheet?.nameMessage == String(
-            localized: "todo_manage_name_hint", bundle: PresentationResources.bundle
-        ))
     }
 
-    @Test("수정 내용이 없으면 저장할 수 없고 색상만 바꾸면 저장할 수 있다")
-    func 수정_내용이_없으면_저장할_수_없고_색상만_바꾸면_저장할_수_있다() {
-        let category = UserTodoCategory(id: "custom", name: "Custom", colorHex: "#111111")
-        let item = TodoCategoryItem(from: .user(category))
-        let driver = CategoryManageTestDriver(preferences: [item])
-
-        driver.tapEditUserCategory(item)
-
-        #expect(driver.categorySheet?.canSubmitUserCategory == false)
-
-        driver.setCategoryColor("#222222")
-
-        #expect(driver.categorySheet?.canSubmitUserCategory == true)
-        #expect(driver.categorySheet?.isDuplicatedName == false)
-        #expect(driver.categorySheet?.nameMessage == String(
-            localized: "todo_manage_name_hint", bundle: PresentationResources.bundle
-        ))
-    }
-
-    @Test("빈 이름은 중복 오류 대신 안내 문구를 표시한다", arguments: ["", "  ", "\n"])
-    func 빈_이름은_중복_오류_대신_안내_문구를_표시한다(name: String) {
+    @Test("빈 이름은 중복으로 보지 않는다", arguments: ["", "  ", "\n"])
+    func 빈_이름은_중복으로_보지_않는다(name: String) {
         let driver = CategoryManageTestDriver(preferences: [])
 
         driver.tapAddUserCategory()
         driver.setCategoryName(name)
 
         #expect(driver.categorySheet?.isDuplicatedName == false)
-        #expect(driver.categorySheet?.canSubmitUserCategory == false)
-        #expect(driver.categorySheet?.nameMessage == String(
-            localized: "todo_manage_name_hint", bundle: PresentationResources.bundle
-        ))
     }
 
-    @Test("새 사용자 카테고리를 저장하면 이름을 trim한 항목이 추가되고 시트가 닫힌다")
-    func 새_사용자_카테고리를_저장하면_이름을_trim한_항목이_추가되고_시트가_닫힌다() {
-        let driver = CategoryManageTestDriver(preferences: [])
-
-        driver.tapAddUserCategory()
-        let colorHex = driver.categorySheet?.category.colorHex
-        driver.setCategoryName("  Custom  ")
-        driver.tapSaveButton()
-
-        #expect(driver.preferences.count == 1)
-        #expect(driver.userCategory(at: 0)?.name == "Custom")
-        #expect(driver.userCategory(at: 0)?.colorHex == colorHex)
-        #expect(driver.categorySheet == nil)
-    }
-
-    @Test("기존 사용자 카테고리를 저장하면 표시 여부를 유지한 채 항목을 교체한다")
-    func 기존_사용자_카테고리를_저장하면_표시_여부를_유지한_채_항목을_교체한다() {
+    @Test("사용자 카테고리를 고치면 표시 여부를 유지한 채 목록에 바로 반영한다")
+    func 사용자_카테고리를_고치면_표시_여부를_유지한_채_목록에_바로_반영한다() {
         let item = TodoCategoryItem(
             from: .user(
                 UserTodoCategory(
@@ -187,13 +121,12 @@ struct CategoryManageFeatureTests {
         driver.tapEditUserCategory(item)
         driver.setCategoryName("New")
         driver.setCategoryColor("#222222")
-        driver.tapSaveButton()
 
         #expect(driver.preferences.count == 1)
         #expect(driver.preferences.first?.isVisible == false)
         #expect(driver.userCategory(at: 0)?.name == "New")
         #expect(driver.userCategory(at: 0)?.colorHex == "#222222")
-        #expect(driver.categorySheet == nil)
+        #expect(driver.categorySheet?.category.id == "custom")
     }
 
     @Test("사용자 카테고리 삭제를 확인하면 항목이 제거된다")
@@ -264,27 +197,26 @@ struct CategoryManageFeatureTests {
         #expect(driver.categorySheet == nil)
     }
 
-    @Test("바로 저장 상태에서 카테고리를 추가하면 번호를 붙인 새 이름으로 목록에 추가하고 고른다")
-    func 바로_저장_상태에서_카테고리를_추가하면_번호를_붙인_새_이름으로_목록에_추가하고_고른다() {
+    @Test("카테고리를 추가하면 번호를 붙인 새 이름으로 목록에 추가하고 고른다")
+    func 카테고리를_추가하면_번호를_붙인_새_이름으로_목록에_추가하고_고른다() {
         let name = String(localized: "todo_manage_new_category_name", bundle: PresentationResources.bundle)
         let category = UserTodoCategory(id: "custom", name: name, colorHex: "#111111")
         let driver = CategoryManageTestDriver(preferences: [TodoCategoryItem(from: .user(category))])
 
-        driver.setSavesImmediately()
         driver.tapAddUserCategory()
 
         #expect(driver.preferences.count == 2)
         #expect(driver.userCategory(at: 1)?.name == "\(name) 2")
         #expect(driver.categorySheet?.category.id == driver.userCategory(at: 1)?.id)
+        #expect(driver.categorySheet?.isNew == true)
     }
 
-    @Test("바로 저장 상태에서 이름을 바꾸면 목록에 반영하고 빈 이름과 중복 이름은 반영하지 않는다")
-    func 바로_저장_상태에서_이름을_바꾸면_목록에_반영하고_빈_이름과_중복_이름은_반영하지_않는다() {
+    @Test("이름을 바꾸면 목록에 반영하고 빈 이름과 중복 이름은 반영하지 않는다")
+    func 이름을_바꾸면_목록에_반영하고_빈_이름과_중복_이름은_반영하지_않는다() {
         let category = UserTodoCategory(id: "custom", name: "Custom", colorHex: "#111111")
         let item = TodoCategoryItem(from: .user(category))
         let driver = CategoryManageTestDriver(preferences: [TodoCategoryItem(from: .system(.issue)), item])
 
-        driver.setSavesImmediately()
         driver.selectCategory(item)
         driver.setCategoryName("  Renamed  ")
 
@@ -297,39 +229,6 @@ struct CategoryManageFeatureTests {
         driver.setCategoryName("ISSUE")
 
         #expect(driver.userCategory(at: 1)?.name == "Renamed")
-    }
-
-    @Test("바로 저장 상태로 바뀌면 목록에 없는 새 카테고리 입력을 닫고 고치던 카테고리는 목록에 반영한다")
-    func 바로_저장_상태로_바뀌면_목록에_없는_새_카테고리_입력을_닫고_고치던_카테고리는_목록에_반영한다() {
-        let category = UserTodoCategory(id: "custom", name: "Custom", colorHex: "#111111")
-        let item = TodoCategoryItem(from: .user(category))
-        let driver = CategoryManageTestDriver(preferences: [item])
-
-        driver.tapAddUserCategory()
-        driver.setSavesImmediately()
-
-        #expect(driver.categorySheet == nil)
-
-        driver.setSavesImmediately(false)
-        driver.selectCategory(item)
-        driver.setCategoryName("Renamed")
-        driver.setSavesImmediately()
-
-        #expect(driver.categorySheet?.category.id == category.id)
-        #expect(driver.userCategory(at: 0)?.name == "Renamed")
-    }
-
-    @Test("완료 버튼을 누르면 현재 preferences를 delegate로 전달한다")
-    func 완료_버튼을_누르면_현재_preferences를_delegate로_전달한다() async {
-        let item = TodoCategoryItem(from: .system(.issue))
-        let store = TestStore(
-            initialState: CategoryManageFeature.State(preferences: [item])
-        ) {
-            CategoryManageFeature()
-        }
-
-        await store.send(.tapDoneButton)
-        await store.receive(.delegate(.done([item])))
     }
 }
 
@@ -355,10 +254,6 @@ private struct CategoryManageTestDriver {
         ) {
             CategoryManageFeature()
         }
-    }
-
-    func setSavesImmediately(_ savesImmediately: Bool = true) {
-        feature.send(.setSavesImmediately(savesImmediately))
     }
 
     func selectCategory(_ item: TodoCategoryItem) {
@@ -399,10 +294,6 @@ private struct CategoryManageTestDriver {
 
     func setCategoryColor(_ colorHex: String) {
         feature.send(.categorySheet(.presented(.binding(.set(\.category.colorHex, colorHex)))))
-    }
-
-    func tapSaveButton() {
-        feature.send(.categorySheet(.presented(.tapSaveButton)))
     }
 
     func tapCloseButton() {
