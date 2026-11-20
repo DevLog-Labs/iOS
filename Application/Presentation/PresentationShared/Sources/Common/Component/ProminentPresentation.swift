@@ -8,6 +8,9 @@
 import SwiftUI
 import UIComposable
 
+// 직접 그린 닫힘 효과 시간이자 그동안 덮개를 제자리에 두는 시간
+private let dismissDuration = 0.2
+
 // 탭 바·사이드바까지 화면 전체를 덮는 표시 자리
 struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
@@ -89,17 +92,26 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
         }
     }
 
-    // 다음 표시가 시스템 표시 순서를 기다리도록 닫힘은 바로 시작
+    // 다음 표시가 시스템 표시 순서를 기다리도록 시스템 닫힘은 닫힘 효과가 끝나기를 기다리지 않고 시작
     private func hide(isAnimated: Bool) {
-        guard isCovered else { return }
+        // 시스템 닫힘을 미뤄 둔 사이에 다시 닫으면 그 닫힘을 그대로 이어감
+        guard isCovered, !isDismissing else { return }
         // 화면에 나타난 덮개만 시스템 닫힘을 기다림
         // 나타나기 전에 닫으면 onDismiss가 오지 않아 다음 표시가 계속 막히므로 기다리지 않음
         isDismissing = isShown
-        withAnimation(isAnimated ? .easeIn(duration: 0.2) : nil) {
+        withAnimation(isAnimated ? .easeIn(duration: dismissDuration) : nil) {
             isShown = false
         }
         guard !isAnimated else {
-            isCovered = false
+            // 시스템 닫힘이 시작되면 덮개 안 내용이 더 그려지지 않아 나타난 덮개는 닫힘 효과를 시작한 다음 메인 큐에서 시스템 닫힘 시작
+            // 나타나기 전 덮개는 미루는 사이 다시 띄우면 그 표시까지 걷히므로 바로 걷음
+            if isDismissing {
+                DispatchQueue.main.async {
+                    isCovered = false
+                }
+            } else {
+                isCovered = false
+            }
             return
         }
         // 효과 없이 닫으면 비어 있는 덮개도 바로 걷어 뒤 화면을 바로 누를 수 있게 함
@@ -132,13 +144,20 @@ private final class CoverDismissTransition: UIViewController, UIComposable, UIVi
     func animationController(
         forDismissed dismissed: UIViewController
     ) -> (any UIViewControllerAnimatedTransitioning)? {
-        isAnimated ? nil : ImmediateDismissTransition()
+        // 덮개는 내려가지 않고, 안에서 직접 그린 닫힘 효과가 끝날 때까지 제자리에 둠
+        InPlaceDismissTransition(duration: isAnimated ? dismissDuration : 0)
     }
 }
 
-private final class ImmediateDismissTransition: NSObject, UIViewControllerAnimatedTransitioning {
+private final class InPlaceDismissTransition: NSObject, UIViewControllerAnimatedTransitioning {
+    let duration: TimeInterval
+
+    init(duration: TimeInterval) {
+        self.duration = duration
+    }
+
     func transitionDuration(using context: (any UIViewControllerContextTransitioning)?) -> TimeInterval {
-        0
+        duration
     }
 
     func animateTransition(using context: any UIViewControllerContextTransitioning) {
@@ -148,7 +167,11 @@ private final class ImmediateDismissTransition: NSObject, UIViewControllerAnimat
             toView.frame = context.finalFrame(for: toController)
             context.containerView.insertSubview(toView, at: 0)
         }
-        context.view(forKey: .from)?.removeFromSuperview()
-        context.completeTransition(!context.transitionWasCancelled)
+        let complete = {
+            context.view(forKey: .from)?.removeFromSuperview()
+            context.completeTransition(!context.transitionWasCancelled)
+        }
+        guard 0 < duration else { return complete() }
+        DispatchQueue.main.asyncAfter(deadline: .now() + duration, execute: complete)
     }
 }

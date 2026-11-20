@@ -112,12 +112,15 @@ private struct ProminentSheet<Content: View>: View {
                         .overlay { dismissArea }
                         .transition(.opacity)
 
+                    // 사라지는 동안 어두운 배경이 시트 위로 올라오지 않도록 순서 고정
                     if isDialog {
                         dialog(in: proxy)
                             .transition(.scale(scale: 0.96).combined(with: .opacity))
+                            .zIndex(1)
                     } else {
                         bottomSheet(in: proxy)
                             .transition(.move(edge: .bottom))
+                            .zIndex(1)
                     }
                 }
             }
