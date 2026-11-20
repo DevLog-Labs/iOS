@@ -82,6 +82,8 @@ struct AccountFeature {
             case .alert:
                 break
             case .onAppear:
+                // 화면을 떠난 뒤 실패한 요청의 알림창은 다시 들어올 때 띄우지 않음
+                state.alert = nil
                 return fetchProvidersEffect()
             case .linkWithProvider(let provider):
                 guard !state.isLoading,

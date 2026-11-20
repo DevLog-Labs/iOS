@@ -272,6 +272,24 @@ struct AccountFeatureTests {
         #expect(driver.alert == nil)
     }
 
+    @Test("화면이 다시 나타나면 이전에 실패한 요청의 알림을 지운다")
+    func 화면이_다시_나타나면_이전에_실패한_요청의_알림을_지운다() async {
+        let fetchSpy = FetchAuthProvidersUseCaseSpy()
+        fetchSpy.error = AccountTestError.failure
+        let driver = AccountTestDriver(fetchUseCase: fetchSpy)
+
+        driver.onAppear()
+
+        await waitUntil {
+            driver.alert != nil
+        }
+
+        fetchSpy.error = nil
+        driver.onAppear()
+
+        #expect(driver.alert == nil)
+    }
+
     @Test("로그아웃 성공 후에도 LoginView 전환 전까지 로딩 상태를 유지한다")
     func 로그아웃_성공_후에도_LoginView_전환_전까지_로딩_상태를_유지한다() async {
         let signOutSpy = SignOutUseCaseSpy()
