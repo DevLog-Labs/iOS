@@ -51,8 +51,11 @@ public struct GoalDetailView: View {
     }
 
     private var presentedContent: some View {
+        // 창 폭이 바뀌면 개발 목표가 새 자리에 나타난 뒤에 기록 상세를 띄워 같은 갱신에서 겹쳐 쌓지 않음
+        let isShown = store.shownOnDesktop == usesDesktopLayout
+
         // 사이드바가 있으면 기록 작성을 개발 목표 오른쪽 칸에 표시
-        PaneSplitView(splitsOnDesktop: store.recordEditor != nil) {
+        return PaneSplitView(splitsOnDesktop: store.recordEditor != nil) {
             mainContent
         } detail: {
             if let editorStore = store.scope(state: \.recordEditor, action: \.recordEditor.presented) {
@@ -84,7 +87,7 @@ public struct GoalDetailView: View {
         }
         .navigationDestination(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .activePresentation(when: !usesDesktopLayout),
+                .hiddenInPane(usesDesktopLayout || !isShown),
             interactivePop: true
         ) { destination in
             RecordDetailView(
@@ -97,7 +100,7 @@ public struct GoalDetailView: View {
         // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
         .detailPanel(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .activePresentation(when: usesDesktopLayout)
+                .hiddenInPane(!usesDesktopLayout || !isShown)
         ) { destination in
             NavigationStack {
                 RecordDetailView(
@@ -128,6 +131,7 @@ public struct GoalDetailView: View {
             .environment(\.showsPaneTitleBar, usesDesktopLayout)
             .detailSideBarTarget(.todo(id: $0.todoId, isEditable: false))
         }
+        .onAppear { store.send(.view(.appear(onDesktop: usesDesktopLayout))) }
     }
 
     @ViewBuilder
