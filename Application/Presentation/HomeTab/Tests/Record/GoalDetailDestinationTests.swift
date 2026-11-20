@@ -62,8 +62,16 @@ struct GoalDetailDestinationTests {
             GoalDetailFeature()
         }
 
+        var content = RecordDetailFeature.State(
+            goalTitle: goal.title,
+            record: record,
+            allowsMutation: state.allowsRecordMutation
+        )
+        content.goalShownOnDesktop = state.shownOnDesktop
+
         await store.send(.view(.selectRecord(item))) {
             $0.recordDetail = RecordDetailDestination(record: record)
+            $0.recordDetailContent = content
         }
         await store.send(.recordDetail(.dismiss)) {
             $0.recordDetail = nil
@@ -71,9 +79,11 @@ struct GoalDetailDestinationTests {
         }
         await store.receive(.store(.recordDetailDismissed)) {
             $0.dismissedRecordDetail = nil
+            $0.recordDetailContent = nil
         }
         await store.send(.view(.selectRecord(item))) {
             $0.recordDetail = RecordDetailDestination(record: record)
+            $0.recordDetailContent = content
         }
     }
 
@@ -85,12 +95,17 @@ struct GoalDetailDestinationTests {
         var state = GoalDetailFeature.State(goalId: goal.id)
         state.shownOnDesktop = false
         state.recordDetail = RecordDetailDestination(record: record)
+        state.recordDetailContent = RecordDetailFeature.State(goalTitle: goal.title, record: record)
+        state.recordDetailContent?.history = RecordHistoryDestination(recordID: record.id)
 
         // 빠지는 자리의 닫힘과 새 자리의 나타남이 정리 동작보다 먼저 들어오는 차례
+        _ = feature.reduce(into: &state, action: .recordDetailContent(.history(.dismiss)))
         _ = feature.reduce(into: &state, action: .recordDetail(.dismiss))
         _ = feature.reduce(into: &state, action: .view(.appear(onDesktop: true)))
 
         #expect(state.recordDetail == RecordDetailDestination(record: record))
+        #expect(state.recordDetailContent?.history == RecordHistoryDestination(recordID: record.id))
+        #expect(state.recordDetailContent?.goalShownOnDesktop == true)
         #expect(state.shownOnDesktop == true)
     }
 

@@ -30,24 +30,148 @@ struct RecordDetailFeatureTests {
         state.contentState = .loaded
         let store = TestStore(initialState: state) {
             RecordDetailFeature()
+        } withDependencies: {
+            $0.uuid = .incrementing
         }
+        let editor = RecordEditorFeature.State(
+            goalId: record.goalId,
+            goalTitle: "개발 목표",
+            record: record,
+            baseVersion: currentVersion,
+            versionId: UUID(0).uuidString
+        )
+        let history = RecordHistoryDestination(recordID: record.id)
+        let versionDetail = RecordVersionDetailDestination(version: previousVersion)
+
+        let destination = RecordEditorDestination(versionID: editor.versionId)
 
         await store.send(.view(.tapCorrection)) {
-            $0.sheet = .editor
+            $0.editorContent = editor
+            $0.editor = destination
         }
-        await store.send(.sheet(.dismiss)) {
-            $0.sheet = nil
+        await store.send(.editor(.dismiss)) {
+            $0.editor = nil
+            $0.dismissedEditor = destination
+        }
+        await store.receive(.store(.screensDismissed)) {
+            $0.dismissedEditor = nil
+            $0.editorContent = nil
         }
         await store.send(.view(.tapHistory)) {
-            $0.history = RecordHistoryDestination(recordID: record.id)
+            $0.history = history
         }
         await store.send(.view(.selectVersion(previousVersion))) {
-            $0.versionDetail = RecordVersionDetailDestination(version: previousVersion)
+            $0.versionDetail = versionDetail
         }
         await store.send(.history(.dismiss)) {
             $0.history = nil
             $0.versionDetail = nil
+            $0.dismissedHistory = history
+            $0.dismissedVersionDetail = versionDetail
         }
+        await store.receive(.store(.screensDismissed)) {
+            $0.dismissedHistory = nil
+            $0.dismissedVersionDetail = nil
+        }
+    }
+
+    @Test("창 폭이 바뀌며 같은 차례에 닫힌 화면은 새 자리에서 다시 표시한다")
+    func 창_폭이_바뀌며_같은_차례에_닫힌_화면은_새_자리에서_다시_표시한다() async throws {
+        let previousVersion = try makeDevelopmentRecordVersion(id: "version-1")
+        let currentVersion = try makeDevelopmentRecordVersion(
+            id: "version-2",
+            number: 2,
+            kind: .correction,
+            sourceVersionId: previousVersion.id
+        )
+        let record = try makeConfirmedDevelopmentRecord(
+            versionId: currentVersion.id,
+            versionNumber: currentVersion.number
+        )
+        let feature = RecordDetailFeature()
+        var state = RecordDetailFeature.State(goalTitle: "개발 목표", record: record)
+        state.versions = [previousVersion, currentVersion]
+        state.contentState = .loaded
+        state.shownOnDesktop = false
+        // 개발 목표가 먼저 넓은 창 자리로 옮겨 간 상태
+        state.goalShownOnDesktop = true
+        let editor = RecordEditorFeature.State(
+            goalId: record.goalId,
+            goalTitle: "개발 목표",
+            record: record,
+            baseVersion: currentVersion
+        )
+        state.editorContent = editor
+        state.editor = RecordEditorDestination(versionID: editor.versionId)
+        state.history = RecordHistoryDestination(recordID: record.id)
+        state.versionDetail = RecordVersionDetailDestination(version: previousVersion)
+        let presented = state
+
+        // 빠지는 자리의 닫힘과 새 자리의 나타남이 정리 동작보다 먼저 들어오는 차례
+        _ = feature.reduce(into: &state, action: .versionDetail(.dismiss))
+        _ = feature.reduce(into: &state, action: .history(.dismiss))
+        _ = feature.reduce(into: &state, action: .editor(.dismiss))
+        _ = feature.reduce(into: &state, action: .view(.appear(onDesktop: true)))
+
+        #expect(state.editor == presented.editor)
+        #expect(state.editorContent == presented.editorContent)
+        #expect(state.history == presented.history)
+        #expect(state.versionDetail == presented.versionDetail)
+        #expect(state.contentState == .loaded)
+
+        // 정리 동작이 지난 뒤 같은 자리에 다시 나타나면 닫은 화면을 다시 표시하지 않음
+        _ = feature.reduce(into: &state, action: .history(.dismiss))
+        _ = feature.reduce(into: &state, action: .store(.screensDismissed))
+        _ = feature.reduce(into: &state, action: .view(.appear(onDesktop: true)))
+        #expect(state.history == nil)
+
+        // 빠지는 자리의 화면이 닫히는 중에 다시 나타나도 나타난 자리를 바꾸지 않음
+        _ = feature.reduce(into: &state, action: .view(.appear(onDesktop: false)))
+        _ = feature.reduce(into: &state, action: .view(.appearHistory(onDesktop: false)))
+        #expect(state.shownOnDesktop == true)
+        #expect(state.historyShownOnDesktop == nil)
+    }
+
+    @Test("창 폭이 바뀌며 정정 화면이 잠깐 닫혀도 진행 중인 저장을 마친다")
+    func 창_폭이_바뀌며_정정_화면이_잠깐_닫혀도_진행_중인_저장을_마친다() async throws {
+        let currentVersion = try makeDevelopmentRecordVersion(id: "version-1")
+        let record = try makeConfirmedDevelopmentRecord(
+            versionId: currentVersion.id,
+            versionNumber: currentVersion.number
+        )
+        let savedRecord = try makeDevelopmentRecord(
+            id: record.id,
+            draft: makeDevelopmentRecordDraft(title: "정정한 제목")
+        )
+        let feature = RecordDetailFeature()
+        var state = RecordDetailFeature.State(goalTitle: "개발 목표", record: record)
+        state.versions = [currentVersion]
+        state.contentState = .loaded
+        state.shownOnDesktop = false
+        // 개발 목표가 먼저 넓은 창 자리로 옮겨 간 상태
+        state.goalShownOnDesktop = true
+        // 저장 중인 정정 화면
+        var editor = RecordEditorFeature.State(
+            goalId: record.goalId,
+            goalTitle: "개발 목표",
+            record: record,
+            baseVersion: currentVersion
+        )
+        editor.isLoading = true
+        state.editorContent = editor
+        state.editor = RecordEditorDestination(versionID: editor.versionId)
+        let presented = state
+
+        // 저장하는 동안 빠지는 자리의 닫힘과 새 자리의 나타남이 정리 동작보다 먼저 들어오는 차례
+        _ = feature.reduce(into: &state, action: .editor(.dismiss))
+        _ = feature.reduce(into: &state, action: .view(.appear(onDesktop: true)))
+
+        // 정정 상태가 비지 않아 진행 중인 저장의 결과를 받음
+        #expect(state.editor == presented.editor)
+        #expect(state.editorContent == presented.editorContent)
+        _ = feature.reduce(into: &state, action: .editorContent(.store(.saved(savedRecord))))
+        #expect(state.editorContent?.isLoading == false)
+        #expect(state.editorContent?.result == .saved(savedRecord))
     }
 
     @Test("상세는 currentVersion과 일치하는 확정 버전을 표시한다")

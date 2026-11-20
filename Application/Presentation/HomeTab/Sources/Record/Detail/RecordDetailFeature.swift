@@ -13,7 +13,7 @@ struct RecordDetailFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Action.Alert>?
-        @Presents var sheet: SheetState?
+        @Presents var editor: RecordEditorDestination?
         @Presents var history: RecordHistoryDestination?
         @Presents var versionDetail: RecordVersionDetailDestination?
         let goalTitle: String
@@ -25,6 +25,18 @@ struct RecordDetailFeature {
         var isRestoring = false
         var restoreRequest: RestoreRequest?
         var restoredSourceVersionID: String?
+        // 좁은 창의 전체 화면과 넓은 창의 시트가 같은 정정 상태를 그려 창 폭이 바뀌어도 작성 중인 정정 유지
+        // 창 폭이 바뀌어 표시가 잠깐 닫혀도 진행 중인 저장·확정을 잃지 않도록 표시 상태와 따로 보관
+        var editorContent: RecordEditorFeature.State?
+        // 개발 목표와 기록 상세, 버전 이력 화면이 나타난 자리
+        // 창 폭이 바뀌면 새 자리에 나타난 뒤에 안에서 연 화면을 다시 띄우고, 개발 목표가 먼저 옮겨 가면 빠지는 자리의 닫힘을 거름
+        var goalShownOnDesktop: Bool?
+        var shownOnDesktop: Bool?
+        var historyShownOnDesktop: Bool?
+        // 창 폭이 바뀌어 빠지는 자리가 먼저 닫은 화면, 같은 차례에 새 자리가 나타나면 되살림
+        var dismissedEditor: RecordEditorDestination?
+        var dismissedHistory: RecordHistoryDestination?
+        var dismissedVersionDetail: RecordVersionDetailDestination?
 
         var isLoading: Bool {
             contentState == .idle || contentState == .loading
@@ -49,6 +61,12 @@ struct RecordDetailFeature {
                 self.contentState = .idle
             }
         }
+
+        mutating func restoreDismissedScreens() {
+            editor = editor ?? dismissedEditor
+            history = history ?? dismissedHistory
+            versionDetail = versionDetail ?? dismissedVersionDetail
+        }
     }
 
     enum ContentState: Equatable {
@@ -66,7 +84,8 @@ struct RecordDetailFeature {
 
     enum Action: Equatable {
         case alert(PresentationAction<Alert>)
-        case sheet(PresentationAction<Never>)
+        case editor(PresentationAction<Never>)
+        case editorContent(RecordEditorFeature.Action)
         case history(PresentationAction<Never>)
         case versionDetail(PresentationAction<Never>)
         case view(ViewAction)
@@ -77,6 +96,8 @@ struct RecordDetailFeature {
         }
 
         enum ViewAction: Equatable {
+            case appear(onDesktop: Bool)
+            case appearHistory(onDesktop: Bool)
             case fetch
             case finishEditing
             case restore(DevelopmentRecord.Version)
@@ -90,12 +111,8 @@ struct RecordDetailFeature {
             case restored(DevelopmentRecord.Version)
             case loadFailed
             case restoreFailed
+            case screensDismissed
         }
-    }
-
-    @ObservableState
-    enum SheetState: Equatable {
-        case editor
     }
 
     @Dependency(\.developmentFetchRecordsUseCase) private var fetchRecordsUseCase
@@ -129,19 +146,45 @@ struct RecordDetailFeature {
                 )
             case .alert:
                 break
-            case .sheet(.dismiss):
-                state.sheet = nil
-            case .sheet:
+            case .editor(.dismiss):
+                state.dismissedEditor = state.editor
+                state.editor = nil
+                return .run { send in
+                    await send(.store(.screensDismissed))
+                }
+            case .editor, .editorContent:
                 break
             case .history(.dismiss):
+                state.dismissedHistory = state.history
+                state.dismissedVersionDetail = state.versionDetail ?? state.dismissedVersionDetail
                 state.history = nil
                 state.versionDetail = nil
+                return .run { send in
+                    await send(.store(.screensDismissed))
+                }
             case .history:
                 break
             case .versionDetail(.dismiss):
+                state.dismissedVersionDetail = state.versionDetail
                 state.versionDetail = nil
+                return .run { send in
+                    await send(.store(.screensDismissed))
+                }
             case .versionDetail:
                 break
+            case .view(.appear(let onDesktop)):
+                // 빠지는 자리의 화면이 닫히는 중에 다시 나타나며 보내는 동작은 거름
+                guard onDesktop == state.goalShownOnDesktop else { break }
+                if state.shownOnDesktop != onDesktop {
+                    state.restoreDismissedScreens()
+                }
+                state.shownOnDesktop = onDesktop
+                // 창 폭이 바뀌어 새 자리에 나타날 때는 다시 조회하지 않음
+                guard state.contentState == .idle else { break }
+                return .send(.view(.fetch))
+            case .view(.appearHistory(let onDesktop)):
+                guard onDesktop == state.goalShownOnDesktop else { break }
+                state.historyShownOnDesktop = onDesktop
             case .view(.fetch):
                 guard state.contentState != .loading,
                       !state.isRestoring,
@@ -151,8 +194,14 @@ struct RecordDetailFeature {
                 state.restoredSourceVersionID = nil
                 return fetchEffect(goalID: state.record.goalId, recordID: state.record.id)
             case .view(.finishEditing):
-                state.sheet = nil
-                return .send(.view(.fetch))
+                state.editor = nil
+                // 닫히는 정정 화면이 정정 상태를 그리는 동안은 남겨 두고 다음 차례에 비움
+                return .merge(
+                    .send(.view(.fetch)),
+                    .run { send in
+                        await send(.store(.screensDismissed))
+                    }
+                )
             case .view(.restore(let version)):
                 guard !state.isRestoring,
                       state.allowsMutation,
@@ -167,7 +216,15 @@ struct RecordDetailFeature {
                 guard state.allowsMutation,
                       state.contentState == .loaded,
                       state.currentVersion != nil else { break }
-                state.sheet = .editor
+                let content = RecordEditorFeature.State(
+                    goalId: state.record.goalId,
+                    goalTitle: state.goalTitle,
+                    record: state.record,
+                    baseVersion: state.currentVersion,
+                    versionId: uuid().uuidString
+                )
+                state.editorContent = content
+                state.editor = RecordEditorDestination(versionID: content.versionId)
             case .view(.tapHistory):
                 guard state.contentState == .loaded,
                       state.currentVersion != nil else { break }
@@ -194,12 +251,28 @@ struct RecordDetailFeature {
             case .store(.restoreFailed):
                 state.isRestoring = false
                 state.alert = Self.restoreErrorAlert
+            case .store(.screensDismissed):
+                state.dismissedEditor = nil
+                state.dismissedHistory = nil
+                state.dismissedVersionDetail = nil
+                if state.editor == nil {
+                    state.editorContent = nil
+                }
             }
 
             return .none
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.editorContent, action: \.editorContent) {
+            RecordEditorFeature()
+        }
     }
+}
+
+@ObservableState
+struct RecordEditorDestination: Equatable, Identifiable {
+    let versionID: String
+    var id: String { versionID }
 }
 
 @ObservableState

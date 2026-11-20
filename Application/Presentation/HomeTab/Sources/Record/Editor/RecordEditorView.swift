@@ -20,29 +20,7 @@ public struct RecordEditorView: View {
     // 칸에 그린 작성 화면을 닫는 동작, 없으면 시트를 닫음
     private let onClose: (() -> Void)?
 
-    public init(
-        goalId: String,
-        goalTitle: String,
-        record: DevelopmentRecord? = nil,
-        baseVersion: DevelopmentRecord.Version? = nil,
-        onCompletion: @escaping () -> Void = { },
-        onClose: (() -> Void)? = nil
-    ) {
-        self._store = State(initialValue: Store(
-            initialState: RecordEditorFeature.State(
-                goalId: goalId,
-                goalTitle: goalTitle,
-                record: record,
-                baseVersion: baseVersion
-            )
-        ) {
-            RecordEditorFeature()
-        })
-        self.onCompletion = onCompletion
-        self.onClose = onClose
-    }
-
-    // 개발 목표가 가진 작성 상태를 칸과 시트에 같이 그림
+    // 개발 목표와 기록 상세가 가진 작성 상태를 칸과 시트에 같이 그림
     init(
         store: StoreOf<RecordEditorFeature>,
         onCompletion: @escaping () -> Void,

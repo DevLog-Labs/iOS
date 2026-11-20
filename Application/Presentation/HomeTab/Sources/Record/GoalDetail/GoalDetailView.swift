@@ -92,26 +92,20 @@ public struct GoalDetailView: View {
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
                 .hiddenInPane { usesDesktopLayout || isHidden() },
             interactivePop: true
-        ) { destination in
-            RecordDetailView(
-                goalTitle: store.goalTitle,
-                record: destination.record,
-                allowsMutation: store.allowsRecordMutation,
-                onUpdate: { store.send(.view(.refresh)) }
-            )
+        ) { _ in
+            if let detailStore = store.scope(state: \.recordDetailContent, action: \.recordDetailContent) {
+                RecordDetailView(store: detailStore, onUpdate: { store.send(.view(.refresh)) })
+            }
         }
         // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
         .detailPanel(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
                 .hiddenInPane { !usesDesktopLayout || isHidden() }
-        ) { destination in
+        ) { _ in
             NavigationStack {
-                RecordDetailView(
-                    goalTitle: store.goalTitle,
-                    record: destination.record,
-                    allowsMutation: store.allowsRecordMutation,
-                    onUpdate: { store.send(.view(.refresh)) }
-                )
+                if let detailStore = store.scope(state: \.recordDetailContent, action: \.recordDetailContent) {
+                    RecordDetailView(store: detailStore, onUpdate: { store.send(.view(.refresh)) })
+                }
             }
             .desktopNavigationTransition()
         }
