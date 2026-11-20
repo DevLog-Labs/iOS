@@ -52,7 +52,9 @@ public struct GoalDetailView: View {
 
     private var presentedContent: some View {
         // 창 폭이 바뀌면 개발 목표가 새 자리에 나타난 뒤에 기록 상세를 띄워 같은 갱신에서 겹쳐 쌓지 않음
+        // 지금 값으로 다시 그리고, 새 자리가 먼저 나타난 뒤 빠지는 자리에서 늦게 들어온 닫힘은 읽을 때의 값으로 거름
         let isShown = store.shownOnDesktop == usesDesktopLayout
+        let isHidden = { !isShown || store.shownOnDesktop != usesDesktopLayout }
 
         // 사이드바가 있으면 기록 작성을 개발 목표 오른쪽 칸에 표시
         return PaneSplitView(splitsOnDesktop: store.recordEditor != nil) {
@@ -88,7 +90,7 @@ public struct GoalDetailView: View {
         }
         .navigationDestination(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .hiddenInPane(usesDesktopLayout || !isShown),
+                .hiddenInPane { usesDesktopLayout || isHidden() },
             interactivePop: true
         ) { destination in
             RecordDetailView(
@@ -101,7 +103,7 @@ public struct GoalDetailView: View {
         // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
         .detailPanel(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .hiddenInPane(!usesDesktopLayout || !isShown)
+                .hiddenInPane { !usesDesktopLayout || isHidden() }
         ) { destination in
             NavigationStack {
                 RecordDetailView(
