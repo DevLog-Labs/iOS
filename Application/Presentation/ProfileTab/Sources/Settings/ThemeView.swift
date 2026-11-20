@@ -25,35 +25,20 @@ struct ThemeView: View {
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 24) {
-                if isiOSAppOnMac {
-                    DesktopSettingsSection {
-                        ForEach(Self.themes) { option in
-                            Button {
-                                theme = option
-                            } label: {
-                                DesktopSettingsRow(
-                                    symbolName: option.desktopSymbolName,
-                                    title: Text(option.localizedName(in: PresentationResources.bundle))
-                                ) {
-                                    SettingsCheck(isSelected: theme == option)
-                                }
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                } else {
-                    VStack(spacing: 0) {
-                        ForEach(Self.themes) { option in
-                            themeButton(option)
-
-                            if option != Self.themes.last {
-                                Divider().overlay(Color.separator)
-                                    .padding(.leading, 68)
-                                    .padding(.trailing, 16)
+                DesktopSettingsSection {
+                    ForEach(Self.themes) { option in
+                        Button {
+                            theme = option
+                        } label: {
+                            DesktopSettingsRow(
+                                symbolName: option.symbolName,
+                                title: Text(option.localizedName(in: PresentationResources.bundle))
+                            ) {
+                                SettingsCheck(isSelected: theme == option)
                             }
                         }
+                        .buttonStyle(.plain)
                     }
-                    .groupBackground(in: .rect(cornerRadius: CornerRadius.group))
                 }
             }
             // Mac 설정 화면은 묶음마다 보드의 위아래 8, 좌우 14 여백
@@ -62,10 +47,10 @@ struct ThemeView: View {
             .frame(maxWidth: readableContentWidth)
             .frame(maxWidth: .infinity)
         }
-        // Mac 제목 줄 구분선과 첫 항목 사이 여백
+        // 위쪽 줄 구분선과 첫 항목 사이 여백
         .contentMargins(
             .top,
-            isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : showsPaneTitleBar ? 12 : 0,
+            isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : showsPaneTitleBar ? 24 : 12,
             for: .scrollContent
         )
         .safeAreaInset(edge: .top, spacing: 0) {
@@ -87,66 +72,32 @@ struct ThemeView: View {
             // 일반 화면에서 밀어 넣은 화면이 칸 화면으로 바뀌어도 뒤로 갈 수 있게 뒤로 버튼 표시
             PaneTitleBar(title, onBack: isPaneDetail ? nil : { dismiss() }, showsBackOnDesktop: true)
         } else {
+            // OS와 상관없이 같은 모양인 가운데 제목과 아래 구분선
             ZStack {
                 title
-                    .font(.adaptive(.headline))
-
-                if deviceType != .duo {
-                    HStack {
+                    .font(.adaptive(.callout).bold())
+                HStack {
+                    // Duo는 세로 막대의 뒤로 버튼 사용
+                    if deviceType != .duo {
                         NavigationBackButton(action: { dismiss() })
-                        Spacer()
                     }
+                    Spacer()
                 }
             }
-            .padding(.horizontal, 16)
-            .frame(maxWidth: readableContentWidth)
+            .frame(height: 48)
+            .padding(.horizontal, 8)
+            .overlay(alignment: .bottom) {
+                Divider().overlay(Color.secondarySeparator)
+            }
             .padding(.top, windowControlsInset)
-            .padding(.bottom, 12)
-            .background(Color.background)
-            .toolbarBackground(Color.background)
-        }
-    }
-
-    private func themeButton(_ option: SystemTheme) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: option.symbolName)
-                .font(.adaptive(.headline))
-                .frame(width: 36, height: 36)
-                .iconStyle(color: option.iconColor, in: Circle())
-
-            Text(option.localizedName(in: PresentationResources.bundle))
-                .foregroundStyle(Color.label)
-
-            Spacer(minLength: 8)
-
-            Image(systemName: theme == option ? "checkmark.circle.fill" : "circle")
-                .font(.adaptive(.title2))
-                .foregroundStyle(theme == option ? Color.accent : Color.separator)
-
-        }
-        .padding(16)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .contentShape(.rect)
-        .onTapGesture {
-            theme = option
+            .background(Color.background, ignoresSafeAreaEdges: .top)
         }
     }
 }
 
 private extension SystemTheme {
+    // 아이콘 사각형 안 기호
     var symbolName: String {
-        switch self {
-        case .automatic:
-            return "circle.lefthalf.filled"
-        case .light:
-            return "sun.max.fill"
-        case .dark:
-            return "moon.fill"
-        }
-    }
-
-    // Mac 설정 화면 아이콘 사각형 안 기호
-    var desktopSymbolName: String {
         switch self {
         case .automatic:
             return "desktopcomputer"
@@ -154,17 +105,6 @@ private extension SystemTheme {
             return "sun.max"
         case .dark:
             return "moon"
-        }
-    }
-
-    var iconColor: Color {
-        switch self {
-        case .automatic:
-            return .accent
-        case .light:
-            return .warning
-        case .dark:
-            return .fillLabel
         }
     }
 }
