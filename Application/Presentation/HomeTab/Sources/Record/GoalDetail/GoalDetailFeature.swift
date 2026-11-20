@@ -32,6 +32,8 @@ struct GoalDetailFeature {
         @Presents var recordDetail: RecordDetailDestination?
         @Presents var todoDetail: TodoDetailDestination?
         @Presents var todoLinkSheet: GoalTodoLinkFeature.State?
+        // 창 폭이 바뀌어 기록 상세 표시가 잠깐 닫혀도 진행 중인 조회·되돌리기와 안에서 연 화면을 잃지 않도록 따로 보관하는 상세 상태
+        var recordDetailContent: RecordDetailFeature.State?
         let goalId: String
         var goal: DevelopmentGoal?
         var updatedGoalStatus: DevelopmentGoal.Status?
@@ -75,6 +77,7 @@ struct GoalDetailFeature {
         case alert(PresentationAction<Alert>)
         case recordEditor(PresentationAction<RecordEditorFeature.Action>)
         case recordDetail(PresentationAction<Never>)
+        case recordDetailContent(RecordDetailFeature.Action)
         case todoDetail(PresentationAction<Never>)
         case todoLinkSheet(PresentationAction<GoalTodoLinkFeature.Action>)
         case binding(BindingAction<State>)
@@ -139,7 +142,7 @@ struct GoalDetailFeature {
                 return .run { send in
                     await send(.store(.recordDetailDismissed))
                 }
-            case .recordDetail:
+            case .recordDetail, .recordDetailContent:
                 break
             case .todoDetail(.dismiss):
                 state.todoDetail = nil
@@ -169,10 +172,14 @@ struct GoalDetailFeature {
                     versionId: uuid().uuidString
                 )
             case .view(.appear(let onDesktop)):
-                if state.shownOnDesktop != onDesktop, state.recordDetail == nil {
-                    state.recordDetail = state.dismissedRecordDetail
+                if state.shownOnDesktop != onDesktop {
+                    if state.recordDetail == nil {
+                        state.recordDetail = state.dismissedRecordDetail
+                    }
+                    state.recordDetailContent?.restoreDismissedScreens()
                 }
                 state.shownOnDesktop = onDesktop
+                state.recordDetailContent?.goalShownOnDesktop = onDesktop
             case .view(.continueRecord):
                 guard state.hasLoaded,
                       state.allowsRecordMutation,
@@ -232,10 +239,21 @@ struct GoalDetailFeature {
                     )
                 } else {
                     state.recordDetail = RecordDetailDestination(record: item.record)
+                    var content = RecordDetailFeature.State(
+                        goalTitle: state.goalTitle,
+                        record: item.record,
+                        allowsMutation: state.allowsRecordMutation
+                    )
+                    content.goalShownOnDesktop = state.shownOnDesktop
+                    state.recordDetailContent = content
                 }
             case .view(.returnToGoal):
                 state.recordDetail = nil
                 state.todoDetail = nil
+                // 내려가는 기록 상세 안 화면의 닫힘을 처리한 다음 차례에 상세 상태를 비움
+                return .run { send in
+                    await send(.store(.recordDetailDismissed))
+                }
             case .view(.selectTodo(let todoId)):
                 guard state.linkedTodos.contains(where: { $0.id == todoId }),
                       state.todoDetail == nil else { break }
@@ -279,6 +297,9 @@ struct GoalDetailFeature {
                 state.alert = Self.transitionErrorAlert
             case .store(.recordDetailDismissed):
                 state.dismissedRecordDetail = nil
+                if state.recordDetail == nil {
+                    state.recordDetailContent = nil
+                }
             }
 
             return .none
@@ -286,6 +307,9 @@ struct GoalDetailFeature {
         .ifLet(\.$alert, action: \.alert)
         .ifLet(\.$recordEditor, action: \.recordEditor) {
             RecordEditorFeature()
+        }
+        .ifLet(\.recordDetailContent, action: \.recordDetailContent) {
+            RecordDetailFeature()
         }
         .ifLet(\.$todoLinkSheet, action: \.todoLinkSheet) {
             GoalTodoLinkFeature()

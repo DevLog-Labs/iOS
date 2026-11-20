@@ -22,7 +22,15 @@ struct RecordVersionHistoryView: View {
     }
 
     var body: some View {
-        ScrollView {
+        // 창 폭이 바뀌면 버전 이력이 새 자리에 나타난 뒤에 이전 버전을 띄움
+        // 지금 값으로 다시 그리고, 빠지는 자리에서 늦게 들어온 닫힘은 읽을 때의 값으로 거름
+        let versionDetail = $store.scope(state: \.versionDetail, action: \.versionDetail)
+        let isShown = store.goalShownOnDesktop == usesDesktopLayout && store.historyShownOnDesktop == usesDesktopLayout
+        let isHidden = {
+            !isShown || store.goalShownOnDesktop != usesDesktopLayout || store.historyShownOnDesktop != usesDesktopLayout
+        }
+
+        return ScrollView {
             LazyVStack(alignment: .leading, spacing: 0) {
                 currentVersionSection
                 HomeSectionHeader {
@@ -57,8 +65,7 @@ struct RecordVersionHistoryView: View {
         .background(Color.background.ignoresSafeArea())
         .duoToolbarVisibility(showsBackButton: true)
         .navigationDestination(
-            item: $store.scope(state: \.versionDetail, action: \.versionDetail)
-                .activePresentation(when: !usesDesktopLayout),
+            item: versionDetail.hiddenInPane { usesDesktopLayout || isHidden() },
             interactivePop: true
         ) { destination in
             RecordVersionDetailView(
@@ -68,14 +75,14 @@ struct RecordVersionHistoryView: View {
         }
         // 사이드바가 있는 창은 이전 버전을 사이드바까지 덮는 상세 판으로 열기
         .detailPanel(
-            item: $store.scope(state: \.versionDetail, action: \.versionDetail)
-                .activePresentation(when: usesDesktopLayout)
+            item: versionDetail.hiddenInPane { !usesDesktopLayout || isHidden() }
         ) { destination in
             RecordVersionDetailView(
                 store: store,
                 version: destination.version
             )
         }
+        .onAppear { store.send(.view(.appearHistory(onDesktop: usesDesktopLayout))) }
     }
 
     @ViewBuilder

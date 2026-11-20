@@ -16,29 +16,20 @@ public struct RecordDetailView: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    private let onUpdate: () -> Void
-    @State private var store: StoreOf<RecordDetailFeature>
-
-    public init(
-        goalTitle: String,
-        record: DevelopmentRecord,
-        allowsMutation: Bool = true,
-        onUpdate: @escaping () -> Void = { }
-    ) {
-        self.onUpdate = onUpdate
-        self._store = State(initialValue: Store(
-            initialState: RecordDetailFeature.State(
-                goalTitle: goalTitle,
-                record: record,
-                allowsMutation: allowsMutation
-            )
-        ) {
-            RecordDetailFeature()
-        })
-    }
+    // 개발 목표가 가진 상세 상태를 좁은 창의 내비게이션과 넓은 창의 상세 판에 같이 그림
+    @Bindable var store: StoreOf<RecordDetailFeature>
+    let onUpdate: () -> Void
 
     public var body: some View {
-        ScrollView {
+        // 창 폭이 바뀌면 기록 상세가 새 자리에 나타난 뒤에 안에서 연 화면을 띄움
+        // 지금 값으로 다시 그리고, 빠지는 자리에서 늦게 들어온 닫힘은 읽을 때의 값으로 거름
+        let editor = $store.scope(state: \.editor, action: \.editor)
+        let isShown = store.goalShownOnDesktop == usesDesktopLayout && store.shownOnDesktop == usesDesktopLayout
+        let isHidden = {
+            !isShown || store.goalShownOnDesktop != usesDesktopLayout || store.shownOnDesktop != usesDesktopLayout
+        }
+
+        return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 switch store.contentState {
                 case .draft(let draft):
@@ -70,23 +61,22 @@ public struct RecordDetailView: View {
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background.ignoresSafeArea())
         .duoToolbarVisibility(showsBackButton: true)
-        .onAppear { store.send(.view(.fetch)) }
+        .onAppear { store.send(.view(.appear(onDesktop: usesDesktopLayout))) }
         .prominentAlert(store, state: \.alert, action: \.alert)
         // 좁은 창의 기록 정정은 닫기·저장·확정 버튼으로만 닫는 전체 화면
         .fullScreenCover(
-            item: $store.scope(state: \.sheet, action: \.sheet)
-                .activePresentation(when: !usesDesktopLayout)
+            item: editor.hiddenInPane { usesDesktopLayout || isHidden() }
         ) { _ in
             correctionEditor
         }
         .prominentSheet(
-            item: $store.scope(state: \.sheet, action: \.sheet)
-                .activePresentation(when: usesDesktopLayout)
+            item: editor.hiddenInPane { !usesDesktopLayout || isHidden() }
         ) { _ in
             correctionEditor
         }
         .navigationDestination(
-            item: $store.scope(state: \.history, action: \.history),
+            item: $store.scope(state: \.history, action: \.history)
+                .hiddenInPane(isHidden),
             interactivePop: true
         ) { _ in
             RecordVersionHistoryView(store: store)
@@ -102,14 +92,11 @@ public struct RecordDetailView: View {
         }
     }
 
+    @ViewBuilder
     private var correctionEditor: some View {
-        RecordEditorView(
-            goalId: store.record.goalId,
-            goalTitle: store.goalTitle,
-            record: store.record,
-            baseVersion: store.currentVersion,
-            onCompletion: finishEditing
-        )
+        if let editorStore = store.scope(state: \.editorContent, action: \.editorContent) {
+            RecordEditorView(store: editorStore, onCompletion: finishEditing)
+        }
     }
 
     @ViewBuilder
