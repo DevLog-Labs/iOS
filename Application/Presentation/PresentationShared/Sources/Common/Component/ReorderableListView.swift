@@ -160,7 +160,7 @@ public final class ReorderableListView<
                     var listConfiguration = UICollectionLayoutListConfiguration(appearance: .plain)
                     listConfiguration.backgroundColor = .clear
                     listConfiguration.separatorConfiguration.color = self?.collectionView?.separatorColor ?? .separator
-                    // 시스템 reorder 핸들의 trailing 여백이 페이지 여백(16pt)보다 커서 셀을 그만큼 여백 밖으로 늘린다.
+                    // 시스템 reorder 핸들의 trailing 여백이 페이지 여백(16pt)보다 커서 셀을 그만큼 여백 밖으로 늘림
                     let handleOverhang: CGFloat = 7
                     // 구분선은 목록 오른쪽 끝까지 이어짐
                     let separatorInsets = NSDirectionalEdgeInsets(

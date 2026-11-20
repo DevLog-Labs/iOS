@@ -26,9 +26,7 @@ struct CategoryManageFeature {
         var isNew = false
 
         var navigationTitle: String {
-            isNew
-                ? String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle)
-                : String(localized: "todo_manage_edit_category_title", bundle: PresentationResources.bundle)
+            isNew ? String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle) : String(localized: "todo_manage_edit_category_title", bundle: PresentationResources.bundle)
         }
         var placeholder: String {
             category.name
