@@ -302,7 +302,7 @@ public struct InfoSheetView: View {
                 } label: {
                     Text(String(localized: "common_close", bundle: PresentationResources.bundle))
                         .font(.adaptive(.callout).weight(.medium))
-                        .foregroundStyle(Color.tintLabel)
+                        .foregroundStyle(Color.label)
                         .padding(.horizontal, 4)
                         .frame(maxHeight: .infinity)
                         .contentShape(.rect)

@@ -29,19 +29,19 @@ public struct PaneMenuButton: View {
         DropdownMenu(alignment: .trailing, sections: sections) {
             Image(systemName: systemImage)
                 .topBarButtonStyle()
-                // 걸린 필터 개수는 아이콘 오른쪽 위 강조색 배지로 표시
+                // 걸린 필터 개수는 아이콘 오른쪽 위 흑백 배지로 표시
                 .overlay(alignment: .topTrailing) {
                     if 0 < badgeCount {
                         Text(verbatim: badgeCount.formatted())
                             .font(.system(size: isiOSAppOnMac ? 9 * AdaptiveSize.boardScale : 11, weight: .semibold))
                             .monospacedDigit()
-                            .foregroundStyle(Color.white)
+                            .foregroundStyle(Color.background)
                             .padding(.horizontal, isiOSAppOnMac ? 3 * AdaptiveSize.boardScale : 4)
                             .frame(
                                 minWidth: isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16,
                                 minHeight: isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16
                             )
-                            .background(Color.accent, in: .capsule)
+                            .background(Color.label, in: .capsule)
                             .fixedSize()
                             .padding([.top, .trailing], isiOSAppOnMac ? AdaptiveSize.boardScale : 2)
                     }

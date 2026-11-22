@@ -28,7 +28,7 @@ private struct InputBackgroundModifier: ViewModifier {
         // 사이드바가 있는 창은 Mac과 같은 입력칸 모양
         if usesDesktopLayout {
             let shape = RoundedRectangle(cornerRadius: isMultiline ? CornerRadius.group : CornerRadius.control)
-            let border = isInvalid ? Color.danger : isFocused ? .accent : isMultiline ? .multilineInputBorder : .inputBorder
+            let border = isInvalid ? Color.danger : isFocused ? .secondaryLabel : isMultiline ? .multilineInputBorder : .inputBorder
 
             // Orca 입력칸처럼 라이트는 테두리만, 다크는 옅은 바탕과 테두리
             content
@@ -36,7 +36,7 @@ private struct InputBackgroundModifier: ViewModifier {
                 .overlay { shape.strokeBorder(border) }
                 .overlay {
                     if isFocused && !isInvalid {
-                        shape.inset(by: -3).strokeBorder(Color.accent.opacity(0.3), lineWidth: 3)
+                        shape.inset(by: -3).strokeBorder(Color.secondaryLabel.opacity(0.3), lineWidth: 3)
                     }
                 }
         } else {

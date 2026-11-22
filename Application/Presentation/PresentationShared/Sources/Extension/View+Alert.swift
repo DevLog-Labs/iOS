@@ -131,10 +131,7 @@ where State: ObservableState {
                             .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(
-                        button.role == .destructive
-                            ? Color.danger : usesDefaultAction ? .accent : .label
-                    )
+                    .foregroundStyle(button.role == .destructive ? Color.danger : .label)
                     .keyboardShortcut(
                         usesDefaultAction
                             ? .defaultAction : button.role == .cancel ? .cancelAction : nil

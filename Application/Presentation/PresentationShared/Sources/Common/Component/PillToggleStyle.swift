@@ -41,14 +41,14 @@ private struct PillToggle: View {
                 let knob = (isiOSAppOnMac ? 14 : 18) * AdaptiveSize.boardScale
 
                 Capsule()
-                    .fill(configuration.isOn ? Color.accent : .switchOffFill)
+                    .fill(configuration.isOn ? Color.label : .switchOffFill)
                     .frame(
                         width: (isiOSAppOnMac ? 32 : 44) * AdaptiveSize.boardScale,
                         height: (isiOSAppOnMac ? 18 : 24) * AdaptiveSize.boardScale
                     )
                     .overlay(alignment: configuration.isOn ? .trailing : .leading) {
                         Circle()
-                            .fill(Color.white)
+                            .fill(configuration.isOn ? Color.background : .white)
                             .frame(width: knob, height: knob)
                             .shadow(color: Color.black.opacity(0.1), radius: 1.5, y: 1)
                             .padding((isiOSAppOnMac ? 2 : 3) * AdaptiveSize.boardScale)
