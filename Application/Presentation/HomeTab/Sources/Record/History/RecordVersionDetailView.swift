@@ -137,10 +137,7 @@ struct RecordVersionDetailView: View {
                 Button {
                     store.send(.view(.restore(version)))
                 } label: {
-                    RecordButtonLabel(
-                        RecordPresentation.text("development_record_restore_button"),
-                        systemImage: "arrow.uturn.backward"
-                    )
+                    RecordButtonLabel(RecordPresentation.text("development_record_restore_button"))
                 }
                 .buttonStyle(RecordButtonStyle(isProminent: false))
                 .disabled(store.isRestoring || store.record.draft != nil)

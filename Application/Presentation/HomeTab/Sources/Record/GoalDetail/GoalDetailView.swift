@@ -260,10 +260,7 @@ public struct GoalDetailView: View {
             Button {
                 store.send(.view(hasDraft ? .continueRecord : .addRecord))
             } label: {
-                RecordButtonLabel(
-                    RecordPresentation.text(hasDraft ? "development_record_continue" : "development_record_add"),
-                    systemImage: hasDraft ? "pencil" : "plus"
-                )
+                RecordButtonLabel(RecordPresentation.text(hasDraft ? "development_record_continue" : "development_record_add"))
             }
             .buttonStyle(RecordButtonStyle(fillsWidth: !usesDesktopLayout))
             .disabled(store.isLoading || store.isTransitioning)
