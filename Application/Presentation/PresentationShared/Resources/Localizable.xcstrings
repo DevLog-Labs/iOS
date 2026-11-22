@@ -1473,13 +1473,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Record"
+            "value" : "New Record"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "기록 추가"
+            "value" : "새로 작성"
           }
         }
       }
@@ -1615,7 +1615,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "기록 이어서 작성"
+            "value" : "이어서 작성"
           }
         }
       }
