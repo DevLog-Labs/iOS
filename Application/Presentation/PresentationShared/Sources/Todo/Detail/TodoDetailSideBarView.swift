@@ -161,7 +161,7 @@ private struct TodoInfoProperties: View {
                         .resizable()
                         .fontWeight(.medium)
                         .frame(width: glyphSize, height: glyphSize)
-                        .foregroundStyle(editorStore.isPinned ? Color.accent : .secondaryLabel)
+                        .foregroundStyle(editorStore.isPinned ? Color.important : .secondaryLabel)
                         .padding(hitPadding)
                         .contentShape(.rect)
                 }

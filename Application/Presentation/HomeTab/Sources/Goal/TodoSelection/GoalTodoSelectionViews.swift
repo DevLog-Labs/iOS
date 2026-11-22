@@ -93,7 +93,7 @@ struct GoalTodoSelectionRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if todo.isPinned {
                     Image(systemName: "star.fill")
-                        .foregroundStyle(Color.warning)
+                        .foregroundStyle(Color.important)
                 }
             }
             .padding(.horizontal, 16)

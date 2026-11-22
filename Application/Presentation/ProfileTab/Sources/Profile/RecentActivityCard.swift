@@ -78,7 +78,7 @@ private struct RecentTodoRow: View {
                     if todo.isPinned {
                         Image(systemName: "star.fill")
                             .font(.adaptive(.caption).weight(.semibold))
-                            .foregroundStyle(Color.accent)
+                            .foregroundStyle(Color.important)
                     }
                 }
 

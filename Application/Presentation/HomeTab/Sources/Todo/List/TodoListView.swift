@@ -217,7 +217,7 @@ private struct TodoListContent: View {
                                     ItemActionButton(
                                         title: todo.isPinned
                                             ? String(localized: "todo_action_unpin", bundle: PresentationResources.bundle) : String(localized: "todo_action_pin", bundle: PresentationResources.bundle),
-                                        color: Color.orange,
+                                        color: Color.important,
                                         image: Image(systemName: "star\(todo.isPinned ? ".slash" : ".fill")")
                                     ) {
                                         store.send(.view(.tapTogglePinned(todo)))

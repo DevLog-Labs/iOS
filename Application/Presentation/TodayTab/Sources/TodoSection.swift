@@ -91,7 +91,7 @@ private struct TodoRow: View {
                         if item.isPinned {
                             Image(systemName: "star.fill")
                                 .font(.system(size: isiOSAppOnMac ? 12.5 * AdaptiveSize.boardScale : 14))
-                                .foregroundStyle(Color.tintLabel)
+                                .foregroundStyle(Color.important)
                         }
                     }
                     if !item.content.isEmpty {

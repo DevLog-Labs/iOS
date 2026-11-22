@@ -51,7 +51,7 @@ public struct TodoItemRow: View {
                 if item.isPinned {
                     Image(systemName: "star.fill")
                         .font(.system(size: isiOSAppOnMac ? 12.5 * AdaptiveSize.boardScale : 14))
-                        .foregroundStyle(Color.accent)
+                        .foregroundStyle(Color.important)
                 }
 
                 // 칸 화면은 옆 칸에 상세를 열어 화면 이동 표시 생략
