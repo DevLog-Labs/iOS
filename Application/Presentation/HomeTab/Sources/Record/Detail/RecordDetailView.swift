@@ -202,10 +202,7 @@ public struct RecordDetailView: View {
             Button {
                 store.send(.view(.tapCorrection))
             } label: {
-                RecordButtonLabel(
-                    RecordPresentation.text("development_record_correct"),
-                    systemImage: "pencil"
-                )
+                RecordButtonLabel(RecordPresentation.text("development_record_correct"))
             }
         }
         Button {

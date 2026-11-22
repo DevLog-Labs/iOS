@@ -44,10 +44,7 @@ struct CategoryManageView: View {
                                 setDetailSideBarPresented?(true)
                             }
                         } label: {
-                            Label(
-                                String(localized: "todo_manage_add_category_title", bundle: PresentationResources.bundle),
-                                systemImage: "plus"
-                            )
+                            Text("todo_manage_add_category_title", bundle: PresentationResources.bundle)
                             .font(.adaptive(isiOSAppOnMac ? .headline : .subheadline).weight(.semibold))
                             .foregroundStyle(Color.label)
                             // 좁은 창은 목록 폭, 사이드바가 있으면 글자 폭
