@@ -17,7 +17,7 @@ struct AccountCard: View {
             Button(action: onAccount) {
                 DesktopSettingsRow(
                     symbolName: "person",
-                    symbolColor: .tintLabel,
+                    symbolColor: .label,
                     title: Text(String(localized: "settings_account", bundle: PresentationResources.bundle))
                 ) {
                     Image(systemName: "chevron.right")

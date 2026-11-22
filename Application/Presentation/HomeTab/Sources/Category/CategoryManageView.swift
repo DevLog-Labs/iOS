@@ -147,7 +147,7 @@ private struct CategorySheetTopBar: View {
         let closeButton = Button(action: onClose) {
             Text(closeTitle)
                 .font(.adaptive(.callout).weight(closesAtLeading ? .medium : .bold))
-                .foregroundStyle(Color.tintLabel)
+                .foregroundStyle(Color.label)
                 .padding(.horizontal, 4)
                 .frame(maxHeight: .infinity)
                 .contentShape(.rect)
@@ -197,7 +197,7 @@ private struct CategoryManageRow: View {
                 .itemActions {
                     ItemActionButton(
                         title: String(localized: "todo_edit", bundle: PresentationResources.bundle),
-                        color: Color.accent,
+                        color: Color.label,
                         image: Image(systemName: "pencil"),
                         action: onEdit
                     )
@@ -333,7 +333,7 @@ private struct CategoryEditForm: View {
                         store.send(.tapRandomColorButton)
                     } label: {
                         Text(String(localized: "todo_manage_random_color", bundle: PresentationResources.bundle))
-                            .foregroundStyle(Color.tintLabel)
+                            .foregroundStyle(Color.label)
                     }
                     .buttonStyle(.plain)
                 }
@@ -412,7 +412,7 @@ private struct CategoryEditForm: View {
                 .foregroundStyle(Color.secondaryLabel)
                 .monospacedDigit()
         }
-        .tint(Color.accent)
+        .tint(Color.label)
         .padding(.horizontal, 12 * AdaptiveSize.boardScale)
         .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
         .modifier(CategoryNameFieldBackground(isFocused: isNameFocused, isInvalid: store.isDuplicatedName))

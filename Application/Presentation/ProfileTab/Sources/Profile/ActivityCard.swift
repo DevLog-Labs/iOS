@@ -27,7 +27,7 @@ struct ActivityCard: View {
                         store.send(.moveToCurrentQuarter)
                     } label: {
                         Image(systemName: "arrow.uturn.backward")
-                            .foregroundStyle(Color.tintLabel)
+                            .foregroundStyle(Color.label)
                     }
                     .buttonStyle(.plain)
                 }
@@ -49,7 +49,7 @@ struct ActivityCard: View {
                     }
                 } label: {
                     Image(systemName: "line.3.horizontal.decrease")
-                        .foregroundStyle(Color.tintLabel)
+                        .foregroundStyle(Color.label)
                 }
             }
 
@@ -61,7 +61,7 @@ struct ActivityCard: View {
                         Image(systemName: "chevron.left")
                             .font(.adaptive(.body))
                     }
-                    .tint(Color.tintLabel)
+                    .tint(Color.label)
                     .disabled(!store.canMoveToPreviousQuarter)
                     Spacer()
                     Button {
@@ -96,7 +96,7 @@ struct ActivityCard: View {
                         Image(systemName: "chevron.right")
                             .font(.adaptive(.body))
                     }
-                    .tint(Color.tintLabel)
+                    .tint(Color.label)
                     .disabled(!store.canMoveToNextQuarter)
                 }
                 .font(.adaptive(.footnote))
@@ -228,7 +228,7 @@ struct QuarterPickerSheet: View {
                     } label: {
                         Text(String(localized: "common_done", bundle: PresentationResources.bundle))
                             .font(.adaptive(isiOSAppOnMac ? .body : .callout).bold())
-                            .foregroundStyle(Color.tintLabel)
+                            .foregroundStyle(Color.label)
                             .padding(.horizontal, 4 * AdaptiveSize.boardScale)
                             .contentShape(.rect)
                     }
@@ -297,7 +297,7 @@ struct QuarterPickerSheet: View {
                     } label: {
                         Text(String(localized: "common_done", bundle: PresentationResources.bundle))
                             .font(.adaptive(.callout).weight(.medium))
-                            .foregroundStyle(Color.tintLabel)
+                            .foregroundStyle(Color.label)
                             .padding(.horizontal, 4)
                             .frame(maxHeight: .infinity)
                             .contentShape(.rect)
@@ -349,7 +349,7 @@ struct QuarterPickerSheet: View {
         .sheetDetent(store.quarterPickerHeight == 0 ? .fraction(0.3) : .height(store.quarterPickerHeight))
     }
 
-    // 고른 분기는 강조색 테두리와 옅은 바탕, 고를 수 없는 분기는 흐린 글자
+    // 고른 분기는 기본 글자색 테두리와 회색 바탕, 고를 수 없는 분기는 흐린 글자
     private func desktopQuarterButton(for quarter: Int) -> some View {
         let quarterStart = store.state.quarterStartForPicker(quarter: quarter)
         let isEnabled = store.state.isQuarterSelectableForPicker(quarter)
@@ -367,12 +367,12 @@ struct QuarterPickerSheet: View {
                 )
             )
             .font(.adaptive(isiOSAppOnMac ? .body : .subheadline).weight(.semibold))
-            .foregroundStyle(isSelected ? Color.tintLabel : isEnabled ? .label : .tertiaryLabel)
+            .foregroundStyle(isSelected || isEnabled ? Color.label : .tertiaryLabel)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14 * AdaptiveSize.boardScale)
-            .background(isSelected ? Color.tintFill : .tertiaryBackground, in: shape)
+            .background(isSelected ? Color.fill : .tertiaryBackground, in: shape)
             .overlay {
-                shape.strokeBorder(isSelected ? Color.accent : .secondarySeparator)
+                shape.strokeBorder(isSelected ? Color.label : .secondarySeparator)
             }
             .contentShape(shape)
         }
@@ -401,9 +401,9 @@ struct QuarterPickerSheet: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: CornerRadius.control)
-                    .fill(isSelected ? Color.accent : Color.tertiaryBackground)
+                    .fill(isSelected ? Color.label : Color.tertiaryBackground)
             )
-            .foregroundStyle(isSelected ? Color.white : isEnabled ? .label : .secondaryLabel)
+            .foregroundStyle(isSelected ? Color.background : isEnabled ? .label : .secondaryLabel)
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

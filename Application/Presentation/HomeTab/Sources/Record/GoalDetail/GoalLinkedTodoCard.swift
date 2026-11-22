@@ -41,7 +41,7 @@ struct GoalLinkedTodoCard: View {
                     action: onManage
                 )
                 .font(.adaptive(isiOSAppOnMac ? .subheadline : .footnote).weight(.semibold))
-                .foregroundStyle(Color.tintLabel)
+                .foregroundStyle(Color.label)
                 .buttonStyle(.plain)
                 .disabled(isLoading)
             }

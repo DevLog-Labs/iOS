@@ -141,7 +141,7 @@ private struct TodoRow: View {
         HStack(spacing: 8) {
             Text("#\(item.number)")
                 .fontWeight(.semibold)
-                .foregroundStyle(Color.tintLabel)
+                .foregroundStyle(Color.label)
 
             Image(systemName: category.symbolName)
                 .foregroundStyle(category.color)

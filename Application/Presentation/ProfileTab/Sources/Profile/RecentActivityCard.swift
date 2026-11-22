@@ -85,7 +85,7 @@ private struct RecentTodoRow: View {
                 // #번호 · 카테고리 · 업데이트 시각
                 HStack(spacing: 4) {
                     Text(verbatim: "#\(todo.number)")
-                        .foregroundStyle(Color.tintLabel)
+                        .foregroundStyle(Color.label)
                     Text(category.localizedName)
                         .lineLimit(1)
                     Text(verbatim: "·")

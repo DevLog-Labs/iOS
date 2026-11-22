@@ -137,7 +137,7 @@ struct SearchView: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: "info.circle")
                 .font(.adaptive(.body))
-                .foregroundStyle(Color.tintLabel)
+                .foregroundStyle(Color.label)
             VStack(alignment: .leading, spacing: 0) {
                 Text(String(
                     localized: "search_todo_number_tip_title",
@@ -305,10 +305,10 @@ private struct SearchResults: View {
                                 localized: "search_show_more",
                                 bundle: PresentationResources.bundle)
                             )
-                            .foregroundStyle(Color.tintLabel)
+                            .foregroundStyle(Color.label)
                             .font(.adaptive(.callout).bold())
                         }
-                        .adaptiveButtonStyle(color: .tintFill)
+                        .adaptiveButtonStyle(color: .fill)
                         .padding(.top, 8)
                         .padding(.horizontal)
                     }

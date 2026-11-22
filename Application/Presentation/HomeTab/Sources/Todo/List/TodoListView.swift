@@ -454,7 +454,7 @@ private struct TodoListSearchBar: View {
                 }
             } label: {
                 Text(String(localized: "common_cancel", bundle: PresentationResources.bundle))
-                    .foregroundStyle(Color.accent)
+                    .foregroundStyle(Color.label)
             }
             .buttonStyle(.plain)
         }
@@ -494,10 +494,10 @@ private struct TodoListFilterHeader: View {
                                 .font(.system(size: 10, weight: .semibold))
                         }
                         .font(.adaptive(.footnote))
-                        .foregroundStyle(Color.tintLabel)
+                        .foregroundStyle(Color.label)
                         .padding(.horizontal, 12)
                         .frame(height: 34)
-                        .background(Color.tintFill, in: .rect(cornerRadius: CornerRadius.control))
+                        .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.control))
                     }
                 }
 
@@ -560,7 +560,7 @@ private struct TodoListFilterHeader: View {
     }
 }
 
-// 필터와 정렬 메뉴를 여는 칩, 기본값에서 바꾼 조건은 강조색 바탕으로 표시
+// 필터와 정렬 메뉴를 여는 칩, 기본값에서 바꾼 조건은 회색 바탕으로 표시
 private struct TodoListFilterChip: View {
     let title: String
     let systemImage: String
@@ -575,10 +575,10 @@ private struct TodoListFilterChip: View {
                 .font(.system(size: 10, weight: .semibold))
         }
         .font(.adaptive(.footnote))
-        .foregroundStyle(isActive ? Color.tintLabel : .label)
+        .foregroundStyle(Color.label)
         .padding(.horizontal, 12)
         .frame(height: 34)
-        .background(isActive ? Color.tintFill : .clear, in: .rect(cornerRadius: CornerRadius.control))
+        .background(isActive ? Color.tertiaryBackground : .clear, in: .rect(cornerRadius: CornerRadius.control))
         .overlay {
             RoundedRectangle(cornerRadius: CornerRadius.control).strokeBorder(isActive ? Color.clear : .separator)
         }

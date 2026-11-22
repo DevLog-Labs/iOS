@@ -61,7 +61,7 @@ struct UserInfoCard: View {
                             .foregroundStyle(Color.secondaryLabel)
                     }
                     .foregroundStyle(Color.label)
-                    .tint(Color.accent)
+                    .tint(Color.label)
                     .focused($focused)
                     .disabled(!store.isNetworkConnected)
 
@@ -71,7 +71,7 @@ struct UserInfoCard: View {
                             store.send(.tapResetStatusMessageButton)
                         } label: {
                             Image(systemName: "xmark.circle.fill")
-                                .foregroundStyle(Color.accent)
+                                .foregroundStyle(Color.label)
                         }
                         .transition(.move(edge: .trailing).combined(with: .opacity))
                     }
@@ -94,7 +94,7 @@ struct UserInfoCard: View {
                     } label: {
                         Text("profile_done", bundle: PresentationResources.bundle)
                     }
-                    .tint(Color.accent)
+                    .tint(Color.label)
                     .transition(.move(edge: .trailing).combined(with: .opacity))
                 }
             }

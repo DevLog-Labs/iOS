@@ -446,7 +446,7 @@ private struct PushNotificationFilterBar: View {
     }
 }
 
-// 고른 조건은 강조색 바탕과 테두리, 나머지는 테두리만 있는 칩
+// 고른 조건은 테두리 없는 회색 바탕, 나머지는 테두리만 있는 칩
 private struct PushNotificationFilterChip<Content: View>: View {
     let isSelected: Bool
     @ViewBuilder let content: Content
@@ -457,13 +457,13 @@ private struct PushNotificationFilterChip<Content: View>: View {
         }
         .font(.adaptive(.footnote))
         .imageScale(.small)
-        .foregroundStyle(isSelected ? Color.tintLabel : .label)
+        .foregroundStyle(Color.label)
         .padding(.horizontal, 12)
         .frame(height: 34)
-        .background(isSelected ? Color.tintFill : .clear, in: .rect(cornerRadius: CornerRadius.control))
+        .background(isSelected ? Color.tertiaryBackground : .clear, in: .rect(cornerRadius: CornerRadius.control))
         .overlay {
             RoundedRectangle(cornerRadius: CornerRadius.control)
-                .strokeBorder(isSelected ? Color.accent.opacity(0.6) : .separator)
+                .strokeBorder(isSelected ? Color.clear : .separator)
         }
     }
 }
