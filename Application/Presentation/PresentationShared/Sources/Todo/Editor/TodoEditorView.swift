@@ -324,8 +324,8 @@ private struct TitleField: View {
             )
             .foregroundStyle(Color.secondaryLabel),
         )
-        // 입력칸 바탕 없이 큰 굵은 제목으로 표시
-        .font(.system(size: isiOSAppOnMac ? 17 * AdaptiveSize.boardScale : 24, weight: .heavy))
+        // 입력칸 바탕 없이 큰 제목으로 표시
+        .font(.system(size: isiOSAppOnMac ? 17 * AdaptiveSize.boardScale : 24))
         .focused($field, equals: .title)
     }
 }
