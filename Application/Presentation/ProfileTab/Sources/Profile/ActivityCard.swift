@@ -31,23 +31,42 @@ struct ActivityCard: View {
                     }
                     .buttonStyle(.plain)
                 }
-                Menu {
-                    ForEach(ActivityKindItem.selectableItems) { activityKindItem in
-                        if let activityKind = ActivityKind(rawValue: activityKindItem.rawValue) {
-                            switch activityKind {
+                // 제목 줄 오른쪽 끝 버튼이라 메뉴 오른쪽 끝을 버튼 오른쪽 끝에 맞춤
+                DropdownMenu(
+                    alignment: .trailing,
+                    sections: [
+                        DropdownMenuSection(items: ActivityKindItem.selectableItems.compactMap { activityKindItem in
+                            switch ActivityKind(rawValue: activityKindItem.rawValue) {
                             case .created:
-                                Toggle(activityKindItem.title, isOn: $store.isCreatedActivitySelected)
-                                    .disabled(store.isCreatedActivityToggleDisabled)
+                                DropdownMenuItem(
+                                    activityKindItem.title,
+                                    isChecked: store.isCreatedActivitySelected,
+                                    isDisabled: store.isCreatedActivityToggleDisabled
+                                ) {
+                                    store.send(.binding(.set(\.isCreatedActivitySelected, !store.isCreatedActivitySelected)))
+                                }
                             case .completed:
-                                Toggle(activityKindItem.title, isOn: $store.isCompletedActivitySelected)
-                                    .disabled(store.isCompletedActivityToggleDisabled)
+                                DropdownMenuItem(
+                                    activityKindItem.title,
+                                    isChecked: store.isCompletedActivitySelected,
+                                    isDisabled: store.isCompletedActivityToggleDisabled
+                                ) {
+                                    store.send(.binding(.set(\.isCompletedActivitySelected, !store.isCompletedActivitySelected)))
+                                }
                             case .deleted:
-                                Toggle(activityKindItem.title, isOn: $store.isDeletedActivitySelected)
-                                    .disabled(store.isDeletedActivityToggleDisabled)
+                                DropdownMenuItem(
+                                    activityKindItem.title,
+                                    isChecked: store.isDeletedActivitySelected,
+                                    isDisabled: store.isDeletedActivityToggleDisabled
+                                ) {
+                                    store.send(.binding(.set(\.isDeletedActivitySelected, !store.isDeletedActivitySelected)))
+                                }
+                            case nil:
+                                nil
                             }
-                        }
-                    }
-                } label: {
+                        })
+                    ]
+                ) {
                     Image(systemName: "line.3.horizontal.decrease")
                         .foregroundStyle(Color.label)
                 }
@@ -243,14 +262,17 @@ struct QuarterPickerSheet: View {
                     .frame(height: 1)
             }
 
-            Menu {
-                Picker("", selection: $store.selectedQuarterPickerYear) {
-                    ForEach(store.availableQuarterYears, id: \.self) { year in
-                        Text(verbatim: String(year))
-                            .tag(year)
-                    }
-                }
-            } label: {
+            // 연도 값이 행 오른쪽 끝에 있어 메뉴 오른쪽 끝을 행 오른쪽 끝에 맞춤
+            DropdownMenu(
+                alignment: .trailing,
+                sections: [
+                    DropdownMenuSection(items: store.availableQuarterYears.map { year in
+                        DropdownMenuItem(String(year), isChecked: store.selectedQuarterPickerYear == year) {
+                            store.send(.binding(.set(\.selectedQuarterPickerYear, year)))
+                        }
+                    })
+                ]
+            ) {
                 HStack(spacing: 10 * AdaptiveSize.boardScale) {
                     Text(String(localized: "profile_year", bundle: PresentationResources.bundle))
                         .foregroundStyle(Color.label)
@@ -265,7 +287,6 @@ struct QuarterPickerSheet: View {
                 .frame(minHeight: isiOSAppOnMac ? 38 * AdaptiveSize.boardScale : 50)
                 .contentShape(.rect)
             }
-            .buttonStyle(.plain)
             .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
             .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 12)
 
@@ -319,17 +340,26 @@ struct QuarterPickerSheet: View {
                         .font(.adaptive(.subheadline))
                         .foregroundStyle(Color.secondaryLabel)
                     Spacer()
-                    Picker(
-                        "",
-                        selection: $store.selectedQuarterPickerYear
+                    DropdownMenu(
+                        alignment: .trailing,
+                        sections: [
+                            DropdownMenuSection(items: store.availableQuarterYears.map { year in
+                                DropdownMenuItem(String(year), isChecked: store.selectedQuarterPickerYear == year) {
+                                    store.send(.binding(.set(\.selectedQuarterPickerYear, year)))
+                                }
+                            })
+                        ]
                     ) {
-                        ForEach(store.availableQuarterYears, id: \.self) { year in
-                            Text(verbatim: String(year))
-                                .tag(year)
+                        HStack(spacing: 4) {
+                            Text(verbatim: String(store.selectedQuarterPickerYear))
+                                .foregroundStyle(Color.label)
+                            Image(systemName: "chevron.up.chevron.down")
+                                .font(.adaptive(.caption2))
+                                .foregroundStyle(Color.secondaryLabel)
                         }
+                        .font(.adaptive(.subheadline))
+                        .contentShape(.rect)
                     }
-                    .pickerStyle(.menu)
-                    .labelsHidden()
                 }
 
                 // 시트가 닫히며 사라지는 동안에도 버튼 줄을 그리도록 지연 그리기 없는 한 줄 배치

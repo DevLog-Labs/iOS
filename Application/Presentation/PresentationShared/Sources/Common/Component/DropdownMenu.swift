@@ -27,6 +27,7 @@ public struct DropdownMenuItem {
     let systemImage: String?
     let imageColor: Color?
     let isChecked: Bool
+    let isDisabled: Bool
     let role: ButtonRole?
     let kind: Kind
 
@@ -35,6 +36,7 @@ public struct DropdownMenuItem {
         systemImage: String? = nil,
         imageColor: Color? = nil,
         isChecked: Bool = false,
+        isDisabled: Bool = false,
         role: ButtonRole? = nil,
         action: @escaping () -> Void
     ) {
@@ -42,6 +44,7 @@ public struct DropdownMenuItem {
         self.systemImage = systemImage
         self.imageColor = imageColor
         self.isChecked = isChecked
+        self.isDisabled = isDisabled
         self.role = role
         self.kind = .action(action)
     }
@@ -56,6 +59,7 @@ public struct DropdownMenuItem {
         self.systemImage = systemImage
         self.imageColor = imageColor
         self.isChecked = false
+        self.isDisabled = false
         self.role = nil
         self.kind = .submenu(submenu)
     }
@@ -261,6 +265,7 @@ private struct DropdownMenuRow: View {
     let systemImage: String?
     let imageColor: Color?
     let isChecked: Bool
+    let isDisabled: Bool
     let isDestructive: Bool
     let hasSubmenu: Bool
     let action: () -> Void
@@ -275,6 +280,7 @@ private struct DropdownMenuRow: View {
         self.systemImage = systemImage
         self.imageColor = imageColor
         self.isChecked = false
+        self.isDisabled = false
         self.isDestructive = false
         self.hasSubmenu = false
         self.action = action
@@ -285,6 +291,7 @@ private struct DropdownMenuRow: View {
         self.systemImage = item.systemImage
         self.imageColor = item.imageColor
         self.isChecked = item.isChecked
+        self.isDisabled = item.isDisabled
         self.isDestructive = item.role == .destructive
         if case .submenu = item.kind {
             self.hasSubmenu = true
@@ -304,7 +311,7 @@ private struct DropdownMenuRow: View {
                 if let systemImage {
                     Image(systemName: systemImage)
                         .font(.system(size: iconSize * 0.8))
-                        .foregroundStyle(isDestructive ? Color.danger : imageColor ?? .secondaryLabel)
+                        .foregroundStyle(isDisabled ? Color.tertiaryLabel : isDestructive ? .danger : imageColor ?? .secondaryLabel)
                         .frame(width: iconSize, height: iconSize)
                 }
 
@@ -316,7 +323,7 @@ private struct DropdownMenuRow: View {
                 if isChecked {
                     Image(systemName: "checkmark")
                         .font(.system(size: iconSize * 0.8, weight: .semibold))
-                        .foregroundStyle(Color.label)
+                        .foregroundStyle(isDisabled ? Color.tertiaryLabel : .label)
                 } else if hasSubmenu {
                     Image(systemName: "chevron.right")
                         .font(.system(size: iconSize * 0.7, weight: .semibold))
@@ -324,12 +331,14 @@ private struct DropdownMenuRow: View {
                 }
             }
             .font(.system(size: isiOSAppOnMac ? 13 * AdaptiveSize.boardScale : 15))
-            .foregroundStyle(isDestructive ? Color.danger : .primary)
+            // 고를 수 없는 항목은 흐린 글자
+            .foregroundStyle(isDisabled ? Color.tertiaryLabel : isDestructive ? .danger : .primary)
             .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 28 * AdaptiveSize.boardScale : 44)
             .padding(.horizontal, isiOSAppOnMac ? 10 * AdaptiveSize.boardScale : 14)
             .contentShape(.rect)
         }
         .buttonStyle(DropdownMenuRowStyle(radius: CornerRadius.control))
+        .disabled(isDisabled)
     }
 }
 
@@ -341,6 +350,7 @@ private struct DropdownMenuRowStyle: ButtonStyle {
     }
 
     private struct Highlight: View {
+        @Environment(\.isEnabled) private var isEnabled
         @State private var isHovered = false
         let configuration: Configuration
         let radius: CGFloat
@@ -348,7 +358,7 @@ private struct DropdownMenuRowStyle: ButtonStyle {
         var body: some View {
             configuration.label
                 .background(
-                    configuration.isPressed || isHovered ? Color.fill : .clear,
+                    isEnabled && (configuration.isPressed || isHovered) ? Color.fill : .clear,
                     in: .rect(cornerRadius: radius)
                 )
                 .onHover { isHovered = $0 }
