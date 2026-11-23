@@ -192,10 +192,10 @@ public struct HomeView: View {
             store.send(.sheet(.presented(.goalDetail(.view(.returnToGoal)))))
             return
         }
-        // 작성 중인 새 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음
+        // 작성 중인 새 개발 목표나 수정 중인 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음
         if let request,
            request.action != .createTodo,
-           store.sheet?.goalCreateState?.hasDraft == true {
+           store.sheet?.goalCreateState?.hasDraft == true || store.sheet?.goalDetailState?.goalEdit?.hasDraft == true {
             store.send(.view(.closeGoalCreateForSideBarRequest(request)))
             return
         }

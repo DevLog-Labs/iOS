@@ -148,9 +148,12 @@ extension HomeFeature {
         state.alert = alertState()
     }
 
-    static var discardGoalDraftAlertState: AlertState<Action.Alert> {
+    static func discardGoalDraftAlertState(isEditing: Bool) -> AlertState<Action.Alert> {
         AlertState {
-            TextState(String(localized: "development_goal_create_discard_title", bundle: PresentationResources.bundle))
+            TextState(String(
+                localized: isEditing ? "development_goal_edit_discard_title" : "development_goal_create_discard_title",
+                bundle: PresentationResources.bundle
+            ))
         } actions: {
             ButtonState(role: .destructive, action: .discardGoalDraft) {
                 TextState(String(localized: "development_goal_create_discard", bundle: PresentationResources.bundle))

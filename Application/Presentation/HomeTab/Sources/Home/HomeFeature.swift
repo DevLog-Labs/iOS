@@ -204,8 +204,8 @@ struct HomeFeature {
         }
         BindingReducer()
         Reduce { state, action in
-            // 새 개발 목표 칸이 열린 동안 시트 자리를 바꾸는 동작
-            if let goal = state.sheet?.goalCreateState {
+            // 새 개발 목표나 개발 목표 수정 칸이 열린 동안 시트 자리를 바꾸는 동작
+            if let goal = state.sheet?.goalCreateState ?? state.sheet?.goalDetailState?.goalEdit {
                 switch action {
                 case .view(.tapCreateDevelopmentGoal),
                      .view(.tapDevelopmentGoal),
@@ -221,7 +221,7 @@ struct HomeFeature {
                     // 작성 중인 내용이 있으면 버릴지 물은 뒤 고른 동작 실행
                     if goal.hasDraft {
                         state.actionAfterGoalDiscard = action
-                        state.alert = Self.discardGoalDraftAlertState
+                        state.alert = Self.discardGoalDraftAlertState(isEditing: goal.goal != nil)
                         return .none
                     }
                 default:
@@ -233,8 +233,10 @@ struct HomeFeature {
             case .alert(.presented(.discardGoalDraft)):
                 guard let action = state.actionAfterGoalDiscard else { break }
                 state.actionAfterGoalDiscard = nil
+                // 개발 목표 칸에서 바꾼 상태와 기록은 수정을 버리고 칸을 닫아도 홈과 사이드바 목록에 반영
+                let refreshesDevelopmentGoals = state.sheet?.goalDetailState != nil
                 state.sheet = nil
-                return .send(action)
+                return refreshesDevelopmentGoals ? .merge(.send(action), .send(.view(.fetchData))) : .send(action)
             case .alert(.dismiss):
                 state.actionAfterGoalDiscard = nil
             case .fullScreenCover(.presented(.todoEditor(.delegate(.created)))):

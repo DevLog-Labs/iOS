@@ -146,12 +146,31 @@ struct HomeFeatureTests {
         await adapter.setGoalCreateTitle("목표")
         await adapter.tapDevelopmentGoal("goal")
 
-        #expect(adapter.alert == HomeFeature.discardGoalDraftAlertState)
+        #expect(adapter.alert == HomeFeature.discardGoalDraftAlertState(isEditing: false))
         #expect(adapter.sheet?.goalCreateState?.title == "목표")
 
         await adapter.discardGoalDraft()
 
         #expect(adapter.sheet?.goalDetailState?.goalId == "goal")
+    }
+
+    @Test("수정 중인 개발 목표가 있으면 버릴지 물은 뒤 버리면 고른 목표를 연다")
+    func 수정_중인_개발_목표가_있으면_버릴지_물은_뒤_버리면_고른_목표를_연다() async throws {
+        let adapter = StoreTestAdapter()
+        let goal = try makeDevelopmentGoal()
+        var detail = GoalDetailFeature.State(goalId: goal.id)
+        detail.goalEdit = GoalCreateFeature.State(goal: goal)
+        detail.goalEdit?.title = "바꾼 제목"
+
+        await adapter.setSheet(.goalDetail(detail))
+        await adapter.tapDevelopmentGoal("other")
+
+        #expect(adapter.alert == HomeFeature.discardGoalDraftAlertState(isEditing: true))
+        #expect(adapter.sheet?.goalDetailState?.goalEdit?.title == "바꾼 제목")
+
+        await adapter.discardGoalDraft()
+
+        #expect(adapter.sheet?.goalDetailState?.goalId == "other")
     }
 
     @Test("작성 중인 새 개발 목표를 버리지 않으면 칸을 유지한다")
