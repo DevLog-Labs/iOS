@@ -148,7 +148,7 @@ public struct GoalDetailView: View {
             }
         } else {
             // Duo는 뒤로 버튼을 오른쪽 세로 막대에 표시
-            // 상태 메뉴는 직접 그린 팝오버라 세로 막대에 넣지 않고 제목 줄에 표시
+            // 상태 메뉴는 버튼 자리에 맞춰 직접 그리는 메뉴라 세로 막대에 넣지 않고 제목 줄에 표시
             RecordTopBar(RecordPresentation.text("development_goal_title")) {
                 if deviceType != .duo {
                     NavigationBackButton(action: { dismiss() })
