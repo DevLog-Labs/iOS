@@ -194,8 +194,13 @@ private struct DropdownMenuPanel: View {
     private func select(_ item: DropdownMenuItem) {
         switch item.kind {
         case .action(let action):
-            dismiss()
-            action()
+            // 항목 동작의 상태 변경이 닫기와 같은 갱신에 묶여 전체 화면 닫힘 애니메이션이 살아나지 않도록 애니메이션 없이 실행
+            var transaction = Transaction()
+            transaction.disablesAnimations = true
+            withTransaction(transaction) {
+                dismiss()
+                action()
+            }
         case .submenu:
             submenu = item
         }
