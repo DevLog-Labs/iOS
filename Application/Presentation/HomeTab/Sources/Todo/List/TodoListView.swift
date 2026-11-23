@@ -143,151 +143,159 @@ private struct TodoListContent: View {
         let visibleTodos = store.state.todos.filter { !$0.isHidden }
 
         ZStack {
-            ScrollView {
-                if visibleTodos.isEmpty, !store.state.isLoading {
-                    EmptyStateView(
-                        String(localized: "todo_list_empty", bundle: PresentationResources.bundle),
-                        systemImage: "checklist"
-                    )
-                } else {
-                    // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
-                    let highlightedTodoIds = (
-                        [store.hoveredTodoId] + (usesPaneLayout ? [store.selectedTodoId, store.panelTodo?.id] : [])
-                    ).compactMap { $0 }
+            ScrollViewReader { proxy in
+                ScrollView {
+                    if visibleTodos.isEmpty, !store.state.isLoading {
+                        EmptyStateView(
+                            String(localized: "todo_list_empty", bundle: PresentationResources.bundle),
+                            systemImage: "checklist"
+                        )
+                    } else {
+                        // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
+                        let highlightedTodoIds = (
+                            [store.hoveredTodoId] + (usesPaneLayout ? [store.selectedTodoId, store.panelTodo?.id] : [])
+                        ).compactMap { $0 }
 
-                    LazyVStack(alignment: .leading, spacing: 0) {
-                        ForEach(
-                            Array(zip(visibleTodos.indices, visibleTodos)),
-                            id: \.1.id
-                        ) { index, todo in
-                            let isLast = index == visibleTodos.count - 1
-                            let isHighlighted = highlightedTodoIds.contains(todo.id)
-                            let isNextHighlighted = !isLast && highlightedTodoIds.contains(visibleTodos[index + 1].id)
+                        LazyVStack(alignment: .leading, spacing: 0) {
+                            ForEach(
+                                Array(zip(visibleTodos.indices, visibleTodos)),
+                                id: \.1.id
+                            ) { index, todo in
+                                let isLast = index == visibleTodos.count - 1
+                                let isHighlighted = highlightedTodoIds.contains(todo.id)
+                                let isNextHighlighted = !isLast && highlightedTodoIds.contains(visibleTodos[index + 1].id)
 
-                            // Mac은 둥근 선택·마우스 표시와 맞닿는 구분선 숨김
-                            TodoItemRow(
-                                todo,
-                                showsSeparator: !(isiOSAppOnMac && (isHighlighted || isNextHighlighted))
-                            )
-                                // 선택·마우스 표시는 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
-                                // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
-                                .background(
-                                    isHighlighted ? Color.fill : .clear,
-                                    in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+                                // Mac은 둥근 선택·마우스 표시와 맞닿는 구분선 숨김
+                                TodoItemRow(
+                                    todo,
+                                    showsSeparator: !(isiOSAppOnMac && (isHighlighted || isNextHighlighted))
                                 )
-                                .background(Color.background)
-                                .contentShape(.rect)
-                                .onHover { isHovering in
-                                    guard isiOSAppOnMac else { return }
-                                    // 다른 행으로 옮겨 간 뒤에 온 벗어남은 무시
-                                    if isHovering {
-                                        store.send(.binding(.set(\.hoveredTodoId, todo.id)))
-                                    } else if store.hoveredTodoId == todo.id {
-                                        store.send(.binding(.set(\.hoveredTodoId, nil)))
-                                    }
-                                }
-                                .todoDetailPreview(todoId: todo.id)
-                                .onTapGesture {
-                                    onSelectTodo(todo.id)
-                                }
-                                .itemActions {
-                                    // 사이드바가 있는 창의 우클릭과 길게 누른 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
-                                    if usesDesktopLayout {
-                                        Button {
-                                            store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todo.id))))
-                                        } label: {
-                                            Label {
-                                                Text("detail_panel_open", bundle: PresentationResources.bundle)
-                                            } icon: {
-                                                Image(systemName: "doc.text")
-                                            }
+                                    // 선택·마우스 표시는 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
+                                    // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
+                                    .background(
+                                        isHighlighted ? Color.fill : .clear,
+                                        in: .rect(cornerRadius: isiOSAppOnMac ? CornerRadius.control : 0)
+                                    )
+                                    .background(Color.background)
+                                    .contentShape(.rect)
+                                    .onHover { isHovering in
+                                        guard isiOSAppOnMac else { return }
+                                        // 다른 행으로 옮겨 간 뒤에 온 벗어남은 무시
+                                        if isHovering {
+                                            store.send(.binding(.set(\.hoveredTodoId, todo.id)))
+                                        } else if store.hoveredTodoId == todo.id {
+                                            store.send(.binding(.set(\.hoveredTodoId, nil)))
                                         }
-                                        Button {
-                                            store.send(.binding(.set(\.selectedTodoId, todo.id)))
-                                        } label: {
-                                            Label {
-                                                Text("detail_panel_open_in_pane", bundle: PresentationResources.bundle)
-                                            } icon: {
-                                                Image(systemName: "sidebar.left")
+                                    }
+                                    .todoDetailPreview(todoId: todo.id)
+                                    .onTapGesture {
+                                        onSelectTodo(todo.id)
+                                    }
+                                    .itemActions {
+                                        // 사이드바가 있는 창의 우클릭과 길게 누른 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
+                                        if usesDesktopLayout {
+                                            Button {
+                                                store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todo.id))))
+                                            } label: {
+                                                Label {
+                                                    Text("detail_panel_open", bundle: PresentationResources.bundle)
+                                                } icon: {
+                                                    Image(systemName: "doc.text")
+                                                }
                                             }
+                                            Button {
+                                                store.send(.binding(.set(\.selectedTodoId, todo.id)))
+                                            } label: {
+                                                Label {
+                                                    Text("detail_panel_open_in_pane", bundle: PresentationResources.bundle)
+                                                } icon: {
+                                                    Image(systemName: "sidebar.left")
+                                                }
+                                            }
+                                            Divider()
                                         }
-                                        Divider()
-                                    }
 
-                                    ItemActionButton(
-                                        title: todo.isPinned
-                                            ? String(localized: "todo_action_unpin", bundle: PresentationResources.bundle) : String(localized: "todo_action_pin", bundle: PresentationResources.bundle),
-                                        color: Color.important,
-                                        image: Image(systemName: "star\(todo.isPinned ? ".slash" : ".fill")")
-                                    ) {
-                                        store.send(.view(.tapTogglePinned(todo)))
-                                    }
+                                        ItemActionButton(
+                                            title: todo.isPinned
+                                                ? String(localized: "todo_action_unpin", bundle: PresentationResources.bundle) : String(localized: "todo_action_pin", bundle: PresentationResources.bundle),
+                                            color: Color.important,
+                                            image: Image(systemName: "star\(todo.isPinned ? ".slash" : ".fill")")
+                                        ) {
+                                            store.send(.view(.tapTogglePinned(todo)))
+                                        }
 
-                                    ItemActionButton(
-                                        title: todo.isCompleted
-                                            ? String(localized: "todo_action_uncomplete", bundle: PresentationResources.bundle) : String(localized: "todo_action_complete", bundle: PresentationResources.bundle),
-                                        color: Color.accent,
-                                        image: Image(systemName: todo.isCompleted
-                                            ? "arrow.uturn.backward" : "checkmark")
-                                    ) {
-                                        store.send(.view(.tapToggleCompleted(todo)))
-                                    }
+                                        ItemActionButton(
+                                            title: todo.isCompleted
+                                                ? String(localized: "todo_action_uncomplete", bundle: PresentationResources.bundle) : String(localized: "todo_action_complete", bundle: PresentationResources.bundle),
+                                            color: Color.accent,
+                                            image: Image(systemName: todo.isCompleted
+                                                ? "arrow.uturn.backward" : "checkmark")
+                                        ) {
+                                            store.send(.view(.tapToggleCompleted(todo)))
+                                        }
 
-                                    if usesDesktopLayout {
-                                        Divider()
-                                    }
+                                        if usesDesktopLayout {
+                                            Divider()
+                                        }
 
-                                    ItemActionButton(
-                                        title: String(localized: "common_delete", bundle: PresentationResources.bundle),
-                                        color: Color.red,
-                                        image: Image(systemName: "trash")
-                                    ) {
-                                        store.send(.view(.swipeTodo(todo)))
-                                        presentDeleteTodoToast(todo.id, store: store)
+                                        ItemActionButton(
+                                            title: String(localized: "common_delete", bundle: PresentationResources.bundle),
+                                            color: Color.red,
+                                            image: Image(systemName: "trash")
+                                        ) {
+                                            store.send(.view(.swipeTodo(todo)))
+                                            presentDeleteTodoToast(todo.id, store: store)
+                                        }
                                     }
-                                }
-                                .onAppear {
-                                    if isLast, store.state.hasMore {
-                                        store.send(.view(.loadNextPage))
+                                    .onAppear {
+                                        if isLast, store.state.hasMore {
+                                            store.send(.view(.loadNextPage))
+                                        }
                                     }
-                                }
+                            }
                         }
+                        .background(Color.background)
+                        .clipShape(.rect)
+                        // Mac은 둥근 선택·마우스 표시가 칸 가장자리에 붙지 않도록 좌우 여백 표시
+                        .padding(.horizontal, isiOSAppOnMac ? 16 : 0)
+                        .frame(maxWidth: readableContentWidth)
+                        .frame(maxWidth: .infinity)
                     }
-                    .background(Color.background)
-                    .clipShape(.rect)
-                    // Mac은 둥근 선택·마우스 표시가 칸 가장자리에 붙지 않도록 좌우 여백 표시
-                    .padding(.horizontal, isiOSAppOnMac ? 16 : 0)
-                    .frame(maxWidth: readableContentWidth)
-                    .frame(maxWidth: .infinity)
                 }
-            }
-            .safeAreaInset(edge: .top, spacing: 0) { TodoListTopBar(store: store) }
-            .refreshable { await store.send(.view(.refresh)).finish() }
-            .scrollDisabled(visibleTodos.isEmpty || store.state.isLoading)
-            .duoToolbarVisibility(showsBackButton: true)
-            .toolbar {
-                if deviceType == .duo {
-                    ToolbarItemGroup(placement: .topBarTrailing) {
-                        // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
-                        Group {
-                            if !store.isSearching {
-                                Button {
-                                    withAnimation(.smooth(duration: 0.3)) {
-                                        store.send(.view(.setSearching(true)))
+                .safeAreaInset(edge: .top, spacing: 0) { TodoListTopBar(store: store) }
+                .refreshable { await store.send(.view(.refresh)).finish() }
+                .scrollDisabled(visibleTodos.isEmpty || store.state.isLoading)
+                // 필터, 정렬, 검색어가 바뀌면 이전 스크롤 위치에 남지 않도록 새 목록을 맨 위부터 표시
+                .onChange(of: store.query) {
+                    if let id = visibleTodos.first?.id {
+                        proxy.scrollTo(id, anchor: .top)
+                    }
+                }
+                .duoToolbarVisibility(showsBackButton: true)
+                .toolbar {
+                    if deviceType == .duo {
+                        ToolbarItemGroup(placement: .topBarTrailing) {
+                            // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
+                            Group {
+                                if !store.isSearching {
+                                    Button {
+                                        withAnimation(.smooth(duration: 0.3)) {
+                                            store.send(.view(.setSearching(true)))
+                                        }
+                                    } label: {
+                                        Image(systemName: "magnifyingglass")
                                     }
+                                }
+                                Button {
+                                    store.send(.store(.setFullScreenCover(.editor)))
                                 } label: {
-                                    Image(systemName: "magnifyingglass")
+                                    Image(systemName: "plus")
                                 }
                             }
-                            Button {
-                                store.send(.store(.setFullScreenCover(.editor)))
-                            } label: {
-                                Image(systemName: "plus")
-                            }
+                            .id(windowControlsInset)
                         }
-                        .id(windowControlsInset)
+                        .sharedBackgroundHidden()
                     }
-                    .sharedBackgroundHidden()
                 }
             }
 
