@@ -106,7 +106,7 @@ struct TodoListFeature {
             case didTogglePinned(TodoListItem)
             case setTodoHidden(String, Bool)
             case appendTodos([TodoListItem], nextCursor: TodoCursor?)
-            case setTodos([TodoListItem], nextCursor: TodoCursor?)
+            case setTodos([TodoListItem], nextCursor: TodoCursor?, hasMore: Bool)
             case setHasMore(Bool)
         }
     }
@@ -263,10 +263,14 @@ private extension TodoListFeature {
                 do {
                     let page = try await fetchTodosUseCase.execute(query, cursor: cursor)
                     let todos = page.items.compactMap(TodoListItem.init(from:))
-                    // 비운 목록이 한 번 그려지며 빈 화면이 깜빡이지 않도록 첫 페이지는 한 번에 교체
-                    await send(.store(resetsPagination
-                        ? .setTodos(todos, nextCursor: page.nextCursor) : .appendTodos(todos, nextCursor: page.nextCursor)))
-                    await send(.store(.setHasMore(page.items.count == query.pageSize && page.nextCursor != nil)))
+                    let hasMore = page.items.count == query.pageSize && page.nextCursor != nil
+                    // 비운 목록이나 이전 다음 페이지 여부가 한 번 그려지지 않도록 첫 페이지는 한 번에 교체
+                    if resetsPagination {
+                        await send(.store(.setTodos(todos, nextCursor: page.nextCursor, hasMore: hasMore)))
+                    } else {
+                        await send(.store(.appendTodos(todos, nextCursor: page.nextCursor)))
+                        await send(.store(.setHasMore(hasMore)))
+                    }
                     if showsIndicator {
                         await send(.loading(.end(target: Self.fetchLoadingTarget, mode: .delayed)))
                     }
@@ -374,10 +378,10 @@ private extension TodoListFeature {
         case .appendTodos(let todos, let nextCursor):
             state.todos.append(contentsOf: todos)
             state.nextCursor = nextCursor
-        case .setTodos(let todos, let nextCursor):
+        case .setTodos(let todos, let nextCursor, let hasMore):
             state.todos = todos
             state.nextCursor = nextCursor
-            state.hasMore = false
+            state.hasMore = hasMore
         case .setHasMore(let value):
             state.hasMore = value
         }
