@@ -240,7 +240,8 @@ public struct HomeView: View {
         case .open, nil:
             break
         }
-        if refreshesDevelopmentGoals {
+        // 버릴지 묻는 중이면 칸이 그대로라 다시 불러오지 않음
+        if refreshesDevelopmentGoals && store.actionAfterGoalDiscard == nil {
             store.send(.view(.fetchData))
         }
     }
