@@ -106,7 +106,7 @@ struct TodoListFeature {
             case didTogglePinned(TodoListItem)
             case setTodoHidden(String, Bool)
             case appendTodos([TodoListItem], nextCursor: TodoCursor?)
-            case resetPagination
+            case setTodos([TodoListItem], nextCursor: TodoCursor?)
             case setHasMore(Bool)
         }
     }
@@ -262,13 +262,10 @@ private extension TodoListFeature {
             .run { [fetchTodosUseCase] send in
                 do {
                     let page = try await fetchTodosUseCase.execute(query, cursor: cursor)
-                    if resetsPagination {
-                        await send(.store(.resetPagination))
-                    }
-                    await send(.store(.appendTodos(
-                        page.items.compactMap(TodoListItem.init(from:)),
-                        nextCursor: page.nextCursor
-                    )))
+                    let todos = page.items.compactMap(TodoListItem.init(from:))
+                    // 비운 목록이 한 번 그려지며 빈 화면이 깜빡이지 않도록 첫 페이지는 한 번에 교체
+                    await send(.store(resetsPagination
+                        ? .setTodos(todos, nextCursor: page.nextCursor) : .appendTodos(todos, nextCursor: page.nextCursor)))
                     await send(.store(.setHasMore(page.items.count == query.pageSize && page.nextCursor != nil)))
                     if showsIndicator {
                         await send(.loading(.end(target: Self.fetchLoadingTarget, mode: .delayed)))
@@ -377,9 +374,9 @@ private extension TodoListFeature {
         case .appendTodos(let todos, let nextCursor):
             state.todos.append(contentsOf: todos)
             state.nextCursor = nextCursor
-        case .resetPagination:
-            state.todos = []
-            state.nextCursor = nil
+        case .setTodos(let todos, let nextCursor):
+            state.todos = todos
+            state.nextCursor = nextCursor
             state.hasMore = false
         case .setHasMore(let value):
             state.hasMore = value
