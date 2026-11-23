@@ -379,4 +379,59 @@ struct GoalDetailFeatureTests {
             .init(goalId: goal.id, status: .archived)
         ])
     }
+
+    @Test("목표 수정은 불러온 목표로 수정 화면을 연다")
+    func 목표_수정은_불러온_목표로_수정_화면을_연다() async throws {
+        let goal = try makeDevelopmentGoal()
+        var state = GoalDetailFeature.State(goalId: goal.id)
+        state.goal = goal
+        state.hasLoaded = true
+        let store = TestStore(initialState: state) {
+            GoalDetailFeature()
+        }
+
+        await store.send(.view(.editGoal)) {
+            $0.goalEdit = GoalCreateFeature.State(goal: goal)
+        }
+    }
+
+    @Test("기록 작성이 열려 있으면 목표 수정을 열지 않는다")
+    func 기록_작성이_열려_있으면_목표_수정을_열지_않는다() async throws {
+        let goal = try makeDevelopmentGoal()
+        var state = GoalDetailFeature.State(goalId: goal.id)
+        state.goal = goal
+        state.hasLoaded = true
+        state.recordEditor = RecordEditorFeature.State(
+            goalId: goal.id,
+            goalTitle: goal.title,
+            recordId: "record",
+            versionId: "version"
+        )
+        let store = TestStore(initialState: state) {
+            GoalDetailFeature()
+        }
+
+        await store.send(.view(.editGoal))
+    }
+
+    @Test("목표 수정 저장은 상세 목표를 바꾸고 수정을 알린다")
+    func 목표_수정_저장은_상세_목표를_바꾸고_수정을_알린다() async throws {
+        let goal = try makeDevelopmentGoal(status: .archived)
+        let updated = try makeDevelopmentGoal(title: "바꾼 제목", status: .archived)
+        var state = GoalDetailFeature.State(goalId: goal.id)
+        state.goal = goal
+        state.updatedGoalStatus = .archived
+        state.hasLoaded = true
+        state.goalEdit = GoalCreateFeature.State(goal: goal)
+        let store = TestStore(initialState: state) {
+            GoalDetailFeature()
+        }
+
+        await store.send(.goalEdit(.presented(.delegate(.saved(updated))))) {
+            $0.goal = updated
+            $0.updatedGoalStatus = nil
+            $0.goalEdit = nil
+        }
+        await store.receive(.delegate(.goalUpdated))
+    }
 }

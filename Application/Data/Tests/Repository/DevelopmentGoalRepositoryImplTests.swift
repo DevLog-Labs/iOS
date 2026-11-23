@@ -28,6 +28,24 @@ struct DevelopmentGoalRepositoryImplTests {
         #expect(request.markdownDescription == "설명")
     }
 
+    @Test("목표 수정은 제목과 markdownDescription 요청을 서비스에 전달한다")
+    func 목표_수정은_제목과_markdownDescription_요청을_서비스에_전달한다() async throws {
+        let service = DevelopmentGoalServiceSpy()
+        let repository = DevelopmentGoalRepositoryImpl(service: service)
+
+        let goal = try await repository.updateGoal(
+            "goal-1",
+            title: "바꾼 목표",
+            description: "바꾼 설명"
+        )
+
+        let request = try #require(await service.updateRequest())
+        #expect(goal.id == "goal-1")
+        #expect(request.goalId == "goal-1")
+        #expect(request.title == "바꾼 목표")
+        #expect(request.markdownDescription == "바꾼 설명")
+    }
+
     @Test("완료 검증 문맥은 목표 서비스 응답만으로 복원한다")
     func 완료_검증_문맥은_목표_서비스_응답만으로_복원한다() async throws {
         let service = DevelopmentGoalServiceSpy()
@@ -79,6 +97,12 @@ private actor DevelopmentGoalServiceSpy: DevelopmentGoalService {
         let markdownDescription: String
     }
 
+    struct UpdateRequest {
+        let goalId: String
+        let title: String
+        let markdownDescription: String
+    }
+
     struct TransitionRequest {
         let goalId: String
         let status: DevelopmentGoalStatus
@@ -101,6 +125,7 @@ private actor DevelopmentGoalServiceSpy: DevelopmentGoalService {
         createdAt: .distantPast
     )
     private var recordedCreateRequest: CreateRequest?
+    private var recordedUpdateRequest: UpdateRequest?
     private var recordedCompletionSnapshotGoalIds = [String]()
     private var recordedTransitionRequest: TransitionRequest?
 
@@ -119,7 +144,12 @@ private actor DevelopmentGoalServiceSpy: DevelopmentGoalService {
         goalId: String,
         request: DevelopmentGoalUpdateRequest
     ) async throws -> DevelopmentGoalResponse {
-        goal
+        recordedUpdateRequest = .init(
+            goalId: goalId,
+            title: request.title,
+            markdownDescription: request.markdownDescription
+        )
+        return goal
     }
 
     func fetchGoal(goalId: String) async throws -> DevelopmentGoalResponse {
@@ -146,6 +176,10 @@ private actor DevelopmentGoalServiceSpy: DevelopmentGoalService {
 
     func createRequest() -> CreateRequest? {
         recordedCreateRequest
+    }
+
+    func updateRequest() -> UpdateRequest? {
+        recordedUpdateRequest
     }
 
     func completionSnapshotGoalIds() -> [String] {

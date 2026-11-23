@@ -84,6 +84,57 @@ struct GoalCreateFeatureTests {
         #expect(await spy.requests().isEmpty)
     }
 
+    @Test("수정 저장 실패는 수정 실패 알림을 표시한다")
+    func 수정_저장_실패는_수정_실패_알림을_표시한다() async throws {
+        let goal = try makeDevelopmentGoal()
+        var state = GoalCreateFeature.State(goal: goal)
+        state.title = "바꾼 제목"
+        let store = TestStore(initialState: state) {
+            GoalCreateFeature()
+        } withDependencies: {
+            $0.developmentUpdateGoalUseCase = UpdateDevelopmentGoalUseCaseSpy(
+                result: .failure(RecordTestError.failed)
+            )
+        }
+
+        await store.send(.view(.save)) {
+            $0.isSaving = true
+        }
+        await store.receive(.store(.failed)) {
+            $0.isSaving = false
+            $0.alert = makeEditErrorAlert()
+        }
+    }
+
+    @Test("수정한 내용이 있으면 버릴지 물은 뒤 버리면 닫는다")
+    func 수정한_내용이_있으면_버릴지_물은_뒤_버리면_닫는다() async throws {
+        let goal = try makeDevelopmentGoal()
+        var state = GoalCreateFeature.State(goal: goal)
+        state.content = "바꾼 설명"
+        let store = TestStore(initialState: state) {
+            GoalCreateFeature()
+        }
+
+        await store.send(.view(.close)) {
+            $0.alert = makeEditDiscardAlert()
+        }
+        await store.send(.alert(.presented(.discard))) {
+            $0.alert = nil
+        }
+        await store.receive(.delegate(.close))
+    }
+
+    @Test("바꾼 내용이 없는 수정은 묻지 않고 닫는다")
+    func 바꾼_내용이_없는_수정은_묻지_않고_닫는다() async throws {
+        let goal = try makeDevelopmentGoal()
+        let store = TestStore(initialState: GoalCreateFeature.State(goal: goal)) {
+            GoalCreateFeature()
+        }
+
+        await store.send(.view(.close))
+        await store.receive(.delegate(.close))
+    }
+
     @Test("선택한 Todo는 생성된 목표 ID로 연결한다")
     func 선택한_Todo는_생성된_목표_ID로_연결한다() async throws {
         let goal = try makeDevelopmentGoal()
@@ -162,6 +213,33 @@ struct GoalCreateFeatureTests {
         await store.send(.todoSelection(.presented(.delegate(.selected(["todo"])))) ) {
             $0.selectedTodoIDs = ["todo"]
             $0.todoSelection = nil
+        }
+    }
+
+    private func makeEditErrorAlert() -> AlertState<GoalCreateFeature.Action.Alert> {
+        AlertState {
+            TextState(String(localized: "common_error_title", bundle: PresentationResources.bundle))
+        } actions: {
+            ButtonState(role: .cancel) {
+                TextState(String(localized: "common_close", bundle: PresentationResources.bundle))
+            }
+        } message: {
+            TextState(String(localized: "development_goal_edit_error_message", bundle: PresentationResources.bundle))
+        }
+    }
+
+    private func makeEditDiscardAlert() -> AlertState<GoalCreateFeature.Action.Alert> {
+        AlertState {
+            TextState(String(localized: "development_goal_edit_discard_title", bundle: PresentationResources.bundle))
+        } actions: {
+            ButtonState(role: .destructive, action: .discard) {
+                TextState(String(localized: "development_goal_create_discard", bundle: PresentationResources.bundle))
+            }
+            ButtonState(role: .cancel) {
+                TextState(String(localized: "common_cancel", bundle: PresentationResources.bundle))
+            }
+        } message: {
+            TextState(String(localized: "development_goal_create_discard_message", bundle: PresentationResources.bundle))
         }
     }
 
