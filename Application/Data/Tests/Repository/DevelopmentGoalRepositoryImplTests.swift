@@ -115,6 +115,13 @@ private actor DevelopmentGoalServiceSpy: DevelopmentGoalService {
         return goal
     }
 
+    func updateGoal(
+        goalId: String,
+        request: DevelopmentGoalUpdateRequest
+    ) async throws -> DevelopmentGoalResponse {
+        goal
+    }
+
     func fetchGoal(goalId: String) async throws -> DevelopmentGoalResponse {
         goal
     }

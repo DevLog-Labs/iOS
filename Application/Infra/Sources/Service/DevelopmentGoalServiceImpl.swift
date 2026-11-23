@@ -20,6 +20,7 @@ final class DevelopmentGoalServiceImpl: DevelopmentGoalService {
             case fetchGoals
             case fetchCompletionSnapshot
             case transitionGoalStatus
+            case updateGoal
         }
     }
 
@@ -46,6 +47,26 @@ final class DevelopmentGoalServiceImpl: DevelopmentGoalService {
         } catch {
             logger.error("Failed to create development goal", error: error)
             record(error, code: .createGoal)
+            throw error
+        }
+    }
+
+    func updateGoal(
+        goalId: String,
+        request: DevelopmentGoalUpdateRequest
+    ) async throws -> DevelopmentGoalResponse {
+        guard let uid = Auth.auth().currentUser?.uid else { throw DataLayerError.notAuthenticated }
+
+        do {
+            try Self.validateTitle(request.title)
+            let reference = store.document(FirestorePath.developmentGoal(uid, goalId: goalId))
+            var data = try encoder.encode(request)
+            data[DevelopmentGoalFieldKey.updatedAt.rawValue] = FieldValue.serverTimestamp()
+            try await reference.updateData(data)
+            return try await fetchGoal(uid: uid, goalId: goalId)
+        } catch {
+            logger.error("Failed to update development goal", error: error)
+            record(error, code: .updateGoal)
             throw error
         }
     }
