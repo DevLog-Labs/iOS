@@ -15,6 +15,9 @@ public struct TodoDetailSideBarFeature {
     @ObservableState
     public struct State: Equatable {
         public var editor: TodoEditorFeature.State?
+        // 마지막으로 저장된 Todo
+        // 저장에 실패하면 속성 값을 이 Todo로 되돌림
+        var todo: Todo?
         var isDueDatePickerPresented = false
         var isFetchFailed = false
         // 좁은 창 세부 정보 시트를 속성 칸 높이만큼 열기 위해 잰 위쪽 줄과 속성 칸 높이
@@ -53,6 +56,7 @@ public struct TodoDetailSideBarFeature {
             case .setTodo(let todo):
                 // 다른 곳에서 고친 Todo를 다시 받아도 불러온 카테고리는 유지
                 let categories = state.editor?.categories ?? []
+                state.todo = todo
                 state.editor = TodoEditorFeature.State(todo: todo)
                 state.editor?.categories = categories
                 if categories.isEmpty {
@@ -67,6 +71,16 @@ public struct TodoDetailSideBarFeature {
                  .editor(.binding(\.dueDate)):
                 guard state.isEditable else { break }
                 return .send(.editor(.upsertTodo))
+            case .editor(.updateSucceeded(let todo)):
+                state.todo = todo
+            case .editor(.saveFailed):
+                // 저장에 실패한 값이 남아 다음 저장에 함께 실리지 않도록 마지막으로 저장된 값으로 되돌림
+                guard let todo = state.todo else { break }
+                state.editor?.isCompleted = todo.isCompleted
+                state.editor?.completedAt = todo.completedAt
+                state.editor?.isPinned = todo.isPinned
+                state.editor?.dueDate = todo.dueDate
+                state.editor?.category = TodoCategoryItem(from: todo.category)
             case .editor:
                 break
             }

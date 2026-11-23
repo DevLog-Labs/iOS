@@ -26,6 +26,28 @@ struct TodoDetailSideBarFeatureTests {
         #expect(store.state.editor?.saveResult == upsertSpy.todos.first.map { .updated($0) })
     }
 
+    @Test("저장에 실패하면 바꾼 값을 되돌려 다음 저장에 싣지 않는다")
+    func 저장에_실패하면_바꾼_값을_되돌려_다음_저장에_싣지_않는다() async {
+        let upsertSpy = TodoEditorUpsertTodoUseCaseSpy()
+        let store = makeTodoDetailSideBarStore(isEditable: true, upsertTodoUseCase: upsertSpy)
+
+        await store.send(.onAppear)
+        await store.skipReceivedActions(strict: false)
+        upsertSpy.error = TodoEditorTestError.failure
+        await store.send(.editor(.binding(.set(\.isPinned, true))))
+        await store.skipReceivedActions(strict: false)
+
+        #expect(store.state.editor?.isPinned == false)
+        #expect(store.state.editor?.alert != nil)
+
+        upsertSpy.error = nil
+        await store.send(.editor(.binding(.set(\.isCompleted, true))))
+        await store.skipReceivedActions(strict: false)
+
+        #expect(upsertSpy.todos.last?.isPinned == false)
+        #expect(upsertSpy.todos.last?.isCompleted == true)
+    }
+
     @Test("읽기 전용 사이드바는 값을 바꿔도 저장하지 않는다")
     func 읽기_전용_사이드바는_값을_바꿔도_저장하지_않는다() async {
         let upsertSpy = TodoEditorUpsertTodoUseCaseSpy()
