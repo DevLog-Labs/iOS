@@ -58,6 +58,30 @@ actor CreateDevelopmentGoalUseCaseSpy: CreateDevelopmentGoalUseCase {
     }
 }
 
+actor UpdateDevelopmentGoalUseCaseSpy: UpdateDevelopmentGoalUseCase {
+    struct Request: Equatable {
+        let goalId: String
+        let title: String
+        let description: String
+    }
+
+    private let result: Result<DevelopmentGoal, Error>
+    private var recordedRequests = [Request]()
+
+    init(result: Result<DevelopmentGoal, Error>) {
+        self.result = result
+    }
+
+    func execute(_ goalId: String, title: String, description: String) async throws -> DevelopmentGoal {
+        recordedRequests.append(.init(goalId: goalId, title: title, description: description))
+        return try result.get()
+    }
+
+    func requests() -> [Request] {
+        recordedRequests
+    }
+}
+
 actor UpdateDevelopmentGoalStatusUseCaseSpy: UpdateDevelopmentGoalStatusUseCase {
     struct Request: Equatable {
         let goalId: String

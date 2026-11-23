@@ -65,9 +65,7 @@ public struct HomeView: View {
                     PaneSplitView {
                         homeContent
                     } detail: {
-                        GoalCreateView(store: goalStore) {
-                            store.send(.sheet(.dismiss))
-                        }
+                        GoalCreateView(store: goalStore)
                     }
                     .detailSideBar {
                         GoalCreateSideBarContent(store: goalStore)
@@ -366,9 +364,7 @@ public struct HomeView: View {
             }
         case .goalCreate:
             if let goalStore = sheetStore.scope(state: \.goalCreateState, action: \.goalCreate) {
-                GoalCreateView(store: goalStore) {
-                    store.send(.sheet(.dismiss))
-                }
+                GoalCreateView(store: goalStore)
             }
         case .goalDetail:
             // 개발 목표는 시트 대신 홈 내비게이션에 쌓음

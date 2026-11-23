@@ -39,6 +39,36 @@ struct GoalCreateFeatureTests {
         ])
     }
 
+    @Test("수정하는 목표는 새로 만들지 않고 같은 ID로 제목과 설명을 저장한다")
+    func 수정하는_목표는_새로_만들지_않고_같은_ID로_제목과_설명을_저장한다() async throws {
+        let goal = try makeDevelopmentGoal(title: "버전 이력 완성")
+        let updated = try makeDevelopmentGoal(title: "버전 이력 정리")
+        let createSpy = CreateDevelopmentGoalUseCaseSpy(result: .success(goal))
+        let updateSpy = UpdateDevelopmentGoalUseCaseSpy(result: .success(updated))
+        var state = GoalCreateFeature.State(goal: goal)
+        state.title = updated.title
+        let store = TestStore(initialState: state) {
+            GoalCreateFeature()
+        } withDependencies: {
+            $0.developmentCreateGoalUseCase = createSpy
+            $0.developmentUpdateGoalUseCase = updateSpy
+        }
+
+        await store.send(.view(.save)) {
+            $0.isSaving = true
+        }
+        await store.receive(.store(.updated(updated))) {
+            $0.result = updated
+            $0.isSaving = false
+        }
+        await store.receive(.delegate(.saved(updated)))
+
+        #expect(await updateSpy.requests() == [
+            .init(goalId: goal.id, title: updated.title, description: goal.description)
+        ])
+        #expect(await createSpy.requests().isEmpty)
+    }
+
     @Test("선택한 Todo는 생성된 목표 ID로 연결한다")
     func 선택한_Todo는_생성된_목표_ID로_연결한다() async throws {
         let goal = try makeDevelopmentGoal()

@@ -259,6 +259,11 @@ struct HomeFeature {
             case .sheet(.presented(.goalCreate(.delegate(.saved)))):
                 state.sheet = nil
                 return .send(.view(.fetchData))
+            case .sheet(.presented(.goalCreate(.delegate(.close)))):
+                return .send(.sheet(.dismiss))
+            // 개발 목표 칸에서 고친 제목을 사이드바와 홈 목록에 반영
+            case .sheet(.presented(.goalDetail(.delegate(.goalUpdated)))):
+                return .send(.view(.fetchData))
             case .sheet:
                 break
             case .binding:
