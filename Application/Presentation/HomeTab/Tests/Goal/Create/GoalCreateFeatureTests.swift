@@ -69,6 +69,21 @@ struct GoalCreateFeatureTests {
         #expect(await createSpy.requests().isEmpty)
     }
 
+    @Test("바꾼 내용이 없는 수정은 저장하지 않는다")
+    func 바꾼_내용이_없는_수정은_저장하지_않는다() async throws {
+        let goal = try makeDevelopmentGoal()
+        let spy = UpdateDevelopmentGoalUseCaseSpy(result: .success(goal))
+        let store = TestStore(initialState: GoalCreateFeature.State(goal: goal)) {
+            GoalCreateFeature()
+        } withDependencies: {
+            $0.developmentUpdateGoalUseCase = spy
+        }
+
+        await store.send(.view(.save))
+
+        #expect(await spy.requests().isEmpty)
+    }
+
     @Test("선택한 Todo는 생성된 목표 ID로 연결한다")
     func 선택한_Todo는_생성된_목표_ID로_연결한다() async throws {
         let goal = try makeDevelopmentGoal()

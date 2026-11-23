@@ -25,8 +25,9 @@ struct GoalCreateFeature {
         var result: DevelopmentGoal?
         var isSaving = false
 
+        // 수정은 처음 내용에서 바꾼 것이 있어야 저장
         var isReadyToSave: Bool {
-            !isSaving && !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            !isSaving && hasDraft && !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
 
         // 버리기 전에 확인할 입력 내용이 있는지 여부, 수정은 처음 내용에서 바꾼 것이 있는지 여부
