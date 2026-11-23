@@ -405,8 +405,8 @@ private struct ContentView: View {
         let isContentFocused = field == .content
         Group {
             if store.tabViewTag == .editor {
-                // 안내 문구를 본문 바로 아래에 표시하고 빈 영역은 바깥 최소 높이로 누를 수 있게 둠
-                TextEditorContentLayout(minimumHeight: 0, placesHintBelow: true) {
+                // 안내 문구를 본문 입력칸 위에 두어 본문과 함께 스크롤하고 빈 영역은 바깥 최소 높이로 누를 수 있게 둠
+                TextEditorContentLayout(minimumHeight: 0) {
                     markdownHint
                     UIKitTextEditor
                         .composable(

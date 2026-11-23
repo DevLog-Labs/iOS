@@ -5272,7 +5272,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Markdown 지원 · 예: # 제목, - 목록, **굵게**, - refs #번호"
+            "value" : "Markdown 지원 (예: # 제목, - 목록, **굵게**, - refs #번호)"
           }
         }
       }
