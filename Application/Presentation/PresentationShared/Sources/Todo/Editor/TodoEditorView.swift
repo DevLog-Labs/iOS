@@ -181,6 +181,20 @@ private struct EditorForm: View {
             }
             .contentMargins(.vertical, isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 16, for: .scrollContent)
         }
+        // 안내 문구는 본문 길이와 상관없이 본문 칸 아래에 고정
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if store.tabViewTag == .editor {
+                Text(String(localized: "todo_editor_markdown_hint", bundle: PresentationResources.bundle))
+                    .font(.adaptive(.caption))
+                    .foregroundStyle(Color.secondaryLabel)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, isiOSAppOnMac ? 14 * AdaptiveSize.boardScale : 16)
+                    .frame(maxWidth: readableContentWidth)
+                    .padding(.vertical, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 8)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.background)
+            }
+        }
     }
 }
 
@@ -405,42 +419,39 @@ private struct ContentView: View {
         let isContentFocused = field == .content
         Group {
             if store.tabViewTag == .editor {
-                // 안내 문구를 본문 바로 아래에 표시하고 빈 영역은 바깥 최소 높이로 누를 수 있게 둠
-                TextEditorContentLayout(minimumHeight: 0, placesHintBelow: true) {
-                    markdownHint
-                    UIKitTextEditor
-                        .composable(
-                            update: { textEditor in
-                                // Markdown 본문은 고정폭 글꼴로 표시
-                                // 같은 글꼴을 다시 넣어 긴 본문을 갱신마다 다시 배치하지 않도록 다를 때만 지정
-                                let font = UIFont.monospacedSystemFont(
-                                    ofSize: isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 13.5,
-                                    weight: .regular
+                // 빈 영역은 바깥 최소 높이로 누를 수 있게 둠
+                UIKitTextEditor
+                    .composable(
+                        update: { textEditor in
+                            // Markdown 본문은 고정폭 글꼴로 표시
+                            // 같은 글꼴을 다시 넣어 긴 본문을 갱신마다 다시 배치하지 않도록 다를 때만 지정
+                            let font = UIFont.monospacedSystemFont(
+                                ofSize: isiOSAppOnMac ? 12 * AdaptiveSize.boardScale : 13.5,
+                                weight: .regular
+                            )
+                            if textEditor.font != font {
+                                textEditor.font = font
+                            }
+                            textEditor.updateInput(
+                                text: $store.content,
+                                isFocused: isContentFocused,
+                                onFocusChange: { isFocused in
+                                    if isFocused {
+                                        field = .content
+                                    } else if field == .content {
+                                        field = nil
+                                    }
+                                },
+                                placeholder: String(
+                                    localized: "todo_editor_description_optional",
+                                    bundle: PresentationResources.bundle
                                 )
-                                if textEditor.font != font {
-                                    textEditor.font = font
-                                }
-                                textEditor.updateInput(
-                                    text: $store.content,
-                                    isFocused: isContentFocused,
-                                    onFocusChange: { isFocused in
-                                        if isFocused {
-                                            field = .content
-                                        } else if field == .content {
-                                            field = nil
-                                        }
-                                    },
-                                    placeholder: String(
-                                        localized: "todo_editor_description_optional",
-                                        bundle: PresentationResources.bundle
-                                    )
-                                )
-                            },
-                            sizeThatFits: { UIKitTextEditor.fittingSize(proposal: $0, textEditor: $1) }
-                        )
-                        // SwiftUI 포커싱 시스템에 등록하기 위해 사용
-                        .focused($field, equals: .content)
-                }
+                            )
+                        },
+                        sizeThatFits: { UIKitTextEditor.fittingSize(proposal: $0, textEditor: $1) }
+                    )
+                    // SwiftUI 포커싱 시스템에 등록하기 위해 사용
+                    .focused($field, equals: .content)
             } else {
                 if store.content.isEmpty {
                     previewPlaceholder
@@ -468,12 +479,6 @@ private struct ContentView: View {
                 .containerRelativeFrame(.horizontal)
         }
         .contentShape(.rect)
-    }
-
-    private var markdownHint: some View {
-        Text(String(localized: "todo_editor_markdown_hint", bundle: PresentationResources.bundle))
-            .font(.adaptive(.caption))
-            .foregroundStyle(Color.secondaryLabel)
     }
 
     private var previewPlaceholder: some View {
