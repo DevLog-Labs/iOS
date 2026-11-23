@@ -13,6 +13,7 @@ public extension Color {
     static let danger = Color("Danger", bundle: PresentationResources.bundle)
     static let fill = Color("Fill", bundle: PresentationResources.bundle)
     static let fillLabel = Color("FillLabel", bundle: PresentationResources.bundle)
+    static let important = Color("Important", bundle: PresentationResources.bundle)
     static let info = Color("Info", bundle: PresentationResources.bundle)
     static let inputBorder = Color("InputBorder", bundle: PresentationResources.bundle)
     static let inputFill = Color("InputFill", bundle: PresentationResources.bundle)

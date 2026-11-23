@@ -85,7 +85,7 @@ struct RecordTopBarTextButton: View {
         Button(action: action) {
             Text(title)
                 .font(.adaptive(.callout).weight(isProminent ? .bold : .medium))
-                .foregroundStyle(Color.tintLabel)
+                .foregroundStyle(Color.label)
                 .opacity(isEnabled ? 1 : 0.4)
                 .padding(.horizontal, 4)
                 .frame(maxHeight: .infinity)
@@ -96,7 +96,7 @@ struct RecordTopBarTextButton: View {
 }
 
 // 반경 6의 높이 44 버튼, Mac은 높이 32
-// 강조 버튼은 강조색 바탕, 보조 버튼은 회색 바탕과 테두리
+// 강조 버튼은 흑백 채움 바탕, 보조 버튼은 회색 바탕과 테두리
 struct RecordButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
@@ -108,13 +108,13 @@ struct RecordButtonStyle: ButtonStyle {
 
         configuration.label
             .font(.adaptive(isiOSAppOnMac ? .body : .subheadline).weight(.semibold))
-            .foregroundStyle(isProminent ? Color.white : .label)
+            .foregroundStyle(isProminent ? Color.background : .label)
             .lineLimit(1)
             .padding(.horizontal, 16 * AdaptiveSize.boardScale)
             .frame(maxWidth: fillsWidth ? .infinity : nil)
             .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
-            .background(isProminent ? Color.accent : .tertiaryBackground, in: shape)
-            .overlay { shape.strokeBorder(isProminent ? Color.accent : .secondarySeparator) }
+            .background(isProminent ? Color.label : .tertiaryBackground, in: shape)
+            .overlay { shape.strokeBorder(isProminent ? Color.label : .secondarySeparator) }
             .opacity(isEnabled ? configuration.isPressed ? 0.7 : 1 : 0.4)
             .contentShape(shape)
     }
@@ -160,7 +160,7 @@ private struct RecordInputBackground: ViewModifier {
 
             content
                 .background(Color.tertiaryBackground, in: shape)
-                .overlay { shape.strokeBorder(isFocused ? Color.accent : .secondarySeparator) }
+                .overlay { shape.strokeBorder(isFocused ? Color.secondaryLabel : .secondarySeparator) }
         }
     }
 }

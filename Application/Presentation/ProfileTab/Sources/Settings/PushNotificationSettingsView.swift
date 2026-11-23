@@ -98,7 +98,7 @@ private struct EnableCard: View {
         DesktopSettingsSection(footer: Text("push_settings_footer", bundle: PresentationResources.bundle)) {
             DesktopSettingsRow(
                 symbolName: "bell",
-                symbolColor: .tintLabel,
+                symbolColor: .label,
                 title: Text("push_settings_enable", bundle: PresentationResources.bundle)
             ) {
                 toggle

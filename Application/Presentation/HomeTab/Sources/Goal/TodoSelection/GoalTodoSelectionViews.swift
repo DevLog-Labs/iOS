@@ -76,7 +76,7 @@ struct GoalTodoSelectionRow: View {
             HStack(spacing: 14) {
                 Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
                     .font(.adaptive(.title2))
-                    .foregroundStyle(isSelected ? Color.accent : Color.separator)
+                    .foregroundStyle(isSelected ? Color.label : Color.separator)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(todo.title)
                         .font(.adaptive(.body).weight(isSelected ? .semibold : .regular))
@@ -93,12 +93,12 @@ struct GoalTodoSelectionRow: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 if todo.isPinned {
                     Image(systemName: "star.fill")
-                        .foregroundStyle(Color.warning)
+                        .foregroundStyle(Color.important)
                 }
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .background(isSelected ? Color.tintFill : .clear)
+            .background(isSelected ? Color.fill : .clear)
             .contentShape(.rect)
         }
         .buttonStyle(.plain)

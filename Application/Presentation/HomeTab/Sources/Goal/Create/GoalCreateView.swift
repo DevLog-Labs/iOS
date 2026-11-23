@@ -47,7 +47,7 @@ struct GoalCreateView: View {
                     Button(action: save) {
                         if store.isSaving {
                             ProgressView()
-                                .tint(Color.white)
+                                .tint(Color.background)
                         } else {
                             Text(RecordPresentation.text("development_goal_save"))
                         }
@@ -67,7 +67,7 @@ struct GoalCreateView: View {
                     Button(action: save) {
                         Text(RecordPresentation.text("todo_manage_save"))
                             .font(.adaptive(.body).weight(.semibold))
-                            .foregroundStyle(Color.accent)
+                            .foregroundStyle(Color.label)
                     }
                     .buttonStyle(.plain)
                     .disabled(!store.isReadyToSave)

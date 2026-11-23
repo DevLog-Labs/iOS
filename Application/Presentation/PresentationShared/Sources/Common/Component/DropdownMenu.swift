@@ -311,7 +311,7 @@ private struct DropdownMenuRow: View {
                 if isChecked {
                     Image(systemName: "checkmark")
                         .font(.system(size: iconSize * 0.8, weight: .semibold))
-                        .foregroundStyle(Color.tintLabel)
+                        .foregroundStyle(Color.label)
                 } else if hasSubmenu {
                     Image(systemName: "chevron.right")
                         .font(.system(size: iconSize * 0.7, weight: .semibold))

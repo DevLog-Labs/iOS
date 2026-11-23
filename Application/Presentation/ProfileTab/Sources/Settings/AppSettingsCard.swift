@@ -19,7 +19,7 @@ struct AppSettingsCard: View {
             Button(action: onTheme) {
                 DesktopSettingsRow(
                     symbolName: "desktopcomputer",
-                    symbolColor: .tintLabel,
+                    symbolColor: .label,
                     title: Text(String(localized: "settings_theme", bundle: PresentationResources.bundle))
                 ) {
                     Text(themeName)
@@ -36,7 +36,7 @@ struct AppSettingsCard: View {
             Button(action: onNotifications) {
                 DesktopSettingsRow(
                     symbolName: "bell",
-                    symbolColor: .tintLabel,
+                    symbolColor: .label,
                     title: Text(String(localized: "settings_notifications", bundle: PresentationResources.bundle))
                 ) {
                     Image(systemName: "chevron.right")

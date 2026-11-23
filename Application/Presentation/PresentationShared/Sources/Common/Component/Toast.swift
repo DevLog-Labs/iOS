@@ -222,10 +222,10 @@ private struct ToastOverlayView: View {
 
         return Button(action: performAction) {
             HStack(spacing: 8 * AdaptiveSize.boardScale) {
-                // 인포 토스트는 문구 앞 아이콘, 인터랙션 토스트는 문구 뒤 강조색 사각 버튼
+                // 인포 토스트는 문구 앞 아이콘, 인터랙션 토스트는 문구 뒤 흑백 사각 버튼
                 if action == nil {
                     Image(systemName: systemImage)
-                        .foregroundStyle(Color.accent)
+                        .foregroundStyle(Color.label)
                 }
 
                 Text(message)
@@ -233,9 +233,9 @@ private struct ToastOverlayView: View {
 
                 if action != nil {
                     Image(systemName: systemImage)
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(Color.background)
                         .frame(width: buttonSize, height: buttonSize)
-                        .background(Color.accent, in: .rect(cornerRadius: CornerRadius.control))
+                        .background(Color.label, in: .rect(cornerRadius: CornerRadius.control))
                 }
             }
             .font(isiOSAppOnMac ? .system(size: 13 * AdaptiveSize.boardScale) : .subheadline)

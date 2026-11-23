@@ -51,7 +51,7 @@ public struct ToolbarTrailingButton: ToolbarContent {
             } label: {
                 Image(systemName: "checkmark")
             }
-            .topBarButtonStyle(tint: Color.accent)
+            .topBarButtonStyle()
             .disabled(isDisabled)
         }
         .sharedBackgroundHidden()

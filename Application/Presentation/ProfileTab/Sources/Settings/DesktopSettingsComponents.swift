@@ -163,7 +163,7 @@ struct SettingsCheck: View {
     var body: some View {
         Image(systemName: isSelected ? "checkmark.circle" : "circle")
             .font(.adaptive(isiOSAppOnMac ? .title2 : .title3))
-            .foregroundStyle(isSelected ? Color.accent : .secondaryLabel)
+            .foregroundStyle(isSelected ? Color.label : .secondaryLabel)
     }
 }
 
@@ -186,12 +186,12 @@ struct DesktopSettingsButton: View {
     var body: some View {
         let color: Color = switch role {
         case .normal: .secondaryLabel
-        case .prominent: .white
+        case .prominent: .background
         case .destructive: .danger
         }
         let border: Color = switch role {
         case .normal: .separator
-        case .prominent: .accent
+        case .prominent: .label
         case .destructive: .danger
         }
 
@@ -210,7 +210,7 @@ struct DesktopSettingsButton: View {
             .foregroundStyle(color)
             .padding(.horizontal, 12 * AdaptiveSize.boardScale)
             .frame(minHeight: isiOSAppOnMac ? 22 * AdaptiveSize.boardScale : 34)
-            .background(role == .prominent ? Color.accent : .clear, in: .rect(cornerRadius: CornerRadius.control))
+            .background(role == .prominent ? Color.label : .clear, in: .rect(cornerRadius: CornerRadius.control))
             .overlay {
                 RoundedRectangle(cornerRadius: CornerRadius.control)
                     .strokeBorder(border)

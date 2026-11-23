@@ -196,7 +196,7 @@ private struct PaneEditorActions: View {
             Button(action: onSubmit) {
                 Text(String(localized: "todo_manage_save", bundle: PresentationResources.bundle))
                     .font(.adaptive(.body).weight(.semibold))
-                    .foregroundStyle(Color.accent)
+                    .foregroundStyle(Color.label)
             }
             .buttonStyle(.plain)
             .disabled(!store.isReadyToSubmit)
@@ -228,7 +228,7 @@ private struct ToolBar: View {
             } label: {
                 Image(systemName: "xmark")
             }
-            .topBarButtonStyle(tint: showsActions ? nil : Color.accent)
+            .topBarButtonStyle()
             Spacer()
             Text(store.navigationTitle)
                 .font(.adaptive(.title3).bold())
@@ -264,9 +264,7 @@ struct EditorToolbarActions: View {
                 } label: {
                     Image(systemName: "checkmark")
                 }
-                .topBarButtonStyle(
-                    tint: store.isReadyToSubmit ? Color.accent : nil
-                )
+                .topBarButtonStyle()
                 .disabled(!store.isReadyToSubmit)
                 .opacity(store.isReadyToSubmit ? 1 : 0.4)
             }

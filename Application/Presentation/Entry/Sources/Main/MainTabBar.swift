@@ -64,7 +64,7 @@ private struct MainTabBarItem: View {
                     .font(.system(size: 10, weight: .semibold))
                     .lineLimit(1)
             }
-            .foregroundStyle(isSelected ? Color.tintLabel : .secondaryLabel)
+            .foregroundStyle(isSelected ? Color.label : .secondaryLabel)
             .frame(maxWidth: isFlexible ? .infinity : nil)
             .contentShape(.rect)
         }

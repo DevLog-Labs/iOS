@@ -686,7 +686,8 @@ private struct HomeContentPicker: View {
                                 bundle: PresentationResources.bundle
                             ),
                             systemName: "flag.checkered",
-                            imageColor: Color.accent
+                            imageColor: Color.label,
+                            iconColor: Color.background
                         )
                     }
                     .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
@@ -716,6 +717,7 @@ private struct HomeContentPickerLabel: View {
     let text: String
     let systemName: String
     let imageColor: Color
+    var iconColor = Color.white
 
     var body: some View {
         HStack {
@@ -724,7 +726,7 @@ private struct HomeContentPickerLabel: View {
                 .frame(width: labelWidth, height: labelWidth)
                 .overlay {
                     Image(systemName: systemName)
-                        .foregroundStyle(Color.white)
+                        .foregroundStyle(iconColor)
                         .font(.adaptive(.title3))
                 }
             Text(text)
@@ -787,7 +789,7 @@ private struct HomeDesktopContentPicker: View {
                         row(
                             title: Text("development_goal_create_title", bundle: PresentationResources.bundle),
                             symbolName: "flag",
-                            color: Color.tintLabel
+                            color: Color.label
                         ) {
                             store.send(.view(.tapCreateDevelopmentGoal))
                         }

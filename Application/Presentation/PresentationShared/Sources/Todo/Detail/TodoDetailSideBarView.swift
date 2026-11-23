@@ -161,7 +161,7 @@ private struct TodoInfoProperties: View {
                         .resizable()
                         .fontWeight(.medium)
                         .frame(width: glyphSize, height: glyphSize)
-                        .foregroundStyle(editorStore.isPinned ? Color.accent : .secondaryLabel)
+                        .foregroundStyle(editorStore.isPinned ? Color.important : .secondaryLabel)
                         .padding(hitPadding)
                         .contentShape(.rect)
                 }
@@ -355,13 +355,13 @@ private struct TagField: View {
             } label: {
                 Image(systemName: "plus")
                     .font(.adaptive(.title3))
-                    .foregroundStyle(canSubmit ? Color.accent : .secondaryLabel)
+                    .foregroundStyle(canSubmit ? Color.label : .secondaryLabel)
             }
             .buttonStyle(.plain)
             .disabled(!canSubmit)
         }
         .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
-        .tint(Color.accent)
+        .tint(Color.label)
         .padding(.horizontal, 12 * AdaptiveSize.boardScale)
         .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
         .inputBackground(isFocused: isFocused)
