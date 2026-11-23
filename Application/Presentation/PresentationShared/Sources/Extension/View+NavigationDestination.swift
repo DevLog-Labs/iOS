@@ -140,6 +140,7 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
 
     func connect(coordinator: Coordinator) {
         self.coordinator = coordinator
+        coordinator.owner = self
     }
 
     func update(coordinator: Coordinator) {
@@ -159,6 +160,7 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
         private weak var controller: UINavigationController?
         private weak var delegate: (any UIGestureRecognizerDelegate)?
         private var isObserving = false
+        weak var owner: UIViewController?
         var completion: () -> Void
         var popsImmediately = false
 
@@ -209,9 +211,13 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
 
         @objc
         private func handlePopGesture(_ recognizer: UIGestureRecognizer) {
+            // 같은 내비게이션에 쌓인 아래 화면도 이 제스처를 받으므로 닫히는 화면의 처리기만 반응
             guard recognizer.state == .changed,
                   !isObserving,
-                  let transition = controller?.transitionCoordinator else {
+                  let owner,
+                  let transition = controller?.transitionCoordinator,
+                  let from = transition.viewController(forKey: .from),
+                  owner.viewIfLoaded?.isDescendant(of: from.view) == true else {
                 return
             }
 
