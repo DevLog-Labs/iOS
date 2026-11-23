@@ -184,6 +184,14 @@ private actor DevelopmentGoalRepositorySpy: DevelopmentGoalRepository {
         return goal
     }
 
+    func updateGoal(
+        _ goalId: String,
+        title: String,
+        description: String
+    ) async throws -> DevelopmentGoal {
+        goal
+    }
+
     func fetchGoal(_ goalId: String) async throws -> DevelopmentGoal {
         recordedFetchedGoalIds.append(goalId)
         return goal

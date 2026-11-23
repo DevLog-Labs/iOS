@@ -30,6 +30,22 @@ final class DevelopmentGoalRepositoryImpl: DevelopmentGoalRepository {
         }
     }
 
+    func updateGoal(
+        _ goalId: String,
+        title: String,
+        description: String
+    ) async throws -> DevelopmentGoal {
+        do {
+            let response = try await service.updateGoal(
+                goalId: goalId,
+                request: .init(title: title, markdownDescription: description)
+            )
+            return try response.toDomain()
+        } catch {
+            throw error.toDomain()
+        }
+    }
+
     func fetchGoal(_ goalId: String) async throws -> DevelopmentGoal {
         do {
             return try await service.fetchGoal(goalId: goalId).toDomain()

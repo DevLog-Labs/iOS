@@ -13,10 +13,12 @@ public enum DevelopmentDependencyPreparation {
         _ dependencies: inout DependencyValues,
         createGoalUseCase: CreateDevelopmentGoalUseCase,
         fetchGoalUseCase: FetchDevelopmentGoalUseCase,
+        updateGoalUseCase: UpdateDevelopmentGoalUseCase,
         updateGoalStatusUseCase: UpdateDevelopmentGoalStatusUseCase
     ) {
         dependencies.developmentCreateGoalUseCase = createGoalUseCase
         dependencies.developmentFetchGoalUseCase = fetchGoalUseCase
+        dependencies.developmentUpdateGoalUseCase = updateGoalUseCase
         dependencies.developmentUpdateGoalStatusUseCase = updateGoalStatusUseCase
     }
 
@@ -68,6 +70,11 @@ extension DependencyValues {
     var developmentFetchRecordsUseCase: FetchDevelopmentRecordsUseCase {
         get { self[FetchRecordsUseCaseKey.self] }
         set { self[FetchRecordsUseCaseKey.self] = newValue }
+    }
+
+    var developmentUpdateGoalUseCase: UpdateDevelopmentGoalUseCase {
+        get { self[UpdateGoalUseCaseKey.self] }
+        set { self[UpdateGoalUseCaseKey.self] = newValue }
     }
 
     var developmentUpdateGoalStatusUseCase: UpdateDevelopmentGoalStatusUseCase {
@@ -131,6 +138,12 @@ private enum FetchGoalUseCaseKey: DependencyKey {
 private enum FetchRecordsUseCaseKey: DependencyKey {
     static var liveValue: FetchDevelopmentRecordsUseCase {
         preconditionFailure("FetchDevelopmentRecordsUseCase must be provided.")
+    }
+}
+
+private enum UpdateGoalUseCaseKey: DependencyKey {
+    static var liveValue: UpdateDevelopmentGoalUseCase {
+        preconditionFailure("UpdateDevelopmentGoalUseCase must be provided.")
     }
 }
 

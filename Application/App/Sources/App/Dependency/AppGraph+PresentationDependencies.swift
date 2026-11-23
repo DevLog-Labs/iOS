@@ -31,6 +31,9 @@ private extension AppGraph {
             fetchGoalUseCase: developmentGraphSet
                 .developmentGoalUseCaseGraph
                 .fetchDevelopmentGoalUseCase,
+            updateGoalUseCase: developmentGraphSet
+                .developmentGoalUseCaseGraph
+                .updateDevelopmentGoalUseCase,
             updateGoalStatusUseCase: developmentGraphSet
                 .developmentGoalUseCaseGraph
                 .updateDevelopmentGoalStatusUseCase

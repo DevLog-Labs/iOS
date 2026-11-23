@@ -65,9 +65,7 @@ public struct HomeView: View {
                     PaneSplitView {
                         homeContent
                     } detail: {
-                        GoalCreateView(store: goalStore) {
-                            store.send(.sheet(.dismiss))
-                        }
+                        GoalCreateView(store: goalStore)
                     }
                     .detailSideBar {
                         GoalCreateSideBarContent(store: goalStore)
@@ -132,7 +130,7 @@ public struct HomeView: View {
         .onChange(of: sideBarRequest, initial: true) { _, request in
             handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
         }
-        // 작성 중인 새 개발 목표를 버린 뒤 미뤄 둔 사이드바 요청 처리
+        // 작성 중인 새 개발 목표나 수정 중인 개발 목표를 버린 뒤 미뤄 둔 사이드바 요청 처리
         .onChange(of: store.sideBarRequestAfterGoalDiscard) { _, request in
             handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
         }
@@ -194,11 +192,11 @@ public struct HomeView: View {
             store.send(.sheet(.presented(.goalDetail(.view(.returnToGoal)))))
             return
         }
-        // 작성 중인 새 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음
+        // 작성 중인 새 개발 목표나 수정 중인 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음
         if let request,
            request.action != .createTodo,
-           store.sheet?.goalCreateState?.hasDraft == true {
-            store.send(.view(.closeGoalCreateForSideBarRequest(request)))
+           store.sheet?.goalCreateState?.hasDraft == true || store.sheet?.goalDetailState?.goalEdit?.hasDraft == true {
+            store.send(.view(.closeGoalDraftForSideBarRequest(request)))
             return
         }
         // 개발 목표 칸을 다른 화면으로 바꾸면 칸에서 바꾼 목표와 기록을 시트를 닫을 때처럼 홈과 사이드바 목록에 반영
@@ -242,7 +240,8 @@ public struct HomeView: View {
         case .open, nil:
             break
         }
-        if refreshesDevelopmentGoals {
+        // 버릴지 묻는 중이면 칸이 그대로라 다시 불러오지 않음
+        if refreshesDevelopmentGoals && store.actionAfterGoalDiscard == nil {
             store.send(.view(.fetchData))
         }
     }
@@ -366,9 +365,7 @@ public struct HomeView: View {
             }
         case .goalCreate:
             if let goalStore = sheetStore.scope(state: \.goalCreateState, action: \.goalCreate) {
-                GoalCreateView(store: goalStore) {
-                    store.send(.sheet(.dismiss))
-                }
+                GoalCreateView(store: goalStore)
             }
         case .goalDetail:
             // 개발 목표는 시트 대신 홈 내비게이션에 쌓음

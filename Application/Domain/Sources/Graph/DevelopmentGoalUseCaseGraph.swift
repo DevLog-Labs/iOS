@@ -33,6 +33,11 @@ public final class DevelopmentGoalUseCaseGraph {
     }
 
     @Provide
+    private func makeUpdateDevelopmentGoalUseCase() -> UpdateDevelopmentGoalUseCase {
+        UpdateDevelopmentGoalUseCaseImpl(input.repository)
+    }
+
+    @Provide
     private func makeUpdateDevelopmentGoalStatusUseCase() -> UpdateDevelopmentGoalStatusUseCase {
         UpdateDevelopmentGoalStatusUseCaseImpl(input.repository)
     }

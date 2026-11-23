@@ -52,14 +52,21 @@ struct GoalTodoLinkSheet: View {
                 .disabled(store.isUpdating)
                 Spacer()
                 HStack(spacing: 8) {
-                    Image(systemName: "ellipsis")
-                        .prominentMenu(
-                            items: clearSelectionMenuItems,
-                            isEnabled: store.canClearSelection
-                        ) { _ in
-                            store.send(.view(.clearSelection))
-                        }
-                        .topBarButtonStyle()
+                    // 제목 줄 오른쪽 버튼이라 메뉴 오른쪽 끝을 버튼 오른쪽 끝에 맞춤
+                    DropdownMenu(alignment: .trailing, sections: [
+                        DropdownMenuSection(items: [
+                            DropdownMenuItem(
+                                RecordPresentation.text("development_goal_todo_clear_selection"),
+                                systemImage: "xmark.circle"
+                            ) {
+                                store.send(.view(.clearSelection))
+                            }
+                        ])
+                    ]) {
+                        Image(systemName: "ellipsis")
+                            .topBarButtonStyle()
+                    }
+                    .disabled(!store.canClearSelection)
                     Button {
                         store.send(.view(.save))
                     } label: {
@@ -93,16 +100,6 @@ struct GoalTodoLinkSheet: View {
                 .fill(Color.secondaryBackground)
                 .strokeBorder(Color.separator, lineWidth: 1)
         }
-    }
-
-    private var clearSelectionMenuItems: [ProminentMenuItem<GoalTodoLinkMenuAction>] {
-        [
-            ProminentMenuItem(
-                action: .clearSelection,
-                title: RecordPresentation.text("development_goal_todo_clear_selection"),
-                systemImage: "xmark.circle"
-            )
-        ]
     }
 
     @ViewBuilder
@@ -145,8 +142,4 @@ struct GoalTodoLinkSheet: View {
             }
         }
     }
-}
-
-private enum GoalTodoLinkMenuAction: Hashable {
-    case clearSelection
 }

@@ -17,6 +17,16 @@ public struct DevelopmentGoalCreateRequest: Encodable {
     }
 }
 
+public struct DevelopmentGoalUpdateRequest: Encodable {
+    public let title: String
+    public let markdownDescription: String
+
+    public init(title: String, markdownDescription: String) {
+        self.title = title
+        self.markdownDescription = markdownDescription
+    }
+}
+
 public struct DevelopmentGoalStatusRequest {
     public let status: DevelopmentGoalStatus
 

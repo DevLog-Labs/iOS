@@ -56,11 +56,13 @@ public struct GoalDetailView: View {
         let isShown = store.shownOnDesktop == usesDesktopLayout
         let isHidden = { !isShown || store.shownOnDesktop != usesDesktopLayout }
 
-        // 사이드바가 있으면 기록 작성을 개발 목표 오른쪽 칸에 표시
-        return PaneSplitView(splitsOnDesktop: store.recordEditor != nil) {
+        // 사이드바가 있으면 개발 목표 수정과 기록 작성을 개발 목표 오른쪽 칸에 표시
+        return PaneSplitView(splitsOnDesktop: store.goalEdit != nil || store.recordEditor != nil) {
             mainContent
         } detail: {
-            if let editorStore = store.scope(state: \.recordEditor, action: \.recordEditor.presented) {
+            if let editStore = store.scope(state: \.goalEdit, action: \.goalEdit.presented) {
+                GoalCreateView(store: editStore)
+            } else if let editorStore = store.scope(state: \.recordEditor, action: \.recordEditor.presented) {
                 RecordEditorView(
                     store: editorStore,
                     onCompletion: {
@@ -87,6 +89,13 @@ public struct GoalDetailView: View {
         }
         .prominentSheet(item: $store.scope(state: \.todoLinkSheet, action: \.todoLinkSheet)) {
             GoalTodoLinkSheet(store: $0)
+        }
+        // 좁은 창은 새 개발 목표와 같은 시트로 수정하고 닫기, 저장 버튼으로만 닫음
+        .prominentSheet(
+            item: $store.scope(state: \.goalEdit, action: \.goalEdit)
+                .hiddenInPane { usesDesktopLayout || store.shownOnDesktop == true }
+        ) {
+            GoalCreateView(store: $0)
         }
         .navigationDestination(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail)
@@ -139,7 +148,7 @@ public struct GoalDetailView: View {
             }
         } else {
             // Duo는 뒤로 버튼을 오른쪽 세로 막대에 표시
-            // 상태 메뉴는 직접 그린 팝오버라 세로 막대에 넣지 않고 제목 줄에 표시
+            // 상태 메뉴는 버튼 자리에 맞춰 직접 그리는 메뉴라 세로 막대에 넣지 않고 제목 줄에 표시
             RecordTopBar(RecordPresentation.text("development_goal_title")) {
                 if deviceType != .duo {
                     NavigationBackButton(action: { dismiss() })
@@ -151,17 +160,16 @@ public struct GoalDetailView: View {
         }
     }
 
+    // 상태 항목 아래 구분선 뒤에 수정
+    // 제목 줄 오른쪽 끝 버튼이라 메뉴 오른쪽 끝을 버튼 오른쪽 끝에 맞춤
     @ViewBuilder
     private var statusMenu: some View {
         if let status = store.goalStatus {
-            Image(systemName: "ellipsis")
-                .prominentMenu(
-                    items: statusMenuItems(status),
-                    isEnabled: !store.isLoading && !store.isTransitioning
-                ) { status in
-                    store.send(.view(.selectStatus(status)))
-                }
-                .topBarButtonStyle()
+            DropdownMenu(alignment: .trailing, sections: menuSections(status)) {
+                Image(systemName: "ellipsis")
+                    .topBarButtonStyle()
+            }
+            .disabled(store.isLoading || store.isTransitioning)
         }
     }
 
@@ -188,9 +196,11 @@ public struct GoalDetailView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
             } else if let description = store.goal?.description, !description.isEmpty {
-                MarkdownContentView(content: description, isScrollEnabled: false)
-                    // MarkdownRenderer 내부의 좌우 여백을 상쇄해 제목과 정렬
-                    .padding(.horizontal, -16)
+                // 마크다운 없이 쓴 그대로 표시
+                Text(description)
+                    .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
+                    .foregroundStyle(Color.secondaryLabel)
+                    .lineSpacing(6 * AdaptiveSize.boardScale)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -269,29 +279,44 @@ public struct GoalDetailView: View {
         }
     }
 
-    private func statusMenuItems(_ status: DevelopmentGoal.Status) -> [ProminentMenuItem<DevelopmentGoal.Status>] {
-        switch status {
+    private func menuSections(_ status: DevelopmentGoal.Status) -> [DropdownMenuSection] {
+        let statusItems = switch status {
         case .inProgress:
             [
-                ProminentMenuItem(
-                    action: .completed,
-                    title: RecordPresentation.text("development_goal_complete"),
+                DropdownMenuItem(
+                    RecordPresentation.text("development_goal_complete"),
                     systemImage: "checkmark.circle"
-                ),
-                ProminentMenuItem(
-                    action: .archived,
-                    title: RecordPresentation.text("development_goal_archive"),
+                ) {
+                    store.send(.view(.selectStatus(.completed)))
+                },
+                DropdownMenuItem(
+                    RecordPresentation.text("development_goal_archive"),
                     systemImage: "archivebox"
-                )
+                ) {
+                    store.send(.view(.selectStatus(.archived)))
+                }
             ]
         case .completed, .archived:
             [
-                ProminentMenuItem(
-                    action: .inProgress,
-                    title: RecordPresentation.text("development_goal_resume"),
+                DropdownMenuItem(
+                    RecordPresentation.text("development_goal_resume"),
                     systemImage: "arrow.counterclockwise"
-                )
+                ) {
+                    store.send(.view(.selectStatus(.inProgress)))
+                }
             ]
         }
+
+        return [
+            DropdownMenuSection(items: statusItems),
+            DropdownMenuSection(items: [
+                DropdownMenuItem(
+                    RecordPresentation.text("development_goal_edit"),
+                    systemImage: "pencil"
+                ) {
+                    store.send(.view(.editGoal))
+                }
+            ])
+        ]
     }
 }

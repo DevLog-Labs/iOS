@@ -27,6 +27,8 @@ struct GoalDetailFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Action.Alert>?
+        // 좁은 창은 시트, 넓은 창은 오른쪽 칸에 그려 창 폭이 바뀌어도 수정 중인 내용 유지
+        @Presents var goalEdit: GoalCreateFeature.State?
         // 넓은 창의 칸과 시트가 같은 상태를 그려 창 폭이 바뀌어도 작성 중인 기록 유지
         @Presents var recordEditor: RecordEditorFeature.State?
         @Presents var recordDetail: RecordDetailDestination?
@@ -75,6 +77,7 @@ struct GoalDetailFeature {
 
     enum Action: BindableAction, Equatable {
         case alert(PresentationAction<Alert>)
+        case goalEdit(PresentationAction<GoalCreateFeature.Action>)
         case recordEditor(PresentationAction<RecordEditorFeature.Action>)
         case recordDetail(PresentationAction<Never>)
         case recordDetailContent(RecordDetailFeature.Action)
@@ -83,6 +86,7 @@ struct GoalDetailFeature {
         case binding(BindingAction<State>)
         case view(ViewAction)
         case store(StoreAction)
+        case delegate(Delegate)
 
         enum Alert: Equatable {
             case confirmTransition(DevelopmentGoal.Status)
@@ -92,6 +96,7 @@ struct GoalDetailFeature {
             case addRecord
             case appear(onDesktop: Bool)
             case continueRecord
+            case editGoal
             case fetch
             case manageTodos
             case refresh
@@ -112,6 +117,10 @@ struct GoalDetailFeature {
             case transitionFailed
             case recordDetailDismissed
         }
+
+        enum Delegate: Equatable {
+            case goalUpdated
+        }
     }
 
     @Dependency(\.developmentFetchGoalUseCase) private var fetchGoalUseCase
@@ -131,6 +140,16 @@ struct GoalDetailFeature {
                 state.isTransitioning = true
                 return transitionEffect(goalId: state.goalId, status: status)
             case .alert:
+                break
+            case .goalEdit(.presented(.delegate(.saved(let goal)))):
+                state.goal = goal
+                state.updatedGoalStatus = nil
+                state.goalEdit = nil
+                return .send(.delegate(.goalUpdated))
+            case .goalEdit(.dismiss),
+                 .goalEdit(.presented(.delegate(.close))):
+                state.goalEdit = nil
+            case .goalEdit, .delegate:
                 break
             case .recordEditor(.dismiss):
                 state.recordEditor = nil
@@ -164,7 +183,8 @@ struct GoalDetailFeature {
                       state.allowsRecordMutation,
                       !state.isLoading,
                       !state.isTransitioning,
-                      state.recordEditor == nil else { break }
+                      state.recordEditor == nil,
+                      state.goalEdit == nil else { break }
                 state.recordEditor = RecordEditorFeature.State(
                     goalId: state.goalId,
                     goalTitle: state.goalTitle,
@@ -186,6 +206,7 @@ struct GoalDetailFeature {
                       !state.isLoading,
                       !state.isTransitioning,
                       state.recordEditor == nil,
+                      state.goalEdit == nil,
                       let record = state.items.first(where: \.hasDraft)?.record else { break }
                 state.recordEditor = RecordEditorFeature.State(
                     goalId: state.goalId,
@@ -193,6 +214,15 @@ struct GoalDetailFeature {
                     record: record,
                     versionId: uuid().uuidString
                 )
+            case .view(.editGoal):
+                // 넓은 창은 같은 오른쪽 칸을 쓰는 기록 작성이 열려 있으면 수정을 열지 않음
+                guard state.hasLoaded,
+                      !state.isLoading,
+                      !state.isTransitioning,
+                      state.recordEditor == nil,
+                      state.goalEdit == nil,
+                      let goal = state.goal else { break }
+                state.goalEdit = GoalCreateFeature.State(goal: goal)
             case .view(.fetch):
                 guard !state.hasLoaded, !state.isLoading else { break }
                 state.isLoading = true
@@ -231,6 +261,7 @@ struct GoalDetailFeature {
                 guard state.recordEditor == nil,
                       state.recordDetail == nil else { break }
                 if item.hasDraft, state.allowsRecordMutation {
+                    guard state.goalEdit == nil else { break }
                     state.recordEditor = RecordEditorFeature.State(
                         goalId: state.goalId,
                         goalTitle: state.goalTitle,
@@ -305,6 +336,9 @@ struct GoalDetailFeature {
             return .none
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$goalEdit, action: \.goalEdit) {
+            GoalCreateFeature()
+        }
         .ifLet(\.$recordEditor, action: \.recordEditor) {
             RecordEditorFeature()
         }

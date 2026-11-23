@@ -24,6 +24,14 @@ actor DevelopmentRecordGoalRepositorySpy: DevelopmentGoalRepository {
         goal
     }
 
+    func updateGoal(
+        _ goalId: String,
+        title: String,
+        description: String
+    ) async throws -> DevelopmentGoal {
+        goal
+    }
+
     func fetchGoal(_ goalId: String) async throws -> DevelopmentGoal {
         goal
     }

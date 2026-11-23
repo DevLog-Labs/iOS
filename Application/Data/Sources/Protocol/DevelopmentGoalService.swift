@@ -10,6 +10,10 @@ public protocol DevelopmentGoalService {
         goalId: String,
         request: DevelopmentGoalCreateRequest
     ) async throws -> DevelopmentGoalResponse
+    func updateGoal(
+        goalId: String,
+        request: DevelopmentGoalUpdateRequest
+    ) async throws -> DevelopmentGoalResponse
     func fetchGoal(goalId: String) async throws -> DevelopmentGoalResponse
     func fetchGoals(_ query: DevelopmentGoalQuery) async throws -> [DevelopmentGoalResponse]
     func fetchCompletionSnapshot(

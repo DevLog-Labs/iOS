@@ -11,6 +11,11 @@ public protocol DevelopmentGoalRepository {
         title: String,
         description: String
     ) async throws -> DevelopmentGoal
+    func updateGoal(
+        _ goalId: String,
+        title: String,
+        description: String
+    ) async throws -> DevelopmentGoal
     func fetchGoal(_ goalId: String) async throws -> DevelopmentGoal
     func fetchGoals(_ query: DevelopmentGoal.Query) async throws -> [DevelopmentGoal]
     func fetchCompletionSnapshot(for goalId: String) async throws -> DevelopmentGoal.CompletionSnapshot
