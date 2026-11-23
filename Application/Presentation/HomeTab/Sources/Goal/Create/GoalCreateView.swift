@@ -136,105 +136,49 @@ private struct GoalCreateTitleField: View {
 }
 
 private struct GoalCreateDescriptionEditor: View {
-    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Bindable var store: StoreOf<GoalCreateFeature>
     let focusedField: FocusState<GoalCreateField?>.Binding
 
+    // 마크다운 없이 여러 줄 일반 글자로 작성
     var body: some View {
         // 사이드바가 있는 창은 입력칸을 더 높게 표시
         let minimumHeight = CGFloat(usesDesktopLayout ? 160 : 110) * AdaptiveSize.boardScale
 
         VStack(alignment: .leading, spacing: 0) {
-            // 사이드바가 있는 창은 작성·미리보기 버튼을 설명 이름 오른쪽 같은 줄에 표시
-            HStack {
-                Text(RecordPresentation.text("development_goal_create_description_label"))
-                    .font(.adaptive(.footnote))
-                    .foregroundStyle(Color.secondaryLabel)
-                if usesDesktopLayout {
-                    Spacer()
-                    modePicker
-                }
-            }
-            .padding(.top, 12)
-            .padding(.bottom, usesDesktopLayout ? 8 : 0)
+            Text(RecordPresentation.text("development_goal_create_description_label"))
+                .font(.adaptive(.footnote))
+                .foregroundStyle(Color.secondaryLabel)
+                .padding(.top, 12)
+                .padding(.bottom, usesDesktopLayout ? 8 : 0)
 
-            if !usesDesktopLayout {
-                modePicker
-                    .padding(.vertical, 8)
-            }
-
-            switch store.selectedTab {
-            case .write:
-                // 안내 문구는 입력칸 아래에 표시
-                TextEditorContentLayout(minimumHeight: minimumHeight, placesHintBelow: true) {
-                    Text(RecordPresentation.text("development_goal_create_markdown_hint"))
-                        .font(.adaptive(.caption))
-                        .foregroundStyle(Color.secondaryLabel)
-                    UIKitTextEditor
-                        .composable(
-                            update: { textEditor in
-                                textEditor.updateInput(
-                                    text: $store.markdownContent,
-                                    isFocused: focusedField.wrappedValue == .content,
-                                    onFocusChange: { isFocused in
-                                        if isFocused {
-                                            focusedField.wrappedValue = .content
-                                        } else if focusedField.wrappedValue == .content {
-                                            focusedField.wrappedValue = nil
-                                        }
-                                    },
-                                    isEnabled: !store.isSaving
-                                )
+            UIKitTextEditor
+                .composable(
+                    update: { textEditor in
+                        textEditor.updateInput(
+                            text: $store.content,
+                            isFocused: focusedField.wrappedValue == .content,
+                            onFocusChange: { isFocused in
+                                if isFocused {
+                                    focusedField.wrappedValue = .content
+                                } else if focusedField.wrappedValue == .content {
+                                    focusedField.wrappedValue = nil
+                                }
                             },
-                            sizeThatFits: { UIKitTextEditor.fittingSize(proposal: $0, textEditor: $1) }
+                            isEnabled: !store.isSaving
                         )
-                        .focused(focusedField, equals: .content)
-                        .padding(12)
-                        .recordInputBackground(isMultiline: true, isFocused: focusedField.wrappedValue == .content)
-                }
+                    },
+                    sizeThatFits: { UIKitTextEditor.fittingSize(proposal: $0, textEditor: $1) }
+                )
+                .focused(focusedField, equals: .content)
+                .padding(12)
+                .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .topLeading)
+                .recordInputBackground(isMultiline: true, isFocused: focusedField.wrappedValue == .content)
                 .padding(.top, 8)
                 .contentShape(.rect)
                 .onTapGesture { focusedField.wrappedValue = .content }
-            case .preview:
-                Group {
-                    if store.markdownContent.isEmpty {
-                        VStack(spacing: 8) {
-                            Text(RecordPresentation.text("development_goal_create_preview_empty_title"))
-                                .font(.adaptive(.headline))
-                            Text(RecordPresentation.text("development_goal_create_preview_empty_message"))
-                                .font(.adaptive(.subheadline))
-                                .foregroundStyle(Color.secondaryLabel)
-                        }
-                        .multilineTextAlignment(.center)
-                        .padding(12)
-                        .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: .center)
-                    } else {
-                        MarkdownContentView(
-                            content: store.markdownContent,
-                            isScrollEnabled: false
-                        )
-                        // MarkdownRenderer 내부의 좌우 여백을 상쇄해 입력 본문과 정렬
-                        .padding(.horizontal, -16)
-                        .padding(12)
-                        .frame(minHeight: minimumHeight, alignment: .topLeading)
-                    }
-                }
-                .recordInputBackground(isMultiline: true)
-                .padding(.top, 8)
-            }
         }
         .disabled(store.isSaving)
-    }
-
-    private var modePicker: some View {
-        RecordModePicker(isWriting: store.selectedTab == .write) {
-            store.send(.binding(.set(\.selectedTab, .write)))
-            focusedField.wrappedValue = .content
-        } onPreview: {
-            focusedField.wrappedValue = nil
-            store.send(.binding(.set(\.selectedTab, .preview)))
-        }
     }
 }
 

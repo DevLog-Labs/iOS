@@ -188,9 +188,11 @@ public struct GoalDetailView: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
             } else if let description = store.goal?.description, !description.isEmpty {
-                MarkdownContentView(content: description, isScrollEnabled: false)
-                    // MarkdownRenderer 내부의 좌우 여백을 상쇄해 제목과 정렬
-                    .padding(.horizontal, -16)
+                // 마크다운 없이 쓴 그대로 표시
+                Text(description)
+                    .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
+                    .foregroundStyle(Color.secondaryLabel)
+                    .lineSpacing(6 * AdaptiveSize.boardScale)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)

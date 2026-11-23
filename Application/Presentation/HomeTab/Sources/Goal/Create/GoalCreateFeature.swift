@@ -17,8 +17,7 @@ struct GoalCreateFeature {
         @Presents var alert: AlertState<Action.Alert>?
         @Presents var todoSelection: GoalCreateTodoSelectionFeature.State?
         var title = ""
-        var markdownContent = ""
-        var selectedTab = EditorTab.write
+        var content = ""
         var selectedTodoIDs = Set<String>()
         var pendingGoal: DevelopmentGoal?
         var result: DevelopmentGoal?
@@ -31,14 +30,9 @@ struct GoalCreateFeature {
         // 버리기 전에 확인할 입력 내용이 있는지 여부
         var hasDraft: Bool {
             !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                || !markdownContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                || !content.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 || !selectedTodoIDs.isEmpty
         }
-    }
-
-    enum EditorTab: Equatable {
-        case write
-        case preview
     }
 
     enum Action: BindableAction, Equatable {
@@ -99,7 +93,7 @@ struct GoalCreateFeature {
                 state.isSaving = true
                 state.pendingGoal = nil
                 state.result = nil
-                return createGoalEffect(title: state.title, description: state.markdownContent)
+                return createGoalEffect(title: state.title, description: state.content)
             case .view(.selectTodos):
                 guard !state.isSaving, state.todoSelection == nil else { break }
                 state.todoSelection = GoalCreateTodoSelectionFeature.State(

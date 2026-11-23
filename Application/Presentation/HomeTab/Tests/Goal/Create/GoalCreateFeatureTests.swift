@@ -18,7 +18,7 @@ struct GoalCreateFeatureTests {
         let spy = CreateDevelopmentGoalUseCaseSpy(result: .success(goal))
         var state = GoalCreateFeature.State()
         state.title = goal.title
-        state.markdownContent = "# 목표"
+        state.content = "# 목표"
         let store = TestStore(initialState: state) {
             GoalCreateFeature()
         } withDependencies: {
