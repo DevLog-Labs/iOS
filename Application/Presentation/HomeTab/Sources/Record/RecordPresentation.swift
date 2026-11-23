@@ -96,7 +96,7 @@ struct RecordTopBarTextButton: View {
 }
 
 // 반경 6의 높이 44 버튼, Mac은 높이 32
-// 강조 버튼은 흑백 채움 바탕, 보조 버튼은 회색 바탕과 테두리
+// 강조 버튼은 흑백 채움 바탕, 보조 버튼은 테두리 버튼 모양
 struct RecordButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
@@ -105,18 +105,25 @@ struct RecordButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         let shape = RoundedRectangle(cornerRadius: CornerRadius.control)
-
-        configuration.label
+        let label = configuration.label
             .font(.adaptive(isiOSAppOnMac ? .body : .subheadline).weight(.semibold))
             .foregroundStyle(isProminent ? Color.background : .label)
             .lineLimit(1)
             .padding(.horizontal, 16 * AdaptiveSize.boardScale)
             .frame(maxWidth: fillsWidth ? .infinity : nil)
             .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
-            .background(isProminent ? Color.label : .tertiaryBackground, in: shape)
-            .overlay { shape.strokeBorder(isProminent ? Color.label : .secondarySeparator) }
-            .opacity(isEnabled ? configuration.isPressed ? 0.7 : 1 : 0.4)
-            .contentShape(shape)
+
+        Group {
+            if isProminent {
+                label
+                    .background(Color.label, in: shape)
+                    .overlay { shape.strokeBorder(Color.label) }
+            } else {
+                label.outlineButtonBackground()
+            }
+        }
+        .opacity(isEnabled ? configuration.isPressed ? 0.7 : 1 : 0.4)
+        .contentShape(shape)
     }
 }
 

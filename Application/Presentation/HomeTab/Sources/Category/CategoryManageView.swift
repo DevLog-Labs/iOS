@@ -51,11 +51,7 @@ struct CategoryManageView: View {
                             .frame(maxWidth: usesDesktopLayout ? nil : .infinity)
                             .frame(height: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44)
                             .padding(.horizontal, 16 * AdaptiveSize.boardScale)
-                            .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.control))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: CornerRadius.control)
-                                    .strokeBorder(Color.secondarySeparator)
-                            }
+                            .outlineButtonBackground()
                         }
                         .buttonStyle(.plain)
                         .frame(maxWidth: .infinity, alignment: .leading)

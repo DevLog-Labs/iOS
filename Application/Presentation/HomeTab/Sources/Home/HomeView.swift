@@ -543,17 +543,13 @@ private struct HomeTodoSection: View {
                     Button {
                         store.send(.view(.tapManageTodoCategory))
                     } label: {
-                        // Todo 타일과 같은 바탕·테두리의 작은 버튼
+                        // 테두리 버튼 모양의 작은 버튼
                         Text("todo_edit", bundle: PresentationResources.bundle)
                             .font(.adaptive(.footnote).weight(.medium))
                             .foregroundStyle(Color.label)
                             .padding(.horizontal, isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10)
                             .frame(minHeight: isiOSAppOnMac ? 24 * AdaptiveSize.boardScale : 28)
-                            .background(Color.secondaryBackground, in: .rect(cornerRadius: CornerRadius.control))
-                            .overlay {
-                                RoundedRectangle(cornerRadius: CornerRadius.control)
-                                    .strokeBorder(Color.secondarySeparator)
-                            }
+                            .outlineButtonBackground()
                             .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
