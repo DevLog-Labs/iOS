@@ -226,6 +226,65 @@ struct HomeFeatureTests {
         #expect(adapter.sheet?.goalCreateState?.isSaving == true)
     }
 
+    @Test("수정 중인 개발 목표를 버리고 칸을 닫으면 개발 목표 목록을 다시 조회한다")
+    func 수정_중인_개발_목표를_버리고_칸을_닫으면_개발_목표_목록을_다시_조회한다() async throws {
+        let goalsSpy = FetchDevelopmentGoalsUseCaseSpy()
+        let adapter = StoreTestAdapter(fetchDevelopmentGoalsUseCase: goalsSpy)
+        let goal = try makeDevelopmentGoal()
+        var detail = GoalDetailFeature.State(goalId: goal.id)
+        detail.goalEdit = GoalCreateFeature.State(goal: goal)
+        detail.goalEdit?.title = "바꾼 제목"
+
+        await adapter.setSheet(.goalDetail(detail))
+        await adapter.tapManageTodoCategory()
+
+        #expect(goalsSpy.queries.isEmpty)
+
+        await adapter.discardGoalDraft()
+
+        await waitUntil { !goalsSpy.queries.isEmpty }
+        #expect(goalsSpy.queries == [.init(status: .inProgress)])
+        #expect(adapter.sheet?.goalDetailState == nil)
+    }
+
+    @Test("수정 중인 개발 목표를 버리면 미뤄 둔 사이드바 요청을 다시 처리한다")
+    func 수정_중인_개발_목표를_버리면_미뤄_둔_사이드바_요청을_다시_처리한다() async throws {
+        let adapter = StoreTestAdapter()
+        let request = SideBarRequest(id: UUID(), action: .open(.home))
+        let goal = try makeDevelopmentGoal()
+        var detail = GoalDetailFeature.State(goalId: goal.id)
+        detail.goalEdit = GoalCreateFeature.State(goal: goal)
+        detail.goalEdit?.content = "바꾼 설명"
+
+        await adapter.setSheet(.goalDetail(detail))
+        await adapter.closeGoalDraftForSideBarRequest(request)
+
+        #expect(adapter.alert == HomeFeature.discardGoalDraftAlertState(isEditing: true))
+        #expect(adapter.sideBarRequestAfterGoalDiscard == nil)
+
+        await adapter.discardGoalDraft()
+
+        #expect(adapter.sheet == nil)
+        #expect(adapter.sideBarRequestAfterGoalDiscard == request)
+    }
+
+    @Test("수정 중인 개발 목표를 저장하는 동안 시트를 바꾸지 않는다")
+    func 수정_중인_개발_목표를_저장하는_동안_시트를_바꾸지_않는다() async throws {
+        let adapter = StoreTestAdapter()
+        let goal = try makeDevelopmentGoal()
+        var detail = GoalDetailFeature.State(goalId: goal.id)
+        detail.goalEdit = GoalCreateFeature.State(goal: goal)
+        detail.goalEdit?.title = "바꾼 제목"
+        detail.goalEdit?.isSaving = true
+
+        await adapter.setSheet(.goalDetail(detail))
+        await adapter.tapDevelopmentGoal("other")
+        await adapter.setSheet(nil)
+
+        #expect(adapter.alert == nil)
+        #expect(adapter.sheet?.goalDetailState?.goalEdit?.isSaving == true)
+    }
+
     @Test("새 개발 목표를 저장하면 시트를 닫고 홈 데이터를 다시 조회한다")
     func 새_개발_목표를_저장하면_시트를_닫고_홈_데이터를_다시_조회한다() async throws {
         let goal = try makeDevelopmentGoal(id: "goal", createdAt: 1)
