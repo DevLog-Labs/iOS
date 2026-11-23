@@ -130,7 +130,7 @@ public struct HomeView: View {
         .onChange(of: sideBarRequest, initial: true) { _, request in
             handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
         }
-        // 작성 중인 새 개발 목표를 버린 뒤 미뤄 둔 사이드바 요청 처리
+        // 작성 중인 새 개발 목표나 수정 중인 개발 목표를 버린 뒤 미뤄 둔 사이드바 요청 처리
         .onChange(of: store.sideBarRequestAfterGoalDiscard) { _, request in
             handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
         }
@@ -196,7 +196,7 @@ public struct HomeView: View {
         if let request,
            request.action != .createTodo,
            store.sheet?.goalCreateState?.hasDraft == true || store.sheet?.goalDetailState?.goalEdit?.hasDraft == true {
-            store.send(.view(.closeGoalCreateForSideBarRequest(request)))
+            store.send(.view(.closeGoalDraftForSideBarRequest(request)))
             return
         }
         // 개발 목표 칸을 다른 화면으로 바꾸면 칸에서 바꾼 목표와 기록을 시트를 닫을 때처럼 홈과 사이드바 목록에 반영

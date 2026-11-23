@@ -193,7 +193,7 @@ struct HomeFeatureTests {
 
         await adapter.tapCreateDevelopmentGoal()
         await adapter.setGoalCreateTitle("목표")
-        await adapter.closeGoalCreateForSideBarRequest(request)
+        await adapter.closeGoalDraftForSideBarRequest(request)
 
         #expect(adapter.sideBarRequestAfterGoalDiscard == nil)
 

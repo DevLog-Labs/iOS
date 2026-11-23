@@ -123,8 +123,8 @@ struct StoreTestAdapter {
         await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.title, title))))))
     }
 
-    func closeGoalCreateForSideBarRequest(_ request: SideBarRequest) async {
-        await store.send(.view(.closeGoalCreateForSideBarRequest(request)))
+    func closeGoalDraftForSideBarRequest(_ request: SideBarRequest) async {
+        await store.send(.view(.closeGoalDraftForSideBarRequest(request)))
     }
 
     func discardGoalDraft() async {

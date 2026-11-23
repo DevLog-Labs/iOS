@@ -16,9 +16,9 @@ struct HomeFeature {
         @Presents var alert: AlertState<Action.Alert>?
         @Presents var sheet: SheetState?
         @Presents var fullScreenCover: FullScreenCoverState?
-        // 작성 중인 새 개발 목표를 버릴지 묻는 동안 미뤄 둔 동작
+        // 작성 중인 새 개발 목표나 수정 중인 개발 목표를 버릴지 묻는 동안 미뤄 둔 동작
         var actionAfterGoalDiscard: Action?
-        // 새 개발 목표 칸을 닫은 뒤 다시 처리할 사이드바 요청
+        // 새 개발 목표나 개발 목표 칸을 닫은 뒤 다시 처리할 사이드바 요청
         var sideBarRequestAfterGoalDiscard: SideBarRequest?
         var developmentGoalItems = [DevelopmentGoalItem]()
         var hasDevelopmentGoalsLoaded = false
@@ -74,7 +74,7 @@ struct HomeFeature {
             case tapManageTodoCategory
             case tapTodoCategoryExpansionButton
             case tapTodoCategory(TodoCategory)
-            case closeGoalCreateForSideBarRequest(SideBarRequest)
+            case closeGoalDraftForSideBarRequest(SideBarRequest)
         }
 
         enum StoreAction: Equatable {
@@ -211,7 +211,7 @@ struct HomeFeature {
                      .view(.tapDevelopmentGoal),
                      .view(.tapManageTodoCategory),
                      .view(.tapTodoCategory),
-                     .view(.closeGoalCreateForSideBarRequest),
+                     .view(.closeGoalDraftForSideBarRequest),
                      .store(.setSheet),
                      .store(.setPresentation(.contentPicker, true)):
                     // 저장하는 동안 시트 자리를 바꾸면 저장이 취소되어 막음
@@ -340,7 +340,7 @@ private extension HomeFeature {
             state.selectedTodoCategory = category
             state.sheet = nil
             return delayedTodoEditorEffect()
-        case .closeGoalCreateForSideBarRequest(let request):
+        case .closeGoalDraftForSideBarRequest(let request):
             state.sheet = nil
             state.sideBarRequestAfterGoalDiscard = request
         }
