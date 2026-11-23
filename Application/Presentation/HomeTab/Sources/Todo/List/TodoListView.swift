@@ -167,7 +167,7 @@ private struct TodoListContent: View {
                             // Mac은 둥근 선택·마우스 표시와 맞닿는 구분선 숨김
                             TodoItemRow(
                                 todo,
-                                showsSeparator: !isLast && !(isiOSAppOnMac && (isHighlighted || isNextHighlighted))
+                                showsSeparator: !(isiOSAppOnMac && (isHighlighted || isNextHighlighted))
                             )
                                 // 선택·마우스 표시는 같은 회색, Mac은 Orca 데스크톱처럼 둥근 사각형
                                 // 반투명 선택 색 아래로 행 동작 버튼이 비치지 않도록 불투명 바탕 위에 표시
