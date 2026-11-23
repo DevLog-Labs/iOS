@@ -120,14 +120,7 @@ where State: ObservableState {
                                 maxWidth: usesDesktopLayout ? nil : .infinity,
                                 minHeight: isiOSAppOnMac ? 32 * AdaptiveSize.boardScale : 44
                             )
-                            .background(
-                                usesDefaultAction ? Color.clear : .tertiaryBackground,
-                                in: .rect(cornerRadius: CornerRadius.control)
-                            )
-                            .overlay {
-                                RoundedRectangle(cornerRadius: CornerRadius.control)
-                                    .strokeBorder(Color.secondarySeparator)
-                            }
+                            .outlineButtonBackground()
                             .contentShape(.rect)
                     }
                     .buttonStyle(.plain)

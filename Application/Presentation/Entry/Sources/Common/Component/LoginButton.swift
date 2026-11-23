@@ -50,11 +50,7 @@ struct LoginButton: View {
             }
             .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 40 * AdaptiveSize.boardScale : 52)
             .contentShape(.rect(cornerRadius: CornerRadius.control))
-            .background {
-                RoundedRectangle(cornerRadius: CornerRadius.control)
-                    .fill(Color.secondaryBackground)
-                    .stroke(Color.separator, lineWidth: 1)
-            }
+            .outlineButtonBackground()
         }
     }
 }

@@ -189,31 +189,36 @@ struct DesktopSettingsButton: View {
         case .prominent: .background
         case .destructive: .danger
         }
-        let border: Color = switch role {
-        case .normal: .separator
-        case .prominent: .label
-        case .destructive: .danger
+        let label = ZStack {
+            Text(title)
+                .opacity(showsProgress ? 0 : 1)
+
+            if showsProgress {
+                ProgressView()
+                    .controlSize(.small)
+                    .tint(color)
+            }
         }
+        .font(.adaptive(.footnote).weight(.semibold))
+        .foregroundStyle(color)
+        .padding(.horizontal, 12 * AdaptiveSize.boardScale)
+        .frame(minHeight: isiOSAppOnMac ? 22 * AdaptiveSize.boardScale : 34)
 
         Button(action: action) {
-            ZStack {
-                Text(title)
-                    .opacity(showsProgress ? 0 : 1)
+            // 일반 버튼은 테두리 버튼 모양, 강조와 삭제 버튼은 역할 색 테두리
+            Group {
+                if role == .normal {
+                    label.outlineButtonBackground()
+                } else {
+                    let border = role == .prominent ? Color.label : .danger
 
-                if showsProgress {
-                    ProgressView()
-                        .controlSize(.small)
-                        .tint(color)
+                    label
+                        .background(role == .prominent ? Color.label : .clear, in: .rect(cornerRadius: CornerRadius.control))
+                        .overlay {
+                            RoundedRectangle(cornerRadius: CornerRadius.control)
+                                .strokeBorder(border)
+                        }
                 }
-            }
-            .font(.adaptive(.footnote).weight(.semibold))
-            .foregroundStyle(color)
-            .padding(.horizontal, 12 * AdaptiveSize.boardScale)
-            .frame(minHeight: isiOSAppOnMac ? 22 * AdaptiveSize.boardScale : 34)
-            .background(role == .prominent ? Color.label : .clear, in: .rect(cornerRadius: CornerRadius.control))
-            .overlay {
-                RoundedRectangle(cornerRadius: CornerRadius.control)
-                    .strokeBorder(border)
             }
             .contentShape(.rect)
         }

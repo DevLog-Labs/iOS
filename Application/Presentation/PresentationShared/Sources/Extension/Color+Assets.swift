@@ -22,6 +22,7 @@ public extension Color {
         bundle: PresentationResources.bundle
     )
     static let multilineInputBorder = Color("MultilineInputBorder", bundle: PresentationResources.bundle)
+    static let outlineButtonFill = Color("OutlineButtonFill", bundle: PresentationResources.bundle)
     static let secondaryBackground = Color("SecondaryBackground", bundle: PresentationResources.bundle)
     static let secondaryLabel = Color("SecondaryLabel", bundle: PresentationResources.bundle)
     static let secondarySeparator = Color("SecondarySeparator", bundle: PresentationResources.bundle)
