@@ -43,7 +43,8 @@ private struct PreviewModifier: ViewModifier {
         ) {
             TodoDetailFeature()
         }
-        return UIHostingController(rootView: PreviewView(store: store))
+        // 따로 띄우는 미리보기도 앱과 같은 기본 글자 크기로 고정
+        return UIHostingController(rootView: PreviewView(store: store).dynamicTypeSize(.large))
     }
 }
 
