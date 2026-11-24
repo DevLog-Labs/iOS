@@ -28,6 +28,8 @@ struct DevLogApp: App {
                 pushNotificationTodoIdPublisher: PushNotificationRoute.shared.observe(),
                 clearPushNotificationRoute: { PushNotificationRoute.shared.clear() }
             )
+            // 기기 글자 크기 설정과 관계없이 디자인 캔버스의 기본 글자 크기로 고정
+            .dynamicTypeSize(.large)
             .autocorrectionDisabled()
             .onChange(of: scenePhase) { _, phase in
                 guard phase == .background else { return }
