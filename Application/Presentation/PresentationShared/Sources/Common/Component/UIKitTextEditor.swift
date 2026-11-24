@@ -65,8 +65,12 @@ public final class UIKitTextEditor: UITextView, UICoordinatedComposable {
     }
 
     private func configureAppearance() {
+        // 기기 글자 크기 설정과 관계없이 앱과 같은 기본 글자 크기로 고정
         font = AdaptiveSize.macFontSize(.body).map { UIFont.systemFont(ofSize: $0) }
-            ?? UIFont.preferredFont(forTextStyle: .body)
+            ?? UIFont.preferredFont(
+                forTextStyle: .body,
+                compatibleWith: UITraitCollection(preferredContentSizeCategory: .large)
+            )
         backgroundColor = .clear
         textColor = .label
         tintColor = .tintColor
