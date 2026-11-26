@@ -45,36 +45,22 @@ struct DevelopmentGoalSection: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 32)
         } else if !hasLoaded && hasLoadFailure {
-            ContentUnavailableView {
-                Label(
-                    String(localized: "common_error_title", bundle: PresentationResources.bundle),
-                    systemImage: "exclamationmark.triangle"
-                )
-            } description: {
-                Text(String(localized: "common_error_message", bundle: PresentationResources.bundle))
-            } actions: {
+            EmptyStateView(
+                String(localized: "common_error_title", bundle: PresentationResources.bundle),
+                systemImage: "exclamationmark.triangle",
+                message: String(localized: "common_error_message", bundle: PresentationResources.bundle)
+            ) {
                 Button(String(localized: "development_record_timeline_retry", bundle: PresentationResources.bundle)) {
                     onRetry()
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(RecordButtonStyle())
             }
         } else if items.isEmpty {
-            ContentUnavailableView {
-                Label(
-                    String(
-                        localized: "home_development_goal_empty_title",
-                        bundle: PresentationResources.bundle
-                    ),
-                    systemImage: "flag.checkered"
-                )
-            } description: {
-                Text(
-                    String(
-                        localized: "home_development_goal_empty_message",
-                        bundle: PresentationResources.bundle
-                    )
-                )
-            }
+            EmptyStateView(
+                String(localized: "home_development_goal_empty_title", bundle: PresentationResources.bundle),
+                systemImage: "flag.checkered",
+                message: String(localized: "home_development_goal_empty_message", bundle: PresentationResources.bundle)
+            )
         } else {
             LazyVStack(spacing: 0) {
                 ForEach(items) { item in

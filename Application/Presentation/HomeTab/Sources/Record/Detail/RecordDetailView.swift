@@ -166,23 +166,16 @@ public struct RecordDetailView: View {
     }
 
     private var failureContent: some View {
-        VStack(spacing: 20) {
-            ContentUnavailableView(
-                RecordPresentation.text("common_error_title"),
-                systemImage: "exclamationmark.triangle",
-                description: Text(
-                    RecordPresentation.text("development_record_detail_error_message")
-                )
-            )
-
+        EmptyStateView(
+            RecordPresentation.text("common_error_title"),
+            systemImage: "exclamationmark.triangle",
+            message: RecordPresentation.text("development_record_detail_error_message")
+        ) {
             Button(RecordPresentation.text("development_record_detail_retry")) {
                 store.send(.view(.fetch))
             }
-            .buttonStyle(.borderedProminent)
+            .buttonStyle(RecordButtonStyle())
         }
-        .frame(maxWidth: .infinity)
-        .padding(24)
-        .background(Color.secondaryBackground, in: .rect)
     }
 
     // 기록 정정과 버전 이력 버튼, 한 줄에 들어가지 않으면 세로로 표시

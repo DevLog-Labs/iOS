@@ -29,6 +29,8 @@ struct HomeFeature {
         var selectedTodoCategory: TodoCategory?
         // 홈 제목 줄 아래 보이는 높이, 새로 만들기 팝오버가 화면 밖으로 넘치지 않게 사용
         var visibleHeight = CGFloat.infinity
+        // 새로 만들기 시트 목록 높이, 시트를 내용 높이에 맞추는 데 사용
+        var contentPickerHeight = CGFloat.zero
         var loading = LoadingFeature.State()
 
         var showContentPicker: Bool {
