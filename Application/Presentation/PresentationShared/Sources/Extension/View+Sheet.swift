@@ -371,10 +371,11 @@ private struct SheetDragGesture: UIGestureRecognizerRepresentable {
             // 목록 순서 바꾸기 손잡이처럼 직접 끄는 컨트롤은 시트를 끌지 않음
             guard let hitView = view.hitTest(startLocation, with: nil), !(hitView is UIControl) else { return false }
 
+            // 스크롤을 끈 본문 웹 화면 같은 스크롤 뷰는 건너뛰고 실제로 당겨지는 바깥 스크롤 내용을 고정
             scrollView = sequence(first: hitView, next: \.superview)
                 .lazy
                 .compactMap { $0 as? UIScrollView }
-                .first { $0.alwaysBounceVertical || $0.bounds.height < $0.contentSize.height }
+                .first { $0.isScrollEnabled && ($0.alwaysBounceVertical || $0.bounds.height < $0.contentSize.height) }
             guard let scrollView else { return true }
             return scrollView.contentOffset.y <= -scrollView.adjustedContentInset.top
         }
