@@ -18,17 +18,11 @@ struct TabScreen: View {
     let isSelected: Bool
     let isTabBarHidden: Bool
     let tabBarInset: CGFloat
-    let usesPaneLayout: Bool
-    let windowControlsInset: CGFloat
-    let readableContentWidth: CGFloat
     let windowEvent: TodoEditorWindowEvent
 
     var body: some View {
         content
             .environment(\.isTabContentActive, isSelected)
-            .environment(\.usesPaneLayout, usesPaneLayout)
-            .environment(\.windowControlsInset, windowControlsInset)
-            .environment(\.readableContentWidth, readableContentWidth)
             .environment(\.sideBarRequest, store.sideBarRequests[tab])
             // 좁은 창에서도 고른 대상을 기록해 넓은 창으로 바뀌면 바로 세부 정보 사이드바에 표시
             .environment(\.selectDetailSideBarTarget) { store.send(.view(.detailSideBarTargetChanged(tab, $0, owner: $1))) }

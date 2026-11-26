@@ -9,6 +9,7 @@ import SwiftUI
 import ProfileTab
 import PresentationShared
 
+// SplitShell의 자리마다 넣을 화면과 탭 바를 정하는 화면
 struct CompositionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
@@ -50,7 +51,7 @@ struct CompositionView: View {
         let sideBarIdealWidth = isiOSAppOnMac ? 220 * AdaptiveSize.boardScale : 250
         let tabBarInset = showsTabBar ? store.tabBarHeight : 0
 
-        HStack(spacing: 0) {
+        SplitShell {
             if showsSideBar && !store.isSideBarCollapsed {
                 // 최소는 화살표와 아이콘만 보이는 폭, Mac 최대는 Orca 사이드바와 같은 폭
                 TreeSideBar(selectedTab: $selectedTab, store: store)
@@ -65,7 +66,7 @@ struct CompositionView: View {
                     // 칸 자르기 밖이라 잘리지 않도록 바탕은 칸 바깥에서 아래쪽 안전 영역까지 채움
                     .background(Color.secondaryBackground, ignoresSafeAreaEdges: .bottom)
             }
-
+        } center: {
             ZStack {
                 // iPad는 시스템 탭 바를 쓰지 않아 Mac과 같이 구성
                 // 넓은 창과 좁은 창을 오가도 탭 화면을 다시 만들지 않음
@@ -80,9 +81,6 @@ struct CompositionView: View {
                                 isSelected: selectedTab == tab,
                                 isTabBarHidden: isSystemTabBarHidden,
                                 tabBarInset: tabBarInset,
-                                usesPaneLayout: showsSideBar,
-                                windowControlsInset: tabContentInset,
-                                readableContentWidth: readableContentWidth,
                                 windowEvent: windowEvent
                             )
                             .opacity(selectedTab == tab ? 1 : 0)
@@ -91,78 +89,25 @@ struct CompositionView: View {
                     }
                 } else {
                     TabView(selection: $selectedTab) {
-                        Tab(
-                            AppTab.home.title,
-                            systemImage: AppTab.home.symbolName,
-                            value: AppTab.home
-                        ) {
-                            TabScreen(
-                                store: store,
-                                tab: .home,
-                                isSelected: selectedTab == .home,
-                                isTabBarHidden: isSystemTabBarHidden,
-                                tabBarInset: tabBarInset,
-                                usesPaneLayout: showsSideBar,
-                                windowControlsInset: tabContentInset,
-                                readableContentWidth: readableContentWidth,
-                                windowEvent: windowEvent
-                            )
-                        }
-                        Tab(
-                            AppTab.today.title,
-                            systemImage: AppTab.today.symbolName,
-                            value: AppTab.today
-                        ) {
-                            TabScreen(
-                                store: store,
-                                tab: .today,
-                                isSelected: selectedTab == .today,
-                                isTabBarHidden: isSystemTabBarHidden,
-                                tabBarInset: tabBarInset,
-                                usesPaneLayout: showsSideBar,
-                                windowControlsInset: tabContentInset,
-                                readableContentWidth: readableContentWidth,
-                                windowEvent: windowEvent
-                            )
-                        }
-                        Tab(
-                            AppTab.notification.title,
-                            systemImage: AppTab.notification.symbolName,
-                            value: AppTab.notification
-                        ) {
-                            TabScreen(
-                                store: store,
-                                tab: .notification,
-                                isSelected: selectedTab == .notification,
-                                isTabBarHidden: isSystemTabBarHidden,
-                                tabBarInset: tabBarInset,
-                                usesPaneLayout: showsSideBar,
-                                windowControlsInset: tabContentInset,
-                                readableContentWidth: readableContentWidth,
-                                windowEvent: windowEvent
-                            )
-                        }
-                        .badge(store.unreadPushCount)
-                        Tab(
-                            AppTab.profile.title,
-                            systemImage: AppTab.profile.symbolName,
-                            value: AppTab.profile
-                        ) {
-                            TabScreen(
-                                store: store,
-                                tab: .profile,
-                                isSelected: selectedTab == .profile,
-                                isTabBarHidden: isSystemTabBarHidden,
-                                tabBarInset: tabBarInset,
-                                usesPaneLayout: showsSideBar,
-                                windowControlsInset: tabContentInset,
-                                readableContentWidth: readableContentWidth,
-                                windowEvent: windowEvent
-                            )
+                        ForEach(AppTab.allCases, id: \.self) { tab in
+                            Tab(tab.title, systemImage: tab.symbolName, value: tab) {
+                                TabScreen(
+                                    store: store,
+                                    tab: tab,
+                                    isSelected: selectedTab == tab,
+                                    isTabBarHidden: isSystemTabBarHidden,
+                                    tabBarInset: tabBarInset,
+                                    windowEvent: windowEvent
+                                )
+                            }
+                            .badge(tab == .notification ? store.unreadPushCount : 0)
                         }
                     }
                 }
             }
+            .environment(\.usesPaneLayout, showsSideBar)
+            .environment(\.windowControlsInset, tabContentInset)
+            .environment(\.readableContentWidth, readableContentWidth)
             .background {
                 ReadableContentWidthReader { width in
                     store.send(.binding(.set(\.readableContentWidth, width)))
@@ -188,7 +133,7 @@ struct CompositionView: View {
                 \.setDetailSideBarPresented,
                 showsDetailSideBar ? { store.send(.binding(.set(\.isDetailSideBarPresented, $0))) } : nil
             )
-
+        } right: {
             // 칸 화면이 사이드바를 직접 그리면 창 사이드바는 표시하지 않음
             if showsDetailSideBar
                 && store.isDetailSideBarPresented
@@ -200,10 +145,9 @@ struct CompositionView: View {
                     store.send(.binding(.set(\.isDetailSideBarPresented, false)))
                 }
             }
-        }
-        // 사이드바가 있는 창의 설정은 앱 화면을 덮어 창 전체에 표시하고 닫으면 보던 화면으로 돌아감
-        // 창이 좁아져도 진행 중인 로그아웃, 회원 탈퇴나 그 알림창이 끝날 때까지 표시
-        .overlay {
+        } overlay: {
+            // 사이드바가 있는 창의 설정은 앱 화면을 덮어 창 전체에 표시하고 닫으면 보던 화면으로 돌아감
+            // 창이 좁아져도 진행 중인 로그아웃, 회원 탈퇴나 그 알림창이 끝날 때까지 표시
             if store.isSettingsPresented && (showsSideBar || store.isSettingsBusy) {
                 DesktopSettingsView { isBusy in
                     store.send(.binding(.set(\.isSettingsBusy, isBusy)))
