@@ -7,18 +7,26 @@
 
 import SwiftUI
 
-public struct EmptyStateView: View {
+// 아이콘 원, 제목, 설명 아래에 다시 시도 같은 버튼을 두는 빈 화면
+public struct EmptyStateView<Actions: View>: View {
     @ScaledMetric(relativeTo: .title2) private var iconSize = CGFloat(52)
     @ScaledMetric(relativeTo: .footnote) private var messageSize = CGFloat(13.5)
     @ScaledMetric(relativeTo: .footnote) private var messageWidth = CGFloat(280)
     private let title: String
     private let systemImage: String
     private let message: String?
+    private let actions: Actions
 
-    public init(_ title: String, systemImage: String, message: String? = nil) {
+    public init(
+        _ title: String,
+        systemImage: String,
+        message: String? = nil,
+        @ViewBuilder actions: () -> Actions
+    ) {
         self.title = title
         self.systemImage = systemImage
         self.message = message
+        self.actions = actions()
     }
 
     public var body: some View {
@@ -37,10 +45,20 @@ public struct EmptyStateView: View {
                     .foregroundStyle(Color.secondaryLabel)
                     .frame(maxWidth: messageWidth)
             }
+            if Actions.self != EmptyView.self {
+                actions
+                    .padding(.top, 12)
+            }
         }
         .multilineTextAlignment(.center)
         .frame(maxWidth: .infinity)
         .padding(.horizontal, 32)
         .padding(.top, 72)
+    }
+}
+
+public extension EmptyStateView where Actions == EmptyView {
+    init(_ title: String, systemImage: String, message: String? = nil) {
+        self.init(title, systemImage: systemImage, message: message) { EmptyView() }
     }
 }
