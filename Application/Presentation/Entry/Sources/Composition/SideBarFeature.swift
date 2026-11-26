@@ -57,7 +57,7 @@ struct SideBarFeature {
                     state.expandedGroups.insert(.todo)
                 case .developmentGoal:
                     state.expandedGroups.insert(.developmentGoal)
-                case .home, .todoCategoryManagement, .search, .today, .notification, .profile, .settings:
+                case .home, .todoCategoryManagement, .search, .today, .notification, .profile:
                     break
                 }
             case .contentChanged(let content):

@@ -11,15 +11,15 @@ import Foundation
 import PresentationShared
 
 @Reducer
-struct AccountFeature {
-    enum ActiveLoadingRow: Equatable {
+public struct AccountFeature {
+    public enum ActiveLoadingRow: Equatable {
         case signOut
         case deleteAuth
     }
 
     @ObservableState
-    struct State: Equatable {
-        @Presents var alert: AlertState<Action.Alert>?
+    public struct State: Equatable {
+        @Presents public var alert: AlertState<Action.Alert>?
         var currentProvider: AuthProvider?
         var connectedProviders: [AuthProvider] = []
         var disconnectedProviders: [AuthProvider] = []
@@ -33,9 +33,9 @@ struct AccountFeature {
         }
     }
 
-    enum Action {
+    public enum Action: Equatable {
         case alert(PresentationAction<Alert>)
-        case onAppear
+        case open
         case linkWithProvider(AuthProvider)
         case setPresentationContext(AuthPresentationContext?)
         case unlinkFromProvider(AuthProvider)
@@ -43,13 +43,13 @@ struct AccountFeature {
         case setProviders(currentProvider: AuthProvider?, allProviders: [AuthProvider])
         case loading(LoadingFeature.Action)
 
-        enum Alert: Equatable {
+        public enum Alert: Equatable {
             case tapDeleteAuthButton
             case tapSignOutButton
         }
     }
 
-    enum AlertType: Equatable {
+    public enum AlertType: Equatable {
         case signOut
         case deleteAuth
         case linkEmailNotFound
@@ -65,7 +65,7 @@ struct AccountFeature {
     @Dependency(\.deleteAuthUseCase) var deleteAuthUseCase
     @Dependency(\.signOutUseCase) var signOutUseCase
 
-    var body: some ReducerOf<Self> {
+    public var body: some ReducerOf<Self> {
         Scope(state: \.loading, action: \.loading) {
             LoadingFeature()
         }
@@ -81,7 +81,7 @@ struct AccountFeature {
                 return signOutEffect()
             case .alert:
                 break
-            case .onAppear:
+            case .open:
                 // 화면을 떠난 뒤 실패한 요청의 알림창은 다시 들어올 때 띄우지 않음
                 state.alert = nil
                 return fetchProvidersEffect()
@@ -284,7 +284,6 @@ private extension AccountFeature {
                 try await deleteAuthUseCase.execute()
                 // 유스케이스 완료가 LoginView 전환 완료를 의미하지 않으므로 화면이 교체될 때까지 로딩 유지
             } catch {
-                // 로딩보다 알림창을 먼저 띄워 좁아진 창의 설정 화면이 알림창 전에 닫히지 않게 함
                 await send(.setAlert(.error))
                 await send(.loading(.end(target: .default, mode: .delayed)))
             }
@@ -298,7 +297,6 @@ private extension AccountFeature {
                 try await signOutUseCase.execute()
                 // 유스케이스 완료가 LoginView 전환 완료를 의미하지 않으므로 화면이 교체될 때까지 로딩 유지
             } catch {
-                // 로딩보다 알림창을 먼저 띄워 좁아진 창의 설정 화면이 알림창 전에 닫히지 않게 함
                 await send(.setAlert(.error))
                 await send(.loading(.end(target: .default, mode: .delayed)))
             }

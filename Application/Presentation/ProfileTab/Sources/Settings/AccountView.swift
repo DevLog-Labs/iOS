@@ -73,13 +73,11 @@ struct AccountView: View {
         }
         .background(Color.background)
         .duoToolbarVisibility(showsBackButton: true)
-        .onAppear { store.send(.onAppear) }
-        .prominentAlert(store, state: \.alert, action: \.alert)
         .background {
-            WindowSceneIdentifierReader {
-                store.send(.setPresentationContext(
-                    $0.map(AuthPresentationContext.init(identifier:))
-                ))
+            WindowSceneIdentifierReader { identifier in
+                // 창 폭이 바뀌어 빠지는 화면이 늦게 보낸 빈 값이 새로 그린 화면의 값을 지우지 않음
+                guard let identifier else { return }
+                store.send(.setPresentationContext(AuthPresentationContext(identifier: identifier)))
             }
         }
     }

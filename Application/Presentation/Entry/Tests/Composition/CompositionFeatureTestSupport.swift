@@ -132,6 +132,19 @@ final class ObserveUnreadPushCountUseCaseSpy: ObserveUnreadPushCountUseCase {
     }
 }
 
+actor CompositionFetchAuthProvidersUseCaseSpy: FetchAuthProvidersUseCase {
+    private var count = 0
+
+    func execute() async throws -> (currentProvider: AuthProvider?, allProviders: [AuthProvider]) {
+        count += 1
+        return (nil, [])
+    }
+
+    func executeCallCount() -> Int {
+        count
+    }
+}
+
 final class CompositionTrackAnalyticsEventUseCaseSpy: TrackAnalyticsEventUseCase {
     private var events = [AnalyticsEvent]()
 

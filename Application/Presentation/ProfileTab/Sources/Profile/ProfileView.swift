@@ -17,37 +17,28 @@ public struct ProfileView: View {
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
-    @Environment(\.presentSettings) private var presentSettings
-    @State private var settingsStore: StoreOf<SettingsFeature>
-    // 계정 화면에서 뒤로 가도 진행 중인 로그아웃, 회원 탈퇴가 취소되지 않게 프로필 화면이 보관
-    @State private var accountStore: StoreOf<AccountFeature>
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
+    @Bindable private var settingsStore: StoreOf<SettingsFeature>
     private let isSelected: Bool
     private let windowEvent: TodoEditorWindowEvent
 
     public init(
         isSelected: Bool,
+        settingsStore: StoreOf<SettingsFeature>,
         windowEvent: TodoEditorWindowEvent
     ) {
         let store = Store(initialState: ProfileFeature.State()) {
             ProfileFeature()
         }
-        let settingsStore = Store(initialState: SettingsFeature.State()) {
-            SettingsFeature()
-        }
-        let accountStore = Store(initialState: AccountFeature.State()) {
-            AccountFeature()
-        }
         self._store = State(initialValue: store)
-        self._settingsStore = State(initialValue: settingsStore)
-        self._accountStore = State(initialValue: accountStore)
+        self.settingsStore = settingsStore
         self.isSelected = isSelected
         self.windowEvent = windowEvent
     }
 
     public var body: some View {
-        NavigationStack(path: $router.path) {
+        NavigationStack(path: path) {
             // 사이드바가 있는 창은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
             PaneSplitView(splitsOnDesktop: store.selectedTodoRoute != nil) {
                 ScrollView {
@@ -123,6 +114,8 @@ public struct ProfileView: View {
             )
         }
         .desktopNavigationTransition()
+        // 창 폭이 바뀌어 같은 설정을 다시 쌓거나 내릴 때 밀리는 효과 없이 바꿈
+        .transaction(value: usesDesktopLayout) { $0.disablesAnimations = true }
         // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 같은 Todo를 옆 칸에 표시
         .closesPushedDetail {
             switch router.path.last {
@@ -133,21 +126,6 @@ public struct ProfileView: View {
                 break
             }
         }
-        // 사이드바가 있는 창으로 바뀌면 쌓아 연 설정은 내리고 창 전체 설정 화면으로 표시
-        .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
-            if usesDesktopLayout, router.root == .settings, let presentSettings {
-                router.path = []
-                // 다른 탭을 보던 중이면 쌓아 연 설정만 내리고 창 전체 설정 화면은 띄우지 않음
-                if isSelected {
-                    presentSettings()
-                }
-            }
-        }
-        // 설정 아래 화면도 사이드바에서는 설정으로 표시
-        .preference(
-            key: SideBarLocationPreferenceKey.self,
-            value: router.root == .settings ? .settings : .profile
-        )
         // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
         .onChange(of: sideBarRequest, initial: true) { _, request in
             switch request?.action {
@@ -183,7 +161,7 @@ public struct ProfileView: View {
         ToolbarItem(placement: .topBarTrailing) {
             // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
             Button {
-                router.push(.settings)
+                settingsStore.send(.openList)
             } label: {
                 Image(systemName: "gearshape")
             }
@@ -193,18 +171,12 @@ public struct ProfileView: View {
 
     @ViewBuilder
     private var titleBar: some View {
-        let openSettings = {
-            // 사이드바가 있는 창은 앱 화면과 분리한 설정 화면 표시
-            if let presentSettings {
-                presentSettings()
-            } else {
-                router.push(.settings)
-            }
-        }
-
         if usesPaneLayout {
             PaneTitleBar(Text("nav_profile", bundle: PresentationResources.bundle)) {
-                Button(action: openSettings) {
+                // 사이드바가 있는 창은 앱 화면과 분리한 설정 화면 표시
+                Button {
+                    settingsStore.send(.open)
+                } label: {
                     Image(systemName: "gearshape")
                 }
                 .topBarButtonStyle()
@@ -217,7 +189,9 @@ public struct ProfileView: View {
                     Spacer()
                     if deviceType != .duo {
                         // 리퀴드 글래스 없이 배경 없는 40pt 아이콘 버튼
-                        Button(action: openSettings) {
+                        Button {
+                            settingsStore.send(.openList)
+                        } label: {
                             Image(systemName: "gearshape")
                         }
                         .buttonStyle(ProfileTopBarIconButtonStyle())
@@ -232,6 +206,37 @@ public struct ProfileView: View {
             .background(Color.background)
             .toolbarBackground(Color.background)
         }
+    }
+
+    // 사이드바가 있는 창의 설정은 창 전체 설정 화면에 그리므로 쌓지 않음
+    private var path: Binding<[ProfileRoute]> {
+        Binding(
+            get: {
+                guard !usesDesktopLayout else { return router.path }
+                switch settingsStore.screen {
+                case .list:
+                    return router.path + [.settings]
+                case .detail:
+                    return router.path + [.settings, settingsStore.selectedRoute]
+                case nil:
+                    return router.path
+                }
+            },
+            set: { path in
+                let settingsIndex = path.firstIndex(of: .settings) ?? path.endIndex
+                router.path = Array(path[..<settingsIndex])
+                // 쌓은 설정이 내려가며 늦게 보낸 빈 경로가 보던 항목을 지우지 않음
+                guard !usesDesktopLayout else { return }
+                switch path.endIndex - settingsIndex {
+                case 0:
+                    settingsStore.send(.binding(.set(\.screen, nil)))
+                case 1:
+                    settingsStore.send(.binding(.set(\.screen, .list)))
+                default:
+                    settingsStore.send(.binding(.set(\.screen, .detail)))
+                }
+            }
+        )
     }
 
     // 칸 화면은 옆 칸에 상세를 열고 나머지는 화면 이동
@@ -251,7 +256,7 @@ public struct ProfileView: View {
         switch route {
         case .settings:
             SettingsView(store: settingsStore) { route in
-                router.push(route)
+                settingsStore.send(.select(route))
             }
         case .activity(let todoId):
             TodoDetailView(store: Store(
@@ -283,7 +288,10 @@ public struct ProfileView: View {
                 PushNotificationSettingsFeature()
             })
         case .account:
-            AccountView(store: accountStore, settingsStore: settingsStore)
+            AccountView(
+                store: settingsStore.scope(state: \.account, action: \.account),
+                settingsStore: settingsStore
+            )
         case .settings, .activity, .recentTodo, .information:
             EmptyView()
         }
@@ -318,7 +326,7 @@ private struct ProfileGoalSummary: View {
     }
 }
 
-enum ProfileRoute: Hashable, Identifiable {
+public enum ProfileRoute: Hashable, Identifiable {
     case settings
     case activity(String)
     case recentTodo(String)
@@ -328,7 +336,7 @@ enum ProfileRoute: Hashable, Identifiable {
     // Mac 설정 화면 목차에서만 고르는 앱 정보
     case information
 
-    var id: Self { self }
+    public var id: Self { self }
 }
 
 private extension ProfileRoute {

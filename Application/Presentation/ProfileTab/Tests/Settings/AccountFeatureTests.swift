@@ -22,7 +22,7 @@ struct AccountFeatureTests {
         )
         let driver = AccountTestDriver(fetchUseCase: fetchSpy)
 
-        driver.onAppear()
+        driver.open()
 
         await waitUntil {
             driver.currentProvider == .google
@@ -144,7 +144,7 @@ struct AccountFeatureTests {
         fetchSpy.error = AccountTestError.failure
         let driver = AccountTestDriver(fetchUseCase: fetchSpy)
 
-        driver.onAppear()
+        driver.open()
 
         await waitUntil {
             driver.alert != nil
@@ -261,7 +261,7 @@ struct AccountFeatureTests {
         fetchSpy.error = AccountTestError.failure
         let driver = AccountTestDriver(fetchUseCase: fetchSpy)
 
-        driver.onAppear()
+        driver.open()
 
         await waitUntil {
             driver.alert != nil
@@ -278,14 +278,14 @@ struct AccountFeatureTests {
         fetchSpy.error = AccountTestError.failure
         let driver = AccountTestDriver(fetchUseCase: fetchSpy)
 
-        driver.onAppear()
+        driver.open()
 
         await waitUntil {
             driver.alert != nil
         }
 
         fetchSpy.error = nil
-        driver.onAppear()
+        driver.open()
 
         #expect(driver.alert == nil)
     }
@@ -380,8 +380,8 @@ private struct AccountTestDriver {
         }
     }
 
-    func onAppear() {
-        feature.send(.onAppear)
+    func open() {
+        feature.send(.open)
     }
 
     func linkWithProvider(_ provider: AuthProvider) {

@@ -36,11 +36,10 @@ struct CompositionView: View {
             ? max(store.verticalBarInsets.leading, store.verticalBarInsets.trailing) : 0
         // 시스템 탭 바처럼 키보드가 올라오면 키보드 뒤로 사라짐
         let showsTabBar = !showsSideBar && usesCustomTabBar && verticalBarWidth == 0 && !store.isKeyboardVisible
-        // 사이드바가 있는 창 오른쪽 세부 정보 사이드바, 설정 화면에서는 표시하지 않음
-        let showsDetailSideBar = showsSideBar
-            && (store.sideBar.locations[selectedTab] ?? selectedTab.sideBarLocation) != .settings
         let sideBarIdealWidth = isiOSAppOnMac ? 220 * AdaptiveSize.boardScale : 250
         let tabBarInset = showsTabBar ? store.tabBarHeight : 0
+        // 사이드바가 있는 창에서 연 설정은 좁아지면 고른 탭을 바꾸지 않고 프로필 화면에 이어서 표시
+        let visibleTab = !showsSideBar && store.isSettingsPresented ? AppTab.profile : selectedTab
 
         SplitShell {
             if showsSideBar && !store.sideBar.isCollapsed {
@@ -69,17 +68,18 @@ struct CompositionView: View {
                     // 탭 전환 애니메이션 없이 한 번 연 탭을 유지하고 선택한 탭만 표시
                     // 사이드바 하위 항목은 홈 화면이 알려 주므로 홈은 처음부터 생성
                     ForEach(AppTab.allCases, id: \.self) { tab in
-                        if store.openedTabs.contains(tab) || selectedTab == tab || tab == .home {
+                        if store.openedTabs.contains(tab) || selectedTab == tab || visibleTab == tab || tab == .home {
                             TabScreen(
                                 store: store,
                                 tab: tab,
-                                isSelected: selectedTab == tab,
+                                isSelected: selectedTab == tab && visibleTab == tab,
+                                isVisible: visibleTab == tab,
                                 isTabBarHidden: isSystemTabBarHidden,
                                 tabBarInset: tabBarInset,
                                 windowEvent: windowEvent
                             )
-                            .opacity(selectedTab == tab ? 1 : 0)
-                            .allowsHitTesting(selectedTab == tab)
+                            .opacity(visibleTab == tab ? 1 : 0)
+                            .allowsHitTesting(visibleTab == tab)
                         }
                     }
                 } else {
@@ -89,7 +89,8 @@ struct CompositionView: View {
                                 TabScreen(
                                     store: store,
                                     tab: tab,
-                                    isSelected: selectedTab == tab,
+                                    isSelected: selectedTab == tab && visibleTab == tab,
+                                    isVisible: visibleTab == tab,
                                     isTabBarHidden: isSystemTabBarHidden,
                                     tabBarInset: tabBarInset,
                                     windowEvent: windowEvent
@@ -113,24 +114,20 @@ struct CompositionView: View {
                 \.expandSideBar,
                 store.sideBar.isCollapsed ? { store.send(.sideBar(.binding(.set(\.isCollapsed, false)))) } : nil
             )
-            .environment(
-                \.presentSettings,
-                showsSideBar ? { store.send(.binding(.set(\.isSettingsPresented, true))) } : nil
-            )
             // 닫힌 세부 정보 사이드바는 화면 칸 제목 줄의 버튼으로 엶
             .environment(
                 \.showDetailSideBar,
-                showsDetailSideBar && !store.detailSideBar.isPresented
+                showsSideBar && !store.detailSideBar.isPresented
                     ? { store.send(.detailSideBar(.binding(.set(\.isPresented, true)))) } : nil
             )
-            .environment(\.isDetailSideBarPresented, showsDetailSideBar && store.detailSideBar.isPresented)
+            .environment(\.isDetailSideBarPresented, showsSideBar && store.detailSideBar.isPresented)
             .environment(
                 \.setDetailSideBarPresented,
-                showsDetailSideBar ? { store.send(.detailSideBar(.binding(.set(\.isPresented, $0)))) } : nil
+                showsSideBar ? { store.send(.detailSideBar(.binding(.set(\.isPresented, $0)))) } : nil
             )
         } right: {
             // 칸 화면이 사이드바를 직접 그리면 창 사이드바는 표시하지 않음
-            if showsDetailSideBar
+            if showsSideBar
                 && store.detailSideBar.isPresented
                 && store.detailSideBar.targets[selectedTab] != .hosted {
                 DetailSideBar(
@@ -142,15 +139,12 @@ struct CompositionView: View {
             }
         } overlay: {
             // 사이드바가 있는 창의 설정은 앱 화면을 덮어 창 전체에 표시하고 닫으면 보던 화면으로 돌아감
-            // 창이 좁아져도 진행 중인 로그아웃, 회원 탈퇴나 그 알림창이 끝날 때까지 표시
-            if store.isSettingsPresented && (showsSideBar || store.isSettingsBusy) {
-                DesktopSettingsView { isBusy in
-                    store.send(.binding(.set(\.isSettingsBusy, isBusy)))
-                } onClose: {
-                    store.send(.binding(.set(\.isSettingsPresented, false)))
-                }
-                .environment(\.readableContentWidth, readableContentWidth)
-                .background(Color.background)
+            if showsSideBar
+                && store.settings.screen != nil
+                && (store.isSettingsPresented || selectedTab == .profile) {
+                DesktopSettingsView(store: store.scope(state: \.settings, action: \.settings))
+                    .environment(\.readableContentWidth, readableContentWidth)
+                    .background(Color.background)
             }
         }
         // 세로로 펼친 Duo는 세로 막대가 없어 iPhone과 같은 화면 구성
@@ -201,7 +195,10 @@ struct CompositionView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if showsTabBar {
                 TabBar(
-                    selectedTab: $store.selectedTab.sending(\.selectTab),
+                    selectedTab: Binding(
+                        get: { visibleTab },
+                        set: { store.send(.selectTab($0)) }
+                    ),
                     axis: .horizontal,
                     unreadPushCount: store.unreadPushCount.count
                 )
@@ -231,17 +228,27 @@ struct CompositionView: View {
         } action: { insets in
             store.send(.binding(.set(\.verticalBarInsets, insets)))
         }
-        // iPad 창이 좁아져 사이드바가 없어지면 진행 중인 요청과 알림창이 끝난 뒤 창 전체 설정 화면을 닫고 보던 화면으로 돌아감
-        .onChange(of: showsSideBar || store.isSettingsBusy) { _, keepsSettings in
-            if !keepsSettings {
-                store.send(.binding(.set(\.isSettingsPresented, false)))
-            }
+        .onChange(of: showsSideBar, initial: true) { _, showsSideBar in
+            store.send(.view(.sideBarVisibilityChanged(showsSideBar)))
         }
         .prominentAlert(
             store.scope(state: \.unreadPushCount, action: \.unreadPushCount),
             state: \.alert,
             action: \.alert
         )
+        // 창 폭이 바뀌어 계정 화면을 옮겨 그려도 떠 있는 알림창이 닫히지 않게 이 화면에서 표시
+        .background {
+            Color.clear
+                .prominentAlert(
+                    store.scope(state: \.settings.account, action: \.settings.account),
+                    state: \.alert,
+                    action: \.alert
+                )
+                .environment(
+                    \.isTabContentActive,
+                    store.isAccountOpen && (store.isSettingsPresented || selectedTab == .profile)
+                )
+        }
         // 이 화면 알림창도 화면 안쪽 알림창과 같은 버튼 모양으로 표시
         .environment(\.usesDesktopLayout, showsSideBar)
     }

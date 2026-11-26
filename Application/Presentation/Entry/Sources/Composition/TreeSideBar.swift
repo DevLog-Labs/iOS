@@ -131,8 +131,7 @@ struct TreeSideBar: View {
                     }
                     SideBarRow(
                         title: Text("nav_settings", bundle: PresentationResources.bundle),
-                        symbolName: "gearshape.fill",
-                        isSelected: location == .settings
+                        symbolName: "gearshape.fill"
                     ) {
                         // 앱 화면과 분리한 설정 화면 표시
                         store.send(.tapSettings)

@@ -83,6 +83,48 @@ struct SettingsFeatureTests {
         #expect(adapter.theme == .light)
         #expect(updateSpy.themes == [.light])
     }
+
+    @Test("설정을 새로 열면 앞서 고른 항목과 상관없이 첫 항목부터 표시한다")
+    func 설정을_새로_열면_앞서_고른_항목과_상관없이_첫_항목부터_표시한다() async {
+        let store = TestStore(initialState: SettingsFeature.State()) {
+            SettingsFeature()
+        }
+
+        await store.send(.select(.account)) {
+            $0.selectedRoute = .account
+            $0.screen = .detail
+        }
+        await store.send(.close) {
+            $0.screen = nil
+        }
+        await store.send(.open) {
+            $0.selectedRoute = .theme
+            $0.screen = .detail
+        }
+        await store.send(.select(.account)) {
+            $0.selectedRoute = .account
+        }
+        await store.send(.close) {
+            $0.screen = nil
+        }
+        // 좁은 창은 설정 목록부터 쌓음
+        await store.send(.openList) {
+            $0.selectedRoute = .theme
+            $0.screen = .list
+        }
+    }
+
+    @Test("좁은 창에 항목 화면이 없는 앱 정보를 고르면 설정 목록까지만 쌓는다")
+    func 좁은_창에_항목_화면이_없는_앱_정보를_고르면_설정_목록까지만_쌓는다() async {
+        let store = TestStore(initialState: SettingsFeature.State()) {
+            SettingsFeature()
+        }
+
+        await store.send(.select(.information)) {
+            $0.selectedRoute = .information
+            $0.screen = .list
+        }
+    }
 }
 
 @MainActor

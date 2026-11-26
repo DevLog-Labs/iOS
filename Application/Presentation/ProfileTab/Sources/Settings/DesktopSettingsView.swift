@@ -14,19 +14,10 @@ import PresentationShared
 public struct DesktopSettingsView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
-    @State private var store = Store(initialState: SettingsFeature.State()) {
-        SettingsFeature()
-    }
-    // 목차에서 다른 항목을 골라도 진행 중인 로그아웃, 회원 탈퇴가 취소되지 않게 설정 화면이 보관
-    @State private var accountStore = Store(initialState: AccountFeature.State()) {
-        AccountFeature()
-    }
-    private let onBusyChange: (Bool) -> Void
-    private let onClose: () -> Void
+    @Bindable private var store: StoreOf<SettingsFeature>
 
-    public init(onBusyChange: @escaping (Bool) -> Void, onClose: @escaping () -> Void) {
-        self.onBusyChange = onBusyChange
-        self.onClose = onClose
+    public init(store: StoreOf<SettingsFeature>) {
+        self.store = store
     }
 
     public var body: some View {
@@ -38,16 +29,8 @@ public struct DesktopSettingsView: View {
                 .safeAreaInset(edge: .top, spacing: 0) { titleBar }
                 .environment(\.showsPaneTitleBar, true)
         }
-        // 화면을 닫으면 Store가 해제되어 진행 중인 로그아웃, 회원 탈퇴가 취소되므로 끝날 때까지 화면 전체 비활성화
-        .disabled(accountStore.activeLoadingRow != nil)
-        // 진행 중인 로그아웃, 회원 탈퇴나 계정 화면에 떠 있는 알림창이 남아 있으면 창이 좁아져도 화면을 닫지 않게 알림
-        // 다른 항목으로 옮긴 뒤 실패한 요청의 알림창은 보이지 않아 제외
-        .onChange(
-            of: accountStore.activeLoadingRow != nil || (store.selectedRoute == .account && accountStore.alert != nil),
-            initial: true
-        ) { _, isBusy in
-            onBusyChange(isBusy)
-        }
+        // 로그아웃, 회원 탈퇴가 끝날 때까지 비활성화
+        .disabled(store.account.activeLoadingRow != nil)
         .onAppear { store.send(.startObserving) }
     }
 
@@ -55,7 +38,9 @@ public struct DesktopSettingsView: View {
         VStack(spacing: 0) {
             // 칸 제목 줄과 같은 높이의 앱으로 돌아가기 줄
             PaneTitleBar(background: .secondaryBackground) {
-                Button(action: onClose) {
+                Button {
+                    store.send(.close)
+                } label: {
                     HStack(spacing: 8 * AdaptiveSize.boardScale) {
                         Image(systemName: "arrow.left")
                         Text("settings_back_to_app", bundle: PresentationResources.bundle)
@@ -76,7 +61,7 @@ public struct DesktopSettingsView: View {
                     let isDisabled = !store.isNetworkConnected && (route == .pushNotification || route == .account)
 
                     Button {
-                        store.send(.binding(.set(\.selectedRoute, route)))
+                        store.send(.select(route))
                     } label: {
                         HStack(spacing: isiOSAppOnMac ? 8 * AdaptiveSize.boardScale : 10) {
                             Image(systemName: route.settingsSymbolName)
@@ -130,7 +115,9 @@ public struct DesktopSettingsView: View {
                 Text(store.selectedRoute.settingsTitle)
             }
         } actions: {
-            Button(action: onClose) {
+            Button {
+                store.send(.close)
+            } label: {
                 Image(systemName: "xmark")
             }
             .topBarButtonStyle()
@@ -150,7 +137,7 @@ public struct DesktopSettingsView: View {
             }, isPaneDetail: true, showsTopBar: false)
         case .account:
             AccountView(
-                store: accountStore,
+                store: store.scope(state: \.account, action: \.account),
                 settingsStore: store,
                 isPaneDetail: true,
                 showsTopBar: false
