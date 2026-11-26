@@ -56,6 +56,7 @@ struct RootStoreTestAdapter: RootStateDriving {
     }
     var sheetTodoId: String? { store.state.sheet?.todoId }
     var widgetRoute: WidgetRoute? { store.state.widgetRoute }
+    var sideBarWidth: CGFloat? { store.state.composition?.sideBar.width }
 
     init(
         sessionUseCase: ObserveAuthSessionUseCase = ObserveAuthSessionUseCaseSpy(currentValue: true),
@@ -69,7 +70,8 @@ struct RootStoreTestAdapter: RootStateDriving {
         checkAppUpdateUseCase: CheckAppUpdateUseCase = RootCheckAppUpdateUseCaseSpy(),
         appStoreURL: URL? = URL(string: "https://apps.apple.com/us/app/devlog/id6760288611"),
         openURLSpy: RootOpenURLSpy = RootOpenURLSpy(),
-        badgeCountSpy: RootApplicationBadgeCountSpy = RootApplicationBadgeCountSpy()
+        badgeCountSpy: RootApplicationBadgeCountSpy = RootApplicationBadgeCountSpy(),
+        sideBarWidth: Double? = nil
     ) {
         store = TestStore(initialState: Feature.State()) {
             Feature()
@@ -87,7 +89,7 @@ struct RootStoreTestAdapter: RootStateDriving {
             $0.setApplicationBadgeCount = { count in
                 try await badgeCountSpy.setBadgeCount(count)
             }
-            $0.fetchSideBarWidthUseCase = RootFetchSideBarWidthUseCaseStub()
+            $0.fetchSideBarWidthUseCase = RootFetchSideBarWidthUseCaseStub(width: sideBarWidth)
             $0.observeUnreadPushCountUseCase = ObserveUnreadPushCountUseCaseSpy()
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
@@ -366,8 +368,10 @@ actor RootCheckAppUpdateUseCaseSpy: CheckAppUpdateUseCase {
 }
 
 struct RootFetchSideBarWidthUseCaseStub: FetchSideBarWidthUseCase {
+    let width: Double?
+
     func execute() -> Double? {
-        nil
+        width
     }
 }
 

@@ -53,6 +53,7 @@ struct Feature {
         case networkStatusChanged(Bool)
         case setTheme(SystemTheme)
         case didLogined(Bool)
+        case sideBarWidthFetched(Double?)
 
         enum Alert: Equatable {
             case tapUpdateButton
@@ -119,9 +120,9 @@ struct Feature {
             case .openWidgetRoute(let route):
                 // 로그아웃 상태면 로그인 화면만 보이고 위젯 경로는 버림
                 guard state.signIn != false else { break }
-                // 로그인 여부를 확인하기 전이면 경로를 보관했다가 로그인 확인 뒤 적용
+                // 로그인 여부를 확인하거나 앱 화면 상태를 만들기 전이면 경로를 보관했다가 만들 때 적용
                 state.widgetRoute = route
-                guard state.signIn == true else { break }
+                guard state.signIn == true, state.composition != nil else { break }
                 switch route {
                 case .tab(let tab):
                     return .send(.composition(.selectTab(tab)))
@@ -140,19 +141,14 @@ struct Feature {
                 let wasSignedIn = state.signIn == true
                 state.signIn = result
                 if result {
-                    guard !wasSignedIn else { return .send(.composition(.selectTab(.home))) }
-                    var composition = CompositionFeature.State()
-                    composition.sideBar.width = fetchSideBarWidthUseCase.execute().map { CGFloat($0) }
-                    switch state.widgetRoute {
-                    case .tab(let tab):
-                        composition.selectedTab = tab
-                    case .todayTodo(let id):
-                        state.sheet = .init(todoId: id)
-                    case nil:
-                        break
+                    guard !wasSignedIn else {
+                        // 앱 화면 상태를 만들기 전이면 만들 때 홈 탭으로 시작
+                        return state.composition == nil ? .none : .send(.composition(.selectTab(.home)))
                     }
-                    state.composition = composition
-                    return .send(.composition(.start))
+                    // 사용자가 정한 사이드바 폭을 읽은 뒤 앱 화면 상태를 만듦
+                    return .run { [fetchSideBarWidthUseCase] send in
+                        await send(.sideBarWidthFetched(fetchSideBarWidthUseCase.execute()))
+                    }
                 } else {
                     state.composition = nil
                     state.widgetRoute = nil
@@ -161,6 +157,21 @@ struct Feature {
                         clearApplicationBadgeCountEffect()
                     )
                 }
+            case .sideBarWidthFetched(let width):
+                // 폭을 읽는 동안 로그아웃했거나 이미 만들었으면 다시 만들지 않음
+                guard state.signIn == true, state.composition == nil else { break }
+                var composition = CompositionFeature.State()
+                composition.sideBar.width = width.map { CGFloat($0) }
+                switch state.widgetRoute {
+                case .tab(let tab):
+                    composition.selectedTab = tab
+                case .todayTodo(let id):
+                    state.sheet = .init(todoId: id)
+                case nil:
+                    break
+                }
+                state.composition = composition
+                return .send(.composition(.start))
             }
 
             return .none
