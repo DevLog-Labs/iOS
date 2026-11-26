@@ -28,7 +28,8 @@ struct Feature {
         var isNetworkConnected = true
         var signIn: Bool?
         var theme: SystemTheme = .automatic
-        var selectedTab = AppTab.home
+        // 로그인한 동안에만 있는 앱 화면 상태
+        var composition: CompositionFeature.State?
         var widgetRoute: WidgetRoute?
         var isObservingNetworkConnectivity = false
         var isObservingSession = false
@@ -41,10 +42,10 @@ struct Feature {
         var id: String { todoId }
     }
 
-    enum Action: BindableAction, Equatable {
+    enum Action: Equatable {
         case alert(PresentationAction<Alert>)
         case appUpdateCheckCompleted(Bool)
-        case binding(BindingAction<State>)
+        case composition(CompositionFeature.Action)
         case sheet(PresentationAction<Sheet>)
         case onAppear
         case presentTodoDetail(String)
@@ -70,9 +71,9 @@ struct Feature {
     @Dependency(\.appStoreURL) var appStoreURL
     @Dependency(\.openURL) var openURL
     @Dependency(\.setApplicationBadgeCount) var setApplicationBadgeCount
+    @Dependency(\.fetchSideBarWidthUseCase) var fetchSideBarWidthUseCase
 
     var body: some ReducerOf<Self> {
-        BindingReducer()
         Reduce { state, action in
             switch action {
             case .alert(.presented(.tapUpdateButton)):
@@ -83,7 +84,7 @@ struct Feature {
                 guard isRequired else { break }
                 state.isAppUpdateRequired = true
                 state.alert = Self.appUpdateAlertState()
-            case .binding:
+            case .composition:
                 break
             case .sheet(.dismiss), .sheet(.presented(.tapCloseButton)):
                 state.sheet = nil
@@ -121,7 +122,12 @@ struct Feature {
                 // 로그인 여부를 확인하기 전이면 경로를 보관했다가 로그인 확인 뒤 적용
                 state.widgetRoute = route
                 guard state.signIn == true else { break }
-                Self.applyWidgetRoute(route, to: &state)
+                switch route {
+                case .tab(let tab):
+                    return .send(.composition(.selectTab(tab)))
+                case .todayTodo(let id):
+                    state.sheet = .init(todoId: id)
+                }
             case .networkStatusChanged(let isConnected):
                 let wasConnected = state.isNetworkConnected
                 state.isNetworkConnected = isConnected
@@ -134,12 +140,21 @@ struct Feature {
                 let wasSignedIn = state.signIn == true
                 state.signIn = result
                 if result {
-                    if !wasSignedIn, let route = state.widgetRoute {
-                        Self.applyWidgetRoute(route, to: &state)
-                    } else {
-                        state.selectedTab = .home
+                    guard !wasSignedIn else { return .send(.composition(.selectTab(.home))) }
+                    var composition = CompositionFeature.State()
+                    composition.sideBar.width = fetchSideBarWidthUseCase.execute().map { CGFloat($0) }
+                    switch state.widgetRoute {
+                    case .tab(let tab):
+                        composition.selectedTab = tab
+                    case .todayTodo(let id):
+                        state.sheet = .init(todoId: id)
+                    case nil:
+                        break
                     }
+                    state.composition = composition
+                    return .send(.composition(.start))
                 } else {
+                    state.composition = nil
                     state.widgetRoute = nil
                     return .merge(
                         trackLoginScreenEffect(),
@@ -150,18 +165,12 @@ struct Feature {
 
             return .none
         }
+        .ifLet(\.composition, action: \.composition) {
+            CompositionFeature()
+        }
         .ifLet(\.$alert, action: \.alert)
         .ifLet(\.$sheet, action: \.sheet) {
             SheetFeature()
-        }
-    }
-
-    private static func applyWidgetRoute(_ route: WidgetRoute, to state: inout State) {
-        switch route {
-        case .tab(let tab):
-            state.selectedTab = tab
-        case .todayTodo(let id):
-            state.sheet = .init(todoId: id)
         }
     }
 }

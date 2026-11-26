@@ -54,18 +54,3 @@ public enum AppTab: Hashable, CaseIterable {
         }
     }
 }
-
-extension SideBarLocation {
-    var tab: AppTab {
-        switch self {
-        case .home, .todoCategory, .todoCategoryManagement, .developmentGoal, .search:
-            .home
-        case .today:
-            .today
-        case .notification:
-            .notification
-        case .profile, .settings:
-            .profile
-        }
-    }
-}

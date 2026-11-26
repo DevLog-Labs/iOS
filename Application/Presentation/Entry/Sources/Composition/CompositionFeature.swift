@@ -23,7 +23,7 @@ struct CompositionFeature {
         // 탭 안 화면이 직접 그린 하단 탭 바 뒤로 들어가지 않도록 비울 높이
         var tabBarHeight = CGFloat.zero
         var readableContentWidth = CGFloat.infinity
-        var hasAppeared = false
+        var selectedTab = AppTab.home
         var openedTabs: Set<AppTab> = []
         // 앱 화면과 분리해 창 전체에 표시하는 Mac 설정 화면
         var isSettingsPresented = false
@@ -41,16 +41,12 @@ struct CompositionFeature {
 
     enum Action: BindableAction, Equatable {
         case binding(BindingAction<State>)
-        case view(ViewAction)
+        case start
+        case selectTab(AppTab)
         case sideBar(SideBarFeature.Action)
         case detailSideBar(DetailSideBarFeature.Action)
         case unreadPushCount(UnreadPushCountFeature.Action)
         case store(StoreAction)
-
-        enum ViewAction: Equatable {
-            case onAppear
-            case selectedTabChanged(AppTab)
-        }
 
         enum StoreAction: Equatable {
             case keyboardChanged(KeyboardEvent)
@@ -79,16 +75,17 @@ struct CompositionFeature {
             switch action {
             case .binding:
                 break
-            case .view(.onAppear):
-                guard !state.hasAppeared else { break }
-                state.hasAppeared = true
+            case .start:
+                state.openedTabs.insert(state.selectedTab)
                 return .merge(
                     .send(.unreadPushCount(.startObserving)),
-                    observeKeyboardEffect()
+                    observeKeyboardEffect(),
+                    trackScreenViewEffect(state.selectedTab)
                 )
-            case .view(.selectedTabChanged(let tab)):
-                state.openedTabs.insert(tab)
-                return trackScreenViewEffect(tab)
+            case .selectTab(let tab):
+                return selectTabEffect(tab, state: &state)
+            case .sideBar(.tapItem(let tab, _)):
+                return selectTabEffect(tab, state: &state)
             case .sideBar(.tapSettings):
                 state.isSettingsPresented = true
             case .sideBar, .detailSideBar, .unreadPushCount:
@@ -138,6 +135,13 @@ private extension CompositionFeature {
             }
         }
         .cancellable(id: CancelID.keyboard, cancelInFlight: true)
+    }
+
+    func selectTabEffect(_ tab: AppTab, state: inout State) -> Effect<Action> {
+        guard state.selectedTab != tab else { return .none }
+        state.selectedTab = tab
+        state.openedTabs.insert(tab)
+        return trackScreenViewEffect(tab)
     }
 
     func trackScreenViewEffect(_ tab: AppTab) -> Effect<Action> {

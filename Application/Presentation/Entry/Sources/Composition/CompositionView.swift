@@ -14,27 +14,18 @@ struct CompositionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.deviceType) private var deviceType
-    @Binding var selectedTab: AppTab
-    @State private var store: StoreOf<CompositionFeature>
+    @Bindable private var store: StoreOf<CompositionFeature>
     private let windowEvent: TodoEditorWindowEvent
     // 목록 칸과 상세 칸이 함께 들어가는 화면 영역 폭
     private let splitMinimumWidth = CGFloat(800)
 
-    init(
-        windowEvent: TodoEditorWindowEvent,
-        selectedTab: Binding<AppTab>
-    ) {
-        @Dependency(\.fetchSideBarWidthUseCase) var fetchSideBarWidthUseCase
-        var state = CompositionFeature.State()
-        state.sideBar.width = fetchSideBarWidthUseCase.execute().map { CGFloat($0) }
-        self._store = State(initialValue: Store(initialState: state) {
-            CompositionFeature()
-        })
-        self._selectedTab = selectedTab
+    init(store: StoreOf<CompositionFeature>, windowEvent: TodoEditorWindowEvent) {
+        self.store = store
         self.windowEvent = windowEvent
     }
 
     var body: some View {
+        let selectedTab = store.selectedTab
         let showsSideBar = isiOSAppOnMac || deviceType != .duo && horizontalSizeClass == .regular
         let tabContentInset = horizontalSizeClass == .compact ? store.windowControlsInset : 0
         let readableContentWidth = showsSideBar ? store.readableContentWidth : .infinity
@@ -55,8 +46,8 @@ struct CompositionView: View {
             if showsSideBar && !store.sideBar.isCollapsed {
                 // 최소는 화살표와 아이콘만 보이는 폭, Mac 최대는 Orca 사이드바와 같은 폭
                 TreeSideBar(
-                    selectedTab: $selectedTab,
                     store: store.scope(state: \.sideBar, action: \.sideBar),
+                    selectedTab: selectedTab,
                     unreadPushCount: store.unreadPushCount.count
                 )
                     .resizablePane(
@@ -92,7 +83,7 @@ struct CompositionView: View {
                         }
                     }
                 } else {
-                    TabView(selection: $selectedTab) {
+                    TabView(selection: $store.selectedTab.sending(\.selectTab)) {
                         ForEach(AppTab.allCases, id: \.self) { tab in
                             Tab(tab.title, systemImage: tab.symbolName, value: tab) {
                                 TabScreen(
@@ -184,7 +175,7 @@ struct CompositionView: View {
         .overlay {
             if 0 < verticalBarWidth {
                 DuoTabBar(
-                    selectedTab: $selectedTab,
+                    selectedTab: $store.selectedTab.sending(\.selectTab),
                     edge: store.verticalBarInsets.leading < store.verticalBarInsets.trailing ? .trailing : .leading,
                     width: verticalBarWidth,
                     unreadPushCount: store.unreadPushCount.count
@@ -210,7 +201,7 @@ struct CompositionView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if showsTabBar {
                 TabBar(
-                    selectedTab: $selectedTab,
+                    selectedTab: $store.selectedTab.sending(\.selectTab),
                     axis: .horizontal,
                     unreadPushCount: store.unreadPushCount.count
                 )
@@ -239,10 +230,6 @@ struct CompositionView: View {
             )
         } action: { insets in
             store.send(.binding(.set(\.verticalBarInsets, insets)))
-        }
-        .onAppear { store.send(.view(.onAppear)) }
-        .onChange(of: selectedTab, initial: true) { _, tab in
-            store.send(.view(.selectedTabChanged(tab)))
         }
         // iPad 창이 좁아져 사이드바가 없어지면 진행 중인 요청과 알림창이 끝난 뒤 창 전체 설정 화면을 닫고 보던 화면으로 돌아감
         .onChange(of: showsSideBar || store.isSettingsBusy) { _, keepsSettings in

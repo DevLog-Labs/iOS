@@ -12,8 +12,8 @@ import PresentationShared
 struct TreeSideBar: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.paneWidth) private var paneWidth
-    @Binding var selectedTab: AppTab
     let store: StoreOf<SideBarFeature>
+    let selectedTab: AppTab
     let unreadPushCount: Int
 
     var body: some View {
@@ -54,7 +54,7 @@ struct TreeSideBar: View {
                                 isSelected: location == tab.sideBarLocation,
                                 badgeCount: tab == .notification ? unreadPushCount : 0
                             ) {
-                                open(tab.sideBarLocation)
+                                store.send(.tapItem(tab, .open(tab.sideBarLocation)))
                             }
                         }
                         SideBarRow(
@@ -72,7 +72,7 @@ struct TreeSideBar: View {
                                     isChild: true,
                                     isSelected: location == .developmentGoal(goal.id)
                                 ) {
-                                    open(.developmentGoal(goal.id))
+                                    store.send(.tapItem(.home, .open(.developmentGoal(goal.id))))
                                 }
                             }
                         }
@@ -86,7 +86,7 @@ struct TreeSideBar: View {
                         }
                         .contextMenu {
                             Button {
-                                request(.createTodo)
+                                store.send(.tapItem(.home, .createTodo))
                             } label: {
                                 Label {
                                     Text("sidebar_new_todo", bundle: PresentationResources.bundle)
@@ -95,7 +95,7 @@ struct TreeSideBar: View {
                                 }
                             }
                             Button {
-                                request(.manageTodoCategory)
+                                store.send(.tapItem(.home, .manageTodoCategory))
                             } label: {
                                 Label {
                                     Text("todo_category_manage", bundle: PresentationResources.bundle)
@@ -113,7 +113,7 @@ struct TreeSideBar: View {
                                     isChild: true,
                                     isSelected: location == .todoCategory(item.id)
                                 ) {
-                                    open(.todoCategory(item.id))
+                                    store.send(.tapItem(.home, .open(.todoCategory(item.id))))
                                 }
                             }
                         }
@@ -127,7 +127,7 @@ struct TreeSideBar: View {
                         symbolName: AppTab.profile.symbolName,
                         isSelected: location == .profile
                     ) {
-                        open(.profile)
+                        store.send(.tapItem(.profile, .open(.profile)))
                     }
                     SideBarRow(
                         title: Text("nav_settings", bundle: PresentationResources.bundle),
@@ -145,17 +145,6 @@ struct TreeSideBar: View {
         }
         // 칸이 기본 폭보다 좁아도 잘라 내지 않고 지금 폭에 맞춰 배치
         .frame(width: paneWidth)
-    }
-
-    private func open(_ location: SideBarLocation) {
-        selectedTab = location.tab
-        store.send(.tapItem(location.tab, .open(location)))
-    }
-
-    // Todo 우클릭 메뉴의 작성과 카테고리 관리는 홈 화면에서 표시
-    private func request(_ action: SideBarRequest.Action) {
-        selectedTab = .home
-        store.send(.tapItem(.home, action))
     }
 }
 
