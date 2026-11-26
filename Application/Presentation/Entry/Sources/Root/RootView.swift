@@ -34,15 +34,10 @@ public struct RootView: View {
     public var body: some View {
         ZStack {
             Color.background.ignoresSafeArea()
-            if let signIn = store.signIn {
-                if signIn {
-                    MainView(
-                        windowEvent: windowEvent,
-                        selectedTab: $store.selectedMainTab
-                    )
-                } else {
-                    LoginView()
-                }
+            if let compositionStore = store.scope(state: \.composition, action: \.composition) {
+                CompositionView(store: compositionStore, windowEvent: windowEvent)
+            } else if store.signIn == false {
+                LoginView()
             }
         }
         .preferredColorScheme(store.theme.colorScheme)

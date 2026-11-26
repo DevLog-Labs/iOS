@@ -447,6 +447,23 @@
         }
       }
     },
+    "composition_alert_badge_error_message" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There was a problem loading the notification badge."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림 배지를 불러오는 중 문제가 발생했어요."
+          }
+        }
+      }
+    },
     "detail_panel_move_to_pane" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -2738,23 +2755,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "로그인하면 사용 약관 및 개인 정보 취급 방침에 동의하게 돼요."
-          }
-        }
-      }
-    },
-    "main_alert_badge_error_message" : {
-      "extractionState" : "manual",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "There was a problem loading the notification badge."
-          }
-        },
-        "ko" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "알림 배지를 불러오는 중 문제가 발생했어요."
           }
         }
       }

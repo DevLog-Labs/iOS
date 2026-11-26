@@ -26,7 +26,7 @@ protocol RootStateDriving {
     func didLogined(_ signIn: Bool) async
     func presentTodoDetail(_ todoId: String) async
     func dismissSheet() async
-    func selectMainTab(_ tab: MainTab) async
+    func selectTab(_ tab: AppTab) async
     func openWidgetRoute(_ route: WidgetRoute) async
     func tapUpdateButton() async
 }
@@ -37,7 +37,7 @@ struct RootStateSnapshot: Equatable {
     let isNetworkConnected: Bool
     let signIn: Bool?
     let theme: SystemTheme
-    let selectedMainTab: MainTab
+    let selectedTab: AppTab?
 }
 
 @MainActor
@@ -51,11 +51,12 @@ struct RootStoreTestAdapter: RootStateDriving {
             isNetworkConnected: store.state.isNetworkConnected,
             signIn: store.state.signIn,
             theme: store.state.theme,
-            selectedMainTab: store.state.selectedMainTab
+            selectedTab: store.state.composition?.selectedTab
         )
     }
     var sheetTodoId: String? { store.state.sheet?.todoId }
     var widgetRoute: WidgetRoute? { store.state.widgetRoute }
+    var sideBarWidth: CGFloat? { store.state.composition?.sideBar.width }
 
     init(
         sessionUseCase: ObserveAuthSessionUseCase = ObserveAuthSessionUseCaseSpy(currentValue: true),
@@ -69,7 +70,8 @@ struct RootStoreTestAdapter: RootStateDriving {
         checkAppUpdateUseCase: CheckAppUpdateUseCase = RootCheckAppUpdateUseCaseSpy(),
         appStoreURL: URL? = URL(string: "https://apps.apple.com/us/app/devlog/id6760288611"),
         openURLSpy: RootOpenURLSpy = RootOpenURLSpy(),
-        badgeCountSpy: RootApplicationBadgeCountSpy = RootApplicationBadgeCountSpy()
+        badgeCountSpy: RootApplicationBadgeCountSpy = RootApplicationBadgeCountSpy(),
+        sideBarWidth: Double? = nil
     ) {
         store = TestStore(initialState: Feature.State()) {
             Feature()
@@ -87,6 +89,8 @@ struct RootStoreTestAdapter: RootStateDriving {
             $0.setApplicationBadgeCount = { count in
                 try await badgeCountSpy.setBadgeCount(count)
             }
+            $0.fetchSideBarWidthUseCase = RootFetchSideBarWidthUseCaseStub(width: sideBarWidth)
+            $0.observeUnreadPushCountUseCase = ObserveUnreadPushCountUseCaseSpy()
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
     }
@@ -114,6 +118,7 @@ struct RootStoreTestAdapter: RootStateDriving {
 
     func didLogined(_ signIn: Bool) async {
         await store.send(.didLogined(signIn))
+        await drainReceivedActions()
     }
 
     func presentTodoDetail(_ todoId: String) async {
@@ -124,12 +129,13 @@ struct RootStoreTestAdapter: RootStateDriving {
         await store.send(.sheet(.dismiss))
     }
 
-    func selectMainTab(_ tab: MainTab) async {
-        await store.send(.binding(.set(\.selectedMainTab, tab)))
+    func selectTab(_ tab: AppTab) async {
+        await store.send(.composition(.selectTab(tab)))
     }
 
     func openWidgetRoute(_ route: WidgetRoute) async {
         await store.send(.openWidgetRoute(route))
+        await drainReceivedActions()
     }
 
     func tapUpdateButton() async {
@@ -161,7 +167,7 @@ func verifyNetworkDisconnectedAlert(adapter: some RootStateDriving) async {
                 isNetworkConnected: false,
                 signIn: nil,
                 theme: .automatic,
-                selectedMainTab: .home
+                selectedTab: nil
             )
     )
 }
@@ -179,7 +185,7 @@ func verifySetAlert(adapter: some RootStateDriving) async {
                 isNetworkConnected: false,
                 signIn: nil,
                 theme: .automatic,
-                selectedMainTab: .home
+                selectedTab: nil
             )
     )
 }
@@ -190,7 +196,6 @@ func verifyThemeUpdate(adapter: some RootStateDriving) async {
 
     #expect(adapter.snapshot.theme == .dark)
     #expect(adapter.snapshot.alertTitle == nil)
-    #expect(adapter.snapshot.selectedMainTab == .home)
 }
 
 @MainActor
@@ -204,7 +209,7 @@ func verifyDidLoginedFalse(
     }
 
     #expect(adapter.snapshot.signIn == false)
-    #expect(adapter.snapshot.selectedMainTab == .home)
+    #expect(adapter.snapshot.selectedTab == nil)
     #expect(trackAnalyticsEventUseCaseSpy.screenNames == ["login"])
 }
 
@@ -213,12 +218,21 @@ func verifyDidLoginedTrue(
     adapter: some RootStateDriving,
     trackAnalyticsEventUseCaseSpy: RootTrackAnalyticsEventUseCaseSpy
 ) async {
-    await adapter.selectMainTab(.today)
     await adapter.didLogined(true)
 
     #expect(adapter.snapshot.signIn == true)
-    #expect(adapter.snapshot.selectedMainTab == .home)
-    #expect(trackAnalyticsEventUseCaseSpy.screenNames.isEmpty)
+    #expect(adapter.snapshot.selectedTab == .home)
+    await waitUntil {
+        trackAnalyticsEventUseCaseSpy.screenNames == ["home"]
+    }
+    #expect(trackAnalyticsEventUseCaseSpy.screenNames == ["home"])
+
+    await adapter.selectTab(.today)
+    await adapter.didLogined(false)
+    await adapter.didLogined(true)
+
+    #expect(adapter.snapshot.signIn == true)
+    #expect(adapter.snapshot.selectedTab == .home)
 }
 
 @MainActor
@@ -247,7 +261,7 @@ func verifyObservedInitialValues(adapter: some RootStateDriving) async {
                 isNetworkConnected: false,
                 signIn: false,
                 theme: .dark,
-                selectedMainTab: .home
+                selectedTab: nil
             )
     )
 }
@@ -264,17 +278,17 @@ func verifyTodoDetailSheetPresentation(adapter: some RootStateDriving) async {
 @MainActor
 func verifyWidgetRouteOpensWhenSignedIn(adapter: some RootStateDriving) async {
     await adapter.openWidgetRoute(.tab(.today))
-    #expect(adapter.snapshot.selectedMainTab == .home)
+    #expect(adapter.snapshot.selectedTab == nil)
     #expect(adapter.widgetRoute == .tab(.today))
 
     await adapter.didLogined(true)
-    #expect(adapter.snapshot.selectedMainTab == .today)
+    #expect(adapter.snapshot.selectedTab == .today)
     #expect(adapter.widgetRoute == .tab(.today))
     #expect(adapter.sheetTodoId == nil)
 
     await adapter.presentTodoDetail("push-todo")
     await adapter.openWidgetRoute(.todayTodo("todo-1"))
-    #expect(adapter.snapshot.selectedMainTab == .today)
+    #expect(adapter.snapshot.selectedTab == .today)
     #expect(adapter.sheetTodoId == "todo-1")
 }
 
@@ -350,6 +364,14 @@ actor RootCheckAppUpdateUseCaseSpy: CheckAppUpdateUseCase {
 
     func executeCallCount() -> Int {
         count
+    }
+}
+
+struct RootFetchSideBarWidthUseCaseStub: FetchSideBarWidthUseCase {
+    let width: Double?
+
+    func execute() -> Double? {
+        width
     }
 }
 

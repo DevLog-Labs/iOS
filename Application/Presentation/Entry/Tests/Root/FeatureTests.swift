@@ -9,6 +9,7 @@ import Core
 import Foundation
 import PresentationShared
 import Testing
+@testable import Entry
 
 @MainActor
 struct FeatureTests {
@@ -54,8 +55,8 @@ struct FeatureTests {
         #expect(badgeSpy.counts == [0])
     }
 
-    @Test("Feature didLogined(true)는 기존 Root 상태관리처럼 signIn 상태를 true로 갱신하고 selectedMainTab을 home으로 되돌린다")
-    func RootFeature_didLogined_true는_기존_Root_상태관리처럼_signIn_상태를_true로_갱신하고_selectedMainTab을_home으로_되돌린다() async {
+    @Test("Feature didLogined(true)는 기존 Root 상태관리처럼 signIn 상태를 true로 갱신하고 selectedTab을 home으로 되돌린다")
+    func RootFeature_didLogined_true는_기존_Root_상태관리처럼_signIn_상태를_true로_갱신하고_selectedTab을_home으로_되돌린다() async {
         let trackSpy = RootTrackAnalyticsEventUseCaseSpy()
         let adapter = RootStoreTestAdapter(trackAnalyticsEventUseCase: trackSpy)
 
@@ -195,7 +196,7 @@ struct FeatureTests {
         #expect(adapter.widgetRoute == .todayTodo("todo-1"))
 
         await adapter.didLogined(true)
-        #expect(adapter.snapshot.selectedMainTab == .home)
+        #expect(adapter.snapshot.selectedTab == .home)
         #expect(adapter.widgetRoute == .todayTodo("todo-1"))
         #expect(adapter.sheetTodoId == "todo-1")
     }
@@ -209,7 +210,7 @@ struct FeatureTests {
         #expect(adapter.widgetRoute == nil)
 
         await adapter.didLogined(true)
-        #expect(adapter.snapshot.selectedMainTab == .home)
+        #expect(adapter.snapshot.selectedTab == .home)
         #expect(adapter.sheetTodoId == nil)
     }
 
@@ -229,10 +230,10 @@ struct FeatureTests {
         let adapter = RootStoreTestAdapter()
 
         await adapter.didLogined(true)
-        await adapter.selectMainTab(.profile)
+        await adapter.selectTab(.profile)
         await adapter.openWidgetRoute(.todayTodo("todo-2"))
 
-        #expect(adapter.snapshot.selectedMainTab == .profile)
+        #expect(adapter.snapshot.selectedTab == .profile)
         #expect(adapter.sheetTodoId == "todo-2")
     }
 
@@ -241,15 +242,38 @@ struct FeatureTests {
         let adapter = RootStoreTestAdapter()
 
         await adapter.didLogined(true)
-        await adapter.selectMainTab(.profile)
+        await adapter.selectTab(.profile)
         await adapter.openWidgetRoute(.tab(.today))
 
-        #expect(adapter.snapshot.selectedMainTab == .today)
+        #expect(adapter.snapshot.selectedTab == .today)
         #expect(adapter.sheetTodoId == nil)
 
         await adapter.openWidgetRoute(.todayTodo("todo-1"))
-        #expect(adapter.snapshot.selectedMainTab == .today)
+        #expect(adapter.snapshot.selectedTab == .today)
         #expect(adapter.sheetTodoId == "todo-1")
+    }
+
+    @Test("로그인하면 저장된 사이드바 폭을 읽어 앱 화면 상태를 만든다")
+    func 로그인하면_저장된_사이드바_폭을_읽어_앱_화면_상태를_만든다() async {
+        let adapter = RootStoreTestAdapter(sideBarWidth: 300)
+
+        await adapter.didLogined(true)
+
+        #expect(adapter.snapshot.selectedTab == .home)
+        #expect(adapter.sideBarWidth == 300)
+    }
+
+    @Test("사이드바 폭을 읽는 동안 로그아웃하면 앱 화면 상태를 만들지 않는다")
+    func 사이드바_폭을_읽는_동안_로그아웃하면_앱_화면_상태를_만들지_않는다() async {
+        var state = Feature.State()
+        state.signIn = false
+        let store = TestStore(initialState: state) {
+            Feature()
+        }
+
+        await store.send(.sideBarWidthFetched(300))
+
+        #expect(store.state.composition == nil)
     }
 }
 

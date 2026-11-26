@@ -6,6 +6,6 @@
 //
 
 public enum WidgetRoute: Equatable {
-    case tab(MainTab)
+    case tab(AppTab)
     case todayTodo(String)
 }
