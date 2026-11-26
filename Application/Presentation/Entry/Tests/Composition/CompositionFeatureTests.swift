@@ -5,6 +5,7 @@
 //  Created by opfic on 6/16/26.
 //
 
+import Core
 import PresentationShared
 import Foundation
 import Testing
@@ -237,6 +238,32 @@ struct CompositionFeatureTests {
         #expect(store.state.isAccountOpen)
         #expect(store.state.settings.account.alert != nil)
         #expect(await fetchUseCase.executeCallCount() == 1)
+    }
+
+    @Test("CompositionFeature는 창 폭이 바뀔 때는 계정 화면의 창 정보를 유지하고 계정 화면을 나가면 지운다")
+    func CompositionFeature는_창_폭이_바뀔_때는_계정_화면의_창_정보를_유지하고_계정_화면을_나가면_지운다() async {
+        let context = AuthPresentationContext(identifier: "scene")
+        let store = TestStore(initialState: CompositionFeature.State()) {
+            CompositionFeature()
+        } withDependencies: {
+            $0.fetchAuthProvidersUseCase = CompositionFetchAuthProvidersUseCaseSpy()
+        }
+        store.exhaustivity = .off(showSkippedAssertions: false)
+
+        await store.send(.view(.sideBarVisibilityChanged(true)))
+        await store.send(.settings(.open))
+        await store.send(.settings(.select(.account)))
+        await store.receive(.settings(.account(.open)))
+        await store.send(.settings(.account(.setPresentationContext(context))))
+        await store.send(.view(.sideBarVisibilityChanged(false)))
+        await store.send(.view(.sideBarVisibilityChanged(true)))
+
+        #expect(store.state.settings.account.presentationContext == context)
+
+        await store.send(.settings(.select(.theme)))
+        await store.receive(.settings(.account(.setPresentationContext(nil))))
+
+        #expect(store.state.settings.account.presentationContext == nil)
     }
 
     @Test("CompositionFeature는 화면 회전 때 오는 높이 0인 키보드 표시 알림을 무시한다")

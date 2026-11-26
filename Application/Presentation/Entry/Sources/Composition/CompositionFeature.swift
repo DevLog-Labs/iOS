@@ -159,7 +159,8 @@ struct CompositionFeature {
         .onChange(of: \.isAccountOpen) { _, isOpen in
             Reduce { _, _ in
                 // 창 폭이 바뀌어 화면을 옮겨 그릴 때는 다시 조회하지 않고 계정 화면에 들어올 때만 조회
-                isOpen ? .send(.settings(.account(.open))) : .none
+                // 계정 화면을 나가면 그 화면이 있던 창 정보를 지움
+                .send(.settings(.account(isOpen ? .open : .setPresentationContext(nil))))
             }
         }
     }
