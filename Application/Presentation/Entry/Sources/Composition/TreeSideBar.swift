@@ -13,14 +13,15 @@ struct TreeSideBar: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.paneWidth) private var paneWidth
     @Binding var selectedTab: AppTab
-    let store: StoreOf<CompositionFeature>
+    let store: StoreOf<SideBarFeature>
+    let unreadPushCount: Int
 
     var body: some View {
-        let location = store.sideBarLocations[selectedTab] ?? selectedTab.sideBarLocation
-        let expandedGroups = store.expandedSideBarGroups
+        let location = store.locations[selectedTab] ?? selectedTab.sideBarLocation
+        let expandedGroups = store.expandedGroups
         let isCompact = (paneWidth ?? .infinity) < SideBarRow.compactWidth
         let collapseButton = Button {
-            store.send(.binding(.set(\.isSideBarCollapsed, true)))
+            store.send(.binding(.set(\.isCollapsed, true)))
         } label: {
             Image(systemName: "sidebar.left")
         }
@@ -51,7 +52,7 @@ struct TreeSideBar: View {
                                 title: Text(tab.title),
                                 symbolName: tab.symbolName,
                                 isSelected: location == tab.sideBarLocation,
-                                badgeCount: tab == .notification ? store.unreadPushCount : 0
+                                badgeCount: tab == .notification ? unreadPushCount : 0
                             ) {
                                 open(tab.sideBarLocation)
                             }
@@ -61,10 +62,10 @@ struct TreeSideBar: View {
                             symbolName: "flag.checkered",
                             isExpanded: expandedGroups.contains(.developmentGoal)
                         ) {
-                            store.send(.view(.tapSideBarGroup(.developmentGoal)), animation: .easeInOut(duration: 0.2))
+                            store.send(.tapGroup(.developmentGoal), animation: .easeInOut(duration: 0.2))
                         }
                         if expandedGroups.contains(.developmentGoal) {
-                            ForEach(store.sideBarContent.developmentGoals) { goal in
+                            ForEach(store.content.developmentGoals) { goal in
                                 SideBarRow(
                                     title: Text(goal.title),
                                     symbolName: "flag",
@@ -81,7 +82,7 @@ struct TreeSideBar: View {
                             isSelected: location == .todoCategoryManagement,
                             isExpanded: expandedGroups.contains(.todo)
                         ) {
-                            store.send(.view(.tapSideBarGroup(.todo)), animation: .easeInOut(duration: 0.2))
+                            store.send(.tapGroup(.todo), animation: .easeInOut(duration: 0.2))
                         }
                         .contextMenu {
                             Button {
@@ -104,7 +105,7 @@ struct TreeSideBar: View {
                             }
                         }
                         if expandedGroups.contains(.todo) {
-                            ForEach(store.sideBarContent.todoCategories) { item in
+                            ForEach(store.content.todoCategories) { item in
                                 SideBarRow(
                                     title: Text(item.localizedName),
                                     symbolName: item.symbolName,
@@ -134,7 +135,7 @@ struct TreeSideBar: View {
                         isSelected: location == .settings
                     ) {
                         // 앱 화면과 분리한 설정 화면 표시
-                        store.send(.binding(.set(\.isSettingsPresented, true)))
+                        store.send(.tapSettings)
                     }
                 }
                 .padding(.horizontal, 8 * AdaptiveSize.boardScale)
@@ -148,13 +149,13 @@ struct TreeSideBar: View {
 
     private func open(_ location: SideBarLocation) {
         selectedTab = location.tab
-        store.send(.view(.tapSideBarItem(location.tab, .open(location))))
+        store.send(.tapItem(location.tab, .open(location)))
     }
 
     // Todo 우클릭 메뉴의 작성과 카테고리 관리는 홈 화면에서 표시
     private func request(_ action: SideBarRequest.Action) {
         selectedTab = .home
-        store.send(.view(.tapSideBarItem(.home, action)))
+        store.send(.tapItem(.home, action))
     }
 }
 

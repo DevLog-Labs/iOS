@@ -26,7 +26,7 @@ struct CompositionView: View {
     ) {
         @Dependency(\.fetchSideBarWidthUseCase) var fetchSideBarWidthUseCase
         var state = CompositionFeature.State()
-        state.sideBarWidth = fetchSideBarWidthUseCase.execute().map { CGFloat($0) }
+        state.sideBar.width = fetchSideBarWidthUseCase.execute().map { CGFloat($0) }
         self._store = State(initialValue: Store(initialState: state) {
             CompositionFeature()
         })
@@ -47,21 +47,25 @@ struct CompositionView: View {
         let showsTabBar = !showsSideBar && usesCustomTabBar && verticalBarWidth == 0 && !store.isKeyboardVisible
         // 사이드바가 있는 창 오른쪽 세부 정보 사이드바, 설정 화면에서는 표시하지 않음
         let showsDetailSideBar = showsSideBar
-            && (store.sideBarLocations[selectedTab] ?? selectedTab.sideBarLocation) != .settings
+            && (store.sideBar.locations[selectedTab] ?? selectedTab.sideBarLocation) != .settings
         let sideBarIdealWidth = isiOSAppOnMac ? 220 * AdaptiveSize.boardScale : 250
         let tabBarInset = showsTabBar ? store.tabBarHeight : 0
 
         SplitShell {
-            if showsSideBar && !store.isSideBarCollapsed {
+            if showsSideBar && !store.sideBar.isCollapsed {
                 // 최소는 화살표와 아이콘만 보이는 폭, Mac 최대는 Orca 사이드바와 같은 폭
-                TreeSideBar(selectedTab: $selectedTab, store: store)
+                TreeSideBar(
+                    selectedTab: $selectedTab,
+                    store: store.scope(state: \.sideBar, action: \.sideBar),
+                    unreadPushCount: store.unreadPushCount.count
+                )
                     .resizablePane(
-                        width: store.sideBarWidth,
+                        width: store.sideBar.width,
                         minimumWidth: isiOSAppOnMac ? 72 * AdaptiveSize.boardScale : 84,
                         idealWidth: sideBarIdealWidth,
                         maximumWidth: isiOSAppOnMac ? 500 * AdaptiveSize.boardScale : 320
                     ) { width in
-                        store.send(.view(.sideBarResized(width)))
+                        store.send(.sideBar(.resized(width)))
                     }
                     // 칸 자르기 밖이라 잘리지 않도록 바탕은 칸 바깥에서 아래쪽 안전 영역까지 채움
                     .background(Color.secondaryBackground, ignoresSafeAreaEdges: .bottom)
@@ -100,7 +104,7 @@ struct CompositionView: View {
                                     windowEvent: windowEvent
                                 )
                             }
-                            .badge(tab == .notification ? store.unreadPushCount : 0)
+                            .badge(tab == .notification ? store.unreadPushCount.count : 0)
                         }
                     }
                 }
@@ -116,7 +120,7 @@ struct CompositionView: View {
             // 접은 사이드바는 화면 칸 제목 줄의 버튼으로 다시 폄
             .environment(
                 \.expandSideBar,
-                store.isSideBarCollapsed ? { store.send(.binding(.set(\.isSideBarCollapsed, false))) } : nil
+                store.sideBar.isCollapsed ? { store.send(.sideBar(.binding(.set(\.isCollapsed, false)))) } : nil
             )
             .environment(
                 \.presentSettings,
@@ -125,24 +129,24 @@ struct CompositionView: View {
             // 닫힌 세부 정보 사이드바는 화면 칸 제목 줄의 버튼으로 엶
             .environment(
                 \.showDetailSideBar,
-                showsDetailSideBar && !store.isDetailSideBarPresented
-                    ? { store.send(.binding(.set(\.isDetailSideBarPresented, true))) } : nil
+                showsDetailSideBar && !store.detailSideBar.isPresented
+                    ? { store.send(.detailSideBar(.binding(.set(\.isPresented, true)))) } : nil
             )
-            .environment(\.isDetailSideBarPresented, showsDetailSideBar && store.isDetailSideBarPresented)
+            .environment(\.isDetailSideBarPresented, showsDetailSideBar && store.detailSideBar.isPresented)
             .environment(
                 \.setDetailSideBarPresented,
-                showsDetailSideBar ? { store.send(.binding(.set(\.isDetailSideBarPresented, $0))) } : nil
+                showsDetailSideBar ? { store.send(.detailSideBar(.binding(.set(\.isPresented, $0)))) } : nil
             )
         } right: {
             // 칸 화면이 사이드바를 직접 그리면 창 사이드바는 표시하지 않음
             if showsDetailSideBar
-                && store.isDetailSideBarPresented
-                && store.detailSideBarTargets[selectedTab] != .hosted {
+                && store.detailSideBar.isPresented
+                && store.detailSideBar.targets[selectedTab] != .hosted {
                 DetailSideBar(
-                    target: store.detailSideBarTargets[selectedTab],
+                    target: store.detailSideBar.targets[selectedTab],
                     windowEvent: windowEvent
                 ) {
-                    store.send(.binding(.set(\.isDetailSideBarPresented, false)))
+                    store.send(.detailSideBar(.binding(.set(\.isPresented, false))))
                 }
             }
         } overlay: {
@@ -183,7 +187,7 @@ struct CompositionView: View {
                     selectedTab: $selectedTab,
                     edge: store.verticalBarInsets.leading < store.verticalBarInsets.trailing ? .trailing : .leading,
                     width: verticalBarWidth,
-                    unreadPushCount: store.unreadPushCount
+                    unreadPushCount: store.unreadPushCount.count
                 )
             }
         }
@@ -195,7 +199,7 @@ struct CompositionView: View {
             splitMinimumWidth + sideBarIdealWidth <= proxy.size.width
         } action: { fitsSideBar in
             guard !isiOSAppOnMac else { return }
-            store.send(.binding(.set(\.isSideBarCollapsed, !fitsSideBar)))
+            store.send(.sideBar(.binding(.set(\.isCollapsed, !fitsSideBar))))
         }
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.windowControlsInset
@@ -208,7 +212,7 @@ struct CompositionView: View {
                 TabBar(
                     selectedTab: $selectedTab,
                     axis: .horizontal,
-                    unreadPushCount: store.unreadPushCount
+                    unreadPushCount: store.unreadPushCount.count
                 )
                 .padding(.horizontal, 8)
                 .padding(.top, 8)
@@ -246,7 +250,11 @@ struct CompositionView: View {
                 store.send(.binding(.set(\.isSettingsPresented, false)))
             }
         }
-        .prominentAlert(store, state: \.alert, action: \.alert)
+        .prominentAlert(
+            store.scope(state: \.unreadPushCount, action: \.unreadPushCount),
+            state: \.alert,
+            action: \.alert
+        )
         // 이 화면 알림창도 화면 안쪽 알림창과 같은 버튼 모양으로 표시
         .environment(\.usesDesktopLayout, showsSideBar)
     }
