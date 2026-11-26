@@ -55,27 +55,22 @@ struct GoalLinkedTodoCard: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
         } else if hasLoadFailure, todos.isEmpty {
-            ContentUnavailableView {
-                Label(
-                    RecordPresentation.text("common_error_title"),
-                    systemImage: "exclamationmark.triangle"
-                )
-            } description: {
-                Text(RecordPresentation.text("development_goal_todo_load_error_message"))
-            } actions: {
+            EmptyStateView(
+                RecordPresentation.text("common_error_title"),
+                systemImage: "exclamationmark.triangle",
+                message: RecordPresentation.text("development_goal_todo_load_error_message")
+            ) {
                 Button(
                     RecordPresentation.text("development_goal_todo_retry"),
                     action: onRetry
                 )
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(RecordButtonStyle())
             }
         } else if todos.isEmpty {
-            ContentUnavailableView(
+            EmptyStateView(
                 RecordPresentation.text("development_goal_todo_empty_title"),
                 systemImage: "checklist",
-                description: Text(
-                    RecordPresentation.text("development_goal_todo_empty_message")
-                )
+                message: RecordPresentation.text("development_goal_todo_empty_message")
             )
         } else {
             LazyVStack(spacing: 0) {

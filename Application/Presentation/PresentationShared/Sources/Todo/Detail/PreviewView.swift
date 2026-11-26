@@ -21,14 +21,11 @@ struct PreviewView: View {
                     onOpenTodoID: nil
                 )
             } else if store.alert != nil {
-                ContentUnavailableView {
-                    Label(
-                        String(localized: "common_error_title", bundle: PresentationResources.bundle),
-                        systemImage: "exclamationmark.triangle"
-                    )
-                } description: {
-                    Text(String(localized: "common_error_message", bundle: PresentationResources.bundle))
-                }
+                EmptyStateView(
+                    String(localized: "common_error_title", bundle: PresentationResources.bundle),
+                    systemImage: "exclamationmark.triangle",
+                    message: String(localized: "common_error_message", bundle: PresentationResources.bundle)
+                )
             } else {
                 LoadingView()
             }

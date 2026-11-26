@@ -109,29 +109,27 @@ struct GoalTodoLinkSheet: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
         } else if store.hasLoadFailure, store.todos.isEmpty {
-            ContentUnavailableView {
-                Label(
-                    RecordPresentation.text("common_error_title"),
-                    systemImage: "exclamationmark.triangle"
-                )
-            } description: {
-                Text(RecordPresentation.text("development_goal_todo_load_error_message"))
-            } actions: {
+            EmptyStateView(
+                RecordPresentation.text("common_error_title"),
+                systemImage: "exclamationmark.triangle",
+                message: RecordPresentation.text("development_goal_todo_load_error_message")
+            ) {
                 Button(RecordPresentation.text("development_goal_todo_retry")) {
                     store.send(.view(.retry))
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(RecordButtonStyle())
             }
         } else if store.todos.isEmpty {
-            ContentUnavailableView(
+            EmptyStateView(
                 RecordPresentation.text("development_goal_todo_available_empty_title"),
                 systemImage: "checklist",
-                description: Text(
-                    RecordPresentation.text("development_goal_todo_available_empty_message")
-                )
+                message: RecordPresentation.text("development_goal_todo_available_empty_message")
             )
         } else if store.filteredTodos.isEmpty {
-            ContentUnavailableView.search(text: store.searchText)
+            EmptyStateView(
+                String(localized: "todo_list_search_empty", bundle: PresentationResources.bundle),
+                systemImage: "magnifyingglass"
+            )
         } else {
             ForEach(store.sections) { section in
                 GoalTodoSelectionSection(

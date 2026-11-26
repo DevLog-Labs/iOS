@@ -223,30 +223,27 @@ public struct GoalDetailView: View {
             }
 
             if !store.hasLoaded, store.hasLoadFailure {
-                ContentUnavailableView {
-                    Label(
-                        RecordPresentation.text("common_error_title"),
-                        systemImage: "exclamationmark.triangle"
-                    )
-                } description: {
-                    Text(RecordPresentation.text("development_record_timeline_error_message"))
-                } actions: {
+                EmptyStateView(
+                    RecordPresentation.text("common_error_title"),
+                    systemImage: "exclamationmark.triangle",
+                    message: RecordPresentation.text("development_record_timeline_error_message")
+                ) {
                     Button {
                         store.send(.view(.refresh))
                     } label: {
                         Text(RecordPresentation.text("development_record_timeline_retry"))
                     }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(RecordButtonStyle())
                 }
             } else if !store.hasLoaded || store.isLoading, store.items.isEmpty {
                 ProgressView()
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 32)
             } else if store.items.isEmpty {
-                ContentUnavailableView(
+                EmptyStateView(
                     RecordPresentation.text("development_record_empty_title"),
                     systemImage: "doc.badge.plus",
-                    description: Text(RecordPresentation.text("development_record_empty_message"))
+                    message: RecordPresentation.text("development_record_empty_message")
                 )
             } else {
                 LazyVStack(spacing: 0) {
