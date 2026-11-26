@@ -630,145 +630,80 @@ private struct HomeTodoCategoryLink: View {
     }
 }
 
+// 새로 만들기 화면
+// 위쪽 닫기 버튼과 제목 줄, 작은 제목 아래 구분선으로 나눈 TODO 카테고리와 새 개발 목표 배치
+// 좁은 창은 시트, 사이드바가 있는 iPad 창은 손가락 크기 팝오버, Mac은 Mac 크기 팝오버 모양
 private struct HomeContentPicker: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
     let store: StoreOf<HomeFeature>
     let onSelect: (TodoCategory) -> Void
 
     var body: some View {
-        if isiOSAppOnMac {
-            HomeDesktopContentPicker(store: store, onSelect: onSelect)
-        } else {
-            mobileContent
-        }
-    }
+        let scale = AdaptiveSize.boardScale
+        let headerHeight = isiOSAppOnMac ? 44 * scale : usesPaneLayout ? 52 : 48
+        // 시트는 위쪽 손잡이 아래에 제목 줄을 둠
+        let grabberInset = isiOSAppOnMac || usesPaneLayout ? 0 : CGFloat(11)
 
-    private var mobileContent: some View {
-        NavigationStack {
-            List {
-                Section {
-                    if store.isPreferencesLoading {
-                        LoadingView()
-                    } else {
-                        let items = store.preferences.filter(\.isVisible)
-                        ForEach(items, id: \.id) { item in
-                            Button {
-                                onSelect(item.category)
-                            } label: {
-                                HomeContentPickerLabel(
-                                    text: item.localizedName,
-                                    systemName: item.symbolName,
-                                    imageColor: item.color
-                                )
-                            }
-                            .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                        }
-                    }
-                } header: {
-                    Text("TODO", bundle: PresentationResources.bundle)
-                        .foregroundStyle(Color(.label))
-                }
-
-                Section {
-                    Button {
-                        store.send(.view(.tapCreateDevelopmentGoal))
-                    } label: {
-                        HomeContentPickerLabel(
-                            text: String(
-                                localized: "development_goal_create_title",
-                                bundle: PresentationResources.bundle
-                            ),
-                            systemName: "flag.checkered",
-                            imageColor: Color.label,
-                            iconColor: Color.background
-                        )
-                    }
-                    .listRowInsets(EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 16))
-                } header: {
-                    Text("development_goal_title", bundle: PresentationResources.bundle)
-                        .foregroundStyle(Color(.label))
-                }
-            }
-            .navigationTitle(Text(verbatim: "DevLog"))
-            .navigationBarTitleDisplayMode(.inline)  //  설정 안하면 섹션 위에 내비게이션 large 만큼 영역 먹음
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        store.send(.sheet(.presented(.tapCloseButton)))
-                    } label: {
-                        Image(systemName: "xmark")
-                            .bold()
-                    }
-                }
-            }
-        }
-    }
-}
-
-private struct HomeContentPickerLabel: View {
-    @ScaledMetric(relativeTo: .largeTitle) private var labelWidth = CGFloat(34)
-    let text: String
-    let systemName: String
-    let imageColor: Color
-    var iconColor = Color.white
-
-    var body: some View {
-        HStack {
-            RoundedRectangle(cornerRadius: CornerRadius.control)
-                .fill(imageColor)
-                .frame(width: labelWidth, height: labelWidth)
-                .overlay {
-                    Image(systemName: systemName)
-                        .foregroundStyle(iconColor)
-                        .font(.adaptive(.title3))
-                }
-            Text(text)
-                .foregroundStyle(Color.label)
-            Spacer()
-        }
-        .contentShape(.rect)
-    }
-}
-
-// Mac 새로 만들기 팝오버
-// 위쪽 닫기·제목 줄, 작은 제목 아래 구분선으로 나눈 TODO 카테고리와 새 개발 목표 배치
-private struct HomeDesktopContentPicker: View {
-    let store: StoreOf<HomeFeature>
-    let onSelect: (TodoCategory) -> Void
-
-    var body: some View {
         VStack(spacing: 0) {
-            ZStack {
-                Text("home_create_title", bundle: PresentationResources.bundle)
-                    .font(.system(size: 14 * AdaptiveSize.boardScale, weight: .bold))
-                HStack {
-                    Button {
-                        store.send(.sheet(.presented(.tapCloseButton)))
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.adaptive(.body))
-                            .foregroundStyle(Color.label)
-                            .frame(width: 28 * AdaptiveSize.boardScale, height: 28 * AdaptiveSize.boardScale)
-                            .contentShape(.rect)
+            if isiOSAppOnMac || usesPaneLayout {
+                // 팝오버와 Mac은 X 닫기 버튼과 가운데 제목
+                ZStack {
+                    Text("home_create_title", bundle: PresentationResources.bundle)
+                        .font(isiOSAppOnMac ? .system(size: 14 * scale, weight: .bold) : .adaptive(.headline).bold())
+                    HStack {
+                        if isiOSAppOnMac {
+                            Button {
+                                store.send(.sheet(.presented(.tapCloseButton)))
+                            } label: {
+                                Image(systemName: "xmark")
+                                    .font(.adaptive(.body))
+                                    .foregroundStyle(Color.label)
+                                    .frame(width: 28 * scale, height: 28 * scale)
+                                    .contentShape(.rect)
+                            }
+                            .buttonStyle(.plain)
+                        } else {
+                            Button {
+                                store.send(.sheet(.presented(.tapCloseButton)))
+                            } label: {
+                                Image(systemName: "xmark")
+                            }
+                            .topBarButtonStyle()
+                        }
+                        Spacer()
                     }
-                    .buttonStyle(.plain)
-                    Spacer()
                 }
-            }
-            .padding(.horizontal, 10 * AdaptiveSize.boardScale)
-            .frame(height: 44 * AdaptiveSize.boardScale)
-            .overlay(alignment: .bottom) {
-                Rectangle()
-                    .fill(Color.separator)
-                    .frame(height: 1)
+                .padding(.horizontal, 10 * scale)
+                .frame(height: headerHeight)
+                .overlay(alignment: .bottom) {
+                    Rectangle()
+                        .fill(Color.separator)
+                        .frame(height: 1)
+                }
+            } else {
+                // 시트는 다른 시트처럼 손잡이 아래부터 글자 닫기 버튼과 가운데 제목
+                RecordTopBar(
+                    String(localized: "home_create_title", bundle: PresentationResources.bundle),
+                    background: .secondaryBackground
+                ) {
+                    RecordTopBarTextButton(RecordPresentation.text("common_close")) {
+                        store.send(.sheet(.presented(.tapCloseButton)))
+                    }
+                } trailing: {
+                    EmptyView()
+                }
+                .padding(.top, grabberInset)
+                // 아래에서 올라온 시트라 창 컨트롤 여백을 더하지 않음
+                .environment(\.windowControlsInset, 0)
             }
 
             ScrollView {
-                VStack(alignment: .leading, spacing: 16 * AdaptiveSize.boardScale) {
-                    section(Text(verbatim: "TODO")) {
+                VStack(alignment: .leading, spacing: isiOSAppOnMac ? 16 * scale : 24) {
+                    section(Text("TODO", bundle: PresentationResources.bundle)) {
                         if store.isPreferencesLoading {
                             LoadingView()
-                                .frame(maxWidth: .infinity, minHeight: 38 * AdaptiveSize.boardScale)
+                                .frame(maxWidth: .infinity, minHeight: isiOSAppOnMac ? 38 * scale : 50)
                         } else {
                             ForEach(store.preferences.filter(\.isVisible), id: \.id) { item in
                                 row(title: Text(item.localizedName), symbolName: item.symbolName, color: item.color) {
@@ -788,14 +723,25 @@ private struct HomeDesktopContentPicker: View {
                         }
                     }
                 }
-                .padding(.horizontal, 14 * AdaptiveSize.boardScale)
-                .padding(.vertical, 8 * AdaptiveSize.boardScale)
+                .padding(.horizontal, isiOSAppOnMac ? 14 * scale : 16)
+                .padding(.vertical, isiOSAppOnMac ? 8 * scale : 12)
+                .onGeometryChange(for: CGFloat.self) { proxy in
+                    proxy.size.height
+                } action: { height in
+                    store.send(.binding(.set(\.contentPickerHeight, height)))
+                }
             }
             .scrollBounceBehavior(.basedOnSize)
         }
+        // 좁은 화면 시트는 목록 높이에 맞추고, 화면보다 길면 목록을 스크롤
+        .sheetDetent(
+            isiOSAppOnMac || store.contentPickerHeight == 0
+                ? .large : .height(grabberInset + headerHeight + store.contentPickerHeight)
+        )
     }
 
-    // 작은 제목 아래 바탕·테두리 없이 행 사이 구분선으로 나눈 묶음
+    // 작은 제목 아래 바탕과 테두리 없이 행 사이 구분선으로 나눈 묶음
+    // 시트는 이름 앞에서 시작하는 구분선, 팝오버는 행 폭 전체 구분선
     private func section<Content: View>(_ header: Text, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             header
@@ -810,8 +756,9 @@ private struct HomeDesktopContentPicker: View {
 
                         if subview.id != subviews.last?.id {
                             Rectangle()
-                                .fill(Color.secondarySeparator)
+                                .fill(isiOSAppOnMac || usesPaneLayout ? Color.secondarySeparator : .separator)
                                 .frame(height: 1)
+                                .padding(.leading, isiOSAppOnMac || usesPaneLayout ? 0 : 28 + 10)
                         }
                     }
                 }
@@ -821,12 +768,19 @@ private struct HomeDesktopContentPicker: View {
 
     // 테두리 있는 아이콘 사각형과 이름 행
     private func row(title: Text, symbolName: String, color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 10 * AdaptiveSize.boardScale) {
+        let scale = AdaptiveSize.boardScale
+        let iconSize = isiOSAppOnMac ? 25 * scale : 28
+
+        return Button(action: action) {
+            HStack(spacing: 10 * scale) {
                 Image(systemName: symbolName)
+                    .font(.adaptive(isiOSAppOnMac ? .body : .footnote))
                     .foregroundStyle(color)
-                    .frame(width: 25 * AdaptiveSize.boardScale, height: 25 * AdaptiveSize.boardScale)
-                    .background(Color.tertiaryBackground, in: .rect(cornerRadius: CornerRadius.control))
+                    .frame(width: iconSize, height: iconSize)
+                    .background(
+                        isiOSAppOnMac ? Color.tertiaryBackground : .background,
+                        in: .rect(cornerRadius: CornerRadius.control)
+                    )
                     .overlay {
                         RoundedRectangle(cornerRadius: CornerRadius.control)
                             .strokeBorder(Color.secondarySeparator)
@@ -835,8 +789,8 @@ private struct HomeDesktopContentPicker: View {
                     .foregroundStyle(Color.label)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .font(.adaptive(.body))
-            .frame(minHeight: 38 * AdaptiveSize.boardScale)
+            .font(.adaptive(isiOSAppOnMac ? .body : .subheadline))
+            .frame(minHeight: isiOSAppOnMac ? 38 * scale : 50)
             .hoverHighlight()
         }
         .buttonStyle(.plain)
