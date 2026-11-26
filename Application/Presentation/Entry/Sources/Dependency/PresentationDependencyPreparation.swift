@@ -33,7 +33,7 @@ public enum PresentationDependencyPreparation {
         dependencies.signInUseCase = signInUseCase
     }
 
-    public static func prepareMain(
+    public static func prepareComposition(
         _ dependencies: inout DependencyValues,
         observeUnreadPushCountUseCase: ObserveUnreadPushCountUseCase,
         fetchSideBarWidthUseCase: FetchSideBarWidthUseCase,

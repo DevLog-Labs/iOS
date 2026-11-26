@@ -26,7 +26,7 @@ protocol RootStateDriving {
     func didLogined(_ signIn: Bool) async
     func presentTodoDetail(_ todoId: String) async
     func dismissSheet() async
-    func selectMainTab(_ tab: MainTab) async
+    func selectTab(_ tab: AppTab) async
     func openWidgetRoute(_ route: WidgetRoute) async
     func tapUpdateButton() async
 }
@@ -37,7 +37,7 @@ struct RootStateSnapshot: Equatable {
     let isNetworkConnected: Bool
     let signIn: Bool?
     let theme: SystemTheme
-    let selectedMainTab: MainTab
+    let selectedTab: AppTab
 }
 
 @MainActor
@@ -51,7 +51,7 @@ struct RootStoreTestAdapter: RootStateDriving {
             isNetworkConnected: store.state.isNetworkConnected,
             signIn: store.state.signIn,
             theme: store.state.theme,
-            selectedMainTab: store.state.selectedMainTab
+            selectedTab: store.state.selectedTab
         )
     }
     var sheetTodoId: String? { store.state.sheet?.todoId }
@@ -124,8 +124,8 @@ struct RootStoreTestAdapter: RootStateDriving {
         await store.send(.sheet(.dismiss))
     }
 
-    func selectMainTab(_ tab: MainTab) async {
-        await store.send(.binding(.set(\.selectedMainTab, tab)))
+    func selectTab(_ tab: AppTab) async {
+        await store.send(.binding(.set(\.selectedTab, tab)))
     }
 
     func openWidgetRoute(_ route: WidgetRoute) async {
@@ -161,7 +161,7 @@ func verifyNetworkDisconnectedAlert(adapter: some RootStateDriving) async {
                 isNetworkConnected: false,
                 signIn: nil,
                 theme: .automatic,
-                selectedMainTab: .home
+                selectedTab: .home
             )
     )
 }
@@ -179,7 +179,7 @@ func verifySetAlert(adapter: some RootStateDriving) async {
                 isNetworkConnected: false,
                 signIn: nil,
                 theme: .automatic,
-                selectedMainTab: .home
+                selectedTab: .home
             )
     )
 }
@@ -190,7 +190,7 @@ func verifyThemeUpdate(adapter: some RootStateDriving) async {
 
     #expect(adapter.snapshot.theme == .dark)
     #expect(adapter.snapshot.alertTitle == nil)
-    #expect(adapter.snapshot.selectedMainTab == .home)
+    #expect(adapter.snapshot.selectedTab == .home)
 }
 
 @MainActor
@@ -204,7 +204,7 @@ func verifyDidLoginedFalse(
     }
 
     #expect(adapter.snapshot.signIn == false)
-    #expect(adapter.snapshot.selectedMainTab == .home)
+    #expect(adapter.snapshot.selectedTab == .home)
     #expect(trackAnalyticsEventUseCaseSpy.screenNames == ["login"])
 }
 
@@ -213,11 +213,11 @@ func verifyDidLoginedTrue(
     adapter: some RootStateDriving,
     trackAnalyticsEventUseCaseSpy: RootTrackAnalyticsEventUseCaseSpy
 ) async {
-    await adapter.selectMainTab(.today)
+    await adapter.selectTab(.today)
     await adapter.didLogined(true)
 
     #expect(adapter.snapshot.signIn == true)
-    #expect(adapter.snapshot.selectedMainTab == .home)
+    #expect(adapter.snapshot.selectedTab == .home)
     #expect(trackAnalyticsEventUseCaseSpy.screenNames.isEmpty)
 }
 
@@ -247,7 +247,7 @@ func verifyObservedInitialValues(adapter: some RootStateDriving) async {
                 isNetworkConnected: false,
                 signIn: false,
                 theme: .dark,
-                selectedMainTab: .home
+                selectedTab: .home
             )
     )
 }
@@ -264,17 +264,17 @@ func verifyTodoDetailSheetPresentation(adapter: some RootStateDriving) async {
 @MainActor
 func verifyWidgetRouteOpensWhenSignedIn(adapter: some RootStateDriving) async {
     await adapter.openWidgetRoute(.tab(.today))
-    #expect(adapter.snapshot.selectedMainTab == .home)
+    #expect(adapter.snapshot.selectedTab == .home)
     #expect(adapter.widgetRoute == .tab(.today))
 
     await adapter.didLogined(true)
-    #expect(adapter.snapshot.selectedMainTab == .today)
+    #expect(adapter.snapshot.selectedTab == .today)
     #expect(adapter.widgetRoute == .tab(.today))
     #expect(adapter.sheetTodoId == nil)
 
     await adapter.presentTodoDetail("push-todo")
     await adapter.openWidgetRoute(.todayTodo("todo-1"))
-    #expect(adapter.snapshot.selectedMainTab == .today)
+    #expect(adapter.snapshot.selectedTab == .today)
     #expect(adapter.sheetTodoId == "todo-1")
 }
 

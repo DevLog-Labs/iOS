@@ -1,5 +1,5 @@
 //
-//  MainFeature.swift
+//  CompositionFeature.swift
 //  Entry
 //
 //  Created by opfic on 6/16/26.
@@ -14,7 +14,7 @@ import SwiftUI
 import UserNotifications
 
 @Reducer
-struct MainFeature {
+struct CompositionFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Never>?
@@ -28,15 +28,15 @@ struct MainFeature {
         // 탭 안 화면이 직접 그린 하단 탭 바 뒤로 들어가지 않도록 비울 높이
         var tabBarHeight = CGFloat.zero
         var readableContentWidth = CGFloat.infinity
-        var openedTabs: Set<MainTab> = []
+        var openedTabs: Set<AppTab> = []
         var isSideBarCollapsed = false
         // 사용자가 끌어서 정한 사이드바 폭, 정하지 않았으면 기본 폭
         var sideBarWidth: CGFloat?
         var expandedSideBarGroups: Set<SideBarGroup> = []
-        var sideBarLocations: [MainTab: SideBarLocation] = [:]
-        var sideBarRequests: [MainTab: SideBarRequest] = [:]
+        var sideBarLocations: [AppTab: SideBarLocation] = [:]
+        var sideBarRequests: [AppTab: SideBarRequest] = [:]
         // 칸에 작성 화면을 그린 탭, 덮는 화면처럼 닫기·저장 버튼으로 닫기 전에는 사이드바로 이동하지 않음
-        var paneEditingTabs: Set<MainTab> = []
+        var paneEditingTabs: Set<AppTab> = []
         var sideBarContent = SideBarContent()
         var isDetailSideBarPresented = false
         // 앱 화면과 분리해 창 전체에 표시하는 Mac 설정 화면
@@ -44,10 +44,10 @@ struct MainFeature {
         // 창 전체 설정 화면에서 로그아웃, 회원 탈퇴나 그 알림창이 끝나지 않은 상태
         var isSettingsBusy = false
         // 탭마다 세부 정보 사이드바 대상을 고르는 화면, 대상이 없어도 나타난 순서대로 위치
-        var detailSideBarSelections: [MainTab: [DetailSideBarSelection]] = [:]
+        var detailSideBarSelections: [AppTab: [DetailSideBarSelection]] = [:]
 
         // 탭마다 지금 고른 세부 정보 사이드바 대상, 대상을 고른 화면 중 가장 나중에 나타난 화면의 대상
-        var detailSideBarTargets: [MainTab: DetailSideBarTarget] {
+        var detailSideBarTargets: [AppTab: DetailSideBarTarget] {
             detailSideBarSelections.compactMapValues { $0.last { $0.target != nil }?.target }
         }
     }
@@ -75,15 +75,15 @@ struct MainFeature {
 
         enum ViewAction: Equatable {
             case onAppear
-            case selectedTabChanged(MainTab)
-            case sideBarLocationChanged(MainTab, SideBarLocation)
+            case selectedTabChanged(AppTab)
+            case sideBarLocationChanged(AppTab, SideBarLocation)
             case sideBarContentChanged(SideBarContent)
             case tapSideBarGroup(SideBarGroup)
-            case tapSideBarItem(MainTab, SideBarRequest.Action)
-            case paneEditingChanged(MainTab, Bool)
+            case tapSideBarItem(AppTab, SideBarRequest.Action)
+            case paneEditingChanged(AppTab, Bool)
             case sideBarResized(CGFloat)
-            case detailSideBarTargetChanged(MainTab, DetailSideBarTarget?, owner: UUID)
-            case detailSideBarOwnerRemoved(MainTab, owner: UUID)
+            case detailSideBarTargetChanged(AppTab, DetailSideBarTarget?, owner: UUID)
+            case detailSideBarOwnerRemoved(AppTab, owner: UUID)
         }
 
         enum StoreAction: Equatable {
@@ -196,7 +196,7 @@ extension DependencyValues {
         set { self[SetApplicationBadgeCountKey.self] = newValue }
     }
 
-    var keyboardEvents: @Sendable () -> AnyPublisher<MainFeature.KeyboardEvent, Never> {
+    var keyboardEvents: @Sendable () -> AnyPublisher<CompositionFeature.KeyboardEvent, Never> {
         get { self[KeyboardEventsKey.self] }
         set { self[KeyboardEventsKey.self] = newValue }
     }
@@ -253,23 +253,23 @@ private enum SetApplicationBadgeCountKey: DependencyKey {
 }
 
 private enum KeyboardEventsKey: DependencyKey {
-    static let liveValue: @Sendable () -> AnyPublisher<MainFeature.KeyboardEvent, Never> = {
+    static let liveValue: @Sendable () -> AnyPublisher<CompositionFeature.KeyboardEvent, Never> = {
         let center = NotificationCenter.default
         return center.publisher(for: UIResponder.keyboardWillShowNotification)
             .map { notification in
                 let frame = (notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
-                return MainFeature.KeyboardEvent.willShow(height: frame?.height ?? 0)
+                return CompositionFeature.KeyboardEvent.willShow(height: frame?.height ?? 0)
             }
             .merge(with: center.publisher(for: UIResponder.keyboardWillHideNotification).map { _ in .willHide })
             .eraseToAnyPublisher()
     }
 
-    static var testValue: @Sendable () -> AnyPublisher<MainFeature.KeyboardEvent, Never> {
+    static var testValue: @Sendable () -> AnyPublisher<CompositionFeature.KeyboardEvent, Never> {
         liveValue
     }
 }
 
-private extension MainFeature {
+private extension CompositionFeature {
     func observeKeyboardEffect() -> Effect<Action> {
         .run { [keyboardEvents] send in
             for await event in keyboardEvents().values {
@@ -304,7 +304,7 @@ private extension MainFeature {
             do {
                 try await setApplicationBadgeCount(count)
             } catch {
-                Logger(category: "MainFeature").error("Failed to update application badge count", error: error)
+                Logger(category: "CompositionFeature").error("Failed to update application badge count", error: error)
             }
         }
     }
@@ -317,12 +317,12 @@ private extension MainFeature {
                 TextState(String(localized: "common_close", bundle: PresentationResources.bundle))
             }
         } message: {
-            TextState(String(localized: "main_alert_badge_error_message", bundle: PresentationResources.bundle))
+            TextState(String(localized: "composition_alert_badge_error_message", bundle: PresentationResources.bundle))
         }
     }
 }
 
-private extension MainTab {
+private extension AppTab {
     var analyticsScreenName: String? {
         switch self {
         case .home:

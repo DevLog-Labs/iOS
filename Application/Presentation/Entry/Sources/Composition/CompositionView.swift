@@ -1,5 +1,5 @@
 //
-//  MainView.swift
+//  CompositionView.swift
 //  Entry
 //
 //  Created by opfic on 5/8/25.
@@ -12,25 +12,25 @@ import ProfileTab
 import PresentationShared
 import TodayTab
 
-struct MainView: View {
+struct CompositionView: View {
     @Environment(\.horizontalSizeClass) private var horizontalSizeClass
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.deviceType) private var deviceType
-    @Binding var selectedTab: MainTab
-    @State private var store: StoreOf<MainFeature>
+    @Binding var selectedTab: AppTab
+    @State private var store: StoreOf<CompositionFeature>
     private let windowEvent: TodoEditorWindowEvent
     // 목록 칸과 상세 칸이 함께 들어가는 화면 영역 폭
     private let splitMinimumWidth = CGFloat(800)
 
     init(
         windowEvent: TodoEditorWindowEvent,
-        selectedTab: Binding<MainTab>
+        selectedTab: Binding<AppTab>
     ) {
         @Dependency(\.fetchSideBarWidthUseCase) var fetchSideBarWidthUseCase
-        var state = MainFeature.State()
+        var state = CompositionFeature.State()
         state.sideBarWidth = fetchSideBarWidthUseCase.execute().map { CGFloat($0) }
         self._store = State(initialValue: Store(initialState: state) {
-            MainFeature()
+            CompositionFeature()
         })
         self._selectedTab = selectedTab
         self.windowEvent = windowEvent
@@ -75,9 +75,9 @@ struct MainView: View {
                 if isiOSAppOnMac || deviceType == .ipad {
                     // 탭 전환 애니메이션 없이 한 번 연 탭을 유지하고 선택한 탭만 표시
                     // 사이드바 하위 항목은 홈 화면이 알려 주므로 홈은 처음부터 생성
-                    ForEach(MainTab.allCases, id: \.self) { tab in
+                    ForEach(AppTab.allCases, id: \.self) { tab in
                         if store.openedTabs.contains(tab) || selectedTab == tab || tab == .home {
-                            MainTabContent(
+                            TabScreen(
                                 store: store,
                                 tab: tab,
                                 isSelected: selectedTab == tab,
@@ -95,11 +95,11 @@ struct MainView: View {
                 } else {
                     TabView(selection: $selectedTab) {
                         Tab(
-                            MainTab.home.title,
-                            systemImage: MainTab.home.symbolName,
-                            value: MainTab.home
+                            AppTab.home.title,
+                            systemImage: AppTab.home.symbolName,
+                            value: AppTab.home
                         ) {
-                            MainTabContent(
+                            TabScreen(
                                 store: store,
                                 tab: .home,
                                 isSelected: selectedTab == .home,
@@ -112,11 +112,11 @@ struct MainView: View {
                             )
                         }
                         Tab(
-                            MainTab.today.title,
-                            systemImage: MainTab.today.symbolName,
-                            value: MainTab.today
+                            AppTab.today.title,
+                            systemImage: AppTab.today.symbolName,
+                            value: AppTab.today
                         ) {
-                            MainTabContent(
+                            TabScreen(
                                 store: store,
                                 tab: .today,
                                 isSelected: selectedTab == .today,
@@ -129,11 +129,11 @@ struct MainView: View {
                             )
                         }
                         Tab(
-                            MainTab.notification.title,
-                            systemImage: MainTab.notification.symbolName,
-                            value: MainTab.notification
+                            AppTab.notification.title,
+                            systemImage: AppTab.notification.symbolName,
+                            value: AppTab.notification
                         ) {
-                            MainTabContent(
+                            TabScreen(
                                 store: store,
                                 tab: .notification,
                                 isSelected: selectedTab == .notification,
@@ -147,11 +147,11 @@ struct MainView: View {
                         }
                         .badge(store.unreadPushCount)
                         Tab(
-                            MainTab.profile.title,
-                            systemImage: MainTab.profile.symbolName,
-                            value: MainTab.profile
+                            AppTab.profile.title,
+                            systemImage: AppTab.profile.symbolName,
+                            value: AppTab.profile
                         ) {
-                            MainTabContent(
+                            TabScreen(
                                 store: store,
                                 tab: .profile,
                                 isSelected: selectedTab == .profile,
@@ -238,7 +238,7 @@ struct MainView: View {
         }
         .overlay {
             if 0 < verticalBarWidth {
-                MainTabRail(
+                DuoTabBar(
                     selectedTab: $selectedTab,
                     edge: store.verticalBarInsets.leading < store.verticalBarInsets.trailing ? .trailing : .leading,
                     width: verticalBarWidth,
@@ -264,7 +264,7 @@ struct MainView: View {
         .toastHost()
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if showsTabBar {
-                MainTabBar(
+                TabBar(
                     selectedTab: $selectedTab,
                     axis: .horizontal,
                     unreadPushCount: store.unreadPushCount
@@ -377,9 +377,9 @@ struct ReadableContentWidthReader: UIViewRepresentable {
     }
 }
 
-private struct MainTabContent: View {
-    let store: StoreOf<MainFeature>
-    let tab: MainTab
+private struct TabScreen: View {
+    let store: StoreOf<CompositionFeature>
+    let tab: AppTab
     let isSelected: Bool
     let isTabBarHidden: Bool
     let tabBarInset: CGFloat
@@ -439,14 +439,14 @@ private struct MainTabContent: View {
 
 // Duo 세로 칸 경계선과 아래쪽 탭
 // 위쪽 상태 표시와 툴바 버튼 자리는 시스템 세로 막대가 맡음
-private struct MainTabRail: View {
-    @Binding var selectedTab: MainTab
+private struct DuoTabBar: View {
+    @Binding var selectedTab: AppTab
     let edge: HorizontalEdge
     let width: CGFloat
     let unreadPushCount: Int
 
     var body: some View {
-        MainTabBar(
+        TabBar(
             selectedTab: $selectedTab,
             axis: .vertical,
             unreadPushCount: unreadPushCount
@@ -471,8 +471,8 @@ private struct MainTabRail: View {
 private struct TreeSideBar: View {
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.paneWidth) private var paneWidth
-    @Binding var selectedTab: MainTab
-    let store: StoreOf<MainFeature>
+    @Binding var selectedTab: AppTab
+    let store: StoreOf<CompositionFeature>
 
     var body: some View {
         let location = store.sideBarLocations[selectedTab] ?? selectedTab.sideBarLocation
@@ -505,7 +505,7 @@ private struct TreeSideBar: View {
                 }
                 ScrollView {
                     VStack(spacing: isiOSAppOnMac ? AdaptiveSize.boardScale : 2) {
-                        ForEach([MainTab.home, .today, .notification], id: \.self) { tab in
+                        ForEach([AppTab.home, .today, .notification], id: \.self) { tab in
                             SideBarRow(
                                 title: Text(tab.title),
                                 symbolName: tab.symbolName,
@@ -581,8 +581,8 @@ private struct TreeSideBar: View {
                 }
                 VStack(spacing: isiOSAppOnMac ? AdaptiveSize.boardScale : 2) {
                     SideBarRow(
-                        title: Text(MainTab.profile.title),
-                        symbolName: MainTab.profile.symbolName,
+                        title: Text(AppTab.profile.title),
+                        symbolName: AppTab.profile.symbolName,
                         isSelected: location == .profile
                     ) {
                         open(.profile)

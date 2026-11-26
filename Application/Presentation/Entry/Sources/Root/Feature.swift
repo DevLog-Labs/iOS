@@ -28,7 +28,7 @@ struct Feature {
         var isNetworkConnected = true
         var signIn: Bool?
         var theme: SystemTheme = .automatic
-        var selectedMainTab = MainTab.home
+        var selectedTab = AppTab.home
         var widgetRoute: WidgetRoute?
         var isObservingNetworkConnectivity = false
         var isObservingSession = false
@@ -137,7 +137,7 @@ struct Feature {
                     if !wasSignedIn, let route = state.widgetRoute {
                         Self.applyWidgetRoute(route, to: &state)
                     } else {
-                        state.selectedMainTab = .home
+                        state.selectedTab = .home
                     }
                 } else {
                     state.widgetRoute = nil
@@ -159,7 +159,7 @@ struct Feature {
     private static func applyWidgetRoute(_ route: WidgetRoute, to state: inout State) {
         switch route {
         case .tab(let tab):
-            state.selectedMainTab = tab
+            state.selectedTab = tab
         case .todayTodo(let id):
             state.sheet = .init(todoId: id)
         }

@@ -1,5 +1,5 @@
 //
-//  MainTabBar.swift
+//  TabBar.swift
 //  Entry
 //
 //  Created by opfic on 11/14/26.
@@ -10,8 +10,8 @@ import PresentationShared
 
 // OS와 기기에 상관없이 같은 모양으로 직접 그리는 탭
 // 가로는 화면 아래 탭 바, 세로는 Duo 세로 칸 아래쪽 탭
-struct MainTabBar: View {
-    @Binding var selectedTab: MainTab
+struct TabBar: View {
+    @Binding var selectedTab: AppTab
     let axis: Axis
     let unreadPushCount: Int
 
@@ -20,8 +20,8 @@ struct MainTabBar: View {
             ? AnyLayout(HStackLayout(alignment: .top, spacing: 0)) : AnyLayout(VStackLayout(spacing: 22))
 
         layout {
-            ForEach(MainTab.allCases, id: \.self) { tab in
-                MainTabBarItem(
+            ForEach(AppTab.allCases, id: \.self) { tab in
+                TabBarItem(
                     tab: tab,
                     isSelected: selectedTab == tab,
                     badgeCount: tab == .notification ? unreadPushCount : 0,
@@ -34,8 +34,8 @@ struct MainTabBar: View {
     }
 }
 
-private struct MainTabBarItem: View {
-    let tab: MainTab
+private struct TabBarItem: View {
+    let tab: AppTab
     let isSelected: Bool
     let badgeCount: Int
     let isFlexible: Bool

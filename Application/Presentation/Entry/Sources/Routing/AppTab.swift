@@ -1,5 +1,5 @@
 //
-//  MainTab.swift
+//  AppTab.swift
 //  Entry
 //
 //  Created by opfic on 4/30/26.
@@ -8,7 +8,7 @@
 import Foundation
 import PresentationShared
 
-public enum MainTab: Hashable, CaseIterable {
+public enum AppTab: Hashable, CaseIterable {
     case home
     case today
     case notification
@@ -56,7 +56,7 @@ public enum MainTab: Hashable, CaseIterable {
 }
 
 extension SideBarLocation {
-    var tab: MainTab {
+    var tab: AppTab {
         switch self {
         case .home, .todoCategory, .todoCategoryManagement, .developmentGoal, .search:
             .home

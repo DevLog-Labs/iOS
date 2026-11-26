@@ -88,7 +88,7 @@ private extension AppGraph {
             &dependencies,
             signInUseCase: authenticationGraphSet.authenticationUseCaseGraph.signInUseCase
         )
-        PresentationDependencyPreparation.prepareMain(
+        PresentationDependencyPreparation.prepareComposition(
             &dependencies,
             observeUnreadPushCountUseCase: pushNotificationGraphSet
                 .pushNotificationUseCaseGraph

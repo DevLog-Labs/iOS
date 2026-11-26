@@ -36,9 +36,9 @@ public struct RootView: View {
             Color.background.ignoresSafeArea()
             if let signIn = store.signIn {
                 if signIn {
-                    MainView(
+                    CompositionView(
                         windowEvent: windowEvent,
-                        selectedTab: $store.selectedMainTab
+                        selectedTab: $store.selectedTab
                     )
                 } else {
                     LoginView()
