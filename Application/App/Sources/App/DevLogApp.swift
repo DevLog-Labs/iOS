@@ -18,6 +18,9 @@ struct DevLogApp: App {
 
     init() {
         AppGraph.shared.preparePresentationDependencies()
+        #if DEBUG
+        TouchIndicator.install()
+        #endif
     }
 
     var body: some Scene {
