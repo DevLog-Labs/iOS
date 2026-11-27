@@ -157,8 +157,11 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
     @MainActor
     final class Coordinator: NSObject, UIGestureRecognizerDelegate {
         private weak var recognizer: UIGestureRecognizer?
+        // 화면 가장자리가 아닌 곳에서 밀어도 이전 화면으로 돌아가는 제스처
+        private weak var contentRecognizer: UIGestureRecognizer?
         private weak var controller: UINavigationController?
         private weak var delegate: (any UIGestureRecognizerDelegate)?
+        private weak var contentDelegate: (any UIGestureRecognizerDelegate)?
         private var isObserving = false
         weak var owner: UIViewController?
         var completion: () -> Void
@@ -172,28 +175,46 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
             guard let controller,
                   let gesture = controller.interactivePopGestureRecognizer else { return }
 
-            if recognizer !== gesture {
+            // 시스템 막대를 숨긴 화면은 시스템이 이 제스처도 막아 가장자리 제스처와 함께 넘겨받음
+            var content: UIGestureRecognizer?
+            if #available(iOS 26.0, *) {
+                content = controller.interactiveContentPopGestureRecognizer
+            }
+
+            if recognizer !== gesture || contentRecognizer !== content {
                 restore()
                 recognizer = gesture
                 delegate = gesture.delegate
                 gesture.addTarget(self, action: #selector(handlePopGesture(_:)))
+                contentRecognizer = content
+                contentDelegate = content?.delegate
+                content?.addTarget(self, action: #selector(handlePopGesture(_:)))
             }
 
             self.controller = controller
             gesture.delegate = self
             gesture.isEnabled = 1 < controller.viewControllers.count
+            content?.delegate = self
         }
 
         func restore() {
-            guard let recognizer else { return }
-
-            recognizer.removeTarget(self, action: #selector(handlePopGesture(_:)))
-            if recognizer.delegate === self {
-                recognizer.delegate = delegate
+            if let recognizer {
+                recognizer.removeTarget(self, action: #selector(handlePopGesture(_:)))
+                if recognizer.delegate === self {
+                    recognizer.delegate = delegate
+                }
             }
-            self.recognizer = nil
+            if let contentRecognizer {
+                contentRecognizer.removeTarget(self, action: #selector(handlePopGesture(_:)))
+                if contentRecognizer.delegate === self {
+                    contentRecognizer.delegate = contentDelegate
+                }
+            }
+            recognizer = nil
+            contentRecognizer = nil
             controller = nil
             delegate = nil
+            contentDelegate = nil
             isObserving = false
         }
 
@@ -202,6 +223,8 @@ private final class NavigationPopGestureController: UIViewController, UICoordina
                   1 < controller.viewControllers.count,
                   controller.transitionCoordinator == nil else { return false }
             guard !popsImmediately else {
+                // 사이드바가 있는 창은 화면 가장자리에서 밀 때만 바로 돌아감
+                guard recognizer !== contentRecognizer else { return false }
                 controller.popViewController(animated: false)
                 completion()
                 return false
