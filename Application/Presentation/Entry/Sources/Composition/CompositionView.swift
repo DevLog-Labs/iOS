@@ -43,7 +43,7 @@ struct CompositionView: View {
 
         // iPad는 사이드바를 펴면 목록 칸과 상세 칸이 함께 들어가지 않는 창에서 사이드바를 접고 시작
         // 세로 화면처럼 좁은 창에서 상세 칸이 잘리지 않게 함
-        SplitShell(leftFitWidth: isiOSAppOnMac ? nil : splitMinimumWidth + sideBarIdealWidth) { $isSideBarOn in
+        SplitShell(leftFitWidth: isiOSAppOnMac ? nil : splitMinimumWidth + sideBarIdealWidth) { $isSideBarOn, $isDetailSideBarOn in
             ZStack {
                 // iPad는 시스템 탭 바를 쓰지 않아 Mac과 같이 구성
                 // 넓은 창과 좁은 창을 오가도 탭 화면을 다시 만들지 않음
@@ -95,15 +95,8 @@ struct CompositionView: View {
             // 접은 사이드바는 화면 칸 제목 줄의 버튼으로 다시 폄
             .environment(\.expandSideBar, isSideBarOn ? nil : { isSideBarOn = true })
             // 닫힌 세부 정보 사이드바는 화면 칸 제목 줄의 버튼으로 엶
-            .environment(
-                \.showDetailSideBar,
-                showsSideBar && !store.detailSideBar.isPresented
-                    ? { store.send(.detailSideBar(.binding(.set(\.isPresented, true)))) } : nil
-            )
-            .environment(
-                \.setDetailSideBarPresented,
-                showsSideBar ? { store.send(.detailSideBar(.binding(.set(\.isPresented, $0)))) } : nil
-            )
+            .environment(\.showDetailSideBar, showsSideBar && !isDetailSideBarOn ? { isDetailSideBarOn = true } : nil)
+            .environment(\.setDetailSideBarPresented, showsSideBar ? { isDetailSideBarOn = $0 } : nil)
         } left: { $isSideBarOn in
             if showsSideBar && isSideBarOn {
                 // 최소는 화살표와 아이콘만 보이는 폭, Mac 최대는 Orca 사이드바와 같은 폭
@@ -125,11 +118,11 @@ struct CompositionView: View {
                 // 칸 자르기 밖이라 잘리지 않도록 바탕은 칸 바깥에서 아래쪽 안전 영역까지 채움
                 .background(Color.secondaryBackground, ignoresSafeAreaEdges: .bottom)
             }
-        } right: { content in
+        } right: { content, $isDetailSideBarOn in
             // 탭 화면이 올린 내용, 올린 내용이 없으면 안내 표시
-            if showsSideBar && store.detailSideBar.isPresented {
+            if showsSideBar && isDetailSideBarOn {
                 DetailSideBar {
-                    store.send(.detailSideBar(.binding(.set(\.isPresented, false))))
+                    isDetailSideBarOn = false
                 } content: {
                     if let content {
                         content

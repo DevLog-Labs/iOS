@@ -31,7 +31,6 @@ struct CompositionFeature {
         // 앱 화면과 분리해 창 전체에 표시하는 설정 화면, 좁아진 창에서는 프로필 화면에 이어서 표시
         var isSettingsPresented = false
         var sideBar = SideBarFeature.State()
-        var detailSideBar = DetailSideBarFeature.State()
         var unreadPushCount = UnreadPushCountFeature.State()
         // 창 폭이 바뀌어도 보던 항목과 진행 중인 로그아웃, 회원 탈퇴를 이어 가게 화면보다 위에서 보관
         var settings = SettingsFeature.State()
@@ -54,7 +53,6 @@ struct CompositionFeature {
         case selectTab(AppTab)
         case view(ViewAction)
         case sideBar(SideBarFeature.Action)
-        case detailSideBar(DetailSideBarFeature.Action)
         case unreadPushCount(UnreadPushCountFeature.Action)
         case settings(SettingsFeature.Action)
         case store(StoreAction)
@@ -79,9 +77,6 @@ struct CompositionFeature {
         CombineReducers {
             Scope(state: \.sideBar, action: \.sideBar) {
                 SideBarFeature()
-            }
-            Scope(state: \.detailSideBar, action: \.detailSideBar) {
-                DetailSideBarFeature()
             }
             Scope(state: \.unreadPushCount, action: \.unreadPushCount) {
                 UnreadPushCountFeature()
@@ -111,7 +106,7 @@ struct CompositionFeature {
                     return selectTabEffect(tab, state: &state)
                 case .sideBar(.tapSettings):
                     return .send(.settings(.open))
-                case .sideBar, .detailSideBar, .unreadPushCount:
+                case .sideBar, .unreadPushCount:
                     break
                 case .settings(.open):
                     state.isSettingsPresented = true
