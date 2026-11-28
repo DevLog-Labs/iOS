@@ -64,8 +64,7 @@ struct TabScreen: View {
         case .profile:
             ProfileView(
                 isSelected: isSelected,
-                settingsStore: store.scope(state: \.settings, action: \.settings),
-                windowEvent: windowEvent
+                settingsStore: store.scope(state: \.settings, action: \.settings)
             )
         }
     }

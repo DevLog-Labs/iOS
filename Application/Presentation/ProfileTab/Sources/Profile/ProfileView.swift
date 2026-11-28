@@ -20,12 +20,10 @@ public struct ProfileView: View {
     @State private var store: StoreOf<ProfileFeature>
     @Bindable private var settingsStore: StoreOf<SettingsFeature>
     private let isSelected: Bool
-    private let windowEvent: TodoEditorWindowEvent
 
     public init(
         isSelected: Bool,
-        settingsStore: StoreOf<SettingsFeature>,
-        windowEvent: TodoEditorWindowEvent
+        settingsStore: StoreOf<SettingsFeature>
     ) {
         let store = Store(initialState: ProfileFeature.State()) {
             ProfileFeature()
@@ -33,7 +31,6 @@ public struct ProfileView: View {
         self._store = State(initialValue: store)
         self.settingsStore = settingsStore
         self.isSelected = isSelected
-        self.windowEvent = windowEvent
     }
 
     public var body: some View {
