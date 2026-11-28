@@ -15,6 +15,19 @@ public enum CompositionNarrow {
 }
 
 public extension View {
+    // 읽는 화면
+    // 좁은 창은 내비게이션에 쌓거나 시트로 띄우고, 사이드바가 있는 창은 사이드바까지 덮는 상세 판으로 띄움
+    // inPane이 참이면 사이드바가 있는 창에서 상세 판 대신 PaneSplitView의 detail이 그림
+    func compositionDetail<Item: Identifiable, Content: View, Panel: View>(
+        item: Binding<Item?>,
+        narrow: CompositionNarrow = .push,
+        inPane: Bool = false,
+        @ViewBuilder content: @escaping (Item) -> Content,
+        @ViewBuilder panel: @escaping (Item) -> Panel
+    ) -> some View {
+        modifier(CompositionDetailModifier(item: item, narrow: narrow, inPane: inPane, detail: content, panel: panel))
+    }
+
     // 저장이나 닫기 버튼으로만 닫는 작성 화면
     // 좁은 창은 전체 화면이나 시트로 띄우고, 사이드바가 있는 창은 PaneSplitView의 detail이 그림
     // inPane이 거짓이면 사이드바가 있는 창에서도 시트로 띄움
@@ -46,6 +59,36 @@ public extension View {
         @ViewBuilder content: @escaping (Item) -> Content
     ) -> some View {
         modifier(CompositionCenterModifier(item: item, narrow: narrow, isActive: isActive, center: content))
+    }
+}
+
+private struct CompositionDetailModifier<Item: Identifiable, Detail: View, Panel: View>: ViewModifier {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    let item: Binding<Item?>
+    let narrow: CompositionNarrow
+    let inPane: Bool
+    let detail: (Item) -> Detail
+    let panel: (Item) -> Panel
+
+    func body(content: Content) -> some View {
+        // 창 폭이 바뀌면 같은 상태를 짝이 되는 컨테이너가 다시 그리고, 빠지는 쪽의 늦은 닫힘은 상태를 지우지 않음
+        let narrowItem = item.hiddenInPane(usesDesktopLayout)
+        let panelItem = item.hiddenInPane(!usesDesktopLayout || inPane)
+
+        switch narrow {
+        case .push:
+            content
+                .navigationDestination(item: narrowItem, interactivePop: true, destination: detail)
+                .detailPanel(item: panelItem, content: panel)
+        case .sheet:
+            content
+                .prominentSheet(item: narrowItem, content: detail)
+                .detailPanel(item: panelItem, content: panel)
+        case .cover:
+            content
+                .fullScreenCover(item: narrowItem, content: detail)
+                .detailPanel(item: panelItem, content: panel)
+        }
     }
 }
 

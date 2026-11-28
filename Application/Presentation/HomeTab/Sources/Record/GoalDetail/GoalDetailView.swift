@@ -98,20 +98,14 @@ public struct GoalDetailView: View {
         ) {
             GoalCreateView(store: $0)
         }
-        .navigationDestination(
-            item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .hiddenInPane { usesDesktopLayout || isHidden() },
-            interactivePop: true
+        // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
+        .compositionDetail(
+            item: $store.scope(state: \.recordDetail, action: \.recordDetail).hiddenInPane(isHidden)
         ) { _ in
             if let detailStore = store.scope(state: \.recordDetailContent, action: \.recordDetailContent) {
                 RecordDetailView(store: detailStore, onUpdate: { store.send(.view(.refresh)) })
             }
-        }
-        // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
-        .detailPanel(
-            item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .hiddenInPane { !usesDesktopLayout || isHidden() }
-        ) { _ in
+        } panel: { _ in
             NavigationStack {
                 if let detailStore = store.scope(state: \.recordDetailContent, action: \.recordDetailContent) {
                     RecordDetailView(store: detailStore, onUpdate: { store.send(.view(.refresh)) })
