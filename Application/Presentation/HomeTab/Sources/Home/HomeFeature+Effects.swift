@@ -132,7 +132,10 @@ extension HomeFeature {
                 state.selectedTodoCategory = nil
             }
         case .contentPicker:
-            state.sheet = isPresented ? .contentPicker : state.showContentPicker ? nil : state.sheet
+            if isPresented {
+                state.closePresentations()
+            }
+            state.showContentPicker = isPresented
         }
     }
 

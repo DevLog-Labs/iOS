@@ -42,7 +42,7 @@ public struct TodayView: View {
             let showsPane = store.showsDetailInPane
                 && sections.flatMap(\.items).contains { $0.id == store.detail?.todoId }
 
-            PaneSplitView(splitsOnDesktop: showsPane) {
+            PaneSplitView {
                 ScrollView {
                     // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
                     let highlightedTodoIds = (
@@ -124,40 +124,33 @@ public struct TodayView: View {
                 .background(Color.background)
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
-            } detail: {
-                // 목록에서 빠진 Todo는 선택 안내로 대체
-                if showsPane, let detailStore = store.scope(state: \.detail, action: \.detail.presented) {
+                // 좁은 창은 목록 위에 쌓고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+                // 목록에서 빠진 Todo는 오른쪽 칸에 그리지 않음
+                // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
+                .compositionDetail(
+                    item: $store.scope(state: \.detail, action: \.detail),
+                    inPane: showsPane,
+                    isActive: isSelected
+                ) { detailStore, onClose in
                     TodoDetailView(
                         store: detailStore,
                         windowEvent: windowEvent,
-                        isPaneDetail: true,
-                        onClose: { store.send(.detail(.dismiss)) }
+                        isPaneDetail: onClose != nil,
+                        onClose: onClose
                     )
-                    .environment(\.showsPaneTitleBar, true)
                     // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회
                     .id(detailStore.todoId)
-                } else {
-                    PanePlaceholder()
-                }
-            }
-            // 좁은 창은 목록 위에 쌓고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
-            // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
-            .compositionDetail(
-                item: $store.scope(state: \.detail, action: \.detail),
-                inPane: showsPane,
-                isActive: isSelected
-            ) { detailStore in
-                TodoDetailView(store: detailStore, windowEvent: windowEvent)
-            } panel: { detailStore in
-                // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 판 메뉴에서 오른쪽 칸으로 옮기기 생략
-                let isListed = sections.flatMap(\.items).contains { $0.id == detailStore.todoId }
+                } panel: { detailStore in
+                    // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 판 메뉴에서 오른쪽 칸으로 옮기기 생략
+                    let isListed = sections.flatMap(\.items).contains { $0.id == detailStore.todoId }
 
-                TodoDetailPanel(
-                    store: detailStore,
-                    location: Text("nav_today", bundle: PresentationResources.bundle),
-                    windowEvent: windowEvent,
-                    onMoveToPane: isListed ? { store.send(.moveDetailToPane) } : nil
-                )
+                    TodoDetailPanel(
+                        store: detailStore,
+                        location: Text("nav_today", bundle: PresentationResources.bundle),
+                        windowEvent: windowEvent,
+                        onMoveToPane: isListed ? { store.send(.moveDetailToPane) } : nil
+                    )
+                }
             }
             .compositionRight(
                 isActive: sections.flatMap(\.items).contains { $0.id == store.selectedTodoId },

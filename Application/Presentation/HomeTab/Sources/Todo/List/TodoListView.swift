@@ -13,8 +13,7 @@ import PresentationShared
 
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @State private var store: StoreOf<TodoListFeature>
+    @Bindable private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
 
     init(store: StoreOf<TodoListFeature>, windowEvent: TodoEditorWindowEvent? = nil) {
@@ -23,59 +22,51 @@ struct TodoListView: View {
     }
 
     var body: some View {
-        // 사이드바가 있는 창은 목록을 창 전체 폭으로 두고 오른쪽 칸에서 연 Todo나 작성 화면이 있을 때만 두 칸으로 나눔
-        PaneSplitView(splitsOnDesktop: store.showsDetailInPane && store.detail != nil || store.fullScreenCover != nil) {
+        PaneSplitView {
             TodoListContent(store: store) { todoId in
                 store.send(.view(.selectTodo(todoId)))
             }
-        } detail: {
-            // 칸으로 나눈 화면은 새 Todo를 덮는 화면 대신 상세 칸 자리에서 작성
-            if let editorStore = store.scope(
-                state: \.fullScreenCover?.todoEditor,
-                action: \.fullScreenCover.presented.todoEditor
-               ) {
-                TodoEditorView(store: editorStore, onClose: { store.send(.fullScreenCover(.dismiss)) })
-            } else if store.showsDetailInPane,
-                      let detailStore = store.scope(state: \.detail, action: \.detail.presented) {
+            // 좁은 창은 목록 위에 쌓고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+            // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
+            .compositionDetail(
+                item: $store.scope(state: \.detail, action: \.detail),
+                inPane: store.showsDetailInPane,
+                isActive: isTabContentActive
+            ) { detailStore, onClose in
                 TodoDetailView(
                     store: detailStore,
                     windowEvent: windowEvent,
-                    isPaneDetail: true,
-                    onClose: { store.send(.detail(.dismiss)) }
+                    isPaneDetail: onClose != nil,
+                    onClose: onClose
                 )
-                .environment(\.showsPaneTitleBar, true)
                 // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회
                 .id(detailStore.todoId)
-            } else {
-                PanePlaceholder()
-            }
-        }
-        // 좁은 창은 목록 위에 쌓고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
-        // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
-        .compositionDetail(
-            item: $store.scope(state: \.detail, action: \.detail),
-            inPane: store.showsDetailInPane,
-            isActive: isTabContentActive
-        ) { detailStore in
-            TodoDetailView(store: detailStore, windowEvent: windowEvent)
-        } panel: { detailStore in
-            // 목록에서 빠진 Todo는 지울 경로가 없어 판 메뉴에서 삭제 생략
-            let todo = store.todos.first { $0.id == detailStore.todoId }
+            } panel: { detailStore in
+                // 목록에서 빠진 Todo는 지울 경로가 없어 판 메뉴에서 삭제 생략
+                let todo = store.todos.first { $0.id == detailStore.todoId }
 
-            TodoDetailPanel(
-                store: detailStore,
-                location: Text(TodoCategoryItem(from: store.category).localizedName),
-                windowEvent: windowEvent,
-                onMoveToPane: {
-                    store.send(.binding(.set(\.showsDetailInPane, true)))
-                },
-                onDelete: todo.map { todo in
-                    {
-                        store.send(.view(.swipeTodo(todo)))
-                        presentDeleteTodoToast(todo.id, store: store)
+                TodoDetailPanel(
+                    store: detailStore,
+                    location: Text(TodoCategoryItem(from: store.category).localizedName),
+                    windowEvent: windowEvent,
+                    onMoveToPane: {
+                        store.send(.binding(.set(\.showsDetailInPane, true)))
+                    },
+                    onDelete: todo.map { todo in
+                        {
+                            store.send(.view(.swipeTodo(todo)))
+                            presentDeleteTodoToast(todo.id, store: store)
+                        }
                     }
-                }
-            )
+                )
+            }
+            // 칸으로 나눈 화면은 새 Todo를 덮는 화면 대신 상세 칸 자리에서 작성
+            .compositionEditor(
+                item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover),
+                isActive: isTabContentActive
+            ) { coverStore, onClose in
+                fullScreenCoverContent(coverStore, onClose: onClose)
+            }
         }
         // 옆 칸에 연 Todo의 속성은 세부 정보 사이드바에 표시
         .compositionRight(isActive: store.showsDetailInPane && store.detail != nil) {
@@ -89,12 +80,6 @@ struct TodoListView: View {
             // 상세 칸에서 편집한 Todo를 옆 목록에도 반영
             store.send(.view(.windowTodoUpdated))
         }
-        .compositionEditor(
-            item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
-                .activePresentation(when: isTabContentActive)
-        ) { coverStore in
-            fullScreenCoverContent(coverStore)
-        }
         .background(Color.background.ignoresSafeArea())
         .task { store.send(.view(.onAppear)) }
     }
@@ -107,12 +92,13 @@ struct TodoListView: View {
     private func fullScreenCoverContent(
         _ coverStore: Store<
         TodoListFeature.FullScreenCoverState,
-        TodoListFeature.Action.FullScreenCover>
+        TodoListFeature.Action.FullScreenCover>,
+        onClose: (() -> Void)?
     ) -> some View {
         switch coverStore.destination {
         case .editor:
             if let todoEditorStore = coverStore.scope(state: \.todoEditor, action: \.todoEditor) {
-                TodoEditorView(store: todoEditorStore)
+                TodoEditorView(store: todoEditorStore, onClose: onClose)
             }
         }
     }
@@ -317,7 +303,6 @@ private struct TodoListTopBar: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.showsPaneTitleBar) private var showsPaneTitleBar
     @Environment(\.deviceType) private var deviceType
-    @Environment(\.sideBarRequest) private var sideBarRequest
     @Namespace private var searchTransition
     let store: StoreOf<TodoListFeature>
 
@@ -373,11 +358,6 @@ private struct TodoListTopBar: View {
             }
         }
         .background(Color.background, ignoresSafeAreaEdges: .top)
-        // 사이드바 Todo 메뉴의 작성은 이 목록의 작성 버튼과 같은 방식으로 작성
-        .onChange(of: sideBarRequest) { _, request in
-            guard request?.action == .createTodo else { return }
-            store.send(.store(.setFullScreenCover(.editor)))
-        }
     }
 
     @ViewBuilder

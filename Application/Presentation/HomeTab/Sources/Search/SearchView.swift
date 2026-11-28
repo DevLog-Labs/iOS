@@ -16,21 +16,13 @@ struct SearchView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
-    @State private var store: StoreOf<SearchFeature>
+    @Bindable private var store: StoreOf<SearchFeature>
     // 좁은 창에서 쌓아 연 결과 상세의 편집을 Mac 편집 창과 같은 경로로 전달
     private let windowEvent: TodoEditorWindowEvent?
 
-    // 열 때마다 빈 입력칸으로 시작하고 최근 검색은 열 때 읽음
-    // 닫으면 Store와 함께 진행 중인 검색 요청과 상세도 사라짐
-    init(windowEvent: TodoEditorWindowEvent?) {
-        @Dependency(\.homeFetchRecentSearchQueriesUseCase) var fetchRecentSearchQueriesUseCase
-        self._store = State(initialValue: Store(
-            initialState: SearchFeature.State(
-                recentQueries: fetchRecentSearchQueriesUseCase.execute()
-            )
-        ) {
-            SearchFeature()
-        })
+    // 닫으면 쌓은 상태와 함께 진행 중인 검색 요청과 상세도 사라짐
+    init(store: StoreOf<SearchFeature>, windowEvent: TodoEditorWindowEvent?) {
+        self.store = store
         self.windowEvent = windowEvent
     }
 
@@ -78,7 +70,7 @@ struct SearchView: View {
         .prominentAlert(store, state: \.alert, action: \.alert)
         // 좁은 창은 홈 내비게이션에 쌓고, 사이드바가 있는 창은 사이드바까지 덮는 상세 판에 표시
         // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
-        .compositionDetail(item: $store.scope(state: \.detail, action: \.detail)) { detailStore in
+        .compositionDetail(item: $store.scope(state: \.detail, action: \.detail)) { detailStore, _ in
             TodoDetailView(store: detailStore, windowEvent: windowEvent)
         } panel: { detailStore in
             TodoDetailPanel(

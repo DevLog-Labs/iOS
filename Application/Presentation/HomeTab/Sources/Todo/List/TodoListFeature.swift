@@ -71,7 +71,7 @@ struct TodoListFeature {
         }
     }
 
-    enum Action: BindableAction {
+    enum Action: BindableAction, Equatable {
         case alert(PresentationAction<Never>)
         case fullScreenCover(PresentationAction<FullScreenCover>)
         case detail(PresentationAction<TodoDetailFeature.Action>)

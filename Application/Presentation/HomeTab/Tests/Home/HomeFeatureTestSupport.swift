@@ -25,15 +25,15 @@ struct StoreTestAdapter {
     var hasDevelopmentGoalsLoadFailure: Bool { store.state.hasDevelopmentGoalsLoadFailure }
     var isNetworkConnected: Bool { store.state.isNetworkConnected }
     var showContentPicker: Bool { store.state.showContentPicker }
-    var showCategoryManage: Bool {
-        store.state.sheet?.categoryManageState != nil
-    }
+    var showCategoryManage: Bool { store.state.categoryManage != nil }
     var showTodoEditor: Bool { store.state.showTodoEditor }
-    var sheet: HomeFeature.SheetState? { store.state.sheet }
+    var categoryManage: CategoryManageFeature.State? { store.state.categoryManage }
+    var goalCreate: GoalCreateFeature.State? { store.state.goalCreate }
+    var goalDetail: GoalDetailFeature.State? { store.state.goalDetail }
     var alert: AlertState<HomeFeature.Action.Alert>? { store.state.alert }
-    var sideBarRequestAfterGoalDiscard: SideBarRequest? { store.state.sideBarRequestAfterGoalDiscard }
 
     init(
+        initialState: HomeFeature.State = HomeFeature.State(),
         fetchPreferencesUseCase: FetchTodoCategoryPreferencesUseCase = FetchTodoCategoryPreferencesUseCaseSpy(),
         updatePreferencesUseCase: UpdateTodoCategoryPreferencesUseCase = UpdateTodoCategoryPreferencesUseCaseSpy(),
         networkConnectivityUseCase: ObserveNetworkConnectivityUseCase = ObserveNetworkConnectivityUseCaseSpy(),
@@ -45,7 +45,7 @@ struct StoreTestAdapter {
     ) {
         let clock = TestClock()
         self.clock = clock
-        store = TestStore(initialState: HomeFeature.State()) {
+        store = TestStore(initialState: initialState) {
             HomeFeature()
         } withDependencies: {
             $0.fetchTodoCategoryPreferencesUseCase = fetchPreferencesUseCase
@@ -99,32 +99,29 @@ struct StoreTestAdapter {
         await store.send(.view(.tapDevelopmentGoal(goalID)))
     }
 
-    func setSheet(_ sheet: HomeFeature.SheetState?) async {
-        await store.send(.store(.setSheet(sheet)))
-    }
-
     func tapAddCategoryManageItem() async {
-        await store.send(.sheet(.presented(.categoryManage(.tapAddUserCategory))))
+        await store.send(.categoryManage(.presented(.tapAddUserCategory)))
     }
 
     func tapCategoryManageItem(_ item: TodoCategoryItem) async {
-        await store.send(.sheet(.presented(.categoryManage(.tapItem(item)))))
+        await store.send(.categoryManage(.presented(.tapItem(item))))
     }
 
     func changeCategoryPreferences(_ items: [TodoCategoryItem]) async {
-        await store.send(.sheet(.presented(.categoryManage(.delegate(.changed(items))))))
+        await store.send(.categoryManage(.presented(.delegate(.changed(items)))))
     }
 
     func setGoalCreateSaving() async {
-        await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.isSaving, true))))))
+        await store.send(.goalCreate(.presented(.binding(.set(\.isSaving, true)))))
     }
 
     func setGoalCreateTitle(_ title: String) async {
-        await store.send(.sheet(.presented(.goalCreate(.binding(.set(\.title, title))))))
+        await store.send(.goalCreate(.presented(.binding(.set(\.title, title)))))
     }
 
-    func closeGoalDraftForSideBarRequest(_ request: SideBarRequest) async {
-        await store.send(.view(.closeGoalDraftForSideBarRequest(request)))
+    func sideBarRequested(_ request: SideBarRequest) async {
+        await store.send(.view(.sideBarRequested(request)))
+        await drainReceivedActions()
     }
 
     func discardGoalDraft() async {
@@ -137,7 +134,7 @@ struct StoreTestAdapter {
     }
 
     func goalCreateSaved(_ goal: DevelopmentGoal) async {
-        await store.send(.sheet(.presented(.goalCreate(.delegate(.saved(goal))))))
+        await store.send(.goalCreate(.presented(.delegate(.saved(goal)))))
         await drainReceivedActions()
     }
 
@@ -146,8 +143,13 @@ struct StoreTestAdapter {
         await settle()
     }
 
-    func dismissSheet() async {
-        await store.send(.sheet(.dismiss))
+    func dismissGoalCreate() async {
+        await store.send(.goalCreate(.dismiss))
+        await drainReceivedActions()
+    }
+
+    func dismissCategoryManage() async {
+        await store.send(.categoryManage(.dismiss))
         await drainReceivedActions()
     }
 

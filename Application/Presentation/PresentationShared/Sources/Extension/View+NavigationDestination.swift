@@ -34,15 +34,12 @@ public extension View {
         }
     }
 
-    func navigationDestination<Item: Hashable, Destination: View>(
-        for type: Item.Type,
-        interactivePop: @escaping (Item) -> Bool,
-        @ViewBuilder destination: @escaping (Item) -> Destination
-    ) -> some View {
-        navigationDestination(for: type) { value in
-            destination(value)
-                .modifier(NavigationPopGesture(isEnabled: interactivePop(value)))
-        }
+    // 경로로 쌓은 화면의 설정, 밀어서 뒤로 가게 함
+    // 위에 쌓은 화면에 가려진 동안에도 창 폭이 바뀐 것을 받도록 아래 화면에서 읽은 값을 넣음
+    func stackDestination(usesDesktopLayout: Bool, usesPaneLayout: Bool) -> some View {
+        environment(\.showsPaneTitleBar, usesPaneLayout)
+            .environment(\.usesDesktopLayout, usesDesktopLayout)
+            .modifier(NavigationPopGesture(isEnabled: true))
     }
 
     // 사이드바가 있는 창에서 쌓는 화면을 밀리는 효과 없이 내용만 바꿈

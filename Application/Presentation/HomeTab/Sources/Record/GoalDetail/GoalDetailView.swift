@@ -58,50 +58,40 @@ public struct GoalDetailView: View {
         let isHidden = { !isShown || store.shownOnDesktop != usesDesktopLayout }
 
         // 사이드바가 있으면 개발 목표 수정과 기록 작성을 개발 목표 오른쪽 칸에 표시
-        return PaneSplitView(splitsOnDesktop: store.goalEdit != nil || store.recordEditor != nil) {
+        // 좁은 창 표시는 빠지는 자리에서 넓은 창의 개발 목표가 이미 나타났으면 띄우지 않음
+        let isNarrowHidden = { store.shownOnDesktop == true && !usesDesktopLayout }
+
+        return PaneSplitView {
             mainContent
-        } detail: {
-            if let editStore = store.scope(state: \.goalEdit, action: \.goalEdit.presented) {
-                GoalCreateView(store: editStore)
-            } else if let editorStore = store.scope(state: \.recordEditor, action: \.recordEditor.presented) {
-                RecordEditorView(
-                    store: editorStore,
-                    onCompletion: {
-                        store.send(.view(.refresh))
-                    },
-                    onClose: {
-                        store.send(.recordEditor(.dismiss))
-                    }
-                )
-            }
-        }
-        // 좁은 창은 닫기, 저장, 확정 버튼으로만 닫는 전체 화면
-        .compositionEditor(
-            item: $store.scope(state: \.recordEditor, action: \.recordEditor)
-                .hiddenInPane { store.shownOnDesktop == true }
-        ) { editorStore in
-            RecordEditorView(
-                store: editorStore,
-                onCompletion: {
-                    store.send(.view(.refresh))
+                // 좁은 창은 닫기, 저장, 확정 버튼으로만 닫는 전체 화면
+                .compositionEditor(
+                    item: $store.scope(state: \.recordEditor, action: \.recordEditor)
+                        .hiddenInPane(isNarrowHidden)
+                ) { editorStore, onClose in
+                    RecordEditorView(
+                        store: editorStore,
+                        onCompletion: {
+                            store.send(.view(.refresh))
+                        },
+                        onClose: onClose
+                    )
                 }
-            )
+                // 좁은 창은 새 개발 목표와 같은 시트로 수정하고 닫기, 저장 버튼으로만 닫음
+                .compositionEditor(
+                    item: $store.scope(state: \.goalEdit, action: \.goalEdit)
+                        .hiddenInPane(isNarrowHidden),
+                    narrow: .sheet
+                ) { editStore, _ in
+                    GoalCreateView(store: editStore)
+                }
         }
         .prominentSheet(item: $store.scope(state: \.todoLinkSheet, action: \.todoLinkSheet)) {
             GoalTodoLinkSheet(store: $0)
         }
-        // 좁은 창은 새 개발 목표와 같은 시트로 수정하고 닫기, 저장 버튼으로만 닫음
-        .compositionEditor(
-            item: $store.scope(state: \.goalEdit, action: \.goalEdit)
-                .hiddenInPane { store.shownOnDesktop == true },
-            narrow: .sheet
-        ) {
-            GoalCreateView(store: $0)
-        }
         // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
         .compositionDetail(
             item: $store.scope(state: \.recordDetail, action: \.recordDetail).hiddenInPane(isHidden)
-        ) { _ in
+        ) { _, _ in
             if let detailStore = store.scope(state: \.recordDetailContent, action: \.recordDetailContent) {
                 RecordDetailView(store: detailStore, onUpdate: { store.send(.view(.refresh)) })
             }

@@ -15,8 +15,6 @@ public struct HomeView: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
-    @Environment(\.sideBarRequest) private var sideBarRequest
-    @State private var router = NavigationRouter<HomeRoute>()
     @State private var store: StoreOf<HomeFeature>
     private let isSelected: Bool
     private let windowEvent: TodoEditorWindowEvent
@@ -33,106 +31,60 @@ public struct HomeView: View {
     }
 
     public var body: some View {
-        let goalDetailID = store.sheet?.goalDetailState?.goalId
-        let sideBarLocation: SideBarLocation = if let goalDetailID {
-            .developmentGoal(goalDetailID)
-        } else if usesDesktopLayout && store.sheet?.categoryManageState != nil {
-            .todoCategoryManagement
-        } else if router.path.last == .search {
-            .search
-        } else if case .category(let item)? = router.root {
-            .todoCategory(item.id)
-        } else {
-            .home
-        }
-        // 사이드바가 있으면 카테고리 관리, 새 개발 목표, 개발 목표를 시트 대신 칸으로 표시
-        let showsSheetAsPane = usesDesktopLayout
-            && (store.sheet?.categoryManageState != nil || store.sheet?.goalCreateState != nil || goalDetailID != nil)
-        // 칸으로 나눈 화면은 새로 만들기를 시트 대신 만들기 버튼 옆 팝오버로 표시
-        let showsPickerAsPopover = usesPaneLayout && store.showContentPicker
-        let sheetBinding = $store.scope(state: \.sheet, action: \.sheet)
-            .activePresentation(when: isSelected)
-
-        NavigationStack(path: $router.path) {
-            // 사이드바가 있으면 새 개발 목표와 새 Todo를 홈 오른쪽 칸에서 작성
-            PaneSplitView(splitsOnDesktop: store.sheet?.goalCreateState != nil || store.showTodoEditor) {
+        NavigationStack(path: $store.scope(state: \.path, action: \.path)) {
+            PaneSplitView {
                 homeContent
-            } detail: {
-                if let goalStore = store.scope(state: \.sheet?.goalCreateState, action: \.sheet.presented.goalCreate) {
-                    GoalCreateView(store: goalStore)
-                } else if let editorStore = store.scope(
-                    state: \.fullScreenCover?.todoEditor,
-                    action: \.fullScreenCover.presented.todoEditor
-                ) {
-                    TodoEditorView(store: editorStore, onClose: { store.send(.fullScreenCover(.dismiss)) })
-                }
             }
             // 새 개발 목표에 연결한 Todo는 세부 정보 사이드바에 표시
-            .compositionRight(isActive: store.sheet?.goalCreateState != nil) {
-                if let goalStore = store.scope(state: \.sheet?.goalCreateState, action: \.sheet.presented.goalCreate) {
+            .compositionRight(isActive: store.goalCreate != nil) {
+                if let goalStore = store.scope(state: \.goalCreate, action: \.goalCreate.presented) {
                     GoalCreateSideBarContent(store: goalStore)
                 }
             }
             // 사이드바가 있으면 카테고리 관리를 시트 대신 홈 자리에 표시
             .compositionCenter(
-                item: $store.scope(state: \.sheet?.categoryManageState, action: \.sheet.categoryManage),
+                item: $store.scope(state: \.categoryManage, action: \.categoryManage),
                 narrow: .sheet,
                 isActive: isSelected,
                 closesRight: true
             ) { manageStore in
                 CategoryManageView(store: manageStore) {
-                    store.send(.sheet(.dismiss))
+                    store.send(.categoryManage(.dismiss))
                 }
             }
             // 좁은 창은 개발 목표를 홈 내비게이션에 쌓고, 넓어지면 같은 상태를 홈 자리에 표시하고 기록 작성은 오른쪽 칸에 표시
             .compositionCenter(
-                item: $store.scope(state: \.sheet?.goalDetailState, action: \.sheet.goalDetail),
+                item: $store.scope(state: \.goalDetail, action: \.goalDetail),
                 narrow: .push
             ) { goalStore in
                 GoalDetailView(store: goalStore, windowEvent: windowEvent)
-                    .id(goalDetailID)
+                    .id(goalStore.goalId)
             }
-            .navigationDestination(
-                for: HomeRoute.self,
-                interactivePop: {
-                    switch $0 {
-                    case .category: true
-                    case .search: true
-                    }
-                },
-                destination: {
-                    destinationView($0)
-                        .environment(\.showsPaneTitleBar, usesPaneLayout)
-                        // 위에 쌓은 화면에 가려진 동안에도 창 폭이 바뀐 것을 받아 쌓아 연 상세를 옮김
-                        .environment(\.usesDesktopLayout, usesDesktopLayout)
+        } destination: { pathStore in
+            Group {
+                switch pathStore.case {
+                case .category(let listStore):
+                    TodoListView(store: listStore, windowEvent: windowEvent)
+                case .search(let searchStore):
+                    SearchView(store: searchStore, windowEvent: windowEvent)
                 }
-            )
+            }
+            .stackDestination(usesDesktopLayout: usesDesktopLayout, usesPaneLayout: usesPaneLayout)
         }
         .desktopNavigationTransition()
-        .preference(key: SideBarLocationPreferenceKey.self, value: sideBarLocation)
-        .preference(
-            key: SideBarContentPreferenceKey.self,
-            value: SideBarContent(
-                todoCategories: store.preferences.filter(\.isVisible),
-                developmentGoals: store.developmentGoalItems.map { SideBarGoal(id: $0.id, title: $0.goal.title) }
-            )
-        )
-        // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
-        .onChange(of: sideBarRequest, initial: true) { _, request in
-            handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
+        .onChange(of: usesDesktopLayout, initial: true) { _, usesDesktopLayout in
+            store.send(.binding(.set(\.usesDesktopLayout, usesDesktopLayout)))
         }
-        // 작성 중인 새 개발 목표나 수정 중인 개발 목표를 버린 뒤 미뤄 둔 사이드바 요청 처리
-        .onChange(of: store.sideBarRequestAfterGoalDiscard) { _, request in
-            handleSideBarRequest(request, showsSheetAsPane: showsSheetAsPane)
+        .compositionLeft(location: store.sideBarLocation, content: store.sideBarContent) {
+            // 홈이 아닌 탭으로 켜져도 사이드바 하위 항목을 채움
+            if !isSelected {
+                store.send(.view(.fetchData))
+            }
+        } onRequest: { request in
+            store.send(.view(.sideBarRequested(request)))
         }
         .onAppear {
             store.send(.view(.startObserving))
-        }
-        // 사이드바가 있으면 홈이 아닌 탭으로 켜지거나 좁은 창에서 넓어져도 사이드바 하위 항목을 채우도록 불러옴
-        .onChange(of: usesDesktopLayout, initial: true) { _, usesDesktopLayout in
-            if usesDesktopLayout && !isSelected {
-                store.send(.view(.fetchData))
-            }
         }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
@@ -140,100 +92,6 @@ public struct HomeView: View {
             }
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        // 좁은 창의 새로 만들기
-        .prominentSheet(
-            item: Binding(
-                get: { store.showContentPicker && !showsPickerAsPopover ? sheetBinding.wrappedValue : nil },
-                // 앞 시트가 늦게 닫히며 보내는 닫힘이 칸이나 팝오버로 연 화면을 지우지 않도록 지금 상태로 판단
-                set: { sheet in
-                    // 내비게이션에 쌓은 개발 목표는 시트 닫힘으로 지우지 않음
-                    guard store.sheet?.goalDetailState == nil else { return }
-                    guard !usesDesktopLayout
-                        || store.sheet?.categoryManageState == nil
-                        && store.sheet?.goalCreateState == nil
-                        && store.sheet?.goalDetailState == nil
-                    else { return }
-                    guard !(usesPaneLayout && store.showContentPicker) else { return }
-                    sheetBinding.wrappedValue = sheet
-                }
-            )
-        ) { _ in
-            HomeContentPicker(store: store) { store.send(.view(.tapTodoCategory($0))) }
-        }
-        // 좁은 창은 새 개발 목표를 닫기, 저장 버튼으로만 닫는 시트로 작성
-        .compositionEditor(
-            item: $store.scope(state: \.sheet?.goalCreateState, action: \.sheet.goalCreate)
-                .activePresentation(when: isSelected),
-            narrow: .sheet
-        ) { goalStore in
-            GoalCreateView(store: goalStore)
-        }
-        .compositionEditor(
-            item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
-                .activePresentation(when: isSelected),
-            content: coverContent
-        )
-    }
-
-    private func handleSideBarRequest(_ request: SideBarRequest?, showsSheetAsPane: Bool) {
-        // 이미 표시 중인 개발 목표를 다시 누르면 다시 열지 않고 쌓아 연 화면만 닫아 개발 목표 첫 화면 표시
-        if case .open(.developmentGoal(let goalID))? = request?.action,
-           store.sheet?.goalDetailState?.goalId == goalID {
-            store.send(.sheet(.presented(.goalDetail(.view(.returnToGoal)))))
-            return
-        }
-        // 작성 중인 새 개발 목표나 수정 중인 개발 목표가 있으면 칸을 닫기 전에 버릴지 물음
-        if let request,
-           request.action != .createTodo,
-           store.sheet?.goalCreateState?.hasDraft == true || store.sheet?.goalDetailState?.goalEdit?.hasDraft == true {
-            store.send(.view(.closeGoalDraftForSideBarRequest(request)))
-            return
-        }
-        // 개발 목표 칸을 다른 화면으로 바꾸면 칸에서 바꾼 목표와 기록을 시트를 닫을 때처럼 홈과 사이드바 목록에 반영
-        let refreshesDevelopmentGoals = request != nil
-            && showsSheetAsPane
-            && store.sheet?.isDevelopmentGoalPresentation == true
-        // 사이드바로 다른 곳을 열면 칸으로 표시하던 화면은 닫음
-        if showsSheetAsPane, case .open = request?.action {
-            store.send(.store(.setSheet(nil)))
-        }
-        switch request?.action {
-        case .open(.home):
-            router.path = []
-        case .open(.todoCategory(let id)):
-            guard let item = store.preferences.first(where: { $0.id == id }) else { break }
-            router.replace(with: .category(item))
-        case .open(.developmentGoal(let goalID)):
-            // 사이드바가 있으면 개발 목표를 홈 루트에 그려 위에 쌓인 목록을 비움
-            if usesDesktopLayout {
-                router.path = []
-            }
-            store.send(.view(.tapDevelopmentGoal(goalID)))
-        case .createTodo:
-            // 홈 작성 버튼처럼 연결이 끊기면 열지 않고 쌓아 연 검색도 그대로 둠
-            guard store.isNetworkConnected else { break }
-            // 쌓아 연 검색은 내리고 홈 작성 버튼과 같은 방식으로 작성
-            if router.root == .search {
-                router.path = []
-            }
-            // 카테고리 목록이 보이면 그 목록이 자기 작성 버튼과 같은 방식으로 작성
-            guard router.root == nil else { break }
-            store.send(.store(.setPresentation(.contentPicker, true)))
-        case .manageTodoCategory:
-            // 카테고리를 불러오기 전 빈 목록으로 저장하지 않도록 무시
-            guard !store.preferences.isEmpty else { break }
-            // 사이드바가 있으면 카테고리 관리 칸을 홈 루트에 그려 위에 쌓인 목록을 비움
-            if usesDesktopLayout {
-                router.path = []
-            }
-            store.send(.view(.tapManageTodoCategory))
-        case .open, nil:
-            break
-        }
-        // 버릴지 묻는 중이면 칸이 그대로라 다시 불러오지 않음
-        if refreshesDevelopmentGoals && store.actionAfterGoalDiscard == nil {
-            store.send(.view(.fetchData))
-        }
     }
 
     private var homeContent: some View {
@@ -253,6 +111,31 @@ public struct HomeView: View {
                         .sharedBackgroundHidden()
                 }
             }
+            // 좁은 창은 새로 만들기를 시트로, 칸으로 나눈 화면은 만들기 버튼 옆 팝오버로 표시
+            // 버튼 옆으로 붙으면 위쪽이 상태 표시 영역에 가려지므로 버튼 아래로 표시
+            .compositionPicker(
+                isPresented: $store.showContentPicker,
+                isActive: isSelected,
+                arrowEdge: .top,
+                maxHeight: min(640, store.visibleHeight)
+            ) {
+                HomeContentPicker(store: store) { store.send(.view(.tapTodoCategory($0))) }
+            }
+            // 사이드바가 있으면 새 Todo를 홈 오른쪽 칸에서 작성
+            .compositionEditor(
+                item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover),
+                isActive: isSelected
+            ) { coverStore, onClose in
+                coverContent(coverStore, onClose: onClose)
+            }
+            // 좁은 창은 새 개발 목표를 닫기, 저장 버튼으로만 닫는 시트로 작성하고 사이드바가 있으면 홈 오른쪽 칸에서 작성
+            .compositionEditor(
+                item: $store.scope(state: \.goalCreate, action: \.goalCreate),
+                narrow: .sheet,
+                isActive: isSelected
+            ) { goalStore, _ in
+                GoalCreateView(store: goalStore)
+            }
     }
 
     private var duoToolbarItems: some ToolbarContent {
@@ -260,7 +143,7 @@ public struct HomeView: View {
             // 접힌 뒤 펼칠 때 레일 아이콘이 사라지는 현상 방지
             Group {
                 Button {
-                    router.push(.search)
+                    store.send(.view(.tapSearch))
                 } label: {
                     Image(systemName: "magnifyingglass")
                 }
@@ -281,26 +164,7 @@ public struct HomeView: View {
             PaneTitleBar(Text("nav_home", bundle: PresentationResources.bundle)) {
                 searchButton
                 HomeCreateButton(store: store)
-                    .popover(
-                        isPresented: Binding(
-                            get: { isSelected && store.showContentPicker },
-                            // 좁은 창으로 바뀌며 팝오버가 닫혀도 같은 상태를 시트로 다시 그림
-                            set: { isPresented in
-                                if usesPaneLayout {
-                                    store.send(.store(.setPresentation(.contentPicker, isPresented)))
-                                }
-                            }
-                        ),
-                        // 버튼 옆으로 붙으면 위쪽이 상태 표시 영역에 가려지므로 버튼 아래로 표시
-                        arrowEdge: .top
-                    ) {
-                        HomeContentPicker(store: store) { store.send(.view(.tapTodoCategory($0))) }
-                            // 화면이 낮거나 Duo 접는 선에 걸리면 팝오버 높이를 줄이고 목록을 스크롤
-                            .frame(width: 320 * AdaptiveSize.boardScale)
-                            .frame(minHeight: 0, idealHeight: min(640, store.visibleHeight), maxHeight: min(640, store.visibleHeight))
-                            .presentationBackground(Color.secondaryBackground)
-                            .presentationCompactAdaptation(.popover)
-                    }
+                    .compositionPickerAnchor()
             }
         } else {
             HStack(spacing: 0) {
@@ -325,7 +189,7 @@ public struct HomeView: View {
     @ViewBuilder
     private var searchButton: some View {
         // 모든 기기에서 덮는 화면 대신 홈 내비게이션에 쌓아 열고, 사이드바가 있는 창은 사이드바 옆에 표시
-        let openSearch = { router.push(.search) }
+        let openSearch = { _ = store.send(.view(.tapSearch)) }
 
         if !usesPaneLayout {
             Button(action: openSearch) {
@@ -342,36 +206,16 @@ public struct HomeView: View {
 
     @ViewBuilder
     private func coverContent(
-        _ coverStore: Store<HomeFeature.FullScreenCoverState, HomeFeature.FullScreenCover>
+        _ coverStore: Store<HomeFeature.FullScreenCoverState, HomeFeature.FullScreenCover>,
+        onClose: (() -> Void)?
     ) -> some View {
         switch coverStore.destination {
         case .todoEditor:
             if let todoEditorStore = coverStore.scope(state: \.todoEditor, action: \.todoEditor) {
-                TodoEditorView(store: todoEditorStore)
+                TodoEditorView(store: todoEditorStore, onClose: onClose)
             }
         }
     }
-
-    @ViewBuilder
-    private func destinationView(_ route: HomeRoute) -> some View {
-        switch route {
-        case .category(let item):
-            TodoListView(
-                store: Store(initialState: TodoListFeature.State(category: item.todoCategory)) {
-                    TodoListFeature()
-                },
-                windowEvent: windowEvent
-            )
-            .id(item.id)
-        case .search:
-            SearchView(windowEvent: windowEvent)
-        }
-    }
-}
-
-public enum HomeRoute: Hashable {
-    case category(TodoCategoryItem)
-    case search
 }
 
 private struct HomeCreateButton: View {
@@ -559,7 +403,7 @@ private struct HomeTodoCategoryLink: View {
     var body: some View {
         let tileSize = isiOSAppOnMac ? 37 * AdaptiveSize.boardScale : 40
 
-        NavigationLink(value: HomeRoute.category(item)) {
+        NavigationLink(state: HomeFeature.Path.State.category(TodoListFeature.State(category: item.todoCategory))) {
             VStack(spacing: 6) {
                 Image(systemName: item.symbolName)
                     .font(.adaptive(.body).weight(.medium))
@@ -609,7 +453,7 @@ private struct HomeContentPicker: View {
                     HStack {
                         if isiOSAppOnMac {
                             Button {
-                                store.send(.sheet(.presented(.tapCloseButton)))
+                                store.send(.store(.setPresentation(.contentPicker, false)))
                             } label: {
                                 Image(systemName: "xmark")
                                     .font(.adaptive(.body))
@@ -620,7 +464,7 @@ private struct HomeContentPicker: View {
                             .buttonStyle(.plain)
                         } else {
                             Button {
-                                store.send(.sheet(.presented(.tapCloseButton)))
+                                store.send(.store(.setPresentation(.contentPicker, false)))
                             } label: {
                                 Image(systemName: "xmark")
                             }
@@ -643,7 +487,7 @@ private struct HomeContentPicker: View {
                     background: .secondaryBackground
                 ) {
                     RecordTopBarTextButton(RecordPresentation.text("common_close")) {
-                        store.send(.sheet(.presented(.tapCloseButton)))
+                        store.send(.store(.setPresentation(.contentPicker, false)))
                     }
                 } trailing: {
                     EmptyView()

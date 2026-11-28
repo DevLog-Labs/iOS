@@ -39,7 +39,7 @@ public struct ProfileView: View {
     public var body: some View {
         NavigationStack {
             // 사이드바가 있는 창은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
-            PaneSplitView(splitsOnDesktop: store.showsDetailInPane && store.detail != nil) {
+            PaneSplitView {
                 ScrollView {
                     // 카드 없이 각 섹션이 페이지 여백을 가짐
                     LazyVStack(alignment: .leading, spacing: 0) {
@@ -67,21 +67,31 @@ public struct ProfileView: View {
                     }
                 }
                 .background(Color.background)
-            } detail: {
-                if store.showsDetailInPane,
-                   let detailStore = store.scope(state: \.detail, action: \.detail.presented) {
+                // 좁은 창은 프로필 위에 쌓고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+                // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
+                .compositionDetail(
+                    item: $store.scope(state: \.detail, action: \.detail),
+                    inPane: store.showsDetailInPane,
+                    isActive: isSelected
+                ) { detailStore, onClose in
                     // 활동 기록 Todo는 고칠 수 없어 편집 결과를 받을 창 이벤트 없이 표시
                     TodoDetailView(
                         store: detailStore,
                         windowEvent: detailStore.showEditButton ? windowEvent : nil,
-                        isPaneDetail: true,
-                        onClose: { store.send(.detail(.dismiss)) }
+                        isPaneDetail: onClose != nil,
+                        onClose: onClose
                     )
-                    .environment(\.showsPaneTitleBar, true)
                     // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회
                     .id(detailStore.todoId)
-                } else {
-                    PanePlaceholder()
+                } panel: { detailStore in
+                    TodoDetailPanel(
+                        store: detailStore,
+                        location: Text("nav_profile", bundle: PresentationResources.bundle),
+                        windowEvent: detailStore.showEditButton ? windowEvent : nil,
+                        onMoveToPane: {
+                            store.send(.binding(.set(\.showsDetailInPane, true)))
+                        }
+                    )
                 }
             }
             .compositionRight(isActive: store.showsDetailInPane && store.detail != nil) {
@@ -93,24 +103,6 @@ public struct ProfileView: View {
                     )
                     .id(detail.todoId)
                 }
-            }
-            // 좁은 창은 프로필 위에 쌓고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
-            // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
-            .compositionDetail(
-                item: $store.scope(state: \.detail, action: \.detail),
-                inPane: store.showsDetailInPane,
-                isActive: isSelected
-            ) { detailStore in
-                TodoDetailView(store: detailStore, windowEvent: detailStore.showEditButton ? windowEvent : nil)
-            } panel: { detailStore in
-                TodoDetailPanel(
-                    store: detailStore,
-                    location: Text("nav_profile", bundle: PresentationResources.bundle),
-                    windowEvent: detailStore.showEditButton ? windowEvent : nil,
-                    onMoveToPane: {
-                        store.send(.binding(.set(\.showsDetailInPane, true)))
-                    }
-                )
             }
             // 좁은 창은 설정 목록과 고른 항목 화면을 프로필 위에 쌓고, 사이드바가 있는 창은 창 전체 설정 화면에 그려 쌓지 않음
             .navigationDestination(

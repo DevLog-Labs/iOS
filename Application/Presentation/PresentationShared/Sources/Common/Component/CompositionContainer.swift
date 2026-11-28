@@ -17,20 +17,24 @@ public enum CompositionNarrow {
 public extension View {
     // 읽는 화면
     // 좁은 창은 내비게이션에 쌓거나 시트로 띄우고, 사이드바가 있는 창은 사이드바까지 덮는 상세 판으로 띄움
-    // inPane이 참이면 사이드바가 있는 창에서 상세 판 대신 PaneSplitView의 detail이 그림
-    // isActive가 거짓이면 창 위에 덮는 시트와 상세 판은 띄우지 않고, 내비게이션에 쌓은 화면은 그대로 둠
+    // inPane이 참이면 사이드바가 있는 창에서 상세 판 대신 이 화면을 감싼 PaneSplitView의 상세 칸에 올림
+    // emptyPane이 참이면 고른 항목이 없어도 상세 칸에 안내를 올림
+    // isActive가 거짓이면 창 위에 덮는 시트와 상세 판은 띄우지 않고, 내비게이션에 쌓은 화면과 상세 칸은 그대로 둠
+    // content는 상세 칸에 그릴 때만 닫는 동작을 받음
     func compositionDetail<Item: Identifiable, Content: View, Panel: View>(
         item: Binding<Item?>,
         narrow: CompositionNarrow = .push,
         inPane: Bool = false,
+        emptyPane: Bool = false,
         isActive: Bool = true,
-        @ViewBuilder content: @escaping (Item) -> Content,
+        @ViewBuilder content: @escaping (Item, (() -> Void)?) -> Content,
         @ViewBuilder panel: @escaping (Item) -> Panel
     ) -> some View {
         modifier(CompositionDetailModifier(
             item: item,
             narrow: narrow,
             inPane: inPane,
+            emptyPane: emptyPane,
             isActive: isActive,
             detail: content,
             panel: panel
@@ -38,15 +42,25 @@ public extension View {
     }
 
     // 저장이나 닫기 버튼으로만 닫는 작성 화면
-    // 좁은 창은 전체 화면이나 시트로 띄우고, 사이드바가 있는 창은 PaneSplitView의 detail이 그림
+    // 좁은 창은 전체 화면이나 시트로 띄우고, 사이드바가 있는 창은 이 화면을 감싼 PaneSplitView의 상세 칸에 올림
+    // 상세 칸에는 읽는 화면보다 작성 화면을 먼저 올리고, 작성 화면끼리는 바깥에 붙인 수정자의 화면을 올림
     // inPane이 거짓이면 사이드바가 있는 창에서도 시트로 띄움
+    // isActive가 거짓이면 창 위에 띄우지 않고 상세 칸은 그대로 둠
+    // content는 상세 칸에 그릴 때만 닫는 동작을 받음
     func compositionEditor<Item: Identifiable, Content: View>(
         item: Binding<Item?>,
         narrow: CompositionNarrow = .cover,
         inPane: Bool = true,
-        @ViewBuilder content: @escaping (Item) -> Content
+        isActive: Bool = true,
+        @ViewBuilder content: @escaping (Item, (() -> Void)?) -> Content
     ) -> some View {
-        modifier(CompositionEditorModifier(item: item, narrow: narrow, inPane: inPane, editor: content))
+        modifier(CompositionEditorModifier(
+            item: item,
+            narrow: narrow,
+            inPane: inPane,
+            isActive: isActive,
+            editor: content
+        ))
     }
 
     // 바꾸면 바로 저장하는 시트
@@ -124,11 +138,13 @@ private final class LiveLayout {
 private struct CompositionDetailModifier<Item: Identifiable, Detail: View, Panel: View>: ViewModifier {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var layout = LiveLayout()
+    @State private var id = UUID()
     let item: Binding<Item?>
     let narrow: CompositionNarrow
     let inPane: Bool
+    let emptyPane: Bool
     let isActive: Bool
-    let detail: (Item) -> Detail
+    let detail: (Item, (() -> Void)?) -> Detail
     let panel: (Item) -> Panel
 
     func body(content: Content) -> some View {
@@ -138,19 +154,40 @@ private struct CompositionDetailModifier<Item: Identifiable, Detail: View, Panel
         let panelItem = item.activePresentation(when: isActive)
             .hiddenInPane { !layout.usesDesktopLayout || layout.inPane }
 
+        narrowContent(content, item: narrowItem)
+            .detailPanel(item: panelItem, content: panel)
+            // 가려진 탭에서도 상세 칸을 그대로 두도록 isActive와 상관없이 올림
+            .transformPreference(PaneDetailContentPreferenceKey.self) { value in
+                guard inPane, value == nil, item.wrappedValue != nil || emptyPane else { return }
+                value = PaneDetailContent(id: id, isEditor: false) {
+                    AnyView(paneContent)
+                }
+            }
+    }
+
+    @ViewBuilder
+    private func narrowContent(_ content: Content, item: Binding<Item?>) -> some View {
         switch narrow {
         case .push:
             content
-                .navigationDestination(item: narrowItem, interactivePop: true, destination: detail)
-                .detailPanel(item: panelItem, content: panel)
+                .navigationDestination(item: item, interactivePop: true) { detail($0, nil) }
         case .sheet:
             content
-                .prominentSheet(item: narrowItem.activePresentation(when: isActive), content: detail)
-                .detailPanel(item: panelItem, content: panel)
+                .prominentSheet(item: item.activePresentation(when: isActive)) { detail($0, nil) }
         case .cover:
             content
-                .fullScreenCover(item: narrowItem.activePresentation(when: isActive), content: detail)
-                .detailPanel(item: panelItem, content: panel)
+                .fullScreenCover(item: item.activePresentation(when: isActive)) { detail($0, nil) }
+        }
+    }
+
+    // 상세 칸이 그릴 때마다 지금 고른 항목을 읽음
+    @ViewBuilder
+    private var paneContent: some View {
+        if let value = item.wrappedValue {
+            detail(value, { item.wrappedValue = nil })
+                .environment(\.showsPaneTitleBar, true)
+        } else {
+            PanePlaceholder()
         }
     }
 }
@@ -158,33 +195,61 @@ private struct CompositionDetailModifier<Item: Identifiable, Detail: View, Panel
 private struct CompositionEditorModifier<Item: Identifiable, Editor: View>: ViewModifier {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var layout = LiveLayout()
+    @State private var id = UUID()
     let item: Binding<Item?>
     let narrow: CompositionNarrow
     let inPane: Bool
-    let editor: (Item) -> Editor
+    let isActive: Bool
+    let editor: (Item, (() -> Void)?) -> Editor
 
     func body(content: Content) -> some View {
         // 넓은 창으로 바뀌어 칸에 옮겨 그린 뒤 늦게 닫히는 화면은 작성 중인 초안을 지우지 않음
         let layout = layout.update(usesDesktopLayout: usesDesktopLayout)
-        let narrowItem = item.hiddenInPane { layout.usesDesktopLayout }
+        let activeItem = item.activePresentation(when: isActive)
+        let narrowItem = activeItem.hiddenInPane { layout.usesDesktopLayout }
 
+        presentedContent(content, activeItem: activeItem, narrowItem: narrowItem, layout: layout)
+            // 가려진 탭에서도 작성 중인 화면을 상세 칸에 그대로 두도록 isActive와 상관없이 올림
+            .transformPreference(PaneDetailContentPreferenceKey.self) { value in
+                guard inPane, item.wrappedValue != nil else { return }
+                value = PaneDetailContent(id: id, isEditor: true) {
+                    AnyView(paneContent)
+                }
+            }
+    }
+
+    @ViewBuilder
+    private func presentedContent(
+        _ content: Content,
+        activeItem: Binding<Item?>,
+        narrowItem: Binding<Item?>,
+        layout: LiveLayout
+    ) -> some View {
         switch (narrow, inPane) {
         case (.cover, true):
             content
-                .fullScreenCover(item: narrowItem, content: editor)
+                .fullScreenCover(item: narrowItem) { editor($0, nil) }
         case (.sheet, true):
             content
-                .prominentSheet(item: narrowItem, content: editor)
+                .prominentSheet(item: narrowItem) { editor($0, nil) }
         case (.cover, false):
             content
-                .fullScreenCover(item: narrowItem, content: editor)
-                .prominentSheet(item: item.hiddenInPane { !layout.usesDesktopLayout }, content: editor)
+                .fullScreenCover(item: narrowItem) { editor($0, nil) }
+                .prominentSheet(item: activeItem.hiddenInPane { !layout.usesDesktopLayout }) { editor($0, nil) }
         case (.sheet, false):
             content
-                .prominentSheet(item: item, content: editor)
+                .prominentSheet(item: activeItem) { editor($0, nil) }
         case (.push, _):
             content
-                .navigationDestination(item: narrowItem, interactivePop: true, destination: editor)
+                .navigationDestination(item: narrowItem, interactivePop: true) { editor($0, nil) }
+        }
+    }
+
+    // 상세 칸이 그릴 때마다 지금 작성 중인 항목을 읽음
+    @ViewBuilder
+    private var paneContent: some View {
+        if let value = item.wrappedValue {
+            editor(value, { item.wrappedValue = nil })
         }
     }
 }

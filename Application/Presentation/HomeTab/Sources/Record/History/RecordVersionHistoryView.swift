@@ -65,7 +65,7 @@ struct RecordVersionHistoryView: View {
         .background(Color.background.ignoresSafeArea())
         .duoToolbarVisibility(showsBackButton: true)
         // 사이드바가 있는 창은 이전 버전을 사이드바까지 덮는 상세 판으로 열기
-        .compositionDetail(item: versionDetail.hiddenInPane(isHidden)) { destination in
+        .compositionDetail(item: versionDetail.hiddenInPane(isHidden)) { destination, _ in
             RecordVersionDetailView(
                 store: store,
                 version: destination.version

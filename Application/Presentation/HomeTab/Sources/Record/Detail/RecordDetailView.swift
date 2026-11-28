@@ -64,7 +64,7 @@ public struct RecordDetailView: View {
         .onAppear { store.send(.view(.appear(onDesktop: usesDesktopLayout))) }
         .prominentAlert(store, state: \.alert, action: \.alert)
         // 기록 정정은 좁은 창에서 닫기, 저장, 확정 버튼으로만 닫는 전체 화면이고 넓은 창에서 시트
-        .compositionEditor(item: editor.hiddenInPane(isHidden), inPane: false) { _ in
+        .compositionEditor(item: editor.hiddenInPane(isHidden), inPane: false) { _, _ in
             correctionEditor
         }
         .navigationDestination(
