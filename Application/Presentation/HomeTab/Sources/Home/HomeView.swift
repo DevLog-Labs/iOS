@@ -73,7 +73,7 @@ public struct HomeView: View {
                 } else if usesDesktopLayout,
                           let goalStore = store.scope(state: \.sheet?.goalDetailState, action: \.sheet.presented.goalDetail) {
                     // 홈 자리에 개발 목표를 표시하고 기록 작성은 오른쪽 칸에 표시
-                    GoalDetailView(store: goalStore)
+                    GoalDetailView(store: goalStore, windowEvent: windowEvent)
                         .id(goalDetailID)
                 } else if usesPaneLayout,
                           let editorStore = store.scope(
@@ -107,7 +107,7 @@ public struct HomeView: View {
                     .hiddenInPane(usesDesktopLayout),
                 interactivePop: true
             ) { goalStore in
-                GoalDetailView(store: goalStore)
+                GoalDetailView(store: goalStore, windowEvent: windowEvent)
             }
         }
         .desktopNavigationTransition()
@@ -357,11 +357,9 @@ public struct HomeView: View {
             HomeContentPicker(store: store) { store.send(.view(.tapTodoCategory($0))) }
         case .reorderTodo:
             if let manageStore = sheetStore.scope(state: \.categoryManageState, action: \.categoryManage) {
-                // 넓은 창으로 바뀌어 닫히는 시트가 칸으로 연 화면의 세부 정보 사이드바를 가져가지 않음
                 CategoryManageView(store: manageStore) {
                     store.send(.sheet(.dismiss))
                 }
-                .environment(\.selectDetailSideBarTarget, nil)
             }
         case .goalCreate:
             if let goalStore = sheetStore.scope(state: \.goalCreateState, action: \.goalCreate) {

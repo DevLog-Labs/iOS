@@ -163,11 +163,12 @@ public struct TodayView: View {
                     } : nil
                 )
             }
-            .detailSideBarTarget(
-                sections.flatMap(\.items)
-                    .first { $0.id == store.selectedTodoId }
-                    .map { .todo(id: $0.id, isEditable: true) }
-            )
+            .compositionRight(isActive: sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }) {
+                if let todoId = store.selectedTodoId {
+                    TodoDetailSideBarView(todoId: todoId, isEditable: true, windowEvent: windowEvent)
+                        .id(todoId)
+                }
+            }
             .navigationDestination(
                 for: TodayRoute.self,
                 interactivePop: { _ in true },

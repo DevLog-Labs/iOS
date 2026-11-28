@@ -56,7 +56,6 @@ private struct DetailPanelFrame<Content: View>: View {
                     // 판 안 제목 줄은 창 사이드바를 펴거나 세부 정보 사이드바를 여는 버튼 없이 표시
                     .environment(\.expandSideBar, nil)
                     .environment(\.showDetailSideBar, nil)
-                    .environment(\.selectDetailSideBarTarget, nil)
                     .environment(\.windowControlsInset, 0)
                     .environment(\.showsPaneTitleBar, false)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)

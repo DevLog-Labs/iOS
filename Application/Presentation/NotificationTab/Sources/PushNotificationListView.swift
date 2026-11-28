@@ -13,8 +13,9 @@ public struct PushNotificationListView: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var store: StoreOf<PushNotificationListFeature>
     private let isSelected: Bool
+    private let windowEvent: TodoEditorWindowEvent
 
-    public init(isSelected: Bool) {
+    public init(isSelected: Bool, windowEvent: TodoEditorWindowEvent) {
         @Dependency(\.fetchPushNotificationQueryUseCase) var fetchQueryUseCase
         self._store = State(initialValue: Store(
             initialState: PushNotificationListFeature.State(
@@ -24,6 +25,7 @@ public struct PushNotificationListView: View {
             PushNotificationListFeature()
         })
         self.isSelected = isSelected
+        self.windowEvent = windowEvent
     }
 
     public var body: some View {
@@ -49,9 +51,12 @@ public struct PushNotificationListView: View {
                 )
             }
             // 오른쪽 칸은 칸 제목 줄 정보 버튼 대신 창 오른쪽 세부 정보 사이드바에 속성 표시
-            .detailSideBarTarget(
-                showsPane ? store.selectedTodoId.map { .todo(id: $0.id, isEditable: false) } : nil
-            )
+            .compositionRight(isActive: showsPane && store.selectedTodoId != nil) {
+                if let todoId = store.selectedTodoId?.id {
+                    TodoDetailSideBarView(todoId: todoId, isEditable: false, windowEvent: windowEvent)
+                        .id(todoId)
+                }
+            }
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(item: sheetStore.activePresentation(when: isSelected && !usesDesktopLayout)) { store in

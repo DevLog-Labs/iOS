@@ -15,6 +15,7 @@ public struct GoalDetailView: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<GoalDetailFeature>
+    let windowEvent: TodoEditorWindowEvent
 
     public var body: some View {
         // 좁은 창은 홈 내비게이션에 쌓고, 사이드바가 있으면 홈 내비게이션 안의 칸으로 표시
@@ -135,7 +136,12 @@ public struct GoalDetailView: View {
                 showsBackOnDesktop: true
             )
             .environment(\.showsPaneTitleBar, usesDesktopLayout)
-            .detailSideBarTarget(.todo(id: $0.todoId, isEditable: false))
+            .compositionRight {
+                if let todoId = store.todoDetail?.todoId {
+                    TodoDetailSideBarView(todoId: todoId, isEditable: false, windowEvent: windowEvent)
+                        .id(todoId)
+                }
+            }
         }
         .onAppear { store.send(.view(.appear(onDesktop: usesDesktopLayout))) }
     }

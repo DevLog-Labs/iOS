@@ -7,13 +7,6 @@
 
 import SwiftUI
 
-// 세부 정보 사이드바에 속성을 표시할 대상
-public enum DetailSideBarTarget: Hashable {
-    // 고칠 수 없는 활동 기록 Todo는 읽기 전용
-    // 다른 곳에서 바꾼 Todo를 다시 조회하도록 목록이 올리는 revision
-    case todo(id: String, isEditable: Bool, revision: Int = 0)
-}
-
 // 사이드바가 있는 창 오른쪽에 두는 세부 정보 사이드바
 public struct DetailSideBar<Content: View>: View {
     private let onClose: () -> Void
@@ -55,34 +48,6 @@ public struct DetailSideBar<Content: View>: View {
     }
 }
 
-public extension DetailSideBar where Content == DetailSideBarTargetContent {
-    init(
-        target: DetailSideBarTarget?,
-        windowEvent: TodoEditorWindowEvent?,
-        onClose: @escaping () -> Void
-    ) {
-        self.init(onClose: onClose) {
-            DetailSideBarTargetContent(target: target, windowEvent: windowEvent)
-        }
-    }
-}
-
-// 창이 그리는 사이드바의 대상별 내용
-public struct DetailSideBarTargetContent: View {
-    let target: DetailSideBarTarget?
-    let windowEvent: TodoEditorWindowEvent?
-
-    public var body: some View {
-        switch target {
-        case .todo(let id, let isEditable, _):
-            TodoDetailSideBarView(todoId: id, isEditable: isEditable, windowEvent: windowEvent)
-                .id(target)
-        case nil:
-            DetailSideBarPlaceholder()
-        }
-    }
-}
-
 // 고른 대상이 없을 때의 안내
 public struct DetailSideBarPlaceholder: View {
     public init() { }
@@ -102,11 +67,6 @@ public struct DetailSideBarPlaceholder: View {
 }
 
 public extension View {
-    // 지금 고른 대상을 세부 정보 사이드바에 표시
-    func detailSideBarTarget(_ target: DetailSideBarTarget?) -> some View {
-        modifier(DetailSideBarTargetModifier(target: target))
-    }
-
     // 이 화면의 세부 정보 사이드바 내용, 사이드바가 있는 창에서 SplitShell 오른쪽에 표시
     // 화면은 내용만 올리고 사이드바는 CompositionView가 그림
     func compositionRight<Content: View>(
@@ -141,25 +101,7 @@ public struct DetailSideBarContentPreferenceKey: PreferenceKey {
     }
 }
 
-private struct DetailSideBarTargetModifier: ViewModifier {
-    @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
-    @Environment(\.removeDetailSideBarTarget) private var removeDetailSideBarTarget
-    @State private var owner = UUID()
-    let target: DetailSideBarTarget?
-
-    func body(content: Content) -> some View {
-        content
-            .onAppear { selectDetailSideBarTarget?(target, owner) }
-            .onChange(of: target) { _, target in
-                selectDetailSideBarTarget?(target, owner)
-            }
-            // 화면을 벗어나면 고른 대상 해제
-            .onDisappear { removeDetailSideBarTarget?(owner) }
-    }
-}
-
 private struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
-    @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
     @State private var id = UUID()
     // 화면을 벗어나 가려진 동안은 내용을 올리지 않음
     @State private var isAppeared = false
@@ -167,8 +109,8 @@ private struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
     let sideBarContent: () -> SideBarContent
 
     func body(content: Content) -> some View {
-        // 세부 정보 사이드바 대상을 고를 수 없는 곳(상세 판, 좁은 창 시트)은 내용을 올리지 않음
-        let isShown = isActive && isAppeared && selectDetailSideBarTarget != nil
+        // 상세 판과 시트는 따로 덮는 화면이라 그 안에서 올린 내용은 창까지 오지 않음
+        let isShown = isActive && isAppeared
 
         content
             .transformPreference(DetailSideBarContentPreferenceKey.self) { value in

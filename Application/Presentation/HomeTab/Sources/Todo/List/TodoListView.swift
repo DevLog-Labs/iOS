@@ -85,9 +85,13 @@ struct TodoListView: View {
                 }
             )
         }
-        .detailSideBarTarget(
-            store.selectedTodoId.map { .todo(id: $0, isEditable: true, revision: store.detailRevision) }
-        )
+        // 옆 칸에 연 Todo의 속성은 세부 정보 사이드바에 표시하고, 목록에서 바꾸면 다시 조회
+        .compositionRight(isActive: store.selectedTodoId != nil) {
+            if let todoId = store.selectedTodoId {
+                TodoDetailSideBarView(todoId: todoId, isEditable: true, windowEvent: windowEvent)
+                    .id("\(todoId)-\(store.detailRevision)")
+            }
+        }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .onReceive(windowSubmits) { _ in
             // 상세 칸에서 편집한 Todo를 옆 목록에도 반영

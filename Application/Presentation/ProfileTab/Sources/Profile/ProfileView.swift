@@ -86,15 +86,20 @@ public struct ProfileView: View {
                     TodoDetailPane(todoId: nil, showEditButton: false)
                 }
             }
-            .detailSideBarTarget(store.selectedTodoRoute?.detailSideBarTarget)
+            .compositionRight(isActive: store.selectedTodoRoute?.todo != nil) {
+                if let todo = store.selectedTodoRoute?.todo {
+                    TodoDetailSideBarView(todoId: todo.id, isEditable: todo.isEditable, windowEvent: windowEvent)
+                        .id(todo.id)
+                }
+            }
             // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
             .detailPanel(item: $store.panelTodoRoute.activePresentation(when: isSelected && usesDesktopLayout)) { route in
-                if case .todo(let todoId, let isEditable, _)? = route.detailSideBarTarget {
+                if let todo = route.todo {
                     TodoDetailPanel(
-                        todoId: todoId,
+                        todoId: todo.id,
                         location: Text("nav_profile", bundle: PresentationResources.bundle),
-                        isEditable: isEditable,
-                        windowEvent: isEditable ? windowEvent : nil,
+                        isEditable: todo.isEditable,
+                        windowEvent: todo.isEditable ? windowEvent : nil,
                         onMoveToPane: {
                             store.send(.binding(.set(\.panelTodoRoute, nil)))
                             store.send(.binding(.set(\.selectedTodoRoute, route)))
@@ -341,10 +346,10 @@ public enum ProfileRoute: Hashable, Identifiable {
 
 private extension ProfileRoute {
     // 활동 기록 Todo는 고칠 수 없어 읽기 전용으로 표시
-    var detailSideBarTarget: DetailSideBarTarget? {
+    var todo: (id: String, isEditable: Bool)? {
         switch self {
-        case .activity(let todoId): .todo(id: todoId, isEditable: false)
-        case .recentTodo(let todoId): .todo(id: todoId, isEditable: true)
+        case .activity(let todoId): (todoId, false)
+        case .recentTodo(let todoId): (todoId, true)
         default: nil
         }
     }
