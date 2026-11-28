@@ -309,8 +309,8 @@ struct PushNotificationListFeatureTests {
         #expect(adapter.notifications.first?.isRead == true)
     }
 
-    @Test("syncSheetPresentation은 선택한 Todo를 시트로 표시한다")
-    func syncSheetPresentation은_선택한_Todo를_시트로_표시한다() async throws {
+    @Test("고른 알림의 Todo 상세를 닫으면 고른 알림도 비운다")
+    func 고른_알림의_Todo_상세를_닫으면_고른_알림도_비운다() async throws {
         let fetchSpy = PushNotificationListFetchUseCaseSpy(pages: [
             PushNotificationPage(
                 items: [
@@ -324,15 +324,12 @@ struct PushNotificationListFeatureTests {
         await adapter.fetchNotifications()
         await adapter.selectNotification("notification-1")
 
-        await adapter.syncSheetPresentation()
+        #expect(adapter.detailTodoId == "todo-1")
 
-        #expect(adapter.sheetTodoId == "todo-1")
+        await adapter.dismissDetail()
 
-        await adapter.dismissSheet()
-
-        #expect(adapter.sheetTodoId == nil)
+        #expect(adapter.detailTodoId == nil)
         #expect(adapter.selectedNotificationId == nil)
-        #expect(adapter.selectedTodoId == nil)
     }
 
     @Test("오른쪽 칸에서 연 알림을 시트로 옮긴 뒤 닫으면 오른쪽 칸 상태도 닫는다")
@@ -348,38 +345,13 @@ struct PushNotificationListFeatureTests {
         let adapter = PushNotificationListStoreTestAdapter(fetchUseCase: fetchSpy)
 
         await adapter.fetchNotifications()
-        await adapter.setDetailPanePresented(true)
+        await adapter.setShowsDetailInPane(true)
         await adapter.selectNotification("notification-1")
-        // 창이 좁아져 오른쪽 칸 대신 시트로 표시
-        await adapter.syncSheetPresentation()
+        // 창이 좁아져 오른쪽 칸 대신 같은 상세 상태를 시트로 표시한 뒤 닫음
+        await adapter.dismissDetail()
 
-        await adapter.dismissSheet()
-
-        #expect(adapter.selectedTodoId == nil)
-        #expect(!adapter.isDetailPanePresented)
-    }
-
-    @Test("hideSheet은 시트만 닫고 선택한 알림과 Todo를 유지한다")
-    func hideSheet은_시트만_닫고_선택한_알림과_Todo를_유지한다() async throws {
-        let fetchSpy = PushNotificationListFetchUseCaseSpy(pages: [
-            PushNotificationPage(
-                items: [
-                    makePushNotification(id: "notification-1", number: 1, isRead: true)
-                ],
-                nextCursor: nil
-            )
-        ])
-        let adapter = PushNotificationListStoreTestAdapter(fetchUseCase: fetchSpy)
-
-        await adapter.fetchNotifications()
-        await adapter.selectNotification("notification-1")
-        await adapter.syncSheetPresentation()
-
-        await adapter.hideSheet()
-
-        #expect(adapter.sheetTodoId == nil)
-        #expect(adapter.selectedNotificationId == "notification-1")
-        #expect(adapter.selectedTodoId?.id == "todo-1")
+        #expect(adapter.detailTodoId == nil)
+        #expect(!adapter.showsDetailInPane)
     }
 
     @Test("delete와 undoDelete는 숨김 상태와 최종 제거 상태를 제어한다")

@@ -19,7 +19,7 @@ protocol PushNotificationListStateDriving {
     var query: PushNotificationQuery { get }
     var nextCursor: PushNotificationCursor? { get }
     var selectedNotificationId: String? { get }
-    var selectedTodoId: TodoIdItem? { get }
+    var detailTodoId: String? { get }
     var appliedFilterCount: Int { get }
 
     func startObserving() async
@@ -45,10 +45,9 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
     var query: PushNotificationQuery { store.state.query }
     var nextCursor: PushNotificationCursor? { store.state.nextCursor }
     var selectedNotificationId: String? { store.state.selectedNotificationId }
-    var selectedTodoId: TodoIdItem? { store.state.selectedTodoId }
+    var detailTodoId: String? { store.state.detail?.todoId }
     var appliedFilterCount: Int { store.state.appliedFilterCount }
-    var sheetTodoId: String? { store.state.sheet?.todoId }
-    var isDetailPanePresented: Bool { store.state.isDetailPanePresented }
+    var showsDetailInPane: Bool { store.state.showsDetailInPane }
 
     init(
         fetchUseCase: FetchPushNotificationsUseCase = PushNotificationListFetchUseCaseSpy(),
@@ -148,20 +147,12 @@ struct PushNotificationListStoreTestAdapter: PushNotificationListStateDriving {
         await store.send(.view(.finishDeleteToast(notificationId)))
     }
 
-    func syncSheetPresentation() async {
-        await store.send(.view(.syncSheetPresentation))
+    func dismissDetail() async {
+        await store.send(.detail(.dismiss))
     }
 
-    func dismissSheet() async {
-        await store.send(.sheet(.dismiss))
-    }
-
-    func setDetailPanePresented(_ isPresented: Bool) async {
-        await store.send(.binding(.set(\.isDetailPanePresented, isPresented)))
-    }
-
-    func hideSheet() async {
-        await store.send(.view(.hideSheet))
+    func setShowsDetailInPane(_ showsDetailInPane: Bool) async {
+        await store.send(.binding(.set(\.showsDetailInPane, showsDetailInPane)))
     }
 
     func finishEffects() async {
