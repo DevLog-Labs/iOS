@@ -80,16 +80,42 @@ public extension View {
             center: content
         ))
     }
+
+    // 고르는 화면
+    // 좁은 창은 시트로 띄우고, 칸으로 나눈 화면은 compositionPickerAnchor를 붙인 버튼 옆 팝오버로 띄움
+    // maxHeight가 없으면 팝오버를 내용 높이에 맞춤
+    func compositionPicker<Content: View>(
+        isPresented: Binding<Bool>,
+        isActive: Bool = true,
+        arrowEdge: Edge? = nil,
+        maxHeight: CGFloat? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) -> some View {
+        modifier(CompositionPickerModifier(
+            isPresented: isPresented,
+            isActive: isActive,
+            arrowEdge: arrowEdge,
+            maxHeight: maxHeight,
+            picker: content
+        ))
+    }
+
+    // 바깥의 compositionPicker가 칸으로 나눈 화면에서 띄우는 팝오버를 붙일 버튼
+    func compositionPickerAnchor() -> some View {
+        modifier(CompositionPickerAnchorModifier())
+    }
 }
 
 // 창 폭이 바뀐 뒤 시스템이 표시할 때 받아 둔 바인딩으로 늦게 닫아도 지금 창 폭으로 거르도록 참조로 보관하는 값
 private final class LiveLayout {
     private(set) var usesDesktopLayout = false
+    private(set) var usesPaneLayout = false
     private(set) var inPane = false
 
     // 그릴 때마다 지금 값으로 바꾸고 같은 참조를 돌려줌
-    func update(usesDesktopLayout: Bool, inPane: Bool = false) -> LiveLayout {
+    func update(usesDesktopLayout: Bool = false, usesPaneLayout: Bool = false, inPane: Bool = false) -> LiveLayout {
         self.usesDesktopLayout = usesDesktopLayout
+        self.usesPaneLayout = usesPaneLayout
         self.inPane = inPane
         return self
     }
@@ -248,6 +274,97 @@ private struct CompositionSheetModifier<Item: Identifiable, Sheet: View, Right: 
             .onChange(of: reveal) {
                 if usesDesktopLayout {
                     setDetailSideBarPresented?(true)
+                }
+            }
+    }
+}
+
+// compositionPicker가 compositionPickerAnchor에 넘기는 팝오버 내용
+private struct CompositionPickerContent {
+    let isPresented: Binding<Bool>
+    let arrowEdge: Edge?
+    let maxHeight: CGFloat?
+    let content: () -> AnyView
+}
+
+private extension EnvironmentValues {
+    var compositionPicker: CompositionPickerContent? {
+        get { self[CompositionPickerKey.self] }
+        set { self[CompositionPickerKey.self] = newValue }
+    }
+
+    private struct CompositionPickerKey: EnvironmentKey {
+        static var defaultValue: CompositionPickerContent? { nil }
+    }
+}
+
+private struct CompositionPickerModifier<Picker: View>: ViewModifier {
+    @Environment(\.usesPaneLayout) private var usesPaneLayout
+    @State private var layout = LiveLayout()
+    let isPresented: Binding<Bool>
+    let isActive: Bool
+    let arrowEdge: Edge?
+    let maxHeight: CGFloat?
+    let picker: () -> Picker
+
+    func body(content: Content) -> some View {
+        // 창 폭이 바뀌어 팝오버와 시트를 오가면 같은 상태를 바뀐 쪽에 다시 그리고, 빠지는 쪽의 늦은 닫힘은 거름
+        let layout = layout.update(usesPaneLayout: usesPaneLayout)
+        let sheetBinding = Binding(
+            get: { !layout.usesPaneLayout && isPresented.wrappedValue },
+            set: { value in
+                if !layout.usesPaneLayout {
+                    isPresented.wrappedValue = value
+                }
+            }
+        )
+        let popoverBinding = Binding(
+            get: { layout.usesPaneLayout && isPresented.wrappedValue },
+            set: { value in
+                if layout.usesPaneLayout {
+                    isPresented.wrappedValue = value
+                }
+            }
+        )
+
+        content
+            .prominentSheet(isPresented: sheetBinding.activePresentation(when: isActive)) {
+                picker()
+            }
+            .environment(
+                \.compositionPicker,
+                CompositionPickerContent(
+                    isPresented: popoverBinding.activePresentation(when: isActive),
+                    arrowEdge: arrowEdge,
+                    maxHeight: maxHeight
+                ) {
+                    AnyView(picker())
+                }
+            )
+    }
+}
+
+private struct CompositionPickerAnchorModifier: ViewModifier {
+    @Environment(\.compositionPicker) private var picker
+
+    func body(content: Content) -> some View {
+        content
+            .popover(isPresented: picker?.isPresented ?? .constant(false), arrowEdge: picker?.arrowEdge) {
+                if let picker {
+                    Group {
+                        // 화면이 낮거나 Duo 접는 선에 걸리면 팝오버 높이를 줄이고 목록을 스크롤
+                        if let maxHeight = picker.maxHeight {
+                            picker.content()
+                                .frame(width: 320 * AdaptiveSize.boardScale)
+                                .frame(minHeight: 0, idealHeight: maxHeight, maxHeight: maxHeight)
+                        } else {
+                            picker.content()
+                                .frame(width: 320 * AdaptiveSize.boardScale)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                    .presentationBackground(Color.secondaryBackground)
+                    .presentationCompactAdaptation(.popover)
                 }
             }
     }

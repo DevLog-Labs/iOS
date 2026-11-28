@@ -11,7 +11,6 @@ import Domain
 import PresentationShared
 
 struct ActivityCard: View {
-    @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<ProfileFeature>
@@ -95,19 +94,7 @@ struct ActivityCard: View {
                     }
                     .buttonStyle(.plain)
                     // 칸으로 나눈 화면은 분기 선택을 시트 대신 버튼 옆 팝오버로 표시
-                    .popover(
-                        isPresented: $store.showQuarterPicker
-                            .hiddenInPane(!usesPaneLayout)
-                            .activePresentation(when: isTabContentActive),
-                        // Mac은 분기 표시 아래로 표시
-                        arrowEdge: isiOSAppOnMac ? .top : nil
-                    ) {
-                        QuarterPickerSheet(store: store)
-                            .frame(width: 320 * AdaptiveSize.boardScale)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .presentationBackground(Color.secondaryBackground)
-                            .presentationCompactAdaptation(.popover)
-                    }
+                    .compositionPickerAnchor()
                     Spacer()
                     Button {
                         store.send(.moveQuarter(1))

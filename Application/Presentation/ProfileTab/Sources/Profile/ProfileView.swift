@@ -17,6 +17,7 @@ public struct ProfileView: View {
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
     @Environment(\.sideBarRequest) private var sideBarRequest
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State private var store: StoreOf<ProfileFeature>
     @State private var router = NavigationRouter<ProfileRoute>()
     @Bindable private var settingsStore: StoreOf<SettingsFeature>
@@ -146,11 +147,14 @@ public struct ProfileView: View {
             settingsStore.send(.startObserving)
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .prominentSheet(
-            isPresented: $store.showQuarterPicker
-                .hiddenInPane(usesPaneLayout)
-                .activePresentation(when: isSelected)
-        ) { QuarterPickerSheet(store: store) }
+        // 좁은 창은 분기 선택을 시트로, 칸으로 나눈 화면은 분기 표시 옆 팝오버로 표시하고 Mac은 분기 표시 아래로 표시
+        .compositionPicker(
+            isPresented: $store.showQuarterPicker,
+            isActive: isSelected,
+            arrowEdge: isiOSAppOnMac ? .top : nil
+        ) {
+            QuarterPickerSheet(store: store)
+        }
         .overlay {
             if store.isLoading {
                 LoadingView()
