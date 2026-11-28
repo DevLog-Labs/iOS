@@ -223,6 +223,28 @@ struct ProfileFeatureTests {
         #expect(adapter.selectedActivityKinds == [.created])
         #expect(spy.activityTypes.isEmpty)
     }
+
+    @Test("ProfileFeature는 고른 Todo를 연 자리에서 바꾸고, 상세를 닫으면 오른쪽 칸 표시도 끈다")
+    func ProfileFeature는_고른_Todo를_연_자리에서_바꾸고_상세를_닫으면_오른쪽_칸_표시도_끈다() async {
+        let store = TestStore(initialState: ProfileFeature.State()) {
+            ProfileFeature()
+        }
+
+        await store.send(.selectTodo("activity", isEditable: false)) {
+            $0.detail = TodoDetailFeature.State(todoId: "activity", showEditButton: false)
+        }
+        await store.send(.binding(.set(\.showsDetailInPane, true))) {
+            $0.showsDetailInPane = true
+        }
+        // 같은 Todo도 최근 Todo에서 고르면 편집할 수 있는 상세로 바꿈
+        await store.send(.selectTodo("activity", isEditable: true)) {
+            $0.detail = TodoDetailFeature.State(todoId: "activity", showEditButton: true)
+        }
+        await store.send(.detail(.dismiss)) {
+            $0.detail = nil
+            $0.showsDetailInPane = false
+        }
+    }
 }
 
 private final class FetchTodosUseCaseSpy: FetchTodosUseCase {
@@ -316,28 +338,6 @@ private final class UpdateHeatmapActivityTypesUseCaseSpy: UpdateHeatmapActivityT
 
     func execute(_ activityTypes: [String]) {
         self.activityTypes.append(activityTypes)
-    }
-
-    @Test("ProfileFeature는 고른 Todo를 연 자리에서 바꾸고, 상세를 닫으면 오른쪽 칸 표시도 끈다")
-    func ProfileFeature는_고른_Todo를_연_자리에서_바꾸고_상세를_닫으면_오른쪽_칸_표시도_끈다() async {
-        let store = TestStore(initialState: ProfileFeature.State()) {
-            ProfileFeature()
-        }
-
-        await store.send(.selectTodo("activity", isEditable: false)) {
-            $0.detail = TodoDetailFeature.State(todoId: "activity", showEditButton: false)
-        }
-        await store.send(.binding(.set(\.showsDetailInPane, true))) {
-            $0.showsDetailInPane = true
-        }
-        // 같은 Todo도 최근 Todo에서 고르면 편집할 수 있는 상세로 바꿈
-        await store.send(.selectTodo("activity", isEditable: true)) {
-            $0.detail = TodoDetailFeature.State(todoId: "activity", showEditButton: true)
-        }
-        await store.send(.detail(.dismiss)) {
-            $0.detail = nil
-            $0.showsDetailInPane = false
-        }
     }
 }
 
