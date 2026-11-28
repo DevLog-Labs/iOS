@@ -15,14 +15,14 @@ struct SearchFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Never>?
+        // 연 결과 상세, 좁은 창은 홈 내비게이션에 쌓고 사이드바가 있는 창은 사이드바까지 덮는 상세 판에 표시
+        @Presents var detail: TodoDetailFeature.State?
         var loading = LoadingFeature.State()
         var isSearching = false
         var searchQuery = ""
         var todos: [SearchTodoItem] = []
         var recentQueries = OrderedSet<String>()
         var showAllTodos = false
-        // Mac에서 사이드바까지 덮는 상세 판에 연 Todo
-        var panelTodo: TodoIdItem?
         let contentsLimit = 5
 
         init(recentQueries: [String] = []) {
@@ -53,7 +53,9 @@ struct SearchFeature {
     enum Action: BindableAction, Equatable {
         case onAppear
         case alert(PresentationAction<Never>)
+        case detail(PresentationAction<TodoDetailFeature.Action>)
         case binding(BindingAction<State>)
+        case selectTodo(String)
         case addRecentQuery(String)
         case removeRecentQuery(String)
         case clearRecentQueries
@@ -97,6 +99,10 @@ struct SearchFeature {
                 }
             case .alert:
                 break
+            case .detail:
+                break
+            case .selectTodo(let todoId):
+                state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: true)
             case .binding(\.isSearching):
                 if !state.isSearching {
                     return Self.cancelSearchEffect(isLoading: state.isLoading)
@@ -151,6 +157,9 @@ struct SearchFeature {
             return .none
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$detail, action: \.detail) {
+            TodoDetailFeature()
+        }
     }
 }
 

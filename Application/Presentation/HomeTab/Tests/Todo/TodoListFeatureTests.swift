@@ -370,34 +370,56 @@ struct TodoListFeatureTests {
         #expect(adapter.todos.isEmpty)
     }
 
-    @Test("swipeTodo는 선택한 Todo를 지울 때만 선택을 해제한다")
-    func swipeTodo는_선택한_Todo를_지울_때만_선택을_해제한다() async {
+    @Test("swipeTodo는 연 Todo를 지울 때만 상세를 닫는다")
+    func swipeTodo는_연_Todo를_지울_때만_상세를_닫는다() async {
         let selected = TodoListItem(from: makeTodoListTodo(id: "todo-selected"))!
         let other = TodoListItem(from: makeTodoListTodo(id: "todo-other"))!
         let adapter = TodoListStoreTestAdapter()
 
         await adapter.appendTodos([selected, other])
-        await adapter.selectTodo("todo-selected")
+        await adapter.openTodo("todo-selected", inPane: true)
         await adapter.swipeTodo(other)
 
-        #expect(adapter.selectedTodoId == "todo-selected")
+        #expect(adapter.detailTodoId == "todo-selected")
+        #expect(adapter.showsDetailInPane)
 
         await adapter.swipeTodo(selected)
 
-        #expect(adapter.selectedTodoId == nil)
+        #expect(adapter.detailTodoId == nil)
+        #expect(!adapter.showsDetailInPane)
 
         await adapter.undoDelete()
 
-        #expect(adapter.selectedTodoId == nil)
+        #expect(adapter.detailTodoId == nil)
     }
 
-    @Test("tapToggleCompleted는 선택한 Todo일 때만 상세 칸을 다시 조회하도록 갱신한다")
-    func tapToggleCompleted는_선택한_Todo일_때만_상세_칸을_다시_조회하도록_갱신한다() async {
+    @Test("selectTodo는 연 자리를 유지하고, 상세를 닫으면 오른쪽 칸 표시도 끈다")
+    func selectTodo는_연_자리를_유지하고_상세를_닫으면_오른쪽_칸_표시도_끈다() async {
+        let adapter = TodoListStoreTestAdapter()
+
+        await adapter.selectTodo("todo-a")
+
+        #expect(adapter.detailTodoId == "todo-a")
+        #expect(!adapter.showsDetailInPane)
+
+        await adapter.openTodo("todo-b", inPane: true)
+        await adapter.selectTodo("todo-c")
+
+        #expect(adapter.detailTodoId == "todo-c")
+        #expect(adapter.showsDetailInPane)
+
+        await adapter.dismissDetail()
+
+        #expect(adapter.detailTodoId == nil)
+        #expect(!adapter.showsDetailInPane)
+    }
+
+    @Test("tapToggleCompleted는 연 Todo일 때만 상세를 다시 조회한다")
+    func tapToggleCompleted는_연_Todo일_때만_상세를_다시_조회한다() async {
         let todo = makeTodoListTodo(id: "todo-toggle", isPinned: false, isCompleted: false)
         let item = TodoListItem(from: todo)!
-        let adapter = TodoListStoreTestAdapter(
-            fetchTodoByIdUseCase: TodoListFetchTodoByIdUseCaseSpy(todos: [todo])
-        )
+        let fetchByIdSpy = TodoListFetchTodoByIdUseCaseSpy(todos: [todo])
+        let adapter = TodoListStoreTestAdapter(fetchTodoByIdUseCase: fetchByIdSpy)
 
         await adapter.appendTodos([item])
         await adapter.tapToggleCompleted(item)
@@ -406,16 +428,16 @@ struct TodoListFeatureTests {
             adapter.todos.first?.isCompleted == true
         }
 
-        #expect(adapter.detailRevision == 0)
+        #expect(fetchByIdSpy.todoIds == ["todo-toggle"])
 
         await adapter.selectTodo("todo-toggle")
         await adapter.tapToggleCompleted(adapter.todos[0])
 
         await waitUntil {
-            adapter.detailRevision == 1
+            fetchByIdSpy.todoIds.count == 3
         }
 
-        #expect(adapter.detailRevision == 1)
+        #expect(fetchByIdSpy.todoIds == ["todo-toggle", "todo-toggle", "todo-toggle"])
     }
 
     @Test("tapToggleCompleted와 tapTogglePinned는 조회한 Todo를 갱신해 목록에 반영한다")

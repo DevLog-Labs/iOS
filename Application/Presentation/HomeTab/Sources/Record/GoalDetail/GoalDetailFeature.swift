@@ -32,7 +32,8 @@ struct GoalDetailFeature {
         // 넓은 창의 칸과 시트가 같은 상태를 그려 창 폭이 바뀌어도 작성 중인 기록 유지
         @Presents var recordEditor: RecordEditorFeature.State?
         @Presents var recordDetail: RecordDetailDestination?
-        @Presents var todoDetail: TodoDetailDestination?
+        // 연결한 Todo 상세, 창 폭과 상관없이 개발 목표 위에 쌓음
+        @Presents var todoDetail: TodoDetailFeature.State?
         @Presents var todoLinkSheet: GoalTodoLinkFeature.State?
         // 창 폭이 바뀌어 기록 상세 표시가 잠깐 닫혀도 진행 중인 조회·되돌리기와 안에서 연 화면을 잃지 않도록 따로 보관하는 상세 상태
         var recordDetailContent: RecordDetailFeature.State?
@@ -81,7 +82,7 @@ struct GoalDetailFeature {
         case recordEditor(PresentationAction<RecordEditorFeature.Action>)
         case recordDetail(PresentationAction<Never>)
         case recordDetailContent(RecordDetailFeature.Action)
-        case todoDetail(PresentationAction<Never>)
+        case todoDetail(PresentationAction<TodoDetailFeature.Action>)
         case todoLinkSheet(PresentationAction<GoalTodoLinkFeature.Action>)
         case binding(BindingAction<State>)
         case view(ViewAction)
@@ -163,8 +164,6 @@ struct GoalDetailFeature {
                 }
             case .recordDetail, .recordDetailContent:
                 break
-            case .todoDetail(.dismiss):
-                state.todoDetail = nil
             case .todoDetail:
                 break
             case .todoLinkSheet(.dismiss),
@@ -288,7 +287,7 @@ struct GoalDetailFeature {
             case .view(.selectTodo(let todoId)):
                 guard state.linkedTodos.contains(where: { $0.id == todoId }),
                       state.todoDetail == nil else { break }
-                state.todoDetail = TodoDetailDestination(todoId: todoId)
+                state.todoDetail = TodoDetailFeature.State(todoId: todoId, showEditButton: false)
             case .view(.selectStatus(let status)):
                 guard let goalStatus = state.goalStatus,
                       !state.isLoading,
@@ -347,6 +346,9 @@ struct GoalDetailFeature {
         }
         .ifLet(\.$todoLinkSheet, action: \.todoLinkSheet) {
             GoalTodoLinkFeature()
+        }
+        .ifLet(\.$todoDetail, action: \.todoDetail) {
+            TodoDetailFeature()
         }
     }
 }
@@ -436,10 +438,4 @@ extension GoalDetailFeature {
 struct RecordDetailDestination: Equatable, Identifiable {
     var id: String { record.id }
     let record: DevelopmentRecord
-}
-
-@ObservableState
-struct TodoDetailDestination: Equatable, Identifiable {
-    var id: String { todoId }
-    let todoId: String
 }

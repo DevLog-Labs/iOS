@@ -29,8 +29,8 @@ final class TodoListStoreTestAdapter {
     }
     var showAlert: Bool { store.state.alert != nil }
     var appliedFilterCount: Int { store.state.appliedFilterCount }
-    var selectedTodoId: String? { store.state.selectedTodoId }
-    var detailRevision: Int { store.state.detailRevision }
+    var detailTodoId: String? { store.state.detail?.todoId }
+    var showsDetailInPane: Bool { store.state.showsDetailInPane }
 
     init(
         fetchUseCase: FetchTodosUseCase = TodoListFetchTodosUseCaseSpy(),
@@ -51,6 +51,7 @@ final class TodoListStoreTestAdapter {
             $0.todoListDeleteTodoUseCase = deleteUseCase
             $0.todoListUndoDeleteTodoUseCase = undoDeleteUseCase
             $0.trackAnalyticsEventUseCase = trackAnalyticsEventUseCase
+            $0.fetchReferenceItemsUseCase = TodoListFetchReferenceItemsUseCaseStub()
             $0.continuousClock = ContinuousClock()
             configureDependencies?(&$0)
         }
@@ -153,8 +154,16 @@ final class TodoListStoreTestAdapter {
         await store.send(.view(.finishDeleteToast(todoId)))
     }
 
-    func selectTodo(_ todoId: String?) async {
-        await store.send(.binding(.set(\.selectedTodoId, todoId)))
+    func selectTodo(_ todoId: String) async {
+        await store.send(.view(.selectTodo(todoId)))
+    }
+
+    func openTodo(_ todoId: String, inPane: Bool) async {
+        await store.send(.view(.openTodo(todoId, inPane: inPane)))
+    }
+
+    func dismissDetail() async {
+        await store.send(.detail(.dismiss))
     }
 
     func tapToggleCompleted(_ todo: TodoListItem) async {
@@ -293,6 +302,12 @@ final class TodoListFetchTodoByIdUseCaseSpy: FetchTodoByIdUseCase {
         }
 
         return todos.first { $0.id == todoId } ?? makeTodoListTodo(id: todoId)
+    }
+}
+
+final class TodoListFetchReferenceItemsUseCaseStub: FetchReferenceItemsUseCase {
+    func execute(_ numbers: [Int]) async throws -> [Int: TodoReference] {
+        [:]
     }
 }
 

@@ -90,7 +90,7 @@ struct GoalDetailTodoFeatureTests {
         }
 
         await store.send(.view(.selectTodo(todo.id))) {
-            $0.todoDetail = TodoDetailDestination(todoId: todo.id)
+            $0.todoDetail = TodoDetailFeature.State(todoId: todo.id, showEditButton: false)
         }
     }
 

@@ -17,14 +17,12 @@ struct SearchView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.deviceType) private var deviceType
     @State private var store: StoreOf<SearchFeature>
-    // 홈 내비게이션에 쌓아 연 검색에서 Todo 상세를 홈 내비게이션에 쌓는 동작
-    private let onSelectTodo: (String) -> Void
-    // 홈 내비게이션 맨 위에 있는지 여부, 아래에 깔린 동안은 상세 판을 띄우지 않음
-    private let isOnTop: Bool
+    // 좁은 창에서 쌓아 연 결과 상세의 편집을 Mac 편집 창과 같은 경로로 전달
+    private let windowEvent: TodoEditorWindowEvent?
 
     // 열 때마다 빈 입력칸으로 시작하고 최근 검색은 열 때 읽음
-    // 닫으면 Store와 함께 진행 중인 검색 요청과 상세 판도 사라짐
-    init(isOnTop: Bool, onSelectTodo: @escaping (String) -> Void) {
+    // 닫으면 Store와 함께 진행 중인 검색 요청과 상세도 사라짐
+    init(windowEvent: TodoEditorWindowEvent?) {
         @Dependency(\.homeFetchRecentSearchQueriesUseCase) var fetchRecentSearchQueriesUseCase
         self._store = State(initialValue: Store(
             initialState: SearchFeature.State(
@@ -33,26 +31,14 @@ struct SearchView: View {
         ) {
             SearchFeature()
         })
-        self.onSelectTodo = onSelectTodo
-        self.isOnTop = isOnTop
+        self.windowEvent = windowEvent
     }
 
     var body: some View {
         content { todoId in
-            // 사이드바가 있는 창은 사이드바까지 덮는 상세 판으로 열기
-            // 좁은 창에서 쌓아 연 상세도 기억해 넓어지면 같은 Todo를 상세 판으로 표시
-            store.send(.binding(.set(\.panelTodo, TodoIdItem(id: todoId))))
-            if !usesDesktopLayout {
-                onSelectTodo(todoId)
-            }
+            store.send(.selectTodo(todoId))
         }
         .duoToolbarVisibility(showsBackButton: true)
-        // 좁은 창에서 쌓아 연 결과 상세를 내리면 넓어져도 상세 판으로 다시 열지 않음
-        .onAppear {
-            if !usesDesktopLayout {
-                store.send(.binding(.set(\.panelTodo, nil)))
-            }
-        }
     }
 
     private func content(onSelectTodo: @escaping (String) -> Void) -> some View {
@@ -90,13 +76,14 @@ struct SearchView: View {
         }
         .background(Color.background.ignoresSafeArea())
         .prominentAlert(store, state: \.alert, action: \.alert)
-        // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
-        // 쌓아 연 상세를 편집하는 중에 넓어지면 편집을 마치고 상세가 내려간 뒤 표시
-        .detailPanel(item: $store.panelTodo.activePresentation(when: usesDesktopLayout && isOnTop)) { item in
+        // 좁은 창은 홈 내비게이션에 쌓고, 사이드바가 있는 창은 사이드바까지 덮는 상세 판에 표시
+        // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
+        .compositionDetail(item: $store.scope(state: \.detail, action: \.detail)) { detailStore in
+            TodoDetailView(store: detailStore, windowEvent: windowEvent)
+        } panel: { detailStore in
             TodoDetailPanel(
-                todoId: item.id,
-                location: Text("search_title", bundle: PresentationResources.bundle),
-                isEditable: true
+                store: detailStore,
+                location: Text("search_title", bundle: PresentationResources.bundle)
             )
         }
     }

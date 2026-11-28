@@ -97,7 +97,6 @@ public struct HomeView: View {
                 interactivePop: {
                     switch $0 {
                     case .category: true
-                    case .todo: true
                     case .search: true
                     }
                 },
@@ -105,13 +104,6 @@ public struct HomeView: View {
             )
         }
         .desktopNavigationTransition()
-        // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 카테고리 목록 옆 칸에 표시
-        .closesPushedDetail {
-            router.path.removeAll {
-                if case .todo = $0 { return true }
-                return false
-            }
-        }
         .preference(key: SideBarLocationPreferenceKey.self, value: sideBarLocation)
         .preference(
             key: SideBarContentPreferenceKey.self,
@@ -370,29 +362,17 @@ public struct HomeView: View {
                 store: Store(initialState: TodoListFeature.State(category: item.todoCategory)) {
                     TodoListFeature()
                 },
-                windowEvent: windowEvent,
-                onSelectTodo: { router.push(.todo(TodoIdItem(id: $0))) }
-            )
-            .id(item.id)
-        case .todo(let item):
-            TodoDetailView(
-                store: Store(
-                    initialState: TodoDetailFeature.State(todoId: item.id, showEditButton: true)
-                ) {
-                    TodoDetailFeature()
-                },
                 windowEvent: windowEvent
             )
             .id(item.id)
         case .search:
-            SearchView(isOnTop: router.path.last == .search) { router.push(.todo(TodoIdItem(id: $0))) }
+            SearchView(windowEvent: windowEvent)
         }
     }
 }
 
 public enum HomeRoute: Hashable {
     case category(TodoCategoryItem)
-    case todo(TodoIdItem)
     case search
 }
 
