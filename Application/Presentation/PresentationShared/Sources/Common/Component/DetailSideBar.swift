@@ -75,14 +75,17 @@ public extension View {
         reveal: Int = 0,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        modifier(CompositionRightModifier(isActive: isActive, reveal: reveal, sideBarContent: content))
+        modifier(CompositionRightModifier(isActive: isActive, reveal: reveal, key: nil, sideBarContent: content))
     }
 }
 
 // 화면이 올린 세부 정보 사이드바 내용
-// 같은 화면이 올린 동안은 같은 값으로 보고, 내용이 읽는 상태가 바뀌면 이 View만 다시 그림
+// 같은 화면이 같은 항목을 올린 동안은 같은 값으로 보고, 내용이 읽는 상태가 바뀌면 이 View만 다시 그림
 public struct DetailSideBarContent: View, Equatable {
     let id: UUID
+    // 내용이 바인딩으로 읽는 항목의 식별자
+    // 그리는 중의 바인딩은 만든 때의 값을 돌려주므로 항목이 바뀌면 새 내용으로 보고 다시 전달
+    let key: AnyHashable?
     let content: () -> AnyView
 
     public var body: some View {
@@ -90,7 +93,7 @@ public struct DetailSideBarContent: View, Equatable {
     }
 
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.id == rhs.id
+        lhs.id == rhs.id && lhs.key == rhs.key
     }
 }
 
@@ -103,7 +106,7 @@ public struct DetailSideBarContentPreferenceKey: PreferenceKey {
     }
 }
 
-private struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
+struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var id = UUID()
@@ -111,6 +114,8 @@ private struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
     @State private var isAppeared = false
     let isActive: Bool
     let reveal: Int
+    // 내용이 바인딩으로 읽는 항목의 식별자
+    let key: AnyHashable?
     let sideBarContent: () -> SideBarContent
 
     func body(content: Content) -> some View {
@@ -120,7 +125,7 @@ private struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
         content
             .transformPreference(DetailSideBarContentPreferenceKey.self) { value in
                 guard isShown, value == nil else { return }
-                value = DetailSideBarContent(id: id) { AnyView(sideBarContent()) }
+                value = DetailSideBarContent(id: id, key: key) { AnyView(sideBarContent()) }
             }
             .onAppear { isAppeared = true }
             .onDisappear { isAppeared = false }

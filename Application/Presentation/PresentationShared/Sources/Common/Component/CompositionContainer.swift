@@ -159,7 +159,7 @@ private struct CompositionDetailModifier<Item: Identifiable, Detail: View, Panel
             // 가려진 탭에서도 상세 칸을 그대로 두도록 isActive와 상관없이 올림
             .transformPreference(PaneDetailContentPreferenceKey.self) { value in
                 guard inPane, value == nil, item.wrappedValue != nil || emptyPane else { return }
-                value = PaneDetailContent(id: id, isEditor: false) {
+                value = PaneDetailContent(id: id, isEditor: false, key: item.wrappedValue.map { AnyHashable($0.id) }) {
                     AnyView(paneContent)
                 }
             }
@@ -212,7 +212,7 @@ private struct CompositionEditorModifier<Item: Identifiable, Editor: View>: View
             // 가려진 탭에서도 작성 중인 화면을 상세 칸에 그대로 두도록 isActive와 상관없이 올림
             .transformPreference(PaneDetailContentPreferenceKey.self) { value in
                 guard inPane, item.wrappedValue != nil else { return }
-                value = PaneDetailContent(id: id, isEditor: true) {
+                value = PaneDetailContent(id: id, isEditor: true, key: item.wrappedValue.map { AnyHashable($0.id) }) {
                     AnyView(paneContent)
                 }
             }
@@ -329,13 +329,19 @@ private struct CompositionSheetModifier<Item: Identifiable, Sheet: View, Right: 
                 content: sheet
             )
             // 고른 항목이 없으면 세부 정보 사이드바에 안내 표시
-            .compositionRight(isActive: usesDesktopLayout) {
-                if let value = item.wrappedValue {
-                    right(value)
-                } else {
-                    DetailSideBarPlaceholder()
+            .modifier(CompositionRightModifier(
+                isActive: usesDesktopLayout,
+                reveal: 0,
+                key: item.wrappedValue.map { AnyHashable($0.id) }
+            ) {
+                Group {
+                    if let value = item.wrappedValue {
+                        right(value)
+                    } else {
+                        DetailSideBarPlaceholder()
+                    }
                 }
-            }
+            })
             .onChange(of: reveal) {
                 if usesDesktopLayout {
                     setDetailSideBarPresented?(true)
