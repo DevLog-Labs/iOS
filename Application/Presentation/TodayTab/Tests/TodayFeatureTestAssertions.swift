@@ -11,7 +11,7 @@ import Domain
 @testable import TodayTab
 
 @MainActor
-private func waitUntilTodayMainActor(
+func waitUntilTodayMainActor(
     timeout: Duration = .seconds(1),
     pollInterval: Duration = .milliseconds(20),
     _ condition: @escaping @MainActor () -> Bool

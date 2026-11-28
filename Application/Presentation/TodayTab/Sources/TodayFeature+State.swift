@@ -33,6 +33,8 @@ extension TodayFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Never>?
+        // 연 Todo 상세, 좁은 창은 내비게이션에 쌓고 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+        @Presents var detail: TodoDetailFeature.State?
         var todos = [TodayTodoItem]()
         var completedTodayTodos = [TodayTodoItem]()
         var categories = [TodoCategoryItem]()
@@ -40,15 +42,12 @@ extension TodayFeature {
         var selectedCategoryID: String?
         var isCategoryFilterPresented = false
         var isTodoInspectorPresented = false
+        // 세부 정보 사이드바에 표시하는 Todo, 오른쪽 칸을 열면 칸의 Todo와 같음
         var selectedTodoId: String?
-        // 오른쪽 칸 상세가 모르는 곳에서 고른 Todo가 바뀌면 올려 상세를 다시 만듦
-        var detailPaneRevision = 0
-        // 사이드바가 있는 창에서 사이드바까지 덮는 상세 판에 연 Todo
-        var panelTodo: TodoIdItem?
         // Mac에서 마우스를 올린 행, 선택 행처럼 둥글게 표시하고 맞닿는 구분선을 숨김
         var hoveredTodoId: String?
-        // 사이드바가 있는 창에서 목록 오른쪽 칸을 연 상태, 세부 정보 사이드바만 쓰는 선택과 구분
-        var isDetailPanePresented = false
+        // 사이드바가 있는 창에서 상세 판 대신 목록 오른쪽 칸에 표시, 세부 정보 사이드바만 쓰는 선택과 구분
+        var showsDetailInPane = false
         // 좁은 창 세부 정보 시트의 속성
         // 시트를 닫아도 저장 결과를 받도록 시트 밖에서 소유
         var todoInfo: TodoDetailSideBarFeature.State?

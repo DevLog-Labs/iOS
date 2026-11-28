@@ -109,25 +109,53 @@ struct TodayFeatureTests {
         #expect(adapter.showAlert)
     }
 
-    @Test("상세 칸이 저장해 보낸 Todo는 목록 행만 바꾸고 상세 칸은 다시 만들지 않는다")
-    func 상세_칸이_저장해_보낸_Todo는_목록_행만_바꾸고_상세_칸은_다시_만들지_않는다() async throws {
+    @Test("상세가 저장해 보낸 Todo는 목록 행만 바꾸고 상세는 다시 조회하지 않는다")
+    func 상세가_저장해_보낸_Todo는_목록_행만_바꾸고_상세는_다시_조회하지_않는다() async throws {
         var todo = makeTodayTodo(id: "detail", title: "수정 전")
-        let adapter = TodayStoreTestAdapter()
+        let fetchByIdSpy = TodayFetchTodoByIdUseCaseSpy(todos: [todo])
+        let adapter = TodayStoreTestAdapter(fetchTodoByIdUseCase: fetchByIdSpy)
         await adapter.receiveUpdatedTodo(try #require(TodayTodoItem(from: todo)))
-        await adapter.selectTodo("detail")
-        let revision = adapter.detailPaneRevision
+        await adapter.openTodo("detail")
 
         todo.title = "상세에서 수정"
         await adapter.receiveDetailTodo(try #require(TodayTodoItem(from: todo)))
 
         #expect(adapter.todos.first?.title == "상세에서 수정")
-        #expect(adapter.detailPaneRevision == revision)
+        #expect(fetchByIdSpy.todoIds.isEmpty)
 
         todo.title = "목록에서 수정"
         await adapter.receiveUpdatedTodo(try #require(TodayTodoItem(from: todo)))
 
+        await waitUntilTodayMainActor {
+            !fetchByIdSpy.todoIds.isEmpty
+        }
+
         #expect(adapter.todos.first?.title == "목록에서 수정")
-        #expect(adapter.detailPaneRevision == revision + 1)
+        #expect(fetchByIdSpy.todoIds == ["detail"])
+    }
+
+    @Test("오른쪽 칸을 연 동안만 세부 정보로 고른 Todo가 칸의 Todo도 바꾼다")
+    func 오른쪽_칸을_연_동안만_세부_정보로_고른_Todo가_칸의_Todo도_바꾼다() async {
+        let adapter = TodayStoreTestAdapter()
+
+        await adapter.openTodo("panel")
+        await adapter.inspectTodo("inspected")
+
+        #expect(adapter.detailTodoId == "panel")
+        #expect(adapter.selectedTodoId == "inspected")
+
+        await adapter.moveDetailToPane()
+        await adapter.inspectTodo("next")
+
+        #expect(adapter.showsDetailInPane)
+        #expect(adapter.detailTodoId == "next")
+        #expect(adapter.selectedTodoId == "next")
+
+        await adapter.dismissDetail()
+
+        #expect(adapter.detailTodoId == nil)
+        #expect(!adapter.showsDetailInPane)
+        #expect(adapter.selectedTodoId == "next")
     }
 
     @Test("넓은 창으로 바뀌면 세부 정보 시트를 저장 없이 닫고 같은 Todo를 고른다")
