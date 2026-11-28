@@ -41,7 +41,16 @@ public struct HomeView: View {
                     GoalCreateSideBarContent(store: goalStore)
                 }
             }
+            // 좁은 창은 개발 목표를 홈 내비게이션에 쌓고, 넓어지면 같은 상태를 홈 자리에 표시하고 기록 작성은 오른쪽 칸에 표시
+            .compositionCenter(
+                item: $store.scope(state: \.goalDetail, action: \.goalDetail),
+                narrow: .push
+            ) { goalStore in
+                GoalDetailView(store: goalStore, windowEvent: windowEvent)
+                    .id(goalStore.goalId)
+            }
             // 사이드바가 있으면 카테고리 관리를 시트 대신 홈 자리에 표시
+            // 사이드바에서 개발 목표를 열어 개발 목표 화면으로 바뀌어도 닫힘을 받아 세부 정보 사이드바를 닫도록 개발 목표 바깥에 둠
             .compositionCenter(
                 item: $store.scope(state: \.categoryManage, action: \.categoryManage),
                 narrow: .sheet,
@@ -51,14 +60,6 @@ public struct HomeView: View {
                 CategoryManageView(store: manageStore) {
                     store.send(.categoryManage(.dismiss))
                 }
-            }
-            // 좁은 창은 개발 목표를 홈 내비게이션에 쌓고, 넓어지면 같은 상태를 홈 자리에 표시하고 기록 작성은 오른쪽 칸에 표시
-            .compositionCenter(
-                item: $store.scope(state: \.goalDetail, action: \.goalDetail),
-                narrow: .push
-            ) { goalStore in
-                GoalDetailView(store: goalStore, windowEvent: windowEvent)
-                    .id(goalStore.goalId)
             }
         } destination: { pathStore in
             Group {
