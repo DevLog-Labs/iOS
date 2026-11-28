@@ -57,12 +57,6 @@ public extension EnvironmentValues {
         set { self[RemoveDetailSideBarTargetKey.self] = newValue }
     }
 
-    // 세부 정보 사이드바가 열려 있는지 여부
-    var isDetailSideBarPresented: Bool {
-        get { self[IsDetailSideBarPresentedKey.self] }
-        set { self[IsDetailSideBarPresentedKey.self] = newValue }
-    }
-
     // 세부 정보 사이드바를 열고 닫는 동작, 세부 정보 사이드바가 있는 창 안에서만 있음
     var setDetailSideBarPresented: ((Bool) -> Void)? {
         get { self[SetDetailSideBarPresentedKey.self] }
@@ -153,10 +147,6 @@ public extension EnvironmentValues {
 
     private struct RemoveDetailSideBarTargetKey: EnvironmentKey {
         static let defaultValue: ((UUID) -> Void)? = nil
-    }
-
-    private struct IsDetailSideBarPresentedKey: EnvironmentKey {
-        static let defaultValue = false
     }
 
     private struct SetDetailSideBarPresentedKey: EnvironmentKey {

@@ -120,21 +120,26 @@ struct CompositionView: View {
                 showsSideBar && !store.detailSideBar.isPresented
                     ? { store.send(.detailSideBar(.binding(.set(\.isPresented, true)))) } : nil
             )
-            .environment(\.isDetailSideBarPresented, showsSideBar && store.detailSideBar.isPresented)
             .environment(
                 \.setDetailSideBarPresented,
                 showsSideBar ? { store.send(.detailSideBar(.binding(.set(\.isPresented, $0)))) } : nil
             )
-        } right: {
-            // 칸 화면이 사이드바를 직접 그리면 창 사이드바는 표시하지 않음
-            if showsSideBar
-                && store.detailSideBar.isPresented
-                && store.detailSideBar.targets[selectedTab] != .hosted {
-                DetailSideBar(
-                    target: store.detailSideBar.targets[selectedTab],
-                    windowEvent: windowEvent
-                ) {
-                    store.send(.detailSideBar(.binding(.set(\.isPresented, false))))
+        } right: { content in
+            // 탭 화면이 올린 내용이 있으면 그 내용, 없으면 고른 대상의 속성 표시
+            if showsSideBar && store.detailSideBar.isPresented {
+                if let content {
+                    DetailSideBar {
+                        store.send(.detailSideBar(.binding(.set(\.isPresented, false))))
+                    } content: {
+                        content
+                    }
+                } else {
+                    DetailSideBar(
+                        target: store.detailSideBar.targets[selectedTab],
+                        windowEvent: windowEvent
+                    ) {
+                        store.send(.detailSideBar(.binding(.set(\.isPresented, false))))
+                    }
                 }
             }
         } overlay: {

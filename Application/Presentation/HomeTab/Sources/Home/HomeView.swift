@@ -67,7 +67,7 @@ public struct HomeView: View {
                     } detail: {
                         GoalCreateView(store: goalStore)
                     }
-                    .detailSideBar {
+                    .compositionRight {
                         GoalCreateSideBarContent(store: goalStore)
                     }
                 } else if usesDesktopLayout,

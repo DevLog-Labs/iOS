@@ -12,8 +12,6 @@ public enum DetailSideBarTarget: Hashable {
     // 고칠 수 없는 활동 기록 Todo는 읽기 전용
     // 다른 곳에서 바꾼 Todo를 다시 조회하도록 목록이 올리는 revision
     case todo(id: String, isEditable: Bool, revision: Int = 0)
-    // 칸 화면이 사이드바 내용을 직접 그리는 대상
-    case hosted
 }
 
 // 사이드바가 있는 창 오른쪽에 두는 세부 정보 사이드바
@@ -79,7 +77,7 @@ public struct DetailSideBarTargetContent: View {
         case .todo(let id, let isEditable, _):
             TodoDetailSideBarView(todoId: id, isEditable: isEditable, windowEvent: windowEvent)
                 .id(target)
-        case .hosted, nil:
+        case nil:
             DetailSideBarPlaceholder()
         }
     }
@@ -109,12 +107,37 @@ public extension View {
         modifier(DetailSideBarTargetModifier(target: target))
     }
 
-    // 창 오른쪽 끝 칸 화면이 세부 정보 사이드바 내용을 직접 그림, 사이드바가 있는 창에서만 표시
-    func detailSideBar<Content: View>(
+    // 이 화면의 세부 정보 사이드바 내용, 사이드바가 있는 창에서 SplitShell 오른쪽에 표시
+    // 화면은 내용만 올리고 사이드바는 CompositionView가 그림
+    func compositionRight<Content: View>(
         isActive: Bool = true,
-        @ViewBuilder content: () -> Content
+        @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        modifier(HostedDetailSideBarModifier(isActive: isActive, sideBarContent: content()))
+        modifier(CompositionRightModifier(isActive: isActive, sideBarContent: content))
+    }
+}
+
+// 화면이 올린 세부 정보 사이드바 내용
+// 같은 화면이 올린 동안은 같은 값으로 보고, 내용이 읽는 상태가 바뀌면 이 View만 다시 그림
+public struct DetailSideBarContent: View, Equatable {
+    let id: UUID
+    let content: () -> AnyView
+
+    public var body: some View {
+        content()
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
+// 탭 화면이 올린 세부 정보 사이드바 내용, 나중에 나타난 화면의 내용을 표시
+public struct DetailSideBarContentPreferenceKey: PreferenceKey {
+    public static var defaultValue: DetailSideBarContent? { nil }
+
+    public static func reduce(value: inout DetailSideBarContent?, nextValue: () -> DetailSideBarContent?) {
+        value = nextValue() ?? value
     }
 }
 
@@ -135,35 +158,24 @@ private struct DetailSideBarTargetModifier: ViewModifier {
     }
 }
 
-private struct HostedDetailSideBarModifier<SideBarContent: View>: ViewModifier {
+private struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
     @Environment(\.selectDetailSideBarTarget) private var selectDetailSideBarTarget
-    @Environment(\.removeDetailSideBarTarget) private var removeDetailSideBarTarget
-    @Environment(\.isDetailSideBarPresented) private var isDetailSideBarPresented
-    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
-    @State private var owner = UUID()
+    @State private var id = UUID()
+    // 화면을 벗어나 가려진 동안은 내용을 올리지 않음
+    @State private var isAppeared = false
     let isActive: Bool
-    let sideBarContent: SideBarContent
+    let sideBarContent: () -> SideBarContent
 
     func body(content: Content) -> some View {
-        HStack(spacing: 0) {
-            content
-            if isActive && isDetailSideBarPresented && selectDetailSideBarTarget != nil {
-                DetailSideBar {
-                    setDetailSideBarPresented?(false)
-                } content: {
-                    sideBarContent
-                }
-                // 왼쪽 사이드바를 펴는 버튼은 창 오른쪽 사이드바 제목 줄에 두지 않음
-                .environment(\.expandSideBar, nil)
+        // 세부 정보 사이드바 대상을 고를 수 없는 곳(상세 판, 좁은 창 시트)은 내용을 올리지 않음
+        let isShown = isActive && isAppeared && selectDetailSideBarTarget != nil
+
+        content
+            .transformPreference(DetailSideBarContentPreferenceKey.self) { value in
+                guard isShown, value == nil else { return }
+                value = DetailSideBarContent(id: id) { AnyView(sideBarContent()) }
             }
-        }
-        // 창이 그리는 사이드바 대신 이 화면의 사이드바 표시
-        .onAppear {
-            if isActive { selectDetailSideBarTarget?(.hosted, owner) }
-        }
-        .onChange(of: isActive) { _, isActive in
-            selectDetailSideBarTarget?(isActive ? .hosted : nil, owner)
-        }
-        .onDisappear { removeDetailSideBarTarget?(owner) }
+            .onAppear { isAppeared = true }
+            .onDisappear { isAppeared = false }
     }
 }

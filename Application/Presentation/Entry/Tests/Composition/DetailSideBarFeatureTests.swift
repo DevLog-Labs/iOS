@@ -18,14 +18,15 @@ struct DetailSideBarFeatureTests {
             DetailSideBarFeature()
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
+        let screen = DetailSideBarTarget.todo(id: "screen", isEditable: false)
         let goal = UUID()
         let category = UUID()
 
-        await store.send(.targetChanged(.home, .hosted, owner: goal))
-        await store.send(.targetChanged(.home, .hosted, owner: category))
+        await store.send(.targetChanged(.home, screen, owner: goal))
+        await store.send(.targetChanged(.home, screen, owner: category))
         await store.send(.ownerRemoved(.home, owner: goal))
 
-        #expect(store.state.targets[.home] == .hosted)
+        #expect(store.state.targets[.home] == screen)
 
         await store.send(.ownerRemoved(.home, owner: category))
 
@@ -38,14 +39,15 @@ struct DetailSideBarFeatureTests {
             DetailSideBarFeature()
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
+        let screen = DetailSideBarTarget.todo(id: "screen", isEditable: false)
         let list = UUID()
         let editor = UUID()
 
         await store.send(.targetChanged(.home, .todo(id: "todo", isEditable: true), owner: list))
-        await store.send(.targetChanged(.home, .hosted, owner: editor))
+        await store.send(.targetChanged(.home, screen, owner: editor))
         await store.send(.targetChanged(.home, .todo(id: "other", isEditable: true), owner: list))
 
-        #expect(store.state.targets[.home] == .hosted)
+        #expect(store.state.targets[.home] == screen)
 
         await store.send(.ownerRemoved(.home, owner: editor))
 
@@ -58,14 +60,15 @@ struct DetailSideBarFeatureTests {
             DetailSideBarFeature()
         }
         store.exhaustivity = .off(showSkippedAssertions: false)
+        let screen = DetailSideBarTarget.todo(id: "screen", isEditable: false)
         let list = UUID()
         let editor = UUID()
 
         await store.send(.targetChanged(.home, nil, owner: list))
-        await store.send(.targetChanged(.home, .hosted, owner: editor))
+        await store.send(.targetChanged(.home, screen, owner: editor))
         await store.send(.targetChanged(.home, .todo(id: "todo", isEditable: true), owner: list))
 
-        #expect(store.state.targets[.home] == .hosted)
+        #expect(store.state.targets[.home] == screen)
 
         await store.send(.ownerRemoved(.home, owner: editor))
 

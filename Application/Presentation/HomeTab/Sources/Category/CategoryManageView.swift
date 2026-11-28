@@ -109,7 +109,7 @@ struct CategoryManageView: View {
                 CategoryManageSheet(store: sheetStore)
             }
             .prominentAlert(store, state: \.alert, action: \.alert)
-            .detailSideBar(isActive: usesDesktopLayout) {
+            .compositionRight(isActive: usesDesktopLayout) {
                 if let sheetStore = store.scope(state: \.categorySheet, action: \.categorySheet.presented) {
                     ScrollView {
                         CategoryEditForm(store: sheetStore) {
