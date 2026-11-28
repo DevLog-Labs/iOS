@@ -42,25 +42,6 @@ struct CompositionView: View {
         let visibleTab = !showsSideBar && store.isSettingsPresented ? AppTab.profile : selectedTab
 
         SplitShell {
-            if showsSideBar && !store.sideBar.isCollapsed {
-                // 최소는 화살표와 아이콘만 보이는 폭, Mac 최대는 Orca 사이드바와 같은 폭
-                TreeSideBar(
-                    store: store.scope(state: \.sideBar, action: \.sideBar),
-                    selectedTab: selectedTab,
-                    unreadPushCount: store.unreadPushCount.count
-                )
-                    .resizablePane(
-                        width: store.sideBar.width,
-                        minimumWidth: isiOSAppOnMac ? 72 * AdaptiveSize.boardScale : 84,
-                        idealWidth: sideBarIdealWidth,
-                        maximumWidth: isiOSAppOnMac ? 500 * AdaptiveSize.boardScale : 320
-                    ) { width in
-                        store.send(.sideBar(.resized(width)))
-                    }
-                    // 칸 자르기 밖이라 잘리지 않도록 바탕은 칸 바깥에서 아래쪽 안전 영역까지 채움
-                    .background(Color.secondaryBackground, ignoresSafeAreaEdges: .bottom)
-            }
-        } center: {
             ZStack {
                 // iPad는 시스템 탭 바를 쓰지 않아 Mac과 같이 구성
                 // 넓은 창과 좁은 창을 오가도 탭 화면을 다시 만들지 않음
@@ -124,6 +105,25 @@ struct CompositionView: View {
                 \.setDetailSideBarPresented,
                 showsSideBar ? { store.send(.detailSideBar(.binding(.set(\.isPresented, $0)))) } : nil
             )
+        } left: {
+            if showsSideBar && !store.sideBar.isCollapsed {
+                // 최소는 화살표와 아이콘만 보이는 폭, Mac 최대는 Orca 사이드바와 같은 폭
+                TreeSideBar(
+                    store: store.scope(state: \.sideBar, action: \.sideBar),
+                    selectedTab: selectedTab,
+                    unreadPushCount: store.unreadPushCount.count
+                )
+                    .resizablePane(
+                        width: store.sideBar.width,
+                        minimumWidth: isiOSAppOnMac ? 72 * AdaptiveSize.boardScale : 84,
+                        idealWidth: sideBarIdealWidth,
+                        maximumWidth: isiOSAppOnMac ? 500 * AdaptiveSize.boardScale : 320
+                    ) { width in
+                        store.send(.sideBar(.resized(width)))
+                    }
+                    // 칸 자르기 밖이라 잘리지 않도록 바탕은 칸 바깥에서 아래쪽 안전 영역까지 채움
+                    .background(Color.secondaryBackground, ignoresSafeAreaEdges: .bottom)
+            }
         } right: { content in
             // 탭 화면이 올린 내용, 올린 내용이 없으면 안내 표시
             if showsSideBar && store.detailSideBar.isPresented {
