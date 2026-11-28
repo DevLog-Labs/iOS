@@ -71,8 +71,22 @@ public extension View {
     }
 }
 
+// 창 폭이 바뀐 뒤 시스템이 표시할 때 받아 둔 바인딩으로 늦게 닫아도 지금 창 폭으로 거르도록 참조로 보관하는 값
+private final class LiveLayout {
+    private(set) var usesDesktopLayout = false
+    private(set) var inPane = false
+
+    // 그릴 때마다 지금 값으로 바꾸고 같은 참조를 돌려줌
+    func update(usesDesktopLayout: Bool, inPane: Bool = false) -> LiveLayout {
+        self.usesDesktopLayout = usesDesktopLayout
+        self.inPane = inPane
+        return self
+    }
+}
+
 private struct CompositionDetailModifier<Item: Identifiable, Detail: View, Panel: View>: ViewModifier {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @State private var layout = LiveLayout()
     let item: Binding<Item?>
     let narrow: CompositionNarrow
     let inPane: Bool
@@ -82,8 +96,10 @@ private struct CompositionDetailModifier<Item: Identifiable, Detail: View, Panel
 
     func body(content: Content) -> some View {
         // 창 폭이 바뀌면 같은 상태를 짝이 되는 컨테이너가 다시 그리고, 빠지는 쪽의 늦은 닫힘은 상태를 지우지 않음
-        let narrowItem = item.hiddenInPane(usesDesktopLayout)
-        let panelItem = item.activePresentation(when: isActive).hiddenInPane(!usesDesktopLayout || inPane)
+        let layout = layout.update(usesDesktopLayout: usesDesktopLayout, inPane: inPane)
+        let narrowItem = item.hiddenInPane { layout.usesDesktopLayout }
+        let panelItem = item.activePresentation(when: isActive)
+            .hiddenInPane { !layout.usesDesktopLayout || layout.inPane }
 
         switch narrow {
         case .push:
@@ -104,6 +120,7 @@ private struct CompositionDetailModifier<Item: Identifiable, Detail: View, Panel
 
 private struct CompositionEditorModifier<Item: Identifiable, Editor: View>: ViewModifier {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @State private var layout = LiveLayout()
     let item: Binding<Item?>
     let narrow: CompositionNarrow
     let inPane: Bool
@@ -111,7 +128,8 @@ private struct CompositionEditorModifier<Item: Identifiable, Editor: View>: View
 
     func body(content: Content) -> some View {
         // 넓은 창으로 바뀌어 칸에 옮겨 그린 뒤 늦게 닫히는 화면은 작성 중인 초안을 지우지 않음
-        let narrowItem = item.hiddenInPane(usesDesktopLayout)
+        let layout = layout.update(usesDesktopLayout: usesDesktopLayout)
+        let narrowItem = item.hiddenInPane { layout.usesDesktopLayout }
 
         switch (narrow, inPane) {
         case (.cover, true):
@@ -123,7 +141,7 @@ private struct CompositionEditorModifier<Item: Identifiable, Editor: View>: View
         case (.cover, false):
             content
                 .fullScreenCover(item: narrowItem, content: editor)
-                .prominentSheet(item: item.hiddenInPane(!usesDesktopLayout), content: editor)
+                .prominentSheet(item: item.hiddenInPane { !layout.usesDesktopLayout }, content: editor)
         case (.sheet, false):
             content
                 .prominentSheet(item: item, content: editor)
@@ -136,6 +154,7 @@ private struct CompositionEditorModifier<Item: Identifiable, Editor: View>: View
 
 private struct CompositionCenterModifier<Item: Identifiable, Center: View>: ViewModifier {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @State private var layout = LiveLayout()
     let item: Binding<Item?>
     let narrow: CompositionNarrow
     let isActive: Bool
@@ -143,7 +162,8 @@ private struct CompositionCenterModifier<Item: Identifiable, Center: View>: View
 
     func body(content: Content) -> some View {
         // 창 폭이 바뀌어도 좁은 창의 표시를 같은 화면에 두어, 넓어진 뒤 늦게 닫히는 표시가 상태를 지우지 않음
-        let narrowItem = item.activePresentation(when: isActive).hiddenInPane(usesDesktopLayout)
+        let layout = layout.update(usesDesktopLayout: usesDesktopLayout)
+        let narrowItem = item.activePresentation(when: isActive).hiddenInPane { layout.usesDesktopLayout }
         let shown = Group {
             if usesDesktopLayout, let value = item.wrappedValue {
                 center(value)
@@ -169,14 +189,19 @@ private struct CompositionCenterModifier<Item: Identifiable, Center: View>: View
 private struct CompositionSheetModifier<Item: Identifiable, Sheet: View, Right: View>: ViewModifier {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @State private var layout = LiveLayout()
     let item: Binding<Item?>
     let sheet: (Item) -> Sheet
     let right: (Item) -> Right
 
     func body(content: Content) -> some View {
+        // 넓은 창으로 바뀌어 세부 정보 사이드바로 옮긴 뒤 늦게 닫히는 시트는 고른 항목을 지우지 않음
+        let layout = layout.update(usesDesktopLayout: usesDesktopLayout)
+
         content
             .prominentSheet(
-                item: item.activePresentation(when: isTabContentActive && !usesDesktopLayout),
+                item: item.activePresentation(when: isTabContentActive)
+                    .hiddenInPane { layout.usesDesktopLayout },
                 content: sheet
             )
             // 고른 항목이 없으면 세부 정보 사이드바에 안내 표시

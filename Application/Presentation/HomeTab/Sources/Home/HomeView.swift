@@ -100,7 +100,12 @@ public struct HomeView: View {
                     case .search: true
                     }
                 },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
+                destination: {
+                    destinationView($0)
+                        .environment(\.showsPaneTitleBar, usesPaneLayout)
+                        // 위에 쌓은 화면에 가려진 동안에도 창 폭이 바뀐 것을 받아 쌓아 연 상세를 옮김
+                        .environment(\.usesDesktopLayout, usesDesktopLayout)
+                }
             )
         }
         .desktopNavigationTransition()
