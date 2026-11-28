@@ -75,11 +75,10 @@ public struct GoalDetailView: View {
                 )
             }
         }
-        // 좁은 창은 닫기·저장·확정 버튼으로만 닫는 전체 화면
-        // 넓은 창으로 바뀌어 칸에 옮겨 그린 뒤 늦게 닫히는 전체 화면은 작성 중인 기록을 지우지 않음
-        .fullScreenCover(
+        // 좁은 창은 닫기, 저장, 확정 버튼으로만 닫는 전체 화면
+        .compositionEditor(
             item: $store.scope(state: \.recordEditor, action: \.recordEditor)
-                .hiddenInPane { usesDesktopLayout || store.shownOnDesktop == true }
+                .hiddenInPane { store.shownOnDesktop == true }
         ) { editorStore in
             RecordEditorView(
                 store: editorStore,
@@ -92,9 +91,10 @@ public struct GoalDetailView: View {
             GoalTodoLinkSheet(store: $0)
         }
         // 좁은 창은 새 개발 목표와 같은 시트로 수정하고 닫기, 저장 버튼으로만 닫음
-        .prominentSheet(
+        .compositionEditor(
             item: $store.scope(state: \.goalEdit, action: \.goalEdit)
-                .hiddenInPane { usesDesktopLayout || store.shownOnDesktop == true }
+                .hiddenInPane { store.shownOnDesktop == true },
+            narrow: .sheet
         ) {
             GoalCreateView(store: $0)
         }

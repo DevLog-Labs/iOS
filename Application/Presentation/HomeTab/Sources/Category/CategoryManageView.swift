@@ -102,26 +102,18 @@ struct CategoryManageView: View {
             }
             .background((usesDesktopLayout ? Color.background : .secondaryBackground).ignoresSafeArea())
             // 사이드바가 있으면 고른 카테고리를 시트 대신 세부 정보 사이드바에 표시
-            .prominentSheet(
-                item: $store.scope(state: \.categorySheet, action: \.categorySheet)
-                    .activePresentation(when: isTabContentActive && !usesDesktopLayout)
-            ) { sheetStore in
+            .compositionSheet(item: $store.scope(state: \.categorySheet, action: \.categorySheet)) { sheetStore in
                 CategoryManageSheet(store: sheetStore)
-            }
-            .prominentAlert(store, state: \.alert, action: \.alert)
-            .compositionRight(isActive: usesDesktopLayout) {
-                if let sheetStore = store.scope(state: \.categorySheet, action: \.categorySheet.presented) {
-                    ScrollView {
-                        CategoryEditForm(store: sheetStore) {
-                            if let item = store.preferences.first(where: { $0.id == sheetStore.category.id }) {
-                                store.send(.tapDeleteUserCategory(item))
-                            }
+            } right: { sheetStore in
+                ScrollView {
+                    CategoryEditForm(store: sheetStore) {
+                        if let item = store.preferences.first(where: { $0.id == sheetStore.category.id }) {
+                            store.send(.tapDeleteUserCategory(item))
                         }
                     }
-                } else {
-                    DetailSideBarPlaceholder()
                 }
             }
+            .prominentAlert(store, state: \.alert, action: \.alert)
             // 카테고리 관리를 벗어나면 카테고리를 보여 주던 세부 정보 사이드바도 닫음
             .onChange(of: isTabContentActive) { _, isActive in
                 if usesDesktopLayout && !isActive {

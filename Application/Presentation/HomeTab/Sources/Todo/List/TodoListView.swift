@@ -97,10 +97,9 @@ struct TodoListView: View {
             // 상세 칸에서 편집한 Todo를 옆 목록에도 반영
             store.send(.view(.windowTodoUpdated))
         }
-        .fullScreenCover(
+        .compositionEditor(
             item: $store.scope(state: \.fullScreenCover, action: \.fullScreenCover)
                 .activePresentation(when: isTabContentActive)
-                .hiddenInPane(usesPaneLayout)
         ) { coverStore in
             fullScreenCoverContent(coverStore)
         }
