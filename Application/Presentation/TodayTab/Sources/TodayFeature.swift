@@ -42,7 +42,13 @@ struct TodayFeature {
 
     enum Action: BindableAction, Equatable {
         case alert(PresentationAction<Never>)
+        case detail(PresentationAction<TodoDetailFeature.Action>)
         case binding(BindingAction<State>)
+        // 사이드바가 있는 창은 연 곳(상세 판이나 오른쪽 칸)의 내용을 바꿈
+        case selectTodo(String)
+        // 사이드바가 있는 창에서 오른쪽 칸을 열었으면 칸의 Todo도 바꿈
+        case inspectTodo(String)
+        case moveDetailToPane
         case refresh
         case fetchData
         case checkCurrentDate(Date)
@@ -90,8 +96,30 @@ struct TodayFeature {
             switch action {
             case .alert:
                 break
+            case .detail(.dismiss):
+                state.showsDetailInPane = false
+            case .detail:
+                break
             case .binding:
                 break
+            case .selectTodo(let todoId):
+                if state.showsDetailInPane {
+                    state.selectedTodoId = todoId
+                }
+                // 이미 연 Todo는 불러온 상세와 열어 둔 시트를 그대로 둠
+                if state.detail?.todoId != todoId {
+                    state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: true)
+                }
+            case .inspectTodo(let todoId):
+                state.revealCount += 1
+                state.selectedTodoId = todoId
+                if state.showsDetailInPane && state.detail?.todoId != todoId {
+                    state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: true)
+                }
+            case .moveDetailToPane:
+                guard let todoId = state.detail?.todoId else { break }
+                state.selectedTodoId = todoId
+                state.showsDetailInPane = true
             case .refresh:
                 let interval = prepareTodayInterval(state: &state, now: now)
                 return .concatenate(
@@ -130,6 +158,7 @@ struct TodayFeature {
             case .dismissTodoInspector:
                 state.isTodoInspectorPresented = false
             case .moveTodoInspectorToSideBar:
+                state.revealCount += 1
                 guard state.isTodoInspectorPresented, let info = state.todoInfo else { break }
                 // 고친 값은 이미 저장해 시트만 닫고 같은 Todo를 세부 정보 사이드바에 표시
                 state.isTodoInspectorPresented = false
@@ -165,18 +194,18 @@ struct TodayFeature {
                 state.alert = Self.alertState()
             case .store(.setTodos(let incomplete, let completedToday, let interval)):
                 guard state.todayInterval == interval else { break }
-                let selectedItem = state.selectedTodoId.flatMap { latestItem(id: $0, state: state) }
+                let detailItem = state.detail.flatMap { latestItem(id: $0.todoId, state: state) }
                 state.todos = incomplete
                 state.isIncompleteDataLoaded = true
                 state.completedTodayTodos = completedToday
                 state.isCompletedTodayDataLoaded = true
-                reloadDetailPaneIfChanged(from: selectedItem, state: &state)
+                return reloadDetailIfChanged(from: detailItem, state: state)
             case .store(.setCompletedTodayTodos(let todos, let interval)):
                 guard state.todayInterval == interval else { break }
-                let selectedItem = state.selectedTodoId.flatMap { latestItem(id: $0, state: state) }
+                let detailItem = state.detail.flatMap { latestItem(id: $0.todoId, state: state) }
                 state.completedTodayTodos = todos
                 state.isCompletedTodayDataLoaded = true
-                reloadDetailPaneIfChanged(from: selectedItem, state: &state)
+                return reloadDetailIfChanged(from: detailItem, state: state)
             case .store(.setCategories(let categories)):
                 state.categories = categories
                 let visibleCategoryIDs = Set(state.visibleCategories.map(\.id))
@@ -185,11 +214,11 @@ struct TodayFeature {
                     state.selectedCategoryID = nil
                 }
             case .store(.updateTodo(let item)):
-                // 인스펙터나 완료 버튼으로 바꾼 Todo는 오른쪽 칸 상세도 다시 만듦
-                if item.id == state.selectedTodoId {
-                    state.detailPaneRevision += 1
-                }
                 update(item, state: &state)
+                // 인스펙터나 완료 버튼으로 바꾼 Todo는 연 상세도 다시 조회
+                if item.id == state.detail?.todoId {
+                    return .send(.detail(.presented(.fetch)))
+                }
             case .store(.removeTodo(let todoId)):
                 state.todos.removeAll { $0.id == todoId }
                 state.completedTodayTodos.removeAll { $0.id == todoId }
@@ -202,6 +231,9 @@ struct TodayFeature {
         .ifLet(\.$alert, action: \.alert)
         .ifLet(\.todoInfo, action: \.todoInfo) {
             TodoDetailSideBarFeature()
+        }
+        .ifLet(\.$detail, action: \.detail) {
+            TodoDetailFeature()
         }
     }
 }
@@ -251,11 +283,11 @@ private extension TodayFeature {
         }
     }
 
-    // 다시 불러온 목록에서 고른 Todo가 바뀌었으면 오른쪽 칸 상세도 다시 만듦
-    func reloadDetailPaneIfChanged(from selectedItem: TodayTodoItem?, state: inout State) {
-        guard let selectedItem,
-              latestItem(id: selectedItem.id, state: state)?.updatedAt != selectedItem.updatedAt else { return }
-        state.detailPaneRevision += 1
+    // 다시 불러온 목록에서 연 Todo가 바뀌었으면 상세도 다시 조회
+    func reloadDetailIfChanged(from detailItem: TodayTodoItem?, state: State) -> Effect<Action> {
+        guard let detailItem,
+              latestItem(id: detailItem.id, state: state)?.updatedAt != detailItem.updatedAt else { return .none }
+        return .send(.detail(.presented(.fetch)))
     }
 
     func prepareTodayInterval(state: inout State, now: Date) -> DateInterval {

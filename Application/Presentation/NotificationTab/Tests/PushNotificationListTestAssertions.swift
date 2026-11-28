@@ -139,10 +139,10 @@ func verifySelectNotification<Adapter: PushNotificationListStateDriving>(
     await adapter.selectNotification("notification-1")
 
     let selectedNotificationId = adapter.selectedNotificationId
-    let selectedTodoId = adapter.selectedTodoId
+    let detailTodoId = adapter.detailTodoId
     let notifications = adapter.notifications
     #expect(selectedNotificationId == "notification-1")
-    #expect(selectedTodoId?.id == "todo-1")
+    #expect(detailTodoId == "todo-1")
     #expect(notifications.first?.isRead == true)
 
     await waitUntilMainActor {
@@ -152,9 +152,9 @@ func verifySelectNotification<Adapter: PushNotificationListStateDriving>(
     await adapter.selectNotification(nil)
 
     let resetSelectedNotificationId = adapter.selectedNotificationId
-    let resetSelectedTodoId = adapter.selectedTodoId
+    let resetDetailTodoId = adapter.detailTodoId
     #expect(resetSelectedNotificationId == nil)
-    #expect(resetSelectedTodoId == nil)
+    #expect(resetDetailTodoId == nil)
 }
 
 @MainActor

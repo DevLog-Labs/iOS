@@ -13,8 +13,9 @@ public struct PushNotificationListView: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var store: StoreOf<PushNotificationListFeature>
     private let isSelected: Bool
+    private let windowEvent: TodoEditorWindowEvent
 
-    public init(isSelected: Bool) {
+    public init(isSelected: Bool, windowEvent: TodoEditorWindowEvent) {
         @Dependency(\.fetchPushNotificationQueryUseCase) var fetchQueryUseCase
         self._store = State(initialValue: Store(
             initialState: PushNotificationListFeature.State(
@@ -24,16 +25,14 @@ public struct PushNotificationListView: View {
             PushNotificationListFeature()
         })
         self.isSelected = isSelected
+        self.windowEvent = windowEvent
     }
 
     public var body: some View {
-        // 사이드바가 있는 창에서 오른쪽 칸을 열었을 때만 목록 | 상세 두 칸으로 나눔
-        let showsPane = usesDesktopLayout && store.isDetailPanePresented
-
         NavigationStack {
-            PaneSplitView(splitsOnDesktop: showsPane) {
+            PaneSplitView {
                 // 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 연 알림을 목록에 선택 표시
-                PushNotificationListContent(store: store, showsSelection: usesDesktopLayout)
+                PushNotificationListContent(store: store)
                     .background(Color.background)
                     .refreshable(isEnabled: PullToRefreshAvailability.isEnabled) {
                         let task = store.send(.view(.refresh))
@@ -41,83 +40,57 @@ public struct PushNotificationListView: View {
                         store.send(.view(.startObserving))
                     }
                     .duoToolbarVisibility()
-            } detail: {
-                TodoDetailPane(
-                    todoId: store.selectedTodoId?.id,
-                    showEditButton: false,
-                    onClose: usesDesktopLayout ? closeDetailPane : nil
-                )
+                    // 좁은 창은 시트로 띄우고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+                    // 오른쪽 칸을 연 동안은 고른 알림이 없어도 칸에 안내 표시
+                    // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
+                    .compositionDetail(
+                        item: $store.scope(state: \.detail, action: \.detail),
+                        narrow: .sheet,
+                        inPane: store.showsDetailInPane,
+                        emptyPane: true,
+                        isActive: isSelected
+                    ) { detailStore, onClose in
+                        if let onClose {
+                            TodoDetailView(store: detailStore, isPaneDetail: true, onClose: onClose)
+                                // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회
+                                .id(detailStore.todoId)
+                        } else {
+                            NavigationStack {
+                                TodoDetailView(store: detailStore)
+                            }
+                            .environment(\.windowControlsInset, 0)
+                            .environment(\.deviceType, .bar)
+                            .background(Color.background)
+                        }
+                    } panel: { detailStore in
+                        TodoDetailPanel(
+                            store: detailStore,
+                            location: Text("nav_push_notifications", bundle: PresentationResources.bundle),
+                            onMoveToPane: {
+                                store.send(.binding(.set(\.showsDetailInPane, true)))
+                            }
+                        )
+                    }
             }
             // 오른쪽 칸은 칸 제목 줄 정보 버튼 대신 창 오른쪽 세부 정보 사이드바에 속성 표시
-            .detailSideBarTarget(
-                showsPane ? store.selectedTodoId.map { .todo(id: $0.id, isEditable: false) } : nil
-            )
+            .compositionRight(isActive: usesDesktopLayout && store.showsDetailInPane && store.detail != nil) {
+                if let todoId = store.detail?.todoId {
+                    TodoDetailSideBarView(todoId: todoId, isEditable: false, windowEvent: windowEvent)
+                        .id(todoId)
+                }
+            }
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .prominentSheet(item: sheetStore.activePresentation(when: isSelected && !usesDesktopLayout)) { store in
-            sheetContent(store)
-        }
-        .detailPanel(item: sheetStore.activePresentation(when: isSelected && usesDesktopLayout)) { sheetStore in
-            TodoDetailPanel(
-                todoId: sheetStore.todoId,
-                location: Text("nav_push_notifications", bundle: PresentationResources.bundle),
-                isEditable: false,
-                onMoveToPane: {
-                    store.send(.binding(.set(\.isDetailPanePresented, true)))
-                }
-            )
-        }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.view(.fetchNotifications))
             }
-        }
-        .onChange(of: store.selectedTodoId?.id, initial: true) {
-            if !showsPane {
-                store.send(.view(.syncSheetPresentation))
-            }
-        }
-        // 오른쪽 칸을 열면 상세 판만 닫고, 오른쪽 칸을 닫으면 고른 Todo를 상세 판이나 시트로 표시
-        .onChange(of: showsPane) { _, showsPane in
-            store.send(.view(showsPane ? .hideSheet : .syncSheetPresentation))
         }
         .overlay {
             if store.isLoading {
                 LoadingView()
             }
         }
-    }
-
-    // 선택을 먼저 비워 오른쪽 칸을 닫을 때 같은 Todo를 상세 판으로 다시 열지 않음
-    private func closeDetailPane() {
-        store.send(.view(.selectNotification(nil)))
-        store.send(.binding(.set(\.isDetailPanePresented, false)))
-    }
-
-    @ViewBuilder
-    private func sheetContent(
-        _ sheetStore: Store<PushNotificationListFeature.SheetState, PushNotificationListFeature.Action.Sheet>
-    ) -> some View {
-        NavigationStack {
-            TodoDetailView(store: Store(
-                initialState: TodoDetailFeature.State(
-                    todoId: sheetStore.todoId,
-                    showEditButton: false
-                )
-            ) {
-                TodoDetailFeature()
-            })
-            .id(sheetStore.todoId)
-        }
-        .environment(\.windowControlsInset, 0)
-        .environment(\.deviceType, .bar)
-        .background(Color.background)
-    }
-
-    private var sheetStore: Binding<
-        Store<PushNotificationListFeature.SheetState,
-              PushNotificationListFeature.Action.Sheet>?> {
-        $store.scope(state: \.sheet, action: \.sheet)
     }
 }
 
@@ -127,8 +100,6 @@ private struct PushNotificationListContent: View {
     @Environment(\.windowControlsInset) private var windowControlsInset
     @ScaledMetric(relativeTo: .body) private var iconSize = 32
     let store: StoreOf<PushNotificationListFeature>
-    // 고른 알림을 상세 판이나 옆 칸에 표시하는 동안 목록 행에 선택 표시
-    let showsSelection: Bool
 
     @ViewBuilder
     var body: some View {
@@ -168,7 +139,8 @@ private struct PushNotificationListContent: View {
                             LazyVStack(spacing: 0) {
                                 ForEach(items) { item in
                                     let category = TodoCategoryItem(from: item.todoCategory)
-                                    let isSelected = showsSelection && item.id == store.selectedNotificationId
+                                    // 사이드바가 있는 창은 고른 알림을 상세 판이나 옆 칸에 표시하는 동안 목록 행에 선택 표시
+                                    let isSelected = usesDesktopLayout && item.id == store.selectedNotificationId
 
                                     HStack(alignment: .top, spacing: 10) {
                                         // 테두리 있는 회색 사각형에 카테고리 색 기호
@@ -234,7 +206,7 @@ private struct PushNotificationListContent: View {
                                         // 우클릭과 길게 누른 메뉴는 상세 판과 오른쪽 칸으로 여는 항목을 맨 위에 표시
                                         if usesDesktopLayout {
                                             Button {
-                                                store.send(.binding(.set(\.isDetailPanePresented, false)))
+                                                store.send(.binding(.set(\.showsDetailInPane, false)))
                                                 store.send(.view(.selectNotification(item.id)))
                                             } label: {
                                                 Label {
@@ -244,7 +216,7 @@ private struct PushNotificationListContent: View {
                                                 }
                                             }
                                             Button {
-                                                store.send(.binding(.set(\.isDetailPanePresented, true)))
+                                                store.send(.binding(.set(\.showsDetailInPane, true)))
                                                 store.send(.view(.selectNotification(item.id)))
                                             } label: {
                                                 Label {

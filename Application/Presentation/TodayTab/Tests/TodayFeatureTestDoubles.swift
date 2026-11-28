@@ -78,7 +78,8 @@ struct TodayStoreTestAdapter: TodayStateDriving {
     var isTodoInspectorPresented: Bool { store.state.isTodoInspectorPresented }
     var todoInfoTitle: String? { store.state.todoInfo?.editor?.title }
     var selectedTodoId: String? { store.state.selectedTodoId }
-    var detailPaneRevision: Int { store.state.detailPaneRevision }
+    var detailTodoId: String? { store.state.detail?.todoId }
+    var showsDetailInPane: Bool { store.state.showsDetailInPane }
     var visibleCategoryIDs: [String] { store.state.visibleCategories.map(\.id) }
     var showAlert: Bool { store.state.alert != nil }
     var isLoading: Bool { store.state.isLoading }
@@ -109,6 +110,7 @@ struct TodayStoreTestAdapter: TodayStateDriving {
             $0.fetchTodoByIdUseCase = fetchTodoByIdUseCase
             $0.upsertTodoUseCase = upsertUseCase
             $0.trackAnalyticsEventUseCase = trackAnalyticsEventUseCase
+            $0.fetchReferenceItemsUseCase = TodayFetchReferenceItemsUseCaseStub()
             $0.date.now = now
             $0.continuousClock = ContinuousClock()
             configureDependencies?(&$0)
@@ -147,6 +149,22 @@ struct TodayStoreTestAdapter: TodayStateDriving {
 
     func receiveUpdatedTodo(_ item: TodayTodoItem) async {
         await store.send(.store(.updateTodo(item)))
+    }
+
+    func openTodo(_ id: String) async {
+        await store.send(.selectTodo(id))
+    }
+
+    func inspectTodo(_ id: String) async {
+        await store.send(.inspectTodo(id))
+    }
+
+    func moveDetailToPane() async {
+        await store.send(.moveDetailToPane)
+    }
+
+    func dismissDetail() async {
+        await store.send(.detail(.dismiss))
     }
 
     func receiveDetailTodo(_ item: TodayTodoItem) async {

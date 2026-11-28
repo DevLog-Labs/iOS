@@ -17,6 +17,10 @@ struct TodoListFeature {
     struct State: Equatable {
         @Presents var alert: AlertState<Never>?
         @Presents var fullScreenCover: FullScreenCoverState?
+        // 연 Todo 상세, 좁은 창은 내비게이션에 쌓고 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+        @Presents var detail: TodoDetailFeature.State?
+        // 사이드바가 있는 창에서 상세 판 대신 목록 오른쪽 칸에 표시
+        var showsDetailInPane = false
         var category: TodoCategory
         var todos: [TodoListItem] = []
         var query: TodoQuery
@@ -24,12 +28,8 @@ struct TodoListFeature {
         var isSearching = false
         var loading = LoadingFeature.State()
         var searchQuery = ""
-        var selectedTodoId: String?
-        // 사이드바가 있는 창에서 사이드바까지 덮는 상세 판에 연 Todo
-        var panelTodo: TodoIdItem?
         // Mac에서 마우스를 올린 행, 선택 행처럼 둥글게 표시하고 맞닿는 구분선을 숨김
         var hoveredTodoId: String?
-        var detailRevision = 0
         var undoTodoId: String?
         var nextCursor: TodoCursor?
 
@@ -71,9 +71,10 @@ struct TodoListFeature {
         }
     }
 
-    enum Action: BindableAction {
+    enum Action: BindableAction, Equatable {
         case alert(PresentationAction<Never>)
         case fullScreenCover(PresentationAction<FullScreenCover>)
+        case detail(PresentationAction<TodoDetailFeature.Action>)
         case binding(BindingAction<State>)
         case view(ViewAction)
         case store(StoreAction)
@@ -86,6 +87,9 @@ struct TodoListFeature {
 
         enum ViewAction: Equatable {
             case refresh
+            // 사이드바가 있는 창은 연 곳(상세 판이나 오른쪽 칸)의 내용을 바꿈
+            case selectTodo(String)
+            case openTodo(String, inPane: Bool)
             case swipeTodo(TodoListItem)
             case resetFilters
             case finishDeleteToast(String)
@@ -147,6 +151,10 @@ struct TodoListFeature {
                 state.fullScreenCover = nil
             case .fullScreenCover:
                 break
+            case .detail(.dismiss):
+                state.showsDetailInPane = false
+            case .detail:
+                break
             case .binding(\.query.sortTarget), .binding(\.query.sortOrder), .binding(\.query.isPinned),
                     .binding(\.query.completionFilter):
                 state.nextCursor = nil
@@ -186,6 +194,9 @@ struct TodoListFeature {
         .ifLet(\.$alert, action: \.alert)
         .ifLet(\.$fullScreenCover, action: \.fullScreenCover) {
             FullScreenCoverFeature()
+        }
+        .ifLet(\.$detail, action: \.detail) {
+            TodoDetailFeature()
         }
     }
 }
@@ -302,6 +313,14 @@ private extension TodoListFeature {
         switch action {
         case .refresh:
             return fetchEffect(query: state.query, cursor: nil, showsIndicator: false)
+        case .selectTodo(let todoId):
+            // 이미 연 Todo는 불러온 상세와 열어 둔 시트를 그대로 둠
+            if state.detail?.todoId != todoId {
+                state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: true)
+            }
+        case .openTodo(let todoId, let inPane):
+            state.showsDetailInPane = inPane
+            return reduce(.selectTodo(todoId), state: &state)
         case .onAppear:
             return fetchEffect(query: state.query, cursor: nil)
         case .windowTodoUpdated:
@@ -369,9 +388,9 @@ private extension TodoListFeature {
             if let index = state.todos.firstIndex(where: { $0.id == todo.id }) {
                 state.todos[index] = todo
             }
-            // 상세 칸이 바뀐 완료·중요 상태를 다시 조회하도록 갱신
-            if todo.id == state.selectedTodoId {
-                state.detailRevision += 1
+            // 연 상세와 세부 정보 사이드바가 바뀐 완료, 중요 상태를 다시 조회
+            if todo.id == state.detail?.todoId {
+                return .send(.detail(.presented(.fetch)))
             }
         case .setTodoHidden(let todoId, let isHidden):
             Self.setTodoHidden(&state, todoId: todoId, isHidden: isHidden)

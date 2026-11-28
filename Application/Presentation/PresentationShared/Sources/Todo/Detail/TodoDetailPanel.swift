@@ -6,33 +6,29 @@
 //
 
 import SwiftUI
-import Combine
 import ComposableArchitecture
 
 // 사이드바가 있는 창의 상세 판에 연 보기 전용 Todo
 // 위쪽 막대의 버튼으로 판 안 오른쪽 세부 정보 열을 열고 닫음
+// 판 메뉴의 중요 표시와 완료도 세부 정보 열과 같은 속성 상태로 바로 저장
 public struct TodoDetailPanel: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var store: StoreOf<TodoDetailPanelFeature>
+    @State private var store: StoreOf<TodoDetailFeature>
     private let location: Text
     private let windowEvent: TodoEditorWindowEvent?
     // 목록 | 상세 두 칸을 쓰는 화면만 오른쪽 칸으로 옮기기 표시
     private let onMoveToPane: (() -> Void)?
     private let onDelete: (() -> Void)?
 
+    // 상세 상태는 연 화면의 Feature가 갖고, 창 폭이 바뀌면 같은 상태를 다른 화면이 이어 그림
     public init(
-        todoId: String,
+        store: StoreOf<TodoDetailFeature>,
         location: Text,
-        isEditable: Bool,
         windowEvent: TodoEditorWindowEvent? = nil,
         onMoveToPane: (() -> Void)? = nil,
         onDelete: (() -> Void)? = nil
     ) {
-        self._store = State(initialValue: Store(
-            initialState: TodoDetailPanelFeature.State(todoId: todoId, isEditable: isEditable)
-        ) {
-            TodoDetailPanelFeature()
-        })
+        self._store = State(initialValue: store)
         self.location = location
         self.windowEvent = windowEvent
         self.onMoveToPane = onMoveToPane
@@ -43,10 +39,10 @@ public struct TodoDetailPanel: View {
         VStack(spacing: 0) {
             DetailPanelBar(
                 location: location,
-                title: Text(verbatim: store.detail.todo.map { "#\($0.number)" } ?? "")
+                title: Text(verbatim: store.todo.map { "#\($0.number)" } ?? "")
             ) {
                 Button {
-                    store.send(.binding(.set(\.isDetailColumnPresented, !store.isDetailColumnPresented)))
+                    store.send(.setDetailColumnPresented(!store.isDetailColumnPresented))
                 } label: {
                     Image(systemName: "sidebar.right")
                 }
@@ -56,10 +52,7 @@ public struct TodoDetailPanel: View {
             }
 
             HStack(spacing: 0) {
-                TodoDetailView(
-                    store: store.scope(state: \.detail, action: \.detail),
-                    windowEvent: windowEvent
-                )
+                TodoDetailView(store: store, windowEvent: windowEvent)
                 if store.isDetailColumnPresented {
                     VStack(spacing: 0) {
                         PaneTitleBar(background: .secondaryBackground) {
@@ -67,11 +60,8 @@ public struct TodoDetailPanel: View {
                         } actions: {
                             EmptyView()
                         }
-                        // 저장 결과 전달과 다른 곳에서 고친 값 반영은 판이 맡음
-                        TodoDetailSideBarView(
-                            store: store.scope(state: \.sideBar, action: \.sideBar),
-                            windowEvent: nil
-                        )
+                        // 저장 결과 전달과 다른 곳에서 고친 값 반영은 판 안 상세가 맡음
+                        TodoDetailSideBarView(store: store)
                     }
                     .frame(width: 280 * AdaptiveSize.boardScale)
                     .background(Color.secondaryBackground)
@@ -83,32 +73,8 @@ public struct TodoDetailPanel: View {
                 }
             }
         }
-        // 세부 정보 열을 닫아 둔 동안 판 메뉴로 저장하다 실패하면 판에서 알림 표시
-        .background {
-            if !store.isDetailColumnPresented,
-               let editorStore = store.scope(state: \.sideBar.editor, action: \.sideBar.editor) {
-                Color.clear
-                    .prominentAlert(editorStore, state: \.alert, action: \.alert)
-            }
-        }
         // 세부 정보 열을 닫아 둔 동안에도 판 메뉴로 중요 표시와 완료를 바꾸도록 속성을 불러옴
-        .onAppear { store.send(.sideBar(.onAppear)) }
-        .onChange(of: store.sideBar.editor?.saveResult) { _, result in
-            // 판에서 저장한 Todo를 목록과 판 상세에도 반영
-            guard case .updated(let todo)? = result else { return }
-            windowEvent?.submitUpdate(value: TodoEditorWindowValue(todo: todo), todo: todo)
-        }
-        .onReceive(windowSubmits) { submit in
-            // 판이 저장해 보낸 Todo는 다시 받지 않음
-            guard case .update(let value, let todo) = submit,
-                  value.matchesEdit(todoId: store.sideBar.todoId),
-                  store.sideBar.editor?.saveResult != .updated(todo) else { return }
-            store.send(.sideBar(.setTodo(todo)))
-        }
-    }
-
-    private var windowSubmits: AnyPublisher<TodoEditorWindowSubmit, Never> {
-        windowEvent?.submits ?? Empty().eraseToAnyPublisher()
+        .onAppear { store.send(.info(.onAppear)) }
     }
 
     @ViewBuilder
@@ -123,9 +89,9 @@ public struct TodoDetailPanel: View {
             }
             Divider()
         }
-        if store.sideBar.isEditable, let editor = store.sideBar.editor {
+        if store.info.isEditable, let editor = store.info.editor {
             Button {
-                store.send(.sideBar(.editor(.binding(.set(\.isPinned, !editor.isPinned)))))
+                store.send(.info(.editor(.binding(.set(\.isPinned, !editor.isPinned)))))
             } label: {
                 Label {
                     Text(editor.isPinned ? "todo_action_unpin" : "todo_action_pin", bundle: PresentationResources.bundle)
@@ -134,7 +100,7 @@ public struct TodoDetailPanel: View {
                 }
             }
             Button {
-                store.send(.sideBar(.editor(.binding(.set(\.isCompleted, !editor.isCompleted)))))
+                store.send(.info(.editor(.binding(.set(\.isCompleted, !editor.isCompleted)))))
             } label: {
                 Label {
                     Text(

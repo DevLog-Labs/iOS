@@ -68,6 +68,12 @@ private actor FetchTodosUseCaseCallRecorder {
     }
 }
 
+final class TodayFetchReferenceItemsUseCaseStub: FetchReferenceItemsUseCase {
+    func execute(_ numbers: [Int]) async throws -> [Int: TodoReference] {
+        [:]
+    }
+}
+
 final class TodayFetchTodoByIdUseCaseSpy: FetchTodoByIdUseCase {
     var todos: [Todo]
     var error: Error?

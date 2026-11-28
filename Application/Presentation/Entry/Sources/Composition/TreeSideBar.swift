@@ -15,13 +15,15 @@ struct TreeSideBar: View {
     let store: StoreOf<SideBarFeature>
     let selectedTab: AppTab
     let unreadPushCount: Int
+    // 사이드바를 접는 동작
+    let onCollapse: () -> Void
 
     var body: some View {
         let location = store.locations[selectedTab] ?? selectedTab.sideBarLocation
         let expandedGroups = store.expandedGroups
         let isCompact = (paneWidth ?? .infinity) < SideBarRow.compactWidth
         let collapseButton = Button {
-            store.send(.binding(.set(\.isCollapsed, true)))
+            onCollapse()
         } label: {
             Image(systemName: "sidebar.left")
         }

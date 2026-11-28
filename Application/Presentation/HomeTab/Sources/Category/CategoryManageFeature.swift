@@ -15,6 +15,8 @@ struct CategoryManageFeature {
     struct State: Equatable {
         @Presents var categorySheet: CategorySheetState?
         @Presents var alert: AlertState<Action.Alert>?
+        // 추가하거나 고칠 카테고리를 세부 정보 사이드바에 보여 달라고 한 횟수, 바뀌면 닫힌 세부 정보 사이드바를 엶
+        var revealCount = 0
         var preferences: [TodoCategoryItem]
     }
 
@@ -128,6 +130,7 @@ struct CategoryManageFeature {
             case .categorySheet:
                 break
             case .tapAddUserCategory:
+                state.revealCount += 1
                 if let randomHexValue = Color.randomValue.hexValue {
                     // 목록에 새 카테고리를 바로 만들고 고른 채로 시트나 세부 정보 사이드바에 표시
                     let category = UserTodoCategory(
@@ -156,6 +159,7 @@ struct CategoryManageFeature {
                 state.categorySheet?.preferences = preferences
                 return .send(.delegate(.changed(state.preferences)))
             case .tapEditUserCategory(let item):
+                state.revealCount += 1
                 if item.isUserCategory, case .user(let category) = item.category {
                     state.categorySheet = CategorySheetState(
                         category: category,

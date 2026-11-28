@@ -16,9 +16,8 @@ public struct ProfileView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
-    @Environment(\.sideBarRequest) private var sideBarRequest
+    @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State private var store: StoreOf<ProfileFeature>
-    @State private var router = NavigationRouter<ProfileRoute>()
     @Bindable private var settingsStore: StoreOf<SettingsFeature>
     private let isSelected: Bool
     private let windowEvent: TodoEditorWindowEvent
@@ -38,19 +37,19 @@ public struct ProfileView: View {
     }
 
     public var body: some View {
-        NavigationStack(path: path) {
+        NavigationStack {
             // 사이드바가 있는 창은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
-            PaneSplitView(splitsOnDesktop: store.selectedTodoRoute != nil) {
+            PaneSplitView {
                 ScrollView {
                     // 카드 없이 각 섹션이 페이지 여백을 가짐
                     LazyVStack(alignment: .leading, spacing: 0) {
                         UserInfoCard(store: store, isSelected: isSelected)
                         ActivityCard(store: store) { todoId in
-                            showTodo(.activity(todoId))
+                            store.send(.selectTodo(todoId, isEditable: false))
                         }
                         ProfileGoalSummary(store: store)
                         RecentActivityCard(store: store) { todoId in
-                            showTodo(.recentTodo(todoId))
+                            store.send(.selectTodo(todoId, isEditable: true))
                         }
                     }
                     .padding(.bottom, 24)
@@ -68,73 +67,65 @@ public struct ProfileView: View {
                     }
                 }
                 .background(Color.background)
-            } detail: {
-                let closeDetailPane: (() -> Void)? = usesDesktopLayout
-                    ? { store.send(.binding(.set(\.selectedTodoRoute, nil))) } : nil
-
-                switch store.selectedTodoRoute {
-                case .activity(let todoId):
-                    TodoDetailPane(todoId: todoId, showEditButton: false, onClose: closeDetailPane)
-                case .recentTodo(let todoId):
-                    TodoDetailPane(
-                        todoId: todoId,
-                        showEditButton: true,
-                        windowEvent: windowEvent,
-                        onClose: closeDetailPane
+                // 좁은 창은 프로필 위에 쌓고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+                // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
+                .compositionDetail(
+                    item: $store.scope(state: \.detail, action: \.detail),
+                    inPane: store.showsDetailInPane,
+                    isActive: isSelected
+                ) { detailStore, onClose in
+                    // 활동 기록 Todo는 고칠 수 없어 편집 결과를 받을 창 이벤트 없이 표시
+                    TodoDetailView(
+                        store: detailStore,
+                        windowEvent: detailStore.showEditButton ? windowEvent : nil,
+                        isPaneDetail: onClose != nil,
+                        onClose: onClose
                     )
-                default:
-                    TodoDetailPane(todoId: nil, showEditButton: false)
-                }
-            }
-            .detailSideBarTarget(store.selectedTodoRoute?.detailSideBarTarget)
-            // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
-            .detailPanel(item: $store.panelTodoRoute.activePresentation(when: isSelected && usesDesktopLayout)) { route in
-                if case .todo(let todoId, let isEditable, _)? = route.detailSideBarTarget {
+                    // 칸 안에서 다른 Todo로 바꾸거나 같은 Todo를 다른 목록에서 다시 고르면 그 Todo를 조회
+                    .id([AnyHashable(detailStore.todoId), detailStore.showEditButton])
+                } panel: { detailStore in
                     TodoDetailPanel(
-                        todoId: todoId,
+                        store: detailStore,
                         location: Text("nav_profile", bundle: PresentationResources.bundle),
-                        isEditable: isEditable,
-                        windowEvent: isEditable ? windowEvent : nil,
+                        windowEvent: detailStore.showEditButton ? windowEvent : nil,
                         onMoveToPane: {
-                            store.send(.binding(.set(\.panelTodoRoute, nil)))
-                            store.send(.binding(.set(\.selectedTodoRoute, route)))
+                            store.send(.binding(.set(\.showsDetailInPane, true)))
                         }
                     )
                 }
             }
+            .compositionRight(isActive: store.showsDetailInPane && store.detail != nil) {
+                if let detail = store.detail {
+                    TodoDetailSideBarView(
+                        todoId: detail.todoId,
+                        isEditable: detail.showEditButton,
+                        windowEvent: windowEvent
+                    )
+                    // 같은 Todo도 편집할 수 있는지가 바뀌면 다시 만듦
+                    .id([AnyHashable(detail.todoId), detail.showEditButton])
+                }
+            }
+            // 좁은 창은 설정 목록과 고른 항목 화면을 프로필 위에 쌓고, 사이드바가 있는 창은 창 전체 설정 화면에 그려 쌓지 않음
             .navigationDestination(
-                for: ProfileRoute.self,
-                interactivePop: {
-                    switch $0 {
-                    case .settings, .theme, .activity, .recentTodo: true
-                    default: false
-                    }
-                },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
-            )
+                isPresented: $settingsStore.isListPushed.hiddenInPane(usesDesktopLayout),
+                interactivePop: true
+            ) {
+                SettingsView(store: settingsStore) { route in
+                    settingsStore.send(.select(route))
+                }
+                .environment(\.showsPaneTitleBar, usesPaneLayout)
+                .navigationDestination(
+                    item: $settingsStore.pushedRoute.hiddenInPane(usesDesktopLayout),
+                    interactivePop: settingsStore.pushedRoute == .theme
+                ) { route in
+                    settingsPage(route)
+                        .environment(\.showsPaneTitleBar, usesPaneLayout)
+                }
+            }
         }
         .desktopNavigationTransition()
         // 창 폭이 바뀌어 같은 설정을 다시 쌓거나 내릴 때 밀리는 효과 없이 바꿈
         .transaction(value: usesDesktopLayout) { $0.disablesAnimations = true }
-        // 사이드바 구조로 바뀌면 쌓아 연 Todo 상세는 내리고 같은 Todo를 옆 칸에 표시
-        .closesPushedDetail {
-            switch router.path.last {
-            case .activity?, .recentTodo?:
-                let route = router.path.removeLast()
-                store.send(.binding(.set(\.selectedTodoRoute, route)))
-            default:
-                break
-            }
-        }
-        // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
-        .onChange(of: sideBarRequest, initial: true) { _, request in
-            switch request?.action {
-            case .open(.profile):
-                router.path = []
-            default:
-                break
-            }
-        }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.fetchData)
@@ -145,11 +136,14 @@ public struct ProfileView: View {
             settingsStore.send(.startObserving)
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
-        .prominentSheet(
-            isPresented: $store.showQuarterPicker
-                .hiddenInPane(usesPaneLayout)
-                .activePresentation(when: isSelected)
-        ) { QuarterPickerSheet(store: store) }
+        // 좁은 창은 분기 선택을 시트로, 칸으로 나눈 화면은 분기 표시 옆 팝오버로 표시하고 Mac은 분기 표시 아래로 표시
+        .compositionPicker(
+            isPresented: $store.showQuarterPicker,
+            isActive: isSelected,
+            arrowEdge: isiOSAppOnMac ? .top : nil
+        ) {
+            QuarterPickerSheet(store: store)
+        }
         .overlay {
             if store.isLoading {
                 LoadingView()
@@ -208,73 +202,6 @@ public struct ProfileView: View {
         }
     }
 
-    // 사이드바가 있는 창의 설정은 창 전체 설정 화면에 그리므로 쌓지 않음
-    private var path: Binding<[ProfileRoute]> {
-        Binding(
-            get: {
-                guard !usesDesktopLayout else { return router.path }
-                switch settingsStore.screen {
-                case .list:
-                    return router.path + [.settings]
-                case .detail:
-                    return router.path + [.settings, settingsStore.selectedRoute]
-                case nil:
-                    return router.path
-                }
-            },
-            set: { path in
-                let settingsIndex = path.firstIndex(of: .settings) ?? path.endIndex
-                router.path = Array(path[..<settingsIndex])
-                // 쌓은 설정이 내려가며 늦게 보낸 빈 경로가 보던 항목을 지우지 않음
-                guard !usesDesktopLayout else { return }
-                switch path.endIndex - settingsIndex {
-                case 0:
-                    settingsStore.send(.binding(.set(\.screen, nil)))
-                case 1:
-                    settingsStore.send(.binding(.set(\.screen, .list)))
-                default:
-                    settingsStore.send(.binding(.set(\.screen, .detail)))
-                }
-            }
-        )
-    }
-
-    // 칸 화면은 옆 칸에 상세를 열고 나머지는 화면 이동
-    // 사이드바가 있는 창은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
-    private func showTodo(_ route: ProfileRoute) {
-        if usesDesktopLayout && store.selectedTodoRoute == nil {
-            store.send(.binding(.set(\.panelTodoRoute, route)))
-        } else if usesPaneLayout {
-            store.send(.binding(.set(\.selectedTodoRoute, route)))
-        } else {
-            router.push(route)
-        }
-    }
-
-    @ViewBuilder
-    private func destinationView(_ route: ProfileRoute) -> some View {
-        switch route {
-        case .settings:
-            SettingsView(store: settingsStore) { route in
-                settingsStore.send(.select(route))
-            }
-        case .activity(let todoId):
-            TodoDetailView(store: Store(
-                initialState: TodoDetailFeature.State(todoId: todoId, showEditButton: false)
-            ) {
-                TodoDetailFeature()
-            })
-        case .recentTodo(let todoId):
-            TodoDetailView(store: Store(
-                initialState: TodoDetailFeature.State(todoId: todoId, showEditButton: true)
-            ) {
-                TodoDetailFeature()
-            }, windowEvent: windowEvent)
-        case .theme, .pushNotification, .account, .information:
-            settingsPage(route)
-        }
-    }
-
     // 설정에서 고르는 아래 화면
     @ViewBuilder
     private func settingsPage(_ route: ProfileRoute) -> some View {
@@ -292,7 +219,7 @@ public struct ProfileView: View {
                 store: settingsStore.scope(state: \.account, action: \.account),
                 settingsStore: settingsStore
             )
-        case .settings, .activity, .recentTodo, .information:
+        case .settings, .information:
             EmptyView()
         }
     }
@@ -328,8 +255,6 @@ private struct ProfileGoalSummary: View {
 
 public enum ProfileRoute: Hashable, Identifiable {
     case settings
-    case activity(String)
-    case recentTodo(String)
     case theme
     case pushNotification
     case account
@@ -337,15 +262,4 @@ public enum ProfileRoute: Hashable, Identifiable {
     case information
 
     public var id: Self { self }
-}
-
-private extension ProfileRoute {
-    // 활동 기록 Todo는 고칠 수 없어 읽기 전용으로 표시
-    var detailSideBarTarget: DetailSideBarTarget? {
-        switch self {
-        case .activity(let todoId): .todo(id: todoId, isEditable: false)
-        case .recentTodo(let todoId): .todo(id: todoId, isEditable: true)
-        default: nil
-        }
-    }
 }

@@ -28,6 +28,12 @@ public struct TodoDetailSideBarView: View {
         self.windowEvent = windowEvent
     }
 
+    // 열어 둔 Todo 상세와 속성 상태를 함께 쓰는 세부 정보 열
+    // 저장 결과 전달과 다른 곳에서 고친 값 반영은 상세 화면이 맡음
+    public init(store: StoreOf<TodoDetailFeature>) {
+        self.init(store: store.scope(state: \.info, action: \.info), windowEvent: nil)
+    }
+
     // 상세 판과 세부 정보 시트처럼 바깥 화면이 속성 상태를 함께 쓰는 세부 정보 열
     init(
         store: StoreOf<TodoDetailSideBarFeature>,

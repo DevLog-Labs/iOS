@@ -64,19 +64,13 @@ struct RecordVersionHistoryView: View {
         .safeAreaInset(edge: .top, spacing: 0) { topBar }
         .background(Color.background.ignoresSafeArea())
         .duoToolbarVisibility(showsBackButton: true)
-        .navigationDestination(
-            item: versionDetail.hiddenInPane { usesDesktopLayout || isHidden() },
-            interactivePop: true
-        ) { destination in
+        // 사이드바가 있는 창은 이전 버전을 사이드바까지 덮는 상세 판으로 열기
+        .compositionDetail(item: versionDetail.hiddenInPane(isHidden)) { destination, _ in
             RecordVersionDetailView(
                 store: store,
                 version: destination.version
             )
-        }
-        // 사이드바가 있는 창은 이전 버전을 사이드바까지 덮는 상세 판으로 열기
-        .detailPanel(
-            item: versionDetail.hiddenInPane { !usesDesktopLayout || isHidden() }
-        ) { destination in
+        } panel: { destination in
             RecordVersionDetailView(
                 store: store,
                 version: destination.version

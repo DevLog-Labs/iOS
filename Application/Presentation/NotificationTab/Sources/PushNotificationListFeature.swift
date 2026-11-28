@@ -16,14 +16,14 @@ struct PushNotificationListFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Never>?
-        @Presents var sheet: SheetState?
+        // 고른 알림의 Todo 상세, 좁은 창은 시트로 띄우고 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+        @Presents var detail: TodoDetailFeature.State?
         var notifications: [PushNotificationItem] = []
         var nextCursor: PushNotificationCursor?
         var query: PushNotificationQuery
         var selectedNotificationId: String?
-        var selectedTodoId: TodoIdItem?
         // 사이드바가 있는 창에서 목록 오른쪽 칸을 연 상태, 닫혀 있으면 고른 Todo를 상세 판으로 표시
-        var isDetailPanePresented = false
+        var showsDetailInPane = false
         var loading = LoadingFeature.State()
         var undoNotificationId: String?
 
@@ -44,15 +44,9 @@ struct PushNotificationListFeature {
         }
     }
 
-    @ObservableState
-    struct SheetState: Equatable, Identifiable {
-        let todoId: String
-        var id: String { todoId }
-    }
-
     enum Action: BindableAction {
         case alert(PresentationAction<Never>)
-        case sheet(PresentationAction<Sheet>)
+        case detail(PresentationAction<TodoDetailFeature.Action>)
         case binding(BindingAction<State>)
         case view(ViewAction)
         case store(StoreAction)
@@ -72,12 +66,6 @@ struct PushNotificationListFeature {
             case toggleUnreadOnly
             case resetFilters
             case selectNotification(String?)
-            case syncSheetPresentation
-            case hideSheet
-        }
-
-        enum Sheet: Equatable {
-            case tapCloseButton
         }
 
         enum StoreAction: Equatable {
@@ -112,13 +100,11 @@ struct PushNotificationListFeature {
             switch action {
             case .alert:
                 break
-            case .sheet(.dismiss), .sheet(.presented(.tapCloseButton)):
-                state.sheet = nil
+            case .detail(.dismiss):
                 state.selectedNotificationId = nil
-                state.selectedTodoId = nil
                 // 오른쪽 칸에서 연 알림을 좁은 창의 시트로 닫으면 다시 넓혀도 빈 오른쪽 칸을 열지 않음
-                state.isDetailPanePresented = false
-            case .sheet:
+                state.showsDetailInPane = false
+            case .detail:
                 break
             case .binding(\.query.timeFilter):
                 state.nextCursor = nil
@@ -137,18 +123,9 @@ struct PushNotificationListFeature {
             return .none
         }
         .ifLet(\.$alert, action: \.alert)
-        .ifLet(\.$sheet, action: \.sheet) {
-            PushNotificationListSheetFeature()
+        .ifLet(\.$detail, action: \.detail) {
+            TodoDetailFeature()
         }
-    }
-}
-
-private struct PushNotificationListSheetFeature: Reducer {
-    typealias State = PushNotificationListFeature.SheetState
-    typealias Action = PushNotificationListFeature.Action.Sheet
-
-    var body: some ReducerOf<Self> {
-        EmptyReducer()
     }
 }
 
@@ -229,27 +206,19 @@ private extension PushNotificationListFeature {
             return refreshForQueryChangeEffect(query: state.query)
         case .selectNotification(let notificationId):
             state.selectedNotificationId = notificationId
-            guard let notificationId else {
-                state.selectedTodoId = nil
-                return .none
-            }
-            guard let index = state.notifications.firstIndex(where: { $0.id == notificationId }) else {
-                state.selectedTodoId = nil
+            guard let notificationId,
+                  let index = state.notifications.firstIndex(where: { $0.id == notificationId }) else {
+                state.detail = nil
                 return .none
             }
             let item = state.notifications[index]
-            state.selectedTodoId = TodoIdItem(id: item.todoId)
+            // 같은 Todo의 알림은 불러온 상세와 열어 둔 시트를 그대로 둠
+            if state.detail?.todoId != item.todoId {
+                state.detail = TodoDetailFeature.State(todoId: item.todoId, showEditButton: false)
+            }
             guard !item.isRead else { return .none }
             state.notifications[index].isRead = true
             return toggleReadEffect(notificationId: item.id, todoId: item.todoId, rollbackRead: false)
-        case .syncSheetPresentation:
-            if let todoId = state.selectedTodoId?.id {
-                state.sheet = .init(todoId: todoId)
-            } else {
-                state.sheet = nil
-            }
-        case .hideSheet:
-            state.sheet = nil
         }
 
         return .none

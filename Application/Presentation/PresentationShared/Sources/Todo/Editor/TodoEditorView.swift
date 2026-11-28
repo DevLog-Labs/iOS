@@ -59,7 +59,7 @@ public struct TodoEditorView: View {
             }
             .prominentAlert(store, state: \.alert, action: \.alert)
             // 사이드바가 있는 창은 작성 중인 속성을 세부 정보 사이드바에 표시
-            .detailSideBar {
+            .compositionRight {
                 ScrollView {
                     TodoSideBarProperties(
                         editorStore: store,

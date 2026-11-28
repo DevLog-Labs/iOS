@@ -15,6 +15,7 @@ public struct GoalDetailView: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<GoalDetailFeature>
+    let windowEvent: TodoEditorWindowEvent
 
     public var body: some View {
         // 좁은 창은 홈 내비게이션에 쌓고, 사이드바가 있으면 홈 내비게이션 안의 칸으로 표시
@@ -57,60 +58,44 @@ public struct GoalDetailView: View {
         let isHidden = { !isShown || store.shownOnDesktop != usesDesktopLayout }
 
         // 사이드바가 있으면 개발 목표 수정과 기록 작성을 개발 목표 오른쪽 칸에 표시
-        return PaneSplitView(splitsOnDesktop: store.goalEdit != nil || store.recordEditor != nil) {
+        // 좁은 창 표시는 빠지는 자리에서 넓은 창의 개발 목표가 이미 나타났으면 띄우지 않음
+        let isNarrowHidden = { store.shownOnDesktop == true && !usesDesktopLayout }
+
+        return PaneSplitView {
             mainContent
-        } detail: {
-            if let editStore = store.scope(state: \.goalEdit, action: \.goalEdit.presented) {
-                GoalCreateView(store: editStore)
-            } else if let editorStore = store.scope(state: \.recordEditor, action: \.recordEditor.presented) {
-                RecordEditorView(
-                    store: editorStore,
-                    onCompletion: {
-                        store.send(.view(.refresh))
-                    },
-                    onClose: {
-                        store.send(.recordEditor(.dismiss))
-                    }
-                )
-            }
-        }
-        // 좁은 창은 닫기·저장·확정 버튼으로만 닫는 전체 화면
-        // 넓은 창으로 바뀌어 칸에 옮겨 그린 뒤 늦게 닫히는 전체 화면은 작성 중인 기록을 지우지 않음
-        .fullScreenCover(
-            item: $store.scope(state: \.recordEditor, action: \.recordEditor)
-                .hiddenInPane { usesDesktopLayout || store.shownOnDesktop == true }
-        ) { editorStore in
-            RecordEditorView(
-                store: editorStore,
-                onCompletion: {
-                    store.send(.view(.refresh))
+                // 좁은 창은 닫기, 저장, 확정 버튼으로만 닫는 전체 화면
+                .compositionEditor(
+                    item: $store.scope(state: \.recordEditor, action: \.recordEditor)
+                        .hiddenInPane(isNarrowHidden)
+                ) { editorStore, onClose in
+                    RecordEditorView(
+                        store: editorStore,
+                        onCompletion: {
+                            store.send(.view(.refresh))
+                        },
+                        onClose: onClose
+                    )
                 }
-            )
+                // 좁은 창은 새 개발 목표와 같은 시트로 수정하고 닫기, 저장 버튼으로만 닫음
+                .compositionEditor(
+                    item: $store.scope(state: \.goalEdit, action: \.goalEdit)
+                        .hiddenInPane(isNarrowHidden),
+                    narrow: .sheet
+                ) { editStore, _ in
+                    GoalCreateView(store: editStore)
+                }
         }
         .prominentSheet(item: $store.scope(state: \.todoLinkSheet, action: \.todoLinkSheet)) {
             GoalTodoLinkSheet(store: $0)
         }
-        // 좁은 창은 새 개발 목표와 같은 시트로 수정하고 닫기, 저장 버튼으로만 닫음
-        .prominentSheet(
-            item: $store.scope(state: \.goalEdit, action: \.goalEdit)
-                .hiddenInPane { usesDesktopLayout || store.shownOnDesktop == true }
-        ) {
-            GoalCreateView(store: $0)
-        }
-        .navigationDestination(
-            item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .hiddenInPane { usesDesktopLayout || isHidden() },
-            interactivePop: true
-        ) { _ in
+        // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
+        .compositionDetail(
+            item: $store.scope(state: \.recordDetail, action: \.recordDetail).hiddenInPane(isHidden)
+        ) { _, _ in
             if let detailStore = store.scope(state: \.recordDetailContent, action: \.recordDetailContent) {
                 RecordDetailView(store: detailStore, onUpdate: { store.send(.view(.refresh)) })
             }
-        }
-        // 사이드바가 있는 창은 기록을 사이드바까지 덮는 상세 판으로 열고 버전 이력은 판 안에서 이동
-        .detailPanel(
-            item: $store.scope(state: \.recordDetail, action: \.recordDetail)
-                .hiddenInPane { !usesDesktopLayout || isHidden() }
-        ) { _ in
+        } panel: { _ in
             NavigationStack {
                 if let detailStore = store.scope(state: \.recordDetailContent, action: \.recordDetailContent) {
                     RecordDetailView(store: detailStore, onUpdate: { store.send(.view(.refresh)) })
@@ -118,24 +103,20 @@ public struct GoalDetailView: View {
             }
             .desktopNavigationTransition()
         }
+        // 창 폭이 바뀌면 개발 목표가 새 자리에 나타난 뒤에 다시 쌓음
         .navigationDestination(
-            item: $store.scope(state: \.todoDetail, action: \.todoDetail),
+            item: $store.scope(state: \.todoDetail, action: \.todoDetail).hiddenInPane(isHidden),
             interactivePop: true
         ) {
             // 사이드바가 있으면 Todo 목록 옆 칸의 상세와 같은 칸 모양으로 표시하고 뒤로 가면 개발 목표로 돌아감
-            TodoDetailView(
-                store: Store(
-                    initialState: TodoDetailFeature.State(
-                        todoId: $0.todoId,
-                        showEditButton: false
-                    )
-                ) {
-                    TodoDetailFeature()
-                },
-                showsBackOnDesktop: true
-            )
+            TodoDetailView(store: $0, showsBackOnDesktop: true)
             .environment(\.showsPaneTitleBar, usesDesktopLayout)
-            .detailSideBarTarget(.todo(id: $0.todoId, isEditable: false))
+            .compositionRight {
+                if let todoId = store.todoDetail?.todoId {
+                    TodoDetailSideBarView(todoId: todoId, isEditable: false, windowEvent: windowEvent)
+                        .id(todoId)
+                }
+            }
         }
         .onAppear { store.send(.view(.appear(onDesktop: usesDesktopLayout))) }
     }

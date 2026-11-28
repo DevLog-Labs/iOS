@@ -151,12 +151,12 @@ struct CompositionFeatureTests {
         await store.send(.view(.sideBarVisibilityChanged(true)))
         await store.send(.settings(.open))
         await store.send(.view(.sideBarVisibilityChanged(false)))
-        await store.send(.settings(.binding(.set(\.screen, .list))))
+        await store.send(.settings(.binding(.set(\.pushedRoute, nil))))
 
         #expect(store.state.isSettingsPresented)
         #expect(store.state.selectedTab == .home)
 
-        await store.send(.settings(.binding(.set(\.screen, nil))))
+        await store.send(.settings(.binding(.set(\.isListPushed, false))))
 
         #expect(!store.state.isSettingsPresented)
         #expect(store.state.selectedTab == .profile)

@@ -9,10 +9,8 @@ import SwiftUI
 import PresentationShared
 
 struct CategoryManageView: View {
-    @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @Bindable var store: StoreOf<CategoryManageFeature>
     // 좁은 창에서 시트로 연 카테고리 관리를 닫는 동작
     var onClose: (() -> Void)?
@@ -40,9 +38,6 @@ struct CategoryManageView: View {
                     footer: UIHostingConfiguration {
                         Button {
                             store.send(.tapAddUserCategory)
-                            if usesDesktopLayout {
-                                setDetailSideBarPresented?(true)
-                            }
                         } label: {
                             Text("todo_manage_add_category_title", bundle: PresentationResources.bundle)
                             .font(.adaptive(isiOSAppOnMac ? .headline : .subheadline).weight(.semibold))
@@ -65,10 +60,7 @@ struct CategoryManageView: View {
                             CategoryManageRow(
                                 item: item,
                                 onToggle: { store.send(.tapItem(item)) },
-                                onEdit: {
-                                    store.send(.tapEditUserCategory(item))
-                                    setDetailSideBarPresented?(true)
-                                },
+                                onEdit: { store.send(.tapEditUserCategory(item)) },
                                 onDelete: { store.send(.tapDeleteUserCategory(item)) },
                                 onSelect: usesDesktopLayout ? { store.send(.selectCategory(item)) } : nil
                             )
@@ -102,32 +94,21 @@ struct CategoryManageView: View {
             }
             .background((usesDesktopLayout ? Color.background : .secondaryBackground).ignoresSafeArea())
             // 사이드바가 있으면 고른 카테고리를 시트 대신 세부 정보 사이드바에 표시
-            .prominentSheet(
-                item: $store.scope(state: \.categorySheet, action: \.categorySheet)
-                    .activePresentation(when: isTabContentActive && !usesDesktopLayout)
+            .compositionSheet(
+                item: $store.scope(state: \.categorySheet, action: \.categorySheet),
+                reveal: store.revealCount
             ) { sheetStore in
                 CategoryManageSheet(store: sheetStore)
-            }
-            .prominentAlert(store, state: \.alert, action: \.alert)
-            .detailSideBar(isActive: usesDesktopLayout) {
-                if let sheetStore = store.scope(state: \.categorySheet, action: \.categorySheet.presented) {
-                    ScrollView {
-                        CategoryEditForm(store: sheetStore) {
-                            if let item = store.preferences.first(where: { $0.id == sheetStore.category.id }) {
-                                store.send(.tapDeleteUserCategory(item))
-                            }
+            } right: { sheetStore in
+                ScrollView {
+                    CategoryEditForm(store: sheetStore) {
+                        if let item = store.preferences.first(where: { $0.id == sheetStore.category.id }) {
+                            store.send(.tapDeleteUserCategory(item))
                         }
                     }
-                } else {
-                    DetailSideBarPlaceholder()
                 }
             }
-            // 카테고리 관리를 벗어나면 카테고리를 보여 주던 세부 정보 사이드바도 닫음
-            .onChange(of: isTabContentActive) { _, isActive in
-                if usesDesktopLayout && !isActive {
-                    setDetailSideBarPresented?(false)
-                }
-            }
+            .prominentAlert(store, state: \.alert, action: \.alert)
     }
 }
 

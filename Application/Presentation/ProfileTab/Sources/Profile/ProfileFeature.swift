@@ -34,6 +34,9 @@ struct ProfileFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Never>?
+        // 활동 기록이나 최근 Todo에서 연 Todo 상세, 활동 기록 Todo는 고칠 수 없어 편집 버튼 없이 표시
+        // 좁은 창은 내비게이션에 쌓고 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+        @Presents var detail: TodoDetailFeature.State?
         var name = ""
         var email = ""
         var isNetworkConnected = true
@@ -54,16 +57,18 @@ struct ProfileFeature {
         var dayActivitiesByDate: [Date: [HeatmapActivityItem]] = [:]
         var selectedActivityKinds: Set<ActivityKind> = [.created, .completed, .deleted]
         var selectedDay: HeatmapDay?
-        var selectedTodoRoute: ProfileRoute?
-        // 사이드바가 있는 창에서 사이드바까지 덮는 상세 판에 연 Todo
-        var panelTodoRoute: ProfileRoute?
+        // 사이드바가 있는 창에서 상세 판 대신 오른쪽 칸에 표시
+        var showsDetailInPane = false
         var showDoneButton = false
         var loading = LoadingFeature.State()
     }
 
     enum Action: BindableAction {
         case alert(PresentationAction<Never>)
+        case detail(PresentationAction<TodoDetailFeature.Action>)
         case binding(BindingAction<State>)
+        // 사이드바가 있는 창은 연 곳(상세 판이나 오른쪽 칸)의 내용을 바꿈
+        case selectTodo(String, isEditable: Bool)
         case startObserving
         case fetchData
         case refresh
@@ -119,6 +124,15 @@ struct ProfileFeature {
                 state.alert = nil
             case .alert:
                 break
+            case .detail(.dismiss):
+                state.showsDetailInPane = false
+            case .detail:
+                break
+            case .selectTodo(let todoId, let isEditable):
+                // 이미 연 Todo는 불러온 상세와 열어 둔 시트를 그대로 둠
+                if state.detail?.todoId != todoId || state.detail?.showEditButton != isEditable {
+                    state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: isEditable)
+                }
             case .binding(\.isCreatedActivitySelected):
                 return updateHeatmapActivityKindsEffectIfNeeded(.created, state: state)
             case .binding(\.isCompletedActivitySelected):
@@ -243,6 +257,9 @@ struct ProfileFeature {
             return .none
         }
         .ifLet(\.$alert, action: \.alert)
+        .ifLet(\.$detail, action: \.detail) {
+            TodoDetailFeature()
+        }
     }
 }
 

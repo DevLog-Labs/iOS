@@ -12,7 +12,7 @@ import Foundation
 @Reducer
 public struct TodoDetailFeature {
     @ObservableState
-    public struct State: Equatable {
+    public struct State: Equatable, Identifiable {
         @Presents public var alert: AlertState<Never>?
         @Presents public var sheet: SheetState?
         @Presents public var fullScreenCover: FullScreenCoverState?
@@ -26,11 +26,18 @@ public struct TodoDetailFeature {
         // 좁은 창 세부 정보 시트의 속성
         // 시트를 닫아도 저장 결과를 받도록 시트 밖에서 소유
         var info: TodoDetailSideBarFeature.State
+        // 상세 판 안 오른쪽 세부 정보 열을 연 동안
+        var isDetailColumnPresented = false
 
         public init(todoId: String, showEditButton: Bool) {
             self.todoId = todoId
             self.showEditButton = showEditButton
             self.info = TodoDetailSideBarFeature.State(todoId: todoId, isEditable: showEditButton)
+        }
+
+        // 다른 Todo로 바꾸면 띄운 화면을 새로 만들어 그 Todo를 조회
+        public var id: String {
+            todoId
         }
 
         public var isLoading: Bool {
@@ -84,11 +91,13 @@ public struct TodoDetailFeature {
         }
     }
 
-    public enum Action {
+    public enum Action: Equatable {
         case alert(PresentationAction<Never>)
         case sheet(PresentationAction<Sheet>)
         case fullScreenCover(PresentationAction<FullScreenCover>)
         case onAppear
+        // 화면을 다시 그려도 불러온 Todo를 유지하고, 다른 곳에서 바꾼 Todo는 여는 화면이 다시 조회
+        case fetch
         case fetchFailed
         case setSheet(SheetState?)
         case setFullScreenCover(FullScreenCoverState?)
@@ -96,15 +105,16 @@ public struct TodoDetailFeature {
         case setReferenceItems([Int: TodoReferenceItem])
         case loading(LoadingFeature.Action)
         case info(TodoDetailSideBarFeature.Action)
+        case setDetailColumnPresented(Bool)
 
         @CasePathable
-        public enum Sheet {
+        public enum Sheet: Equatable {
             case tapCloseButton
             case todo(TodoDetailFeature.Action)
         }
 
         @CasePathable
-        public enum FullScreenCover {
+        public enum FullScreenCover: Equatable {
             case todoEditor(TodoEditorFeature.Action)
         }
     }
@@ -146,6 +156,10 @@ public struct TodoDetailFeature {
             case .fullScreenCover:
                 break
             case .onAppear:
+                // 좁은 창과 넓은 창의 화면을 오가도 같은 상태를 이어 그리므로 처음 한 번만 조회
+                guard state.todo == nil else { break }
+                return fetchTodoEffect(todoId: state.todoId)
+            case .fetch:
                 return fetchTodoEffect(todoId: state.todoId)
             case .fetchFailed:
                 state.alert = Self.alertState()
@@ -181,13 +195,15 @@ public struct TodoDetailFeature {
                 state.referenceItems = [:]
                 return resolveMarkdownEffect(content: todo.content)
             case .info(.editor(.saveFailed)):
-                // 시트를 닫은 뒤 실패한 저장은 상세 화면에서 알림
-                if state.sheet != .info {
+                // 시트를 닫은 뒤 실패한 저장은 상세 화면에서 알림, 상세 판 세부 정보 열에서 실패한 저장은 열에서 알림
+                if state.sheet != .info && !state.isDetailColumnPresented {
                     state.info.editor?.alert = nil
                     state.alert = Self.alertState()
                 }
             case .info:
                 break
+            case .setDetailColumnPresented(let isPresented):
+                state.isDetailColumnPresented = isPresented
             }
 
             return .none

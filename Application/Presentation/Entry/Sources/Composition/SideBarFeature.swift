@@ -18,7 +18,6 @@ struct SideBarFeature {
 
     @ObservableState
     struct State: Equatable {
-        var isCollapsed = false
         // 사용자가 끌어서 정한 폭, 정하지 않았으면 기본 폭
         var width: CGFloat?
         var expandedGroups: Set<Group> = []

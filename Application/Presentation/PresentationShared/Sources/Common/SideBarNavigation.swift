@@ -79,3 +79,47 @@ public struct SideBarContentPreferenceKey: PreferenceKey {
         value = nextValue() ?? value
     }
 }
+
+public extension View {
+    // 탭 루트 화면이 사이드바에 표시할 위치와 묶음 하위 항목을 올리고 사이드바 요청을 받음
+    // 사이드바가 있는 창으로 켜지거나 좁은 창에서 넓어지면 하위 항목을 채우도록 onLoad 호출
+    func compositionLeft(
+        location: SideBarLocation,
+        content: SideBarContent,
+        onLoad: @escaping () -> Void,
+        onRequest: @escaping (SideBarRequest) -> Void
+    ) -> some View {
+        modifier(CompositionLeftModifier(
+            location: location,
+            sideBarContent: content,
+            onLoad: onLoad,
+            onRequest: onRequest
+        ))
+    }
+}
+
+private struct CompositionLeftModifier: ViewModifier {
+    @Environment(\.sideBarRequest) private var sideBarRequest
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    let location: SideBarLocation
+    let sideBarContent: SideBarContent
+    let onLoad: () -> Void
+    let onRequest: (SideBarRequest) -> Void
+
+    func body(content: Content) -> some View {
+        content
+            .preference(key: SideBarLocationPreferenceKey.self, value: location)
+            .preference(key: SideBarContentPreferenceKey.self, value: sideBarContent)
+            // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
+            .onChange(of: sideBarRequest, initial: true) { _, request in
+                if let request {
+                    onRequest(request)
+                }
+            }
+            .onChange(of: usesDesktopLayout, initial: true) { _, usesDesktopLayout in
+                if usesDesktopLayout {
+                    onLoad()
+                }
+            }
+    }
+}

@@ -8,40 +8,38 @@
 import SwiftUI
 
 // 사이드바가 있는 창에서 목록 칸 오른쪽에 상세 칸을 나란히 두는 화면
-public struct PaneSplitView<Primary: View, Detail: View>: View {
+// 상세 칸 내용은 목록 칸 안의 compositionDetail, compositionEditor가 올리고, 올린 내용이 있을 때만 두 칸으로 나눔
+public struct PaneSplitView<Primary: View>: View {
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
     @State private var width = CGFloat.infinity
     // 경계선을 끌어 정한 목록 칸 폭, 없으면 기본 폭
     @State private var primaryWidth: CGFloat?
-    // 상세 칸이 편집 화면처럼 화면을 덮는 표시를 띄운 동안
-    @State private var isDetailPresenting = false
     // 상세 칸에 작성 화면을 그린 동안
     @State private var isDetailEditing = false
-    // 사이드바가 있는 창은 따로 정한 화면만 두 칸으로 나눔
-    private let splitsOnDesktop: Bool
+    // 목록 칸 안의 수정자가 올린 상세 칸 내용
+    @State private var detail: PaneDetailContent?
     private let primary: Primary
-    // 상세 칸을 그릴 때만 만들어 칸이 없는 화면에서 상세 내용을 만들지 않음
-    private let detail: () -> Detail
 
-    public init(
-        splitsOnDesktop: Bool = true,
-        @ViewBuilder primary: () -> Primary,
-        @ViewBuilder detail: @escaping () -> Detail
-    ) {
-        self.splitsOnDesktop = splitsOnDesktop
+    public init(@ViewBuilder primary: () -> Primary) {
         self.primary = primary()
-        self.detail = detail
     }
 
     public var body: some View {
         // 두 칸이 기본 폭으로 함께 들어가지 않는 창은 반씩 나눠 처음부터 상세 칸이 잘리지 않게 함
         let paneWidth = min(400, width / 2)
-        let showsDetail = usesDesktopLayout && splitsOnDesktop
+        let showsDetail = usesDesktopLayout && detail != nil
 
         HStack(spacing: 0) {
             // 넓은 창과 좁은 창을 오가도 목록 칸을 다시 만들지 않도록 같은 구조로 두고 사이드바 구조에서만 폭 조절
             // 경계선은 사이드바 경계선부터 창 오른쪽 끝까지 이동
             primary
+                .onPreferenceChange(PaneDetailContentPreferenceKey.self) { content in
+                    detail = content
+                }
+                // 바깥 PaneSplitView로 올라가지 않도록 받은 내용을 비움
+                .transformPreference(PaneDetailContentPreferenceKey.self) { content in
+                    content = nil
+                }
                 .resizablePane(
                     width: primaryWidth,
                     minimumWidth: 0,
@@ -60,23 +58,19 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
                         value = nil
                     }
                 }
-            // 좁은 창으로 바뀌어도 상세 칸이 띄운 편집 화면이 닫히지 않도록 폭 0으로 남겨 두고 닫히면 해제
-            if showsDetail || isDetailPresenting {
+            // 좁은 창으로 바뀌면 상세 칸을 빼고, 같은 상태를 화면이 좁은 창의 표시로 이어 그림
+            if showsDetail, let detail {
                 // 상세 칸이 기본 폭보다 좁으면 내용을 줄이지 않고 잘라서 표시
                 Color.clear
                     .overlay(alignment: .leading) {
-                        detail()
-                            .frame(minWidth: showsDetail ? paneWidth : 0, maxWidth: .infinity)
+                        detail
+                            .frame(minWidth: paneWidth, maxWidth: .infinity)
                             // 사이드바 펴기 버튼은 왼쪽 칸 제목 줄에만 표시
                             .environment(\.expandSideBar, nil)
-                            .onPreferenceChange(PaneDetailPresentingPreferenceKey.self) { isPresenting in
-                                isDetailPresenting = isPresenting
-                            }
                             .onPreferenceChange(PaneDetailEditingPreferenceKey.self) { isEditing in
                                 isDetailEditing = isEditing
                             }
                     }
-                    .frame(maxWidth: showsDetail ? .infinity : 0)
                     .mask {
                         Rectangle()
                     }
@@ -101,41 +95,32 @@ public struct PaneSplitView<Primary: View, Detail: View>: View {
     }
 }
 
-public extension View {
-    // 사이드바 구조로 바뀌면 좁은 창에서 쌓아 연 상세 화면을 내리는 동작
-    // 상세 화면이 편집 화면을 띄운 동안에는 닫힌 뒤 실행
-    func closesPushedDetail(_ action: @escaping () -> Void) -> some View {
-        modifier(PushedDetailCloser(action: action))
+// 목록 칸 안의 수정자가 올린 상세 칸 내용
+// 같은 수정자가 같은 항목을 올린 동안은 같은 값으로 보고, 내용이 읽는 상태가 바뀌면 이 View만 다시 그림
+struct PaneDetailContent: View, Equatable {
+    let id: UUID
+    // 저장이나 닫기 버튼으로만 닫는 작성 화면, 읽는 화면보다 먼저 표시
+    let isEditor: Bool
+    // 내용이 바인딩으로 읽는 항목의 식별자
+    // 그리는 중의 바인딩은 만든 때의 값을 돌려주므로 항목이 바뀌면 새 내용으로 보고 다시 전달
+    let key: AnyHashable?
+    let content: () -> AnyView
+
+    var body: some View {
+        content()
+    }
+
+    static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id && lhs.isEditor == rhs.isEditor && lhs.key == rhs.key
     }
 }
 
-private struct PushedDetailCloser: ViewModifier {
-    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @State private var isDetailPresenting = false
-    let action: () -> Void
+// 목록 칸 안의 화면이 올린 상세 칸 내용
+struct PaneDetailContentPreferenceKey: PreferenceKey {
+    static var defaultValue: PaneDetailContent? { nil }
 
-    func body(content: Content) -> some View {
-        content
-            .onPreferenceChange(PaneDetailPresentingPreferenceKey.self) { isPresenting in
-                isDetailPresenting = isPresenting
-                if usesDesktopLayout && !isPresenting {
-                    action()
-                }
-            }
-            .onChange(of: usesDesktopLayout) { _, isDesktop in
-                if isDesktop && !isDetailPresenting {
-                    action()
-                }
-            }
-    }
-}
-
-// 상세 칸이 편집 화면처럼 화면을 덮는 표시를 띄웠는지 전달
-struct PaneDetailPresentingPreferenceKey: PreferenceKey {
-    static let defaultValue = false
-
-    static func reduce(value: inout Bool, nextValue: () -> Bool) {
-        value = value || nextValue()
+    static func reduce(value: inout PaneDetailContent?, nextValue: () -> PaneDetailContent?) {
+        value = nextValue() ?? value
     }
 }
 

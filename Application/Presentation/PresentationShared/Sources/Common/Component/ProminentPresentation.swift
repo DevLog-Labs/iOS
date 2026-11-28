@@ -19,6 +19,8 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
     @State private var isDismissing = false
     @State private var isShown = false
     @State private var presented: Item?
+    // 지금 띄우라고 한 항목이 있는지, 닫힘이 끝날 때 띄울 때 잡아 둔 바인딩 대신 읽음
+    @State private var isRequested = false
     let item: Binding<Item?>
     @ViewBuilder let overlay: (Item, Bool, @escaping () -> Void) -> Overlay
 
@@ -30,6 +32,7 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
 
         content
             .onChange(of: item.wrappedValue?.id, initial: true) { _, id in
+                isRequested = id != nil
                 if id == nil {
                     hide(isAnimated: isAnimated)
                 } else {
@@ -48,7 +51,7 @@ struct ProminentPresentation<Item: Identifiable, Overlay: View>: ViewModifier {
                 ),
                 onDismiss: {
                     isDismissing = false
-                    if item.wrappedValue == nil {
+                    if !isRequested {
                         presented = nil
                     } else {
                         // 닫히는 동안 들어온 표시는 닫힘이 끝난 뒤 다시 띄움

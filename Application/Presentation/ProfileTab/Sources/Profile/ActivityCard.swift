@@ -11,7 +11,6 @@ import Domain
 import PresentationShared
 
 struct ActivityCard: View {
-    @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @Bindable var store: StoreOf<ProfileFeature>
@@ -95,19 +94,7 @@ struct ActivityCard: View {
                     }
                     .buttonStyle(.plain)
                     // 칸으로 나눈 화면은 분기 선택을 시트 대신 버튼 옆 팝오버로 표시
-                    .popover(
-                        isPresented: $store.showQuarterPicker
-                            .hiddenInPane(!usesPaneLayout)
-                            .activePresentation(when: isTabContentActive),
-                        // Mac은 분기 표시 아래로 표시
-                        arrowEdge: isiOSAppOnMac ? .top : nil
-                    ) {
-                        QuarterPickerSheet(store: store)
-                            .frame(width: 320 * AdaptiveSize.boardScale)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .presentationBackground(Color.secondaryBackground)
-                            .presentationCompactAdaptation(.popover)
-                    }
+                    .compositionPickerAnchor()
                     Spacer()
                     Button {
                         store.send(.moveQuarter(1))
@@ -196,7 +183,8 @@ struct ActivityCard: View {
                         // 행 배치를 바꾸지 않고 선택한 행 배경만 바깥으로 넓힘
                         // 선택 표시는 다른 목록 행과 같은 회색
                         .background {
-                            if usesPaneLayout && store.selectedTodoRoute == .activity(activity.todoId) {
+                            if usesPaneLayout && store.showsDetailInPane
+                                && store.detail?.todoId == activity.todoId && store.detail?.showEditButton == false {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .fill(Color.fill)
                                     .padding(.horizontal, -8)

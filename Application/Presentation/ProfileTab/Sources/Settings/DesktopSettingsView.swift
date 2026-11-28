@@ -158,7 +158,7 @@ public struct DesktopSettingsView: View {
             // 위쪽 줄 구분선과 첫 항목 사이 여백
             .contentMargins(.top, isiOSAppOnMac ? 20 * AdaptiveSize.boardScale : 24, for: .scrollContent)
             .background(Color.background)
-        case .settings, .activity, .recentTodo:
+        case .settings:
             EmptyView()
         }
     }
@@ -178,7 +178,7 @@ private extension ProfileRoute {
             String(localized: "settings_account_section", bundle: PresentationResources.bundle)
         case .information:
             String(localized: "settings_information", bundle: PresentationResources.bundle)
-        case .settings, .activity, .recentTodo:
+        case .settings:
             ""
         }
     }
@@ -193,7 +193,7 @@ private extension ProfileRoute {
             "person"
         case .information:
             "info.circle"
-        case .settings, .activity, .recentTodo:
+        case .settings:
             ""
         }
     }

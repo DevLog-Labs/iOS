@@ -52,8 +52,6 @@ public struct TodoDetailView: View {
 
         detailContent(editsInPane: editsInPane)
             .onAppear { store.send(.onAppear) }
-            // 좁은 창으로 바뀌어도 편집 화면이 닫히지 않도록 상세 칸을 남겨 두게 알림
-            .preference(key: PaneDetailPresentingPreferenceKey.self, value: store.fullScreenCover != nil)
             // 편집 화면에서 저장하면 창 폭과 상관없이 Mac 편집 창과 같은 경로로 옆 목록에도 전달
             // 편집 화면이 닫히며 놓치지 않도록 상세 상태에 남긴 저장 결과로 전달
             .onChange(of: store.savedTodo) { _, todo in

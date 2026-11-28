@@ -25,9 +25,12 @@ struct TabScreen: View {
         content
             .environment(\.isTabContentActive, isVisible)
             .environment(\.sideBarRequest, store.sideBar.requests[tab])
-            // 좁은 창에서도 고른 대상을 기록해 넓은 창으로 바뀌면 바로 세부 정보 사이드바에 표시
-            .environment(\.selectDetailSideBarTarget) { store.send(.detailSideBar(.targetChanged(tab, $0, owner: $1))) }
-            .environment(\.removeDetailSideBarTarget) { store.send(.detailSideBar(.ownerRemoved(tab, owner: $0))) }
+            // 고른 탭 화면이 올린 세부 정보 사이드바 내용만 창에 전달
+            .transformPreference(DetailSideBarContentPreferenceKey.self) { content in
+                if !isSelected {
+                    content = nil
+                }
+            }
             .onPreferenceChange(SideBarLocationPreferenceKey.self) { location in
                 guard let location else { return }
                 store.send(.sideBar(.locationChanged(tab, location)))
@@ -57,7 +60,7 @@ struct TabScreen: View {
                 windowEvent: windowEvent
             )
         case .notification:
-            PushNotificationListView(isSelected: isSelected)
+            PushNotificationListView(isSelected: isSelected, windowEvent: windowEvent)
         case .profile:
             ProfileView(
                 isSelected: isSelected,

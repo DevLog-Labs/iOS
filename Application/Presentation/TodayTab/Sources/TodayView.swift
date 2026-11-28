@@ -18,8 +18,6 @@ public struct TodayView: View {
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
-    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
-    @State private var router = NavigationRouter<TodayRoute>()
     @State private var store: StoreOf<TodayFeature>
     private let isSelected: Bool
     private let windowEvent: TodoEditorWindowEvent
@@ -38,17 +36,17 @@ public struct TodayView: View {
     }
 
     public var body: some View {
-        NavigationStack(path: $router.path) {
+        NavigationStack {
             let sections = store.sections
             // 사이드바가 있는 창은 목록을 창 전체 폭으로 두고 오른쪽 칸을 열었고 그 Todo가 목록에 있을 때만 두 칸으로 나눔
-            let showsPane = store.isDetailPanePresented
-                && sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }
+            let showsPane = store.showsDetailInPane
+                && sections.flatMap(\.items).contains { $0.id == store.detail?.todoId }
 
-            PaneSplitView(splitsOnDesktop: showsPane) {
+            PaneSplitView {
                 ScrollView {
                     // 칸으로 나누지 않은 화면은 상세 칸이 없어 선택 표시 생략
                     let highlightedTodoIds = (
-                        [store.hoveredTodoId] + (usesPaneLayout ? [store.selectedTodoId, store.panelTodo?.id] : [])
+                        [store.hoveredTodoId] + (usesPaneLayout ? [store.selectedTodoId, store.detail?.todoId] : [])
                     ).compactMap { $0 }
 
                     LazyVStack(alignment: .leading, spacing: 0) {
@@ -69,20 +67,12 @@ public struct TodayView: View {
                                     isNavigationEnabled: !store.isTodoInspectorPresented,
                                     highlightedTodoIds: highlightedTodoIds,
                                     onSelect: { item in
-                                        // 사이드바가 있는 창은 오른쪽 칸을 열지 않았으면 상세 판으로 열고 열었으면 오른쪽 칸 내용을 바꿈
-                                        if usesDesktopLayout && !showsPane {
-                                            store.send(.binding(.set(\.panelTodo, TodoIdItem(id: item.id))))
-                                        } else if usesPaneLayout {
-                                            store.send(.binding(.set(\.selectedTodoId, item.id)))
-                                        } else {
-                                            router.push(.todo(TodoIdItem(id: item.id)))
-                                        }
+                                        store.send(.selectTodo(item.id))
                                     },
                                     onInspect: { item in
                                         // 사이드바가 있으면 고른 Todo를 창 오른쪽 세부 정보 사이드바에 표시
                                         if usesDesktopLayout {
-                                            store.send(.binding(.set(\.selectedTodoId, item.id)))
-                                            setDetailSideBarPresented?(true)
+                                            store.send(.inspectTodo(item.id))
                                         } else {
                                             store.send(.showTodoInspector(item))
                                         }
@@ -134,62 +124,50 @@ public struct TodayView: View {
                 .background(Color.background)
                 .refreshable { await store.send(.refresh).finish() }
                 .duoToolbarVisibility()
-            } detail: {
-                let item = sections.flatMap(\.items).first { $0.id == store.selectedTodoId }
-                // 목록에서 빠진 Todo는 선택 안내로 대체
-                TodoDetailPane(
-                    todoId: item?.id,
-                    showEditButton: true,
-                    windowEvent: windowEvent,
-                    onClose: usesDesktopLayout ? { store.send(.binding(.set(\.isDetailPanePresented, false))) } : nil
-                )
-                // 인스펙터 등에서 목록 행이 바뀌면 상세 칸도 다시 조회
-                .id(store.detailPaneRevision)
-            }
-            // 좁은 창으로 바뀌면 상세 판을 숨기고 넓어지면 다시 표시
-            .detailPanel(item: $store.panelTodo.activePresentation(when: isSelected && usesDesktopLayout)) { item in
-                // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 판 메뉴에서 오른쪽 칸으로 옮기기 생략
-                let isListed = sections.flatMap(\.items).contains { $0.id == item.id }
+                // 좁은 창은 목록 위에 쌓고, 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+                // 목록에서 빠진 Todo는 오른쪽 칸에 그리지 않음
+                // 창 폭이 바뀌면 같은 상세 상태를 바뀐 자리에서 이어 그림
+                .compositionDetail(
+                    item: $store.scope(state: \.detail, action: \.detail),
+                    inPane: showsPane,
+                    isActive: isSelected
+                ) { detailStore, onClose in
+                    TodoDetailView(
+                        store: detailStore,
+                        windowEvent: windowEvent,
+                        isPaneDetail: onClose != nil,
+                        onClose: onClose
+                    )
+                    // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회
+                    .id(detailStore.todoId)
+                } panel: { detailStore in
+                    // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 판 메뉴에서 오른쪽 칸으로 옮기기 생략
+                    let isListed = sections.flatMap(\.items).contains { $0.id == detailStore.todoId }
 
-                TodoDetailPanel(
-                    todoId: item.id,
-                    location: Text("nav_today", bundle: PresentationResources.bundle),
-                    isEditable: true,
-                    windowEvent: windowEvent,
-                    onMoveToPane: isListed ? {
-                        store.send(.binding(.set(\.panelTodo, nil)))
-                        store.send(.binding(.set(\.selectedTodoId, item.id)))
-                        store.send(.binding(.set(\.isDetailPanePresented, true)))
-                    } : nil
-                )
+                    TodoDetailPanel(
+                        store: detailStore,
+                        location: Text("nav_today", bundle: PresentationResources.bundle),
+                        windowEvent: windowEvent,
+                        onMoveToPane: isListed ? { store.send(.moveDetailToPane) } : nil
+                    )
+                }
             }
-            .detailSideBarTarget(
-                sections.flatMap(\.items)
-                    .first { $0.id == store.selectedTodoId }
-                    .map { .todo(id: $0.id, isEditable: true) }
-            )
-            .navigationDestination(
-                for: TodayRoute.self,
-                interactivePop: { _ in true },
-                destination: { destination($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
-            )
+            .compositionRight(
+                isActive: sections.flatMap(\.items).contains { $0.id == store.selectedTodoId },
+                reveal: store.revealCount
+            ) {
+                if let todoId = store.selectedTodoId {
+                    TodoDetailSideBarView(todoId: todoId, isEditable: true, windowEvent: windowEvent)
+                        .id(todoId)
+                }
+            }
         }
         .desktopNavigationTransition()
         // 오른쪽 칸에 연 Todo가 목록에서 빠지면 닫기 버튼 없는 선택 안내 대신 오른쪽 칸을 닫음
-        // 좁은 창에서 빠져도 닫아 넓어진 뒤 다른 Todo의 세부 정보만 바꿀 때 오른쪽 칸이 열리지 않게 함
-        .onChange(of: store.sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }) { _, isListed in
-            if store.isDetailPanePresented && !isListed {
-                store.send(.binding(.set(\.isDetailPanePresented, false)))
-            }
-        }
-        // 사이드바 구조로 바뀌면 쌓아 연 상세 화면은 내리고 같은 Todo를 옆 칸에 표시
-        .closesPushedDetail {
-            guard case .todo(let item)? = router.path.last else { return }
-            // 목록에서 빠진 Todo는 오른쪽 칸에 그릴 수 없어 오른쪽 칸을 열지 않음
-            let isListed = store.sections.flatMap(\.items).contains { $0.id == item.id }
-            store.send(.binding(.set(\.selectedTodoId, item.id)))
-            store.send(.binding(.set(\.isDetailPanePresented, isListed)))
-            router.path = []
+        // 좁은 창은 쌓아 연 상세를 그대로 두고, 넓어지면 오른쪽 칸 대신 상세 판으로 표시
+        .onChange(of: store.sections.flatMap(\.items).contains { $0.id == store.detail?.todoId }) { _, isListed in
+            guard store.showsDetailInPane && !isListed else { return }
+            store.send(usesDesktopLayout ? .detail(.dismiss) : .binding(.set(\.showsDetailInPane, false)))
         }
         // 사이드바가 있으면 창 오른쪽 세부 정보 사이드바, 좁은 화면과 Duo 펼침은 직접 그린 시트로 표시
         .prominentSheet(
@@ -204,7 +182,6 @@ public struct TodayView: View {
         .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
             if usesDesktopLayout && store.isTodoInspectorPresented {
                 store.send(.moveTodoInspectorToSideBar)
-                setDetailSideBarPresented?(true)
             }
         }
         // 상단 safe area 배경
@@ -234,21 +211,6 @@ public struct TodayView: View {
             if store.isLoading {
                 LoadingView()
             }
-        }
-    }
-
-    private func destination(_ route: TodayRoute) -> some View {
-        switch route {
-        case .todo(let item):
-            TodoDetailView(
-                store: Store(
-                    initialState: TodoDetailFeature.State(todoId: item.id, showEditButton: true)
-                ) {
-                    TodoDetailFeature()
-                },
-                windowEvent: windowEvent
-            )
-            .id(item.id)
         }
     }
 
