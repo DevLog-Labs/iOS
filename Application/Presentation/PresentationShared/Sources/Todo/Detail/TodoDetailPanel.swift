@@ -35,26 +35,6 @@ public struct TodoDetailPanel: View {
         self.onDelete = onDelete
     }
 
-    // 프로필 탭이 상세 상태를 Feature로 옮기기 전까지 Todo 식별자로 상세 상태를 만들어 여는 init
-    public init(
-        todoId: String,
-        location: Text,
-        isEditable: Bool,
-        windowEvent: TodoEditorWindowEvent? = nil,
-        onMoveToPane: (() -> Void)? = nil,
-        onDelete: (() -> Void)? = nil
-    ) {
-        self.init(
-            store: Store(initialState: TodoDetailFeature.State(todoId: todoId, showEditButton: isEditable)) {
-                TodoDetailFeature()
-            },
-            location: location,
-            windowEvent: windowEvent,
-            onMoveToPane: onMoveToPane,
-            onDelete: onDelete
-        )
-    }
-
     public var body: some View {
         VStack(spacing: 0) {
             DetailPanelBar(

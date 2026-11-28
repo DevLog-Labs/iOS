@@ -196,7 +196,8 @@ struct ActivityCard: View {
                         // 행 배치를 바꾸지 않고 선택한 행 배경만 바깥으로 넓힘
                         // 선택 표시는 다른 목록 행과 같은 회색
                         .background {
-                            if usesPaneLayout && store.selectedTodoRoute == .activity(activity.todoId) {
+                            if usesPaneLayout && store.showsDetailInPane
+                                && store.detail?.todoId == activity.todoId && store.detail?.showEditButton == false {
                                 RoundedRectangle(cornerRadius: CornerRadius.control)
                                     .fill(Color.fill)
                                     .padding(.horizontal, -8)
