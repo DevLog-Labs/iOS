@@ -36,8 +36,7 @@ struct RecentActivityCard: View {
                         } label: {
                             RecentTodoRow(
                                 todo: todo,
-                                isSelected: usesPaneLayout && store.showsDetailInPane
-                                    && store.detail?.todoId == todo.id && store.detail?.showEditButton == true
+                                isSelected: usesPaneLayout && store.showsDetailInPane && store.detail?.todoId == todo.id
                             )
                             .todoDetailPreview(todoId: todo.id)
                         }

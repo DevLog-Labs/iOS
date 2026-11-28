@@ -34,7 +34,7 @@ struct ProfileFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Never>?
-        // 활동 기록이나 최근 Todo에서 연 Todo 상세, 활동 기록 Todo는 고칠 수 없어 편집 버튼 없이 표시
+        // 활동 기록이나 최근 Todo에서 연 Todo 상세, 프로필은 보기만 하는 요약이라 편집 버튼 없이 표시
         // 좁은 창은 내비게이션에 쌓고 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
         @Presents var detail: TodoDetailFeature.State?
         var name = ""
@@ -68,7 +68,7 @@ struct ProfileFeature {
         case detail(PresentationAction<TodoDetailFeature.Action>)
         case binding(BindingAction<State>)
         // 사이드바가 있는 창은 연 곳(상세 판이나 오른쪽 칸)의 내용을 바꿈
-        case selectTodo(String, isEditable: Bool)
+        case selectTodo(String)
         case startObserving
         case fetchData
         case refresh
@@ -128,10 +128,10 @@ struct ProfileFeature {
                 state.showsDetailInPane = false
             case .detail:
                 break
-            case .selectTodo(let todoId, let isEditable):
+            case .selectTodo(let todoId):
                 // 이미 연 Todo는 불러온 상세와 열어 둔 시트를 그대로 둠
-                if state.detail?.todoId != todoId || state.detail?.showEditButton != isEditable {
-                    state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: isEditable)
+                if state.detail?.todoId != todoId {
+                    state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: false)
                 }
             case .binding(\.isCreatedActivitySelected):
                 return updateHeatmapActivityKindsEffectIfNeeded(.created, state: state)
