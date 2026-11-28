@@ -230,15 +230,16 @@ struct ProfileFeatureTests {
             ProfileFeature()
         }
 
-        await store.send(.selectTodo("activity", isEditable: false)) {
+        await store.send(.selectTodo("activity")) {
             $0.detail = TodoDetailFeature.State(todoId: "activity", showEditButton: false)
         }
         await store.send(.binding(.set(\.showsDetailInPane, true))) {
             $0.showsDetailInPane = true
         }
-        // 같은 Todo도 최근 Todo에서 고르면 편집할 수 있는 상세로 바꿈
-        await store.send(.selectTodo("activity", isEditable: true)) {
-            $0.detail = TodoDetailFeature.State(todoId: "activity", showEditButton: true)
+        // 다른 목록에서 같은 Todo를 고르면 연 상세를 그대로 둠
+        await store.send(.selectTodo("activity"))
+        await store.send(.selectTodo("recent")) {
+            $0.detail = TodoDetailFeature.State(todoId: "recent", showEditButton: false)
         }
         await store.send(.detail(.dismiss)) {
             $0.detail = nil

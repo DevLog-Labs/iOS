@@ -20,12 +20,10 @@ public struct ProfileView: View {
     @State private var store: StoreOf<ProfileFeature>
     @Bindable private var settingsStore: StoreOf<SettingsFeature>
     private let isSelected: Bool
-    private let windowEvent: TodoEditorWindowEvent
 
     public init(
         isSelected: Bool,
-        settingsStore: StoreOf<SettingsFeature>,
-        windowEvent: TodoEditorWindowEvent
+        settingsStore: StoreOf<SettingsFeature>
     ) {
         let store = Store(initialState: ProfileFeature.State()) {
             ProfileFeature()
@@ -33,7 +31,6 @@ public struct ProfileView: View {
         self._store = State(initialValue: store)
         self.settingsStore = settingsStore
         self.isSelected = isSelected
-        self.windowEvent = windowEvent
     }
 
     public var body: some View {
@@ -45,11 +42,11 @@ public struct ProfileView: View {
                     LazyVStack(alignment: .leading, spacing: 0) {
                         UserInfoCard(store: store, isSelected: isSelected)
                         ActivityCard(store: store) { todoId in
-                            store.send(.selectTodo(todoId, isEditable: false))
+                            store.send(.selectTodo(todoId))
                         }
                         ProfileGoalSummary(store: store)
                         RecentActivityCard(store: store) { todoId in
-                            store.send(.selectTodo(todoId, isEditable: true))
+                            store.send(.selectTodo(todoId))
                         }
                     }
                     .padding(.bottom, 24)
@@ -74,20 +71,20 @@ public struct ProfileView: View {
                     inPane: store.showsDetailInPane,
                     isActive: isSelected
                 ) { detailStore, onClose in
-                    // 활동 기록 Todo는 고칠 수 없어 편집 결과를 받을 창 이벤트 없이 표시
+                    // 프로필에서 연 Todo는 고칠 수 없어 편집 결과를 받을 창 이벤트 없이 표시
                     TodoDetailView(
                         store: detailStore,
-                        windowEvent: detailStore.showEditButton ? windowEvent : nil,
+                        windowEvent: nil,
                         isPaneDetail: onClose != nil,
                         onClose: onClose
                     )
-                    // 칸 안에서 다른 Todo로 바꾸거나 같은 Todo를 다른 목록에서 다시 고르면 그 Todo를 조회
-                    .id([AnyHashable(detailStore.todoId), detailStore.showEditButton])
+                    // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회
+                    .id(detailStore.todoId)
                 } panel: { detailStore in
                     TodoDetailPanel(
                         store: detailStore,
                         location: Text("nav_profile", bundle: PresentationResources.bundle),
-                        windowEvent: detailStore.showEditButton ? windowEvent : nil,
+                        windowEvent: nil,
                         onMoveToPane: {
                             store.send(.binding(.set(\.showsDetailInPane, true)))
                         }
@@ -98,11 +95,10 @@ public struct ProfileView: View {
                 if let detail = store.detail {
                     TodoDetailSideBarView(
                         todoId: detail.todoId,
-                        isEditable: detail.showEditButton,
-                        windowEvent: windowEvent
+                        isEditable: false,
+                        windowEvent: nil
                     )
-                    // 같은 Todo도 편집할 수 있는지가 바뀌면 다시 만듦
-                    .id([AnyHashable(detail.todoId), detail.showEditButton])
+                    .id(detail.todoId)
                 }
             }
             // 좁은 창은 설정 목록과 고른 항목 화면을 프로필 위에 쌓고, 사이드바가 있는 창은 창 전체 설정 화면에 그려 쌓지 않음
