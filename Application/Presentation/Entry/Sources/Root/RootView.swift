@@ -51,6 +51,8 @@ public struct RootView: View {
             NavigationStack {
                 TodoDetailView(store: sheetStore)
             }
+            // 시트가 떠 있는 동안 다른 Todo를 열면 화면을 다시 만들어 그 Todo를 조회
+            .id(sheetStore.todoId)
             .environment(\.deviceType, .bar)
             .background(Color.background)
         }
