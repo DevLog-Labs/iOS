@@ -22,7 +22,8 @@ struct Feature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Action.Alert>?
-        @Presents var sheet: SheetState?
+        // 위젯과 푸시 알림으로 연 보기 전용 Todo 상세
+        @Presents var sheet: TodoDetailFeature.State?
         var hasCheckedAppUpdate = false
         var isAppUpdateRequired = false
         var isNetworkConnected = true
@@ -36,17 +37,11 @@ struct Feature {
         var isObservingTheme = false
     }
 
-    @ObservableState
-    struct SheetState: Equatable, Identifiable {
-        let todoId: String
-        var id: String { todoId }
-    }
-
     enum Action: Equatable {
         case alert(PresentationAction<Alert>)
         case appUpdateCheckCompleted(Bool)
         case composition(CompositionFeature.Action)
-        case sheet(PresentationAction<Sheet>)
+        case sheet(PresentationAction<TodoDetailFeature.Action>)
         case onAppear
         case presentTodoDetail(String)
         case openWidgetRoute(WidgetRoute)
@@ -57,10 +52,6 @@ struct Feature {
 
         enum Alert: Equatable {
             case tapUpdateButton
-        }
-
-        enum Sheet: Equatable {
-            case tapCloseButton
         }
     }
 
@@ -87,8 +78,6 @@ struct Feature {
                 state.alert = Self.appUpdateAlertState()
             case .composition:
                 break
-            case .sheet(.dismiss), .sheet(.presented(.tapCloseButton)):
-                state.sheet = nil
             case .sheet:
                 break
             case .onAppear:
@@ -116,7 +105,7 @@ struct Feature {
 
                 return effect
             case .presentTodoDetail(let todoId):
-                state.sheet = .init(todoId: todoId)
+                state.sheet = TodoDetailFeature.State(todoId: todoId, showEditButton: false)
             case .openWidgetRoute(let route):
                 // 로그아웃 상태면 로그인 화면만 보이고 위젯 경로는 버림
                 guard state.signIn != false else { break }
@@ -127,7 +116,7 @@ struct Feature {
                 case .tab(let tab):
                     return .send(.composition(.selectTab(tab)))
                 case .todayTodo(let id):
-                    state.sheet = .init(todoId: id)
+                    state.sheet = TodoDetailFeature.State(todoId: id, showEditButton: false)
                 }
             case .networkStatusChanged(let isConnected):
                 let wasConnected = state.isNetworkConnected
@@ -166,7 +155,7 @@ struct Feature {
                 case .tab(let tab):
                     composition.selectedTab = tab
                 case .todayTodo(let id):
-                    state.sheet = .init(todoId: id)
+                    state.sheet = TodoDetailFeature.State(todoId: id, showEditButton: false)
                 case nil:
                     break
                 }
@@ -181,17 +170,8 @@ struct Feature {
         }
         .ifLet(\.$alert, action: \.alert)
         .ifLet(\.$sheet, action: \.sheet) {
-            SheetFeature()
+            TodoDetailFeature()
         }
-    }
-}
-
-private struct SheetFeature: Reducer {
-    typealias State = Feature.SheetState
-    typealias Action = Feature.Action.Sheet
-
-    var body: some ReducerOf<Self> {
-        EmptyReducer()
     }
 }
 

@@ -48,7 +48,11 @@ public struct RootView: View {
         }
         .prominentAlert(store, state: \.alert, action: \.alert)
         .prominentSheet(item: $store.scope(state: \.sheet, action: \.sheet)) { sheetStore in
-            sheetContent(todoId: sheetStore.todoId)
+            NavigationStack {
+                TodoDetailView(store: sheetStore)
+            }
+            .environment(\.deviceType, .bar)
+            .background(Color.background)
         }
         .onReceive(pushNotificationTodoIdPublisher) { todoId in
             store.send(.presentTodoDetail(todoId))
@@ -56,17 +60,5 @@ public struct RootView: View {
         }
         // 글자 크기를 정하지 않은 글자도 Mac 크기로 표시
         .font(AdaptiveSize.macFontSize(.body).map { .system(size: $0) })
-    }
-
-    private func sheetContent(todoId: String) -> some View {
-        NavigationStack {
-            TodoDetailView(store: Store(
-                initialState: TodoDetailFeature.State(todoId: todoId, showEditButton: false)
-            ) {
-                TodoDetailFeature()
-            })
-        }
-        .environment(\.deviceType, .bar)
-        .background(Color.background)
     }
 }
