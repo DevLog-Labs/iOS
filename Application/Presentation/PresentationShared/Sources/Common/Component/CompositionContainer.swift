@@ -51,23 +51,34 @@ public extension View {
 
     // 바꾸면 바로 저장하는 시트
     // 좁은 창은 시트로 띄우고, 사이드바가 있는 창은 SplitShell 오른쪽 세부 정보 사이드바에 표시
+    // reveal이 바뀌면 사이드바가 있는 창에서 닫힌 세부 정보 사이드바를 엶
     func compositionSheet<Item: Identifiable, Sheet: View, Right: View>(
         item: Binding<Item?>,
+        reveal: Int = 0,
         @ViewBuilder sheet: @escaping (Item) -> Sheet,
         @ViewBuilder right: @escaping (Item) -> Right
     ) -> some View {
-        modifier(CompositionSheetModifier(item: item, sheet: sheet, right: right))
+        modifier(CompositionSheetModifier(item: item, reveal: reveal, sheet: sheet, right: right))
     }
 
     // 좁은 창은 시트로 띄우거나 내비게이션에 쌓고, 사이드바가 있는 창은 이 화면 대신 내비게이션 루트에 그림
     // isActive가 거짓이면 좁은 창에서 띄우지 않음
+    // closesRight가 참이면 사이드바가 있는 창에서 닫거나 탭 화면을 벗어날 때 세부 정보 사이드바도 닫음
+    // 창 폭이 바뀌어 시트와 루트를 오갈 때는 상태가 남아 닫지 않음
     func compositionCenter<Item: Identifiable, Content: View>(
         item: Binding<Item?>,
         narrow: CompositionNarrow,
         isActive: Bool = true,
+        closesRight: Bool = false,
         @ViewBuilder content: @escaping (Item) -> Content
     ) -> some View {
-        modifier(CompositionCenterModifier(item: item, narrow: narrow, isActive: isActive, center: content))
+        modifier(CompositionCenterModifier(
+            item: item,
+            narrow: narrow,
+            isActive: isActive,
+            closesRight: closesRight,
+            center: content
+        ))
     }
 }
 
@@ -153,17 +164,21 @@ private struct CompositionEditorModifier<Item: Identifiable, Editor: View>: View
 }
 
 private struct CompositionCenterModifier<Item: Identifiable, Center: View>: ViewModifier {
+    @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var layout = LiveLayout()
     let item: Binding<Item?>
     let narrow: CompositionNarrow
     let isActive: Bool
+    let closesRight: Bool
     let center: (Item) -> Center
 
     func body(content: Content) -> some View {
         // 창 폭이 바뀌어도 좁은 창의 표시를 같은 화면에 두어, 넓어진 뒤 늦게 닫히는 표시가 상태를 지우지 않음
         let layout = layout.update(usesDesktopLayout: usesDesktopLayout)
         let narrowItem = item.activePresentation(when: isActive).hiddenInPane { layout.usesDesktopLayout }
+        let isClosed = item.wrappedValue == nil
         let shown = Group {
             if usesDesktopLayout, let value = item.wrappedValue {
                 center(value)
@@ -172,16 +187,32 @@ private struct CompositionCenterModifier<Item: Identifiable, Center: View>: View
             }
         }
 
+        presentedContent(shown, item: narrowItem)
+            // 루트에 그린 화면을 닫거나 탭 화면을 벗어나면 그 화면이 보여 주던 세부 정보 사이드바도 닫음
+            .onChange(of: isClosed) { _, isClosed in
+                if closesRight && usesDesktopLayout && isClosed {
+                    setDetailSideBarPresented?(false)
+                }
+            }
+            .onChange(of: isTabContentActive) { _, isActive in
+                if closesRight && usesDesktopLayout && !isActive && !isClosed {
+                    setDetailSideBarPresented?(false)
+                }
+            }
+    }
+
+    @ViewBuilder
+    private func presentedContent(_ shown: some View, item: Binding<Item?>) -> some View {
         switch narrow {
         case .sheet:
             shown
-                .prominentSheet(item: narrowItem, content: center)
+                .prominentSheet(item: item, content: center)
         case .cover:
             shown
-                .fullScreenCover(item: narrowItem, content: center)
+                .fullScreenCover(item: item, content: center)
         case .push:
             shown
-                .navigationDestination(item: narrowItem, interactivePop: true, destination: center)
+                .navigationDestination(item: item, interactivePop: true, destination: center)
         }
     }
 }
@@ -189,8 +220,10 @@ private struct CompositionCenterModifier<Item: Identifiable, Center: View>: View
 private struct CompositionSheetModifier<Item: Identifiable, Sheet: View, Right: View>: ViewModifier {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var layout = LiveLayout()
     let item: Binding<Item?>
+    let reveal: Int
     let sheet: (Item) -> Sheet
     let right: (Item) -> Right
 
@@ -210,6 +243,11 @@ private struct CompositionSheetModifier<Item: Identifiable, Sheet: View, Right: 
                     right(value)
                 } else {
                     DetailSideBarPlaceholder()
+                }
+            }
+            .onChange(of: reveal) {
+                if usesDesktopLayout {
+                    setDetailSideBarPresented?(true)
                 }
             }
     }

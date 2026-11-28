@@ -44,6 +44,8 @@ extension TodayFeature {
         var isTodoInspectorPresented = false
         // 세부 정보 사이드바에 표시하는 Todo, 오른쪽 칸을 열면 칸의 Todo와 같음
         var selectedTodoId: String?
+        // 세부 정보 사이드바에 Todo를 보여 달라고 한 횟수, 바뀌면 닫힌 세부 정보 사이드바를 엶
+        var revealCount = 0
         // Mac에서 마우스를 올린 행, 선택 행처럼 둥글게 표시하고 맞닿는 구분선을 숨김
         var hoveredTodoId: String?
         // 사이드바가 있는 창에서 상세 판 대신 목록 오른쪽 칸에 표시, 세부 정보 사이드바만 쓰는 선택과 구분

@@ -111,6 +111,7 @@ struct TodayFeature {
                     state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: true)
                 }
             case .inspectTodo(let todoId):
+                state.revealCount += 1
                 state.selectedTodoId = todoId
                 if state.showsDetailInPane && state.detail?.todoId != todoId {
                     state.detail = TodoDetailFeature.State(todoId: todoId, showEditButton: true)
@@ -157,6 +158,7 @@ struct TodayFeature {
             case .dismissTodoInspector:
                 state.isTodoInspectorPresented = false
             case .moveTodoInspectorToSideBar:
+                state.revealCount += 1
                 guard state.isTodoInspectorPresented, let info = state.todoInfo else { break }
                 // 고친 값은 이미 저장해 시트만 닫고 같은 Todo를 세부 정보 사이드바에 표시
                 state.isTodoInspectorPresented = false

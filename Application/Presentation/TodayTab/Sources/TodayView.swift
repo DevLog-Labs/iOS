@@ -18,7 +18,6 @@ public struct TodayView: View {
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.windowControlsInset) private var windowControlsInset
     @Environment(\.readableContentWidth) private var readableContentWidth
-    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var store: StoreOf<TodayFeature>
     private let isSelected: Bool
     private let windowEvent: TodoEditorWindowEvent
@@ -74,7 +73,6 @@ public struct TodayView: View {
                                         // 사이드바가 있으면 고른 Todo를 창 오른쪽 세부 정보 사이드바에 표시
                                         if usesDesktopLayout {
                                             store.send(.inspectTodo(item.id))
-                                            setDetailSideBarPresented?(true)
                                         } else {
                                             store.send(.showTodoInspector(item))
                                         }
@@ -161,7 +159,10 @@ public struct TodayView: View {
                     onMoveToPane: isListed ? { store.send(.moveDetailToPane) } : nil
                 )
             }
-            .compositionRight(isActive: sections.flatMap(\.items).contains { $0.id == store.selectedTodoId }) {
+            .compositionRight(
+                isActive: sections.flatMap(\.items).contains { $0.id == store.selectedTodoId },
+                reveal: store.revealCount
+            ) {
                 if let todoId = store.selectedTodoId {
                     TodoDetailSideBarView(todoId: todoId, isEditable: true, windowEvent: windowEvent)
                         .id(todoId)
@@ -188,7 +189,6 @@ public struct TodayView: View {
         .onChange(of: usesDesktopLayout) { _, usesDesktopLayout in
             if usesDesktopLayout && store.isTodoInspectorPresented {
                 store.send(.moveTodoInspectorToSideBar)
-                setDetailSideBarPresented?(true)
             }
         }
         // 상단 safe area 배경

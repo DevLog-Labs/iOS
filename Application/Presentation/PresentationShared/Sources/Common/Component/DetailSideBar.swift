@@ -69,11 +69,13 @@ public struct DetailSideBarPlaceholder: View {
 public extension View {
     // 이 화면의 세부 정보 사이드바 내용, 사이드바가 있는 창에서 SplitShell 오른쪽에 표시
     // 화면은 내용만 올리고 사이드바는 CompositionView가 그림
+    // reveal이 바뀌면 사이드바가 있는 창에서 닫힌 세부 정보 사이드바를 엶
     func compositionRight<Content: View>(
         isActive: Bool = true,
+        reveal: Int = 0,
         @ViewBuilder content: @escaping () -> Content
     ) -> some View {
-        modifier(CompositionRightModifier(isActive: isActive, sideBarContent: content))
+        modifier(CompositionRightModifier(isActive: isActive, reveal: reveal, sideBarContent: content))
     }
 }
 
@@ -102,10 +104,13 @@ public struct DetailSideBarContentPreferenceKey: PreferenceKey {
 }
 
 private struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
+    @Environment(\.usesDesktopLayout) private var usesDesktopLayout
+    @Environment(\.setDetailSideBarPresented) private var setDetailSideBarPresented
     @State private var id = UUID()
     // 화면을 벗어나 가려진 동안은 내용을 올리지 않음
     @State private var isAppeared = false
     let isActive: Bool
+    let reveal: Int
     let sideBarContent: () -> SideBarContent
 
     func body(content: Content) -> some View {
@@ -119,5 +124,10 @@ private struct CompositionRightModifier<SideBarContent: View>: ViewModifier {
             }
             .onAppear { isAppeared = true }
             .onDisappear { isAppeared = false }
+            .onChange(of: reveal) {
+                if usesDesktopLayout {
+                    setDetailSideBarPresented?(true)
+                }
+            }
     }
 }
