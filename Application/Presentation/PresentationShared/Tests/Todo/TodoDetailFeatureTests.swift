@@ -284,6 +284,48 @@ struct TodoDetailFeatureTests {
         #expect(adapter.infoEditor?.tags == ["tag"])
     }
 
+    @Test("화면을 옮겨 그려 다시 나타나도 다시 조회하지 않고, 다시 조회를 요청하면 조회한다")
+    func 화면을_옮겨_그려_다시_나타나도_다시_조회하지_않고_다시_조회를_요청하면_조회한다() async {
+        let todo = makeTodo(id: "todo-1", content: "content")
+        let fetchSpy = FetchTodoByIdUseCaseSpy(todo: todo)
+        let adapter = DetailStoreTestAdapter(
+            fetchUseCase: fetchSpy,
+            referenceUseCase: FetchReferenceItemsUseCaseSpy(),
+            todoId: "todo-1"
+        )
+
+        adapter.onAppear()
+
+        await waitUntil {
+            adapter.todo == todo
+        }
+
+        adapter.onAppear()
+        adapter.fetch()
+
+        await waitUntil {
+            fetchSpy.todoIds.count == 2
+        }
+
+        #expect(fetchSpy.todoIds == ["todo-1", "todo-1"])
+    }
+
+    @Test("상세 판 세부 정보 열에서 저장에 실패하면 열 안 알림을 그대로 둔다")
+    func 상세_판_세부_정보_열에서_저장에_실패하면_열_안_알림을_그대로_둔다() async {
+        let upsertSpy = TodoEditorUpsertTodoUseCaseSpy()
+        upsertSpy.error = DetailTestError.failure
+        let adapter = makeInfoAdapter(upsertSpy: upsertSpy)
+
+        await adapter.openDetailColumnAndTogglePinned()
+
+        await waitUntil {
+            adapter.infoEditor?.alert != nil
+        }
+
+        #expect(adapter.infoEditor?.alert != nil)
+        #expect(adapter.alert == nil)
+    }
+
     private func makeInfoAdapter(upsertSpy: TodoEditorUpsertTodoUseCaseSpy) -> DetailStoreTestAdapter {
         DetailStoreTestAdapter(
             fetchUseCase: FetchTodoByIdUseCaseSpy(todo: makeTodo()),
@@ -369,6 +411,10 @@ private struct DetailStoreTestAdapter: DetailTestAdapter {
         store.send(.onAppear)
     }
 
+    func fetch() {
+        store.send(.fetch)
+    }
+
     func onSheetTodoAppear() { store.send(.sheet(.presented(.todo(.onAppear)))) }
 
     func setSheet(_ sheet: TodoDetailFeature.SheetState?) {
@@ -410,6 +456,17 @@ private struct DetailStoreTestAdapter: DetailTestAdapter {
 
     func openInfoAndTogglePinned() async {
         await openInfo()
+        store.send(.info(.editor(.binding(.set(\.isPinned, true)))))
+    }
+
+    func openDetailColumnAndTogglePinned() async {
+        store.send(.setDetailColumnPresented(true))
+        store.send(.info(.onAppear))
+
+        await waitUntil {
+            store.info.editor != nil
+        }
+
         store.send(.info(.editor(.binding(.set(\.isPinned, true)))))
     }
 }

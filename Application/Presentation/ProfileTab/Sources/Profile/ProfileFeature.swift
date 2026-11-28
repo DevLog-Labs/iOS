@@ -34,6 +34,9 @@ struct ProfileFeature {
     @ObservableState
     struct State: Equatable {
         @Presents var alert: AlertState<Never>?
+        // 활동 기록이나 최근 Todo에서 연 Todo 상세, 활동 기록 Todo는 고칠 수 없어 편집 버튼 없이 표시
+        // 좁은 창은 내비게이션에 쌓고 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
+        @Presents var detail: TodoDetailFeature.State?
         var name = ""
         var email = ""
         var isNetworkConnected = true
@@ -54,9 +57,6 @@ struct ProfileFeature {
         var dayActivitiesByDate: [Date: [HeatmapActivityItem]] = [:]
         var selectedActivityKinds: Set<ActivityKind> = [.created, .completed, .deleted]
         var selectedDay: HeatmapDay?
-        // 활동 기록이나 최근 Todo에서 연 Todo 상세, 활동 기록 Todo는 고칠 수 없어 편집 버튼 없이 표시
-        // 좁은 창은 내비게이션에 쌓고 사이드바가 있는 창은 상세 판이나 오른쪽 칸에 표시
-        @Presents var detail: TodoDetailFeature.State?
         // 사이드바가 있는 창에서 상세 판 대신 오른쪽 칸에 표시
         var showsDetailInPane = false
         var showDoneButton = false

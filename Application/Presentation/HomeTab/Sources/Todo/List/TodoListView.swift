@@ -14,7 +14,6 @@ import PresentationShared
 struct TodoListView: View {
     @Environment(\.isTabContentActive) private var isTabContentActive
     @Environment(\.usesDesktopLayout) private var usesDesktopLayout
-    @Environment(\.usesPaneLayout) private var usesPaneLayout
     @State private var store: StoreOf<TodoListFeature>
     private let windowEvent: TodoEditorWindowEvent?
 
@@ -31,8 +30,7 @@ struct TodoListView: View {
             }
         } detail: {
             // 칸으로 나눈 화면은 새 Todo를 덮는 화면 대신 상세 칸 자리에서 작성
-            if usesPaneLayout,
-               let editorStore = store.scope(
+            if let editorStore = store.scope(
                 state: \.fullScreenCover?.todoEditor,
                 action: \.fullScreenCover.presented.todoEditor
                ) {
@@ -43,7 +41,7 @@ struct TodoListView: View {
                     store: detailStore,
                     windowEvent: windowEvent,
                     isPaneDetail: true,
-                    onClose: usesDesktopLayout ? { store.send(.detail(.dismiss)) } : nil
+                    onClose: { store.send(.detail(.dismiss)) }
                 )
                 .environment(\.showsPaneTitleBar, true)
                 // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회

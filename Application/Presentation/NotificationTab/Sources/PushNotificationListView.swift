@@ -49,7 +49,7 @@ public struct PushNotificationListView: View {
                     TodoDetailView(
                         store: detailStore,
                         isPaneDetail: true,
-                        onClose: usesDesktopLayout ? { store.send(.detail(.dismiss)) } : nil
+                        onClose: { store.send(.detail(.dismiss)) }
                     )
                     .environment(\.showsPaneTitleBar, true)
                     // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회
