@@ -16,10 +16,8 @@ public struct ProfileView: View {
     @Environment(\.readableContentWidth) private var readableContentWidth
     @Environment(\.usesPaneLayout) private var usesPaneLayout
     @Environment(\.deviceType) private var deviceType
-    @Environment(\.sideBarRequest) private var sideBarRequest
     @Environment(\.isiOSAppOnMac) private var isiOSAppOnMac
     @State private var store: StoreOf<ProfileFeature>
-    @State private var router = NavigationRouter<ProfileRoute>()
     @Bindable private var settingsStore: StoreOf<SettingsFeature>
     private let isSelected: Bool
     private let windowEvent: TodoEditorWindowEvent
@@ -39,7 +37,7 @@ public struct ProfileView: View {
     }
 
     public var body: some View {
-        NavigationStack(path: path) {
+        NavigationStack {
             // 사이드바가 있는 창은 프로필을 창 전체 폭으로 두고 오른쪽 칸으로 옮긴 Todo가 있을 때만 두 칸으로 나눔
             PaneSplitView(splitsOnDesktop: store.showsDetailInPane && store.detail != nil) {
                 ScrollView {
@@ -114,29 +112,27 @@ public struct ProfileView: View {
                     }
                 )
             }
+            // 좁은 창은 설정 목록과 고른 항목 화면을 프로필 위에 쌓고, 사이드바가 있는 창은 창 전체 설정 화면에 그려 쌓지 않음
             .navigationDestination(
-                for: ProfileRoute.self,
-                interactivePop: {
-                    switch $0 {
-                    case .settings, .theme: true
-                    default: false
-                    }
-                },
-                destination: { destinationView($0).environment(\.showsPaneTitleBar, usesPaneLayout) }
-            )
+                isPresented: $settingsStore.isListPushed.hiddenInPane(usesDesktopLayout),
+                interactivePop: true
+            ) {
+                SettingsView(store: settingsStore) { route in
+                    settingsStore.send(.select(route))
+                }
+                .environment(\.showsPaneTitleBar, usesPaneLayout)
+                .navigationDestination(
+                    item: $settingsStore.pushedRoute.hiddenInPane(usesDesktopLayout),
+                    interactivePop: settingsStore.pushedRoute == .theme
+                ) { route in
+                    settingsPage(route)
+                        .environment(\.showsPaneTitleBar, usesPaneLayout)
+                }
+            }
         }
         .desktopNavigationTransition()
         // 창 폭이 바뀌어 같은 설정을 다시 쌓거나 내릴 때 밀리는 효과 없이 바꿈
         .transaction(value: usesDesktopLayout) { $0.disablesAnimations = true }
-        // 사이드바 요청으로 처음 여는 탭도 그 요청을 반영
-        .onChange(of: sideBarRequest, initial: true) { _, request in
-            switch request?.action {
-            case .open(.profile):
-                router.path = []
-            default:
-                break
-            }
-        }
         .onChange(of: isSelected, initial: true) { _, isSelected in
             if isSelected {
                 store.send(.fetchData)
@@ -210,49 +206,6 @@ public struct ProfileView: View {
             .padding(.bottom, 8)
             .background(Color.background)
             .toolbarBackground(Color.background)
-        }
-    }
-
-    // 사이드바가 있는 창의 설정은 창 전체 설정 화면에 그리므로 쌓지 않음
-    private var path: Binding<[ProfileRoute]> {
-        Binding(
-            get: {
-                guard !usesDesktopLayout else { return router.path }
-                switch settingsStore.screen {
-                case .list:
-                    return router.path + [.settings]
-                case .detail:
-                    return router.path + [.settings, settingsStore.selectedRoute]
-                case nil:
-                    return router.path
-                }
-            },
-            set: { path in
-                let settingsIndex = path.firstIndex(of: .settings) ?? path.endIndex
-                router.path = Array(path[..<settingsIndex])
-                // 쌓은 설정이 내려가며 늦게 보낸 빈 경로가 보던 항목을 지우지 않음
-                guard !usesDesktopLayout else { return }
-                switch path.endIndex - settingsIndex {
-                case 0:
-                    settingsStore.send(.binding(.set(\.screen, nil)))
-                case 1:
-                    settingsStore.send(.binding(.set(\.screen, .list)))
-                default:
-                    settingsStore.send(.binding(.set(\.screen, .detail)))
-                }
-            }
-        )
-    }
-
-    @ViewBuilder
-    private func destinationView(_ route: ProfileRoute) -> some View {
-        switch route {
-        case .settings:
-            SettingsView(store: settingsStore) { route in
-                settingsStore.send(.select(route))
-            }
-        case .theme, .pushNotification, .account, .information:
-            settingsPage(route)
         }
     }
 

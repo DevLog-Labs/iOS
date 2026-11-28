@@ -41,6 +41,26 @@ public struct SettingsFeature {
         // 열린 설정 화면, 좁은 창은 프로필 화면에 쌓고 사이드바가 있는 창은 창 전체 설정 화면에 표시
         public var screen: Screen?
 
+        // 좁은 창에서 프로필 위에 쌓은 설정 목록, 뒤로 가면 설정을 닫음
+        public var isListPushed: Bool {
+            get { screen != nil }
+            set {
+                if !newValue {
+                    screen = nil
+                }
+            }
+        }
+
+        // 좁은 창에서 설정 목록 위에 쌓은 고른 항목 화면, 뒤로 가면 설정 목록으로 돌아감
+        public var pushedRoute: ProfileRoute? {
+            get { screen == .detail ? selectedRoute : nil }
+            set {
+                if newValue == nil && screen == .detail {
+                    screen = .list
+                }
+            }
+        }
+
         public init() { }
 
         static func betaTestURL(appEnvironment: String?, testFlightURL: String?) -> URL? {

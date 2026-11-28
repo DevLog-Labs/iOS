@@ -117,7 +117,7 @@ struct CompositionFeature {
                     state.isSettingsPresented = true
                 case .settings(.close):
                     state.isSettingsPresented = false
-                case .settings(.binding(\.screen)):
+                case .settings(.binding(\.isListPushed)):
                     guard state.settings.screen == nil, state.isSettingsPresented else { break }
                     // 좁아진 창에서 설정을 닫으면 설정 아래에 있던 프로필 화면 표시
                     state.isSettingsPresented = false
