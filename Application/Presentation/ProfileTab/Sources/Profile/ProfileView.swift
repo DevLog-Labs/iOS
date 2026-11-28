@@ -81,8 +81,8 @@ public struct ProfileView: View {
                         isPaneDetail: onClose != nil,
                         onClose: onClose
                     )
-                    // 칸 안에서 다른 Todo로 바꾸면 그 Todo를 조회
-                    .id(detailStore.todoId)
+                    // 칸 안에서 다른 Todo로 바꾸거나 같은 Todo를 다른 목록에서 다시 고르면 그 Todo를 조회
+                    .id([AnyHashable(detailStore.todoId), detailStore.showEditButton])
                 } panel: { detailStore in
                     TodoDetailPanel(
                         store: detailStore,
@@ -101,7 +101,8 @@ public struct ProfileView: View {
                         isEditable: detail.showEditButton,
                         windowEvent: windowEvent
                     )
-                    .id(detail.todoId)
+                    // 같은 Todo도 편집할 수 있는지가 바뀌면 다시 만듦
+                    .id([AnyHashable(detail.todoId), detail.showEditButton])
                 }
             }
             // 좁은 창은 설정 목록과 고른 항목 화면을 프로필 위에 쌓고, 사이드바가 있는 창은 창 전체 설정 화면에 그려 쌓지 않음
