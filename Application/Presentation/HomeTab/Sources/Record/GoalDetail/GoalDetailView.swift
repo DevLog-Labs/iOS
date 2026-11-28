@@ -113,8 +113,9 @@ public struct GoalDetailView: View {
             }
             .desktopNavigationTransition()
         }
+        // 창 폭이 바뀌면 개발 목표가 새 자리에 나타난 뒤에 다시 쌓음
         .navigationDestination(
-            item: $store.scope(state: \.todoDetail, action: \.todoDetail),
+            item: $store.scope(state: \.todoDetail, action: \.todoDetail).hiddenInPane(isHidden),
             interactivePop: true
         ) {
             // 사이드바가 있으면 Todo 목록 옆 칸의 상세와 같은 칸 모양으로 표시하고 뒤로 가면 개발 목표로 돌아감

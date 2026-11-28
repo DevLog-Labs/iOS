@@ -54,6 +54,8 @@ struct GoalDetailFeature {
         var shownOnDesktop: Bool?
         // 창 폭이 바뀌어 빠지는 자리가 먼저 닫은 기록 상세, 같은 차례에 새 자리가 나타나면 되살림
         var dismissedRecordDetail: RecordDetailDestination?
+        // 창 폭이 바뀌어 빠지는 자리가 먼저 닫은 Todo 상세, 같은 차례에 새 자리가 나타나면 되살림
+        var dismissedTodoDetail: TodoDetailFeature.State?
 
         var goalTitle: String {
             goal?.title ?? ""
@@ -117,6 +119,7 @@ struct GoalDetailFeature {
             case todosFailed
             case transitionFailed
             case recordDetailDismissed
+            case todoDetailDismissed
         }
 
         enum Delegate: Equatable {
@@ -164,6 +167,11 @@ struct GoalDetailFeature {
                 }
             case .recordDetail, .recordDetailContent:
                 break
+            case .todoDetail(.dismiss):
+                state.dismissedTodoDetail = state.todoDetail
+                return .run { send in
+                    await send(.store(.todoDetailDismissed))
+                }
             case .todoDetail:
                 break
             case .todoLinkSheet(.dismiss),
@@ -194,6 +202,9 @@ struct GoalDetailFeature {
                 if state.shownOnDesktop != onDesktop {
                     if state.recordDetail == nil {
                         state.recordDetail = state.dismissedRecordDetail
+                    }
+                    if state.todoDetail == nil {
+                        state.todoDetail = state.dismissedTodoDetail
                     }
                     state.recordDetailContent?.restoreDismissedScreens()
                 }
@@ -330,6 +341,8 @@ struct GoalDetailFeature {
                 if state.recordDetail == nil {
                     state.recordDetailContent = nil
                 }
+            case .store(.todoDetailDismissed):
+                state.dismissedTodoDetail = nil
             }
 
             return .none
